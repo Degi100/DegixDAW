@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '../hooks/useAuth'
 import { audioEngine } from '../lib/audioEngine'
 import { 
   Play, 
@@ -13,8 +12,18 @@ import {
   Music
 } from 'lucide-react'
 
-export function DAWInterface() {
-  const { user, signOut } = useAuth()
+interface User {
+  id: string
+  email: string
+  user_metadata?: { name?: string }
+}
+
+interface DAWInterfaceProps {
+  user: User
+  onLogout: () => void
+}
+
+export function DAWInterface({ user, onLogout }: DAWInterfaceProps) {
   const [isRecording, setIsRecording] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [masterVolume, setMasterVolume] = useState(0.7)
@@ -62,7 +71,7 @@ export function DAWInterface() {
 
   const handleSignOut = async () => {
     try {
-      await signOut()
+      onLogout()
     } catch (error) {
       console.error('Error signing out:', error)
     }

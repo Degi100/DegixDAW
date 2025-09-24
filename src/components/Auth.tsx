@@ -1,31 +1,69 @@
-import { useAuth } from '../hooks/useAuth'
-import { LogIn, Music, AlertCircle } from 'lucide-react'
+import { AlertCircle, LogIn, Music } from 'lucide-react'
 
-export function Auth() {
-  const { signInWithGoogle, signInWithDiscord, loading, isSupabaseConfigured } = useAuth()
+interface User {
+  id: string
+  email: string
+  user_metadata?: { name?: string }
+}
+
+interface AuthProps {
+  onLogin: (user: User) => void
+}
+
+export function Auth({ onLogin }: AuthProps) {
+  // Check if Supabase is configured
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+  const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey && 
+    supabaseUrl !== 'your_supabase_project_url' && 
+    supabaseAnonKey !== 'your_supabase_anon_key')
 
   const handleGoogleLogin = async () => {
+    if (!isSupabaseConfigured) {
+      // Mock login for development
+      const mockUser = {
+        id: 'mock-user-id',
+        email: 'demo@degixdaw.com',
+        user_metadata: { name: 'Demo User' }
+      }
+      onLogin(mockUser)
+      return
+    }
+
     try {
-      await signInWithGoogle()
+      const { createClient } = await import('@supabase/supabase-js')
+      const supabase = createClient(supabaseUrl!, supabaseAnonKey!)
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      })
+      if (error) throw error
     } catch (error) {
       console.error('Error signing in with Google:', error)
     }
   }
 
   const handleDiscordLogin = async () => {
+    if (!isSupabaseConfigured) {
+      // Mock login for development
+      const mockUser = {
+        id: 'mock-user-id', 
+        email: 'demo@degixdaw.com',
+        user_metadata: { name: 'Demo User' }
+      }
+      onLogin(mockUser)
+      return
+    }
+
     try {
-      await signInWithDiscord()
+      const { createClient } = await import('@supabase/supabase-js')
+      const supabase = createClient(supabaseUrl!, supabaseAnonKey!)
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'discord',
+      })
+      if (error) throw error
     } catch (error) {
       console.error('Error signing in with Discord:', error)
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
-      </div>
-    )
   }
 
   return (
@@ -60,7 +98,6 @@ export function Auth() {
           <div className="space-y-4">
             <button
               onClick={handleGoogleLogin}
-              disabled={loading}
               className="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 transition-colors"
             >
               <LogIn className="h-4 w-4 mr-2" />
@@ -69,7 +106,6 @@ export function Auth() {
 
             <button
               onClick={handleDiscordLogin}
-              disabled={loading}
               className="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
             >
               <LogIn className="h-4 w-4 mr-2" />

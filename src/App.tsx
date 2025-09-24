@@ -1,21 +1,25 @@
-import { useAuth } from './hooks/useAuth'
+import { useState } from 'react'
 import { Auth } from './components/Auth'
 import { DAWInterface } from './components/DAWInterface'
 
+interface User {
+  id: string
+  email: string
+  user_metadata?: { name?: string }
+}
+
 function App() {
-  const { user, loading } = useAuth()
+  const [user, setUser] = useState<User | null>(null)
 
-  console.log('App render - user:', user, 'loading:', loading)
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
-      </div>
-    )
+  const handleLogin = (userData: User) => {
+    setUser(userData)
   }
 
-  return user ? <DAWInterface /> : <Auth />
+  const handleLogout = () => {
+    setUser(null)
+  }
+
+  return user ? <DAWInterface user={user} onLogout={handleLogout} /> : <Auth onLogin={handleLogin} />
 }
 
 export default App

@@ -49,7 +49,7 @@ export class AudioEngine {
     const source = Tone.context.createMediaStreamSource(stream)
     
     // Connect to recorder using native web audio API
-    const recorderInput = (this.recorder as any).input
+    const recorderInput = (this.recorder as unknown as { input: { input: AudioNode } }).input
     if (recorderInput && recorderInput.input) {
       source.connect(recorderInput.input)
     }
