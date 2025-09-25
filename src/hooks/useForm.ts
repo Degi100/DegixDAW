@@ -19,17 +19,28 @@ export function useForm<T extends Record<string, string>>({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const setValue = useCallback((field: keyof T, value: string) => {
-    setValues(prev => ({ ...prev, [field]: value }));
-    
-    // Clear error when user starts typing
-    if (errors[field as string]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field as string];
+    setValues(prev => {
+      const newValues = { ...prev, [field]: value };
+      
+      // Validate single field on change
+      const result = validateForm(schema, newValues);
+      const fieldErrors = result.errors as Record<string, string>;
+      const fieldError = fieldErrors[field as string];
+      
+      // Update only this field's error state
+      setErrors(prevErrors => {
+        const newErrors = { ...prevErrors };
+        if (fieldError) {
+          newErrors[field as string] = fieldError;
+        } else {
+          delete newErrors[field as string];
+        }
         return newErrors;
       });
-    }
-  }, [errors]);
+      
+      return newValues;
+    });
+  }, [schema]);
 
   const validate = useCallback(() => {
     const result = validateForm(schema, values);
@@ -63,6 +74,14 @@ export function useForm<T extends Record<string, string>>({
     setIsSubmitting(false);
   }, [initialValues]);
 
+  const setFieldError = useCallback((field: string, message: string) => {
+    setErrors(prev => ({ ...prev, [field]: message }));
+  }, []);
+
+  const setErrors_ = useCallback((newErrors: Record<string, string>) => {
+    setErrors(newErrors);
+  }, []);
+
   const getFieldProps = useCallback((field: keyof T) => ({
     value: values[field] || '',
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => setValue(field, e.target.value),
@@ -76,6 +95,8 @@ export function useForm<T extends Record<string, string>>({
     setValue,
     handleSubmit,
     reset,
+    setFieldError,
+    setErrors: setErrors_,
     getFieldProps,
     hasErrors: Object.keys(errors).length > 0,
     isValid: Object.keys(errors).length === 0,

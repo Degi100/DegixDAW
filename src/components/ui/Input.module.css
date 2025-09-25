@@ -57,3 +57,85 @@
   font-size: var(--font-size-sm);
   color: var(--gray-500);
 }
+
+.required {
+  color: var(--error-color);
+  font-weight: bold;
+}
+
+/* Password Toggle */
+.inputWrapper {
+  position: relative;
+}
+
+.inputWithIndicator {
+  padding-right: 3rem;
+}
+
+.inputWithMultipleIcons {
+  padding-right: 5rem; /* Mehr Platz für mehrere Icons */
+}
+
+.passwordToggle {
+  position: absolute;
+  right: var(--spacing-sm);
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+}
+
+.passwordToggle:hover {
+  background-color: var(--gray-100);
+}
+
+.passwordToggle:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Password toggle when other indicators are present */
+.passwordToggleWithOthers {
+  right: 2.5rem; /* Verschoben nach links */
+}
+
+/* Required indicator for empty fields */
+.requiredIndicator {
+  position: absolute;
+  right: var(--spacing-sm);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--error-color);
+  font-size: 1.2rem;
+  font-weight: bold;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Checkmark for completed fields */
+.checkmark {
+  position: absolute;
+  right: var(--spacing-sm);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--success-color);
+  font-size: 1.2rem;
+  font-weight: bold;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Indicators when password toggle is present */
+.indicatorWithToggle {
+  right: var(--spacing-sm); /* Bleiben ganz rechts */
+}

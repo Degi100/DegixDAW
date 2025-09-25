@@ -4,33 +4,24 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useForm } from '../hooks/useForm';
 import { useToast } from '../hooks/useToast';
-import { z } from 'zod';
-
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import UsernameSuggestions from '../components/ui/UsernameSuggestions';
 import { ToastContainer } from '../components/ui/Toast';
 import { LoadingOverlay, Spinner } from '../components/ui/Loading';
 import Container from '../components/layout/Container';
+import { userSettingsWithPasswordSchema, validateUserSettingsAsync } from '../lib/validation';
 import styles from './UserSettings.module.css';
-
-
-
-const settingsSchema = z.object({
-  fullName: z.string(),
-  username: z.string(),
-  currentPassword: z.string(),
-  newPassword: z.string(),
-  confirmPassword: z.string(),
-});
 
 export default function UserSettings() {
   const navigate = useNavigate();
   const { user, loading, updateProfile, updatePassword, signOut } = useAuth();
   const { success, error: showError, toasts, removeToast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showUsernameSuggestions, setShowUsernameSuggestions] = useState(false);
 
   const form = useForm({
-    schema: settingsSchema,
+    schema: userSettingsWithPasswordSchema,
     initialValues: {
       fullName: user?.user_metadata?.full_name || '',
       username: user?.user_metadata?.username || '',
@@ -88,6 +79,40 @@ export default function UserSettings() {
     }
   }, [user, loading, navigate]);
 
+  // Debounced validation für aktuelles Passwort
+  useEffect(() => {
+    if (!form.values.currentPassword || form.values.currentPassword.length < 3) {
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const result = await validateUserSettingsAsync({
+          ...form.values,
+          fullName: form.values.fullName,
+          username: form.values.username,
+          currentPassword: form.values.currentPassword,
+          newPassword: form.values.newPassword,
+          confirmPassword: form.values.confirmPassword
+        });
+
+        const errors = result.errors as Record<string, string>;
+        if (!result.success && errors.currentPassword) {
+          form.setFieldError('currentPassword', errors.currentPassword);
+        } else if (result.success) {
+          // Lössche Fehler wenn Passwort korrekt ist
+          if (form.errors.currentPassword) {
+            form.setFieldError('currentPassword', '');
+          }
+        }
+      } catch (error) {
+        console.error('Fehler bei Passwort-Validierung:', error);
+      }
+    }, 1000); // 1 Sekunde Debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [form.values.currentPassword, form]);
+
   // Initialize form values when user data loads
   useEffect(() => {
     if (user) {
@@ -106,6 +131,30 @@ export default function UserSettings() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]); // Explicitly ignoring form dependency to prevent infinite loop
+
+  // Show username suggestions when user starts editing username
+  useEffect(() => {
+    const currentUsername = user?.user_metadata?.username || '';
+    const newUsername = form.values.username;
+    const fullName = form.values.fullName;
+    
+    // Show suggestions if:
+    // 1. Username is being changed and has at least 2 characters, OR
+    // 2. Full name has at least 2 characters
+    const hasUsernameChange = newUsername && newUsername !== currentUsername && newUsername.length >= 2;
+    const hasFullName = fullName && fullName.length >= 2;
+    
+    if (hasUsernameChange || hasFullName) {
+      setShowUsernameSuggestions(true);
+    } else {
+      setShowUsernameSuggestions(false);
+    }
+  }, [form.values.username, form.values.fullName, user]);
+
+  const handleUsernameSelect = (username: string) => {
+    form.setValue('username', username);
+    setShowUsernameSuggestions(false);
+  };
 
   const handleDeleteAccount = async () => {
     const confirmed = window.confirm(
@@ -198,7 +247,8 @@ export default function UserSettings() {
                     {...form.getFieldProps('fullName')}
                     type="text"
                     placeholder="Vollständiger Name"
-                    label="Vollständiger Name"
+                    required
+                    showCheckmark
                     helpText="Wird als Anzeigename verwendet"
                   />
                 </div>
@@ -208,9 +258,18 @@ export default function UserSettings() {
                     {...form.getFieldProps('username')}
                     type="text"
                     placeholder="Benutzername"
-                    label="Benutzername"
+                    required
+                    showCheckmark
                     helpText="Eindeutiger Benutzername für Ihr Profil"
                   />
+                  {showUsernameSuggestions && (
+                    <UsernameSuggestions
+                      fullName={form.values.fullName}
+                      currentUsername={form.values.username}
+                      onSelectUsername={handleUsernameSelect}
+                      show={showUsernameSuggestions}
+                    />
+                  )}
                 </div>
 
                 <div className={styles.emailField}>
@@ -251,7 +310,9 @@ export default function UserSettings() {
                     {...form.getFieldProps('currentPassword')}
                     type="password"
                     placeholder="Aktuelles Passwort"
-                    label="Aktuelles Passwort"
+                    showPasswordToggle
+                    showCheckmark
+                    conditionalRequired={!!hasPasswordFields}
                   />
                 </div>
 
@@ -260,8 +321,10 @@ export default function UserSettings() {
                     {...form.getFieldProps('newPassword')}
                     type="password"
                     placeholder="Neues Passwort"
-                    label="Neues Passwort"
                     helpText="Mindestens 6 Zeichen, mit Groß-/Kleinbuchstaben und Zahl"
+                    showPasswordToggle
+                    showCheckmark
+                    conditionalRequired={!!hasPasswordFields}
                   />
                 </div>
 
@@ -270,7 +333,9 @@ export default function UserSettings() {
                     {...form.getFieldProps('confirmPassword')}
                     type="password"
                     placeholder="Neues Passwort bestätigen"
-                    label="Passwort bestätigen"
+                    showPasswordToggle
+                    showCheckmark
+                    conditionalRequired={!!hasPasswordFields}
                   />
                 </div>
 

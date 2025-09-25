@@ -1,12 +1,13 @@
 // src/pages/Login.advanced.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useForm } from '../hooks/useForm';
 import { useToast } from '../hooks/useToast';
-import { signInSchema, signUpSchema } from '../lib/validation';
+import { signInSchema, signUpSchema, validateSignUpAsync } from '../lib/validation';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
+import UsernameSuggestions from '../components/ui/UsernameSuggestions';
 import { ToastContainer } from '../components/ui/Toast';
 import { Spinner } from '../components/ui/Loading';
 import styles from './Login.module.css';
@@ -14,6 +15,8 @@ import styles from './Login.module.css';
 export default function Login() {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
+  const [showUsernameSuggestions, setShowUsernameSuggestions] = useState(false);
+
   const { signInWithEmail, signUpWithEmail, signInWithOAuth } = useAuth();
   const { success, error: showError } = useToast();
 
@@ -44,6 +47,15 @@ export default function Login() {
       username: '' 
     },
     onSubmit: async (data) => {
+      // Erst async Validierung
+      const validationResult = await validateSignUpAsync(data);
+      
+      if (!validationResult.success) {
+        // Zeige Validierungsfehler über setErrors
+        signupForm.setErrors(validationResult.errors);
+        return;
+      }
+      
       const result = await signUpWithEmail({
         email: data.email,
         password: data.password,
@@ -62,6 +74,24 @@ export default function Login() {
   });
 
   const currentForm = isLogin ? loginForm : signupForm;
+
+  // Zeige Username-Suggestions wenn Name oder Username eingegeben wird
+  useEffect(() => {
+    if (!isLogin) {
+      const hasFullName = signupForm.values.fullName && signupForm.values.fullName.trim().length >= 2;
+      const hasUsername = signupForm.values.username && signupForm.values.username.trim().length >= 2;
+      
+      if (hasFullName || hasUsername) {
+        setShowUsernameSuggestions(true);
+      } else {
+        setShowUsernameSuggestions(false);
+      }
+    } else {
+      setShowUsernameSuggestions(false);
+    }
+  }, [isLogin, signupForm.values.fullName, signupForm.values.username]);
+
+
 
   const handleOAuthLogin = async (provider: 'google' | 'discord') => {
     const result = await signInWithOAuth(provider);
@@ -96,7 +126,8 @@ export default function Login() {
                   {...signupForm.getFieldProps('fullName')}
                   type="text"
                   placeholder="Vollständiger Name"
-                  helpText="Optional - wird für Anzeigename verwendet"
+                  required
+                  showCheckmark
                 />
                 
                 <Input
@@ -104,15 +135,22 @@ export default function Login() {
                   type="text"
                   placeholder="Benutzername"
                   helpText="Optional - wird automatisch generiert falls leer"
+                  showCheckmark
+                />
+                
+                <UsernameSuggestions
+                  fullName={signupForm.values.fullName}
+                  currentUsername={signupForm.values.username || ''}
+                  onSelectUsername={(username) => signupForm.setValue('username', username)}
+                  show={showUsernameSuggestions}
                 />
               </>
-            )}
-            
-            <Input
+            )}            <Input
               {...currentForm.getFieldProps('email')}
               type="email"
               placeholder="Email-Adresse"
               required
+              showCheckmark
             />
             
             <Input
@@ -120,6 +158,8 @@ export default function Login() {
               type="password"
               placeholder="Passwort"
               required
+              showPasswordToggle
+              showCheckmark
               helpText={!isLogin ? "Mindestens 6 Zeichen, mit Groß-/Kleinbuchstaben und Zahl" : undefined}
             />
 
@@ -129,6 +169,8 @@ export default function Login() {
                 type="password"
                 placeholder="Passwort bestätigen"
                 required
+                showPasswordToggle
+                showCheckmark
               />
             )}
             
