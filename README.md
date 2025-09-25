@@ -1,67 +1,73 @@
-# 🎧 DegixDAW
+# React + TypeScript + Vite
 
-> **D**AW-integrated, **E**ffortless, **G**lobal, **I**nstant e**X**change  
-> Eine Web-DAW, um spontane musikalische Ideen aufzunehmen – und sie **direkt in Cubase** (und andere DAWs) zu laden.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-![DegixDAW Concept](https://via.placeholder.com/800x400?text=DegixDAW+Concept+Image) <!-- später ersetzen -->
+Currently, two official plugins are available:
 
----
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## 🎯 Vision
+## React Compiler
 
-Musiker:innen haben oft **blitzartige Ideen** – am Bahnhof, im Park, im Traum.  
-Aber ohne Studio gehen sie verloren.
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-**DegixDAW schließt diese Lücke**:
-1. Öffne die Web-App → nimm Audio/MIDI auf
-2. Speichere in der Cloud
-3. Öffne dein VST-Plugin in **Cubase** → lade die Idee mit einem Klick
-4. Produziere weiter – **ohne Copy-Paste, ohne Dateimanager**
+## Expanding the ESLint configuration
 
----
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-## 🛠️ Tech-Stack
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-| Komponente | Technologie |
-|-----------|------------|
-| **Frontend** | React + TypeScript + Vite |
-| **Styling** | Tailwind CSS (optional später) |
-| **Backend** | Supabase (Auth, PostgreSQL, Storage) |
-| **Hosting** | Netlify |
-| **VST-Plugin** | JUCE (C++) – geplant für Phase 2 |
-| **Auth** | Google, Discord, GitHub (OAuth) |
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
 
----
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
 
-## ✅ Entwicklungs-Checkliste
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-### 🌱 Phase 1: Web-App MVP
-- [x] **Projektstruktur** (`degixdaw/` mit `web-app/`)
-- [x] **GitHub-Repo** erstellt
-- [x] **Supabase-Projekt** eingerichtet
-- [x] **Login mit Google & Discord** (Woche 1)
-- [ ] Audio-Aufnahme (MediaRecorder)
-- [ ] Hochladen in Supabase Storage
-- [ ] MIDI-Klaviatur + Export
-- [ ] Ideen-Liste (eigene + öffentliche)
-- [ ] Admin-Bereich (nur für @degering)
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
-### 🧱 Phase 2: VST-Plugin
-- [ ] JUCE-Projekt einrichten
-- [ ] HTTPS-Client für Supabase-API
-- [ ] MIDI/Audio herunterladen + in Cubase laden
-- [ ] UI mit Ideen-Liste
-
-### 🌐 Phase 3: Kollaboration
-- [ ] Öffentliche Ideen teilen
-- [ ] Remix-Funktion
-- [ ] Audio-to-MIDI mit KI (Basic Pitch)
-
----
-
-## 🚀 Lokal starten
-
-```bash
-cd web-app
-npm install
-npm run dev
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
