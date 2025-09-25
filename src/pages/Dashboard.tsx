@@ -38,23 +38,38 @@ export default function Dashboard() {
         paddingBottom: '1rem'
       }}>
         <h1>
-          👋 {user ? `Willkommen, ${user.email}!` : 'Willkommen bei DegixDAW!'}
+          👋 {user ? `Willkommen, ${user.user_metadata?.display_name || user.user_metadata?.username || user.email}!` : 'Willkommen bei DegixDAW!'}
         </h1>
         <div>
           {user ? (
-            <button 
-              onClick={handleLogout}
-              style={{ 
-                padding: '0.5rem 1rem', 
-                backgroundColor: '#EF4444', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '4px', 
-                cursor: 'pointer'
-              }}
-            >
-              Abmelden
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button 
+                onClick={() => navigate('/settings')}
+                style={{ 
+                  padding: '0.5rem 1rem', 
+                  backgroundColor: '#6B7280', 
+                  color: 'white', 
+                  border: 'none', 
+                  borderRadius: '4px', 
+                  cursor: 'pointer'
+                }}
+              >
+                ⚙️ Einstellungen
+              </button>
+              <button 
+                onClick={handleLogout}
+                style={{ 
+                  padding: '0.5rem 1rem', 
+                  backgroundColor: '#EF4444', 
+                  color: 'white', 
+                  border: 'none', 
+                  borderRadius: '4px', 
+                  cursor: 'pointer'
+                }}
+              >
+                Abmelden
+              </button>
+            </div>
           ) : (
             <button 
               onClick={() => navigate('/login')}

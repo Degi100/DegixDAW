@@ -1,30 +1,39 @@
-// src/pages/Login.tsx
+// src/pages/Login.refactored.tsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
+import styles from './Login.module.css';
 
 export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLogin, setIsLogin] = useState(true); // true = Login, false = Register
+  const [username, setUsername] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = (provider: 'google' | 'discord') => async () => {
+  const generateUsername = (fullName: string, email: string): string => {
+    if (fullName.trim()) {
+      return fullName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    }
+    const emailName = email.split('@')[0];
+    return emailName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  };
+
+  const handleOAuthLogin = (provider: 'google' | 'discord') => async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: 'http://localhost:5173/auth/callback',
       },
     });
     if (error) {
       console.error(`${provider} Login Fehler:`, error);
       alert(`Fehler beim ${provider}-Login`);
     }
-  };
-
-  const handleContinueWithoutLogin = () => {
-    navigate('/');
   };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
@@ -37,7 +46,6 @@ export default function Login() {
     setLoading(true);
     try {
       if (isLogin) {
-        // Anmelden
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -45,12 +53,18 @@ export default function Login() {
         if (error) throw error;
         navigate('/');
       } else {
-        // Registrieren
+        const finalUsername = username.trim() || generateUsername(fullName, email);
+        
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`
+            emailRedirectTo: 'http://localhost:5173/auth/callback',
+            data: {
+              username: finalUsername,
+              full_name: fullName.trim() || null,
+              display_name: fullName.trim() || finalUsername
+            }
           }
         });
         if (error) throw error;
@@ -72,163 +86,115 @@ export default function Login() {
     }
   };
 
+  const handleContinueWithoutLogin = () => {
+    navigate('/');
+  };
+
   return (
-    <div style={{ 
-      padding: '2rem', 
-      textAlign: 'center',
-      fontFamily: 'sans-serif',
-      maxWidth: '600px',
-      margin: '0 auto'
-    }}>
-      <h1 style={{ color: '#4F46E5' }}>🎧 DegixDAW</h1>
-      <p>
+    <div className={styles.container}>
+      <h1 className={styles.title}>🎧 DegixDAW</h1>
+      <p className={styles.subtitle}>
         <strong>D</strong>AW-integrated, <strong>E</strong>ffortless, <strong>G</strong>lobal, <strong>I</strong>nstant e<strong>X</strong>change
       </p>
       
-      {/* Email/Passwort Login */}
-      <div style={{ 
-        marginTop: '2rem', 
-        padding: '2rem', 
-        border: '1px solid #e5e5e5', 
-        borderRadius: '8px',
-        backgroundColor: '#fafafa' 
-      }}>
-        <h3 style={{ marginTop: 0, textAlign: 'center' }}>
+      {/* Email/Password Form */}
+      <div className={styles.formSection}>
+        <h3 className={styles.formTitle}>
           {isLogin ? 'Anmelden' : 'Registrieren'} mit Email
         </h3>
         
-        <form onSubmit={handleEmailAuth} style={{ maxWidth: '300px', margin: '0 auto' }}>
-          <input
+        <form onSubmit={handleEmailAuth} className={styles.form}>
+          {!isLogin && (
+            <>
+              <Input
+                type="text"
+                placeholder="Vollständiger Name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+              />
+              
+              <Input
+                type="text"
+                placeholder="Benutzername (optional - wird automatisch erstellt)"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                helpText="Falls leer, wird automatisch aus Name oder Email generiert"
+              />
+            </>
+          )}
+          
+          <Input
             type="email"
             placeholder="Email-Adresse"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              margin: '0.5rem 0',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              fontSize: '1rem',
-              boxSizing: 'border-box'
-            }}
             required
           />
           
-          <input
+          <Input
             type="password"
             placeholder="Passwort"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              margin: '0.5rem 0',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              fontSize: '1rem',
-              boxSizing: 'border-box'
-            }}
             required
           />
           
-          <button
+          <Button
             type="submit"
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              margin: '0.5rem 0',
-              backgroundColor: isLogin ? '#10B981' : '#8B5CF6',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              fontSize: '1rem',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.6 : 1
-            }}
+            variant={isLogin ? "success" : "primary"}
+            fullWidth
           >
             {loading ? 'Lädt...' : (isLogin ? 'Anmelden' : 'Registrieren')}
-          </button>
+          </Button>
         </form>
         
-        <p style={{ textAlign: 'center', marginTop: '1rem' }}>
+        <div className={styles.toggleText}>
           {isLogin ? 'Noch kein Account?' : 'Bereits ein Account?'}{' '}
           <button
             onClick={() => setIsLogin(!isLogin)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#4F46E5',
-              textDecoration: 'underline',
-              cursor: 'pointer',
-              fontSize: '1rem'
-            }}
+            className={styles.toggleButton}
+            type="button"
           >
             {isLogin ? 'Hier registrieren' : 'Hier anmelden'}
-          </button>
-        </p>
-      </div>
-
-      {/* OAuth Login */}
-      <div style={{ marginTop: '2rem' }}>
-        <p style={{ textAlign: 'center', color: '#666', margin: '1rem 0' }}>
-          Oder schnell anmelden mit:
-        </p>
-        
-        <div style={{ textAlign: 'center' }}>
-          <button 
-            onClick={handleLogin('google')}
-            style={{ 
-              padding: '0.75rem 1.5rem', 
-              margin: '0.5rem', 
-              backgroundColor: '#4285F4', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '6px', 
-              cursor: 'pointer',
-              fontSize: '1rem'
-            }}
-          >
-            Mit Google anmelden
-          </button>
-          
-          <button 
-            onClick={handleLogin('discord')}
-            style={{ 
-              padding: '0.75rem 1.5rem', 
-              margin: '0.5rem', 
-              backgroundColor: '#5865F2', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '6px', 
-              cursor: 'pointer',
-              fontSize: '1rem'
-            }}
-          >
-            Mit Discord anmelden
           </button>
         </div>
       </div>
 
-      <div style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid #e5e5e5' }}>
-        <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1rem' }}>
+      {/* OAuth Login */}
+      <div className={styles.oauthSection}>
+        <p className={styles.oauthTitle}>
+          Oder schnell anmelden mit:
+        </p>
+        
+        <div className={styles.buttonGroup}>
+          <Button 
+            onClick={handleOAuthLogin('google')}
+            variant="google"
+          >
+            Mit Google anmelden
+          </Button>
+          
+          <Button 
+            onClick={handleOAuthLogin('discord')}
+            variant="discord"
+          >
+            Mit Discord anmelden
+          </Button>
+        </div>
+      </div>
+
+      {/* Continue without login */}
+      <div className={styles.continueSection}>
+        <p className={styles.continueText}>
           Oder erkunden Sie die App ohne Anmeldung:
         </p>
-        <button 
+        <Button 
           onClick={handleContinueWithoutLogin}
-          style={{ 
-            padding: '0.75rem 1.5rem', 
-            backgroundColor: 'transparent', 
-            color: '#4F46E5', 
-            border: '2px solid #4F46E5', 
-            borderRadius: '6px', 
-            cursor: 'pointer',
-            fontSize: '1rem'
-          }}
+          variant="outline"
         >
           Weiter ohne Login
-        </button>
+        </Button>
       </div>
     </div>
   );
