@@ -1,73 +1,103 @@
-# React + TypeScript + Vite
+# 🎧 DegixDAW Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**D**AW-integrated, **E**ffortless, **G**lobal, **I**nstant e**X**change - Professional React web application for music collaboration.
 
-Currently, two official plugins are available:
+## ✨ Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 🎵 **Professional DAW Integration** - Seamless workflow with Digital Audio Workstations
+- 🌍 **Global Collaboration** - Real-time project sharing with musicians worldwide  
+- ⚡ **Modern Authentication** - Email/Password + OAuth (Google, Discord)
+- 🎨 **Professional UI** - CSS Modules with consistent design system
+- 📱 **Responsive Design** - Mobile-optimized with smooth animations
+- 🔔 **Smart Notifications** - Toast system with intelligent welcome messages
+- ⚙️ **User Management** - Complete profile system with avatar generation
 
-## React Compiler
+## 🏗️ Architecture
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### **Modern React Stack**
+- **React 18** with TypeScript
+- **Vite** for lightning-fast development
+- **React Router** for client-side routing
+- **Supabase** for authentication & backend
 
-## Expanding the ESLint configuration
+### **Professional Patterns**
+- **CSS Modules** - Scoped styling with design tokens
+- **Custom Hooks** - Reusable logic (useAuth, useForm, useToast)
+- **Zod Validation** - Type-safe form schemas
+- **Component Library** - Reusable UI components
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### **Project Structure**
+```
+src/
+├── components/ui/       # Reusable UI components
+├── hooks/              # Custom React hooks
+├── lib/                # Utilities & validation
+├── pages/              # Route components
+└── styles/             # Design system & CSS modules
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🚀 Quick Start
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Prerequisites
+- Node.js 20+ 
+- npm or yarn
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Installation
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production  
+npm run build
 ```
+
+### Environment Setup
+Create `.env.local`:
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_key
+```
+
+## 🎯 Key Components
+
+### **Authentication System**
+- `Login.advanced.tsx` - Modern login/signup with OAuth
+- `useAuth.ts` - Centralized auth state management
+- Smart session handling with welcome messages
+
+### **Dashboard & Navigation**  
+- `Dashboard.advanced.tsx` - Feature grid with user awareness
+- `UserSettings.advanced.tsx` - Profile management with avatars
+- Intelligent navigation with loading states
+
+### **UI Component Library**
+- `Button.tsx` - Multi-variant button system
+- `Input.tsx` - Form inputs with validation display  
+- `Toast.tsx` - Notification system with animations
+- `Loading.tsx` - Skeleton screens & spinners
+
+## 🎨 Design System
+
+- **CSS Custom Properties** - Consistent theming
+- **Responsive Grid** - Mobile-first approach
+- **Smooth Animations** - Professional transitions
+- **Accessibility** - WCAG compliant components
+
+## 🔧 Development
+
+### **Available Scripts**
+```bash
+npm run dev          # Development server
+npm run build        # Production build
+npm run preview      # Preview production build
+npm run lint         # ESLint check
+```
+
+### **Code Quality**
+- TypeScript strict mode
+- ESLint + Prettier configuration
+- CSS Modules for scoped styling
+- Zod for runtime validation
