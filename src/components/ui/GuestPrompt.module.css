@@ -1,0 +1,76 @@
+/* src/components/ui/GuestPrompt.module.css */
+
+.guestSection {
+  margin: 2rem 0;
+}
+
+.guestCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  text-align: center;
+}
+
+.guestTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--color-text-primary);
+}
+
+.guestDescription {
+  color: var(--color-text-secondary);
+  margin-bottom: 2rem;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.guestPromptSection {
+  margin: 3rem 0;
+}
+
+.guestPromptCard {
+  background: linear-gradient(135deg, var(--color-success-light), var(--color-success));
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  text-align: center;
+  color: white;
+}
+
+.guestPromptTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  color: white;
+}
+
+.benefitsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  text-align: left;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.benefit {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: white;
+}
+
+.benefitIcon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
