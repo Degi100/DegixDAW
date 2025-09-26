@@ -9,32 +9,65 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Überprüfe URL-Parameter für Email-Bestätigung
+        console.log('AuthCallback: Processing URL:', window.location.href);
+        // Check URL hash and search params for auth data
         const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('token');
-        const type = urlParams.get('type');
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        
+        // Get token from either source
+        const token = urlParams.get('token') || hashParams.get('access_token');
+        const type = urlParams.get('type') || 'signup';
+        const error_code = urlParams.get('error_code') || hashParams.get('error_code');
+        const error_description = urlParams.get('error_description') || hashParams.get('error_description');
+        
+        // Check for errors first
+        if (error_code === 'otp_expired' || error_description?.includes('expired')) {
+          console.log('Email link expired, redirecting to resend page');
+          navigate('/auth/resend-confirmation');
+          return;
+        }
         
         if (token && type) {
-          // Email-Bestätigung verarbeiten
-          const { error } = await supabase.auth.verifyOtp({
-            token_hash: token,
-            type: type as 'signup' | 'recovery' | 'invite' | 'magiclink'
-          });
+          // Try the modern way first
+          const { error } = await supabase.auth.exchangeCodeForSession(window.location.search);
+          
+          if (error) {
+            // Fallback to old method
+            const { error: otpError } = await supabase.auth.verifyOtp({
+              token_hash: token,
+              type: type as 'signup' | 'recovery' | 'invite' | 'magiclink'
+            });
+            
+            if (otpError) {
+              throw otpError;
+            }
+          }
           
           if (error) {
             console.error('Email-Bestätigung fehlgeschlagen:', error);
             const errorMsg = error.message || '';
+            const errorCode = error.message || '';
             
+            // Check for specific error codes and messages
             if (errorMsg.includes('429') || errorMsg.includes('rate')) {
               alert('⏰ Rate Limit erreicht. Bitte warten Sie einige Minuten.');
               navigate('/login');
-            } else if (errorMsg.includes('expired') || errorMsg.includes('invalid')) {
-              // Redirect to resend confirmation page
+              return;
+            } 
+            
+            if (errorMsg.includes('expired') || 
+                errorMsg.includes('invalid') || 
+                errorCode.includes('otp_expired') ||
+                errorMsg.includes('Email link is invalid')) {
+              // Immediately redirect to resend confirmation page
+              console.log('Email link expired, redirecting to resend page');
               navigate('/auth/resend-confirmation');
-            } else {
-              alert('Email-Bestätigung fehlgeschlagen. Link ist möglicherweise abgelaufen.');
-              navigate('/auth/resend-confirmation');
+              return;
             }
+            
+            // Fallback for any other email verification errors
+            console.log('Other email verification error, redirecting to resend page');
+            navigate('/auth/resend-confirmation');
             return;
           }
           
