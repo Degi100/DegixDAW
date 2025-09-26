@@ -2,9 +2,9 @@
 import { useEffect } from 'react';
 import { useForm } from '../../hooks/useForm';
 import { validateUserSettingsAsync, userSettingsWithPasswordSchema } from '../../lib/validation';
-import Input from './Input';
-import Button from './Button';
-import { Spinner } from './Loading';
+import Input from '../ui/Input';
+import Button from '../ui/Button';
+import { Spinner } from '../ui/Loading';
 import styles from './PasswordChanger.module.css';
 
 interface PasswordChangerProps {

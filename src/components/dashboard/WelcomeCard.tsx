@@ -1,6 +1,6 @@
 // src/components/ui/WelcomeCard.tsx
 import type { User } from '@supabase/supabase-js';
-import Button from './Button';
+import Button from '../ui/Button';
 import styles from './WelcomeCard.module.css';
 
 interface WelcomeCardProps {

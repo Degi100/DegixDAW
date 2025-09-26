@@ -1,5 +1,5 @@
 // src/components/ui/OAuthSection.tsx
-import Button from './Button';
+import Button from '../ui/Button';
 import styles from './OAuthSection.module.css';
 
 interface OAuthSectionProps {

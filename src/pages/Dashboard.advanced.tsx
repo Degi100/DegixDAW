@@ -6,10 +6,10 @@ import { useWelcomeMessage } from '../hooks/useWelcomeMessage';
 import { ToastContainer } from '../components/ui/Toast';
 import { LoadingOverlay } from '../components/ui/Loading';
 import Container from '../components/layout/Container';
-import WelcomeCard from '../components/ui/WelcomeCard';
-import FeatureGrid from '../components/ui/FeatureGrid';
-import ProjectsSection from '../components/ui/ProjectsSection';
-import GuestPrompt from '../components/ui/GuestPrompt';
+import WelcomeCard from '../components/dashboard/WelcomeCard';
+import FeatureGrid from '../components/dashboard/FeatureGrid';
+import ProjectsSection from '../components/dashboard/ProjectsSection';
+import GuestPrompt from '../components/dashboard/GuestPrompt';
 import styles from './Dashboard.module.css';
 
 export default function Dashboard() {

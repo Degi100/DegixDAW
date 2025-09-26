@@ -1,5 +1,5 @@
 // src/components/ui/ProjectsSection.tsx
-import Button from './Button';
+import Button from '../ui/Button';
 import styles from './ProjectsSection.module.css';
 
 const PROJECT_CARDS = [

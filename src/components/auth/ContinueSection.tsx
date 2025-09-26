@@ -1,5 +1,5 @@
 // src/components/ui/ContinueSection.tsx
-import Button from './Button';
+import Button from '../ui/Button';
 import styles from './ContinueSection.module.css';
 
 interface ContinueSectionProps {

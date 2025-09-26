@@ -2,10 +2,10 @@
 import { useState, useEffect } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { useForm } from '../../hooks/useForm';
-import Input from './Input';
-import UsernameSuggestions from './UsernameSuggestions';
-import Button from './Button';
-import { Spinner } from './Loading';
+import Input from '../ui/Input';
+import UsernameSuggestions from '../ui/UsernameSuggestions';
+import Button from '../ui/Button';
+import { Spinner } from '../ui/Loading';
 import { userSettingsWithPasswordSchema } from '../../lib/validation';
 import styles from './ProfileEditor.module.css';
 

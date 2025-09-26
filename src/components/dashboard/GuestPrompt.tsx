@@ -1,5 +1,5 @@
 // src/components/ui/GuestPrompt.tsx
-import Button from './Button';
+import Button from '../ui/Button';
 import styles from './GuestPrompt.module.css';
 
 interface GuestPromptProps {

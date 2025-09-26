@@ -2,10 +2,10 @@
 import { useForm } from '../../hooks/useForm';
 import { useFormToggle, getToggleLabels, LOGIN_SIGNUP_LABELS } from '../../hooks/useFormToggle';
 import { signInSchema, signUpSchema, validateSignUpAsync } from '../../lib/validation';
-import Button from './Button';
-import Input from './Input';
-import UsernameSuggestions from './UsernameSuggestions';
-import { Spinner } from './Loading';
+import Button from '../ui/Button';
+import Input from '../ui/Input';
+import UsernameSuggestions from '../ui/UsernameSuggestions';
+import { Spinner } from '../ui/Loading';
 import styles from './AuthForm.module.css';
 
 interface AuthFormProps {

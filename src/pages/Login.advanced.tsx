@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
-import AuthForm from '../components/ui/AuthForm';
-import OAuthSection from '../components/ui/OAuthSection';
-import ContinueSection from '../components/ui/ContinueSection';
+import AuthForm from '../components/auth/AuthForm';
+import OAuthSection from '../components/auth/OAuthSection';
+import ContinueSection from '../components/auth/ContinueSection';
 import { ToastContainer } from '../components/ui/Toast';
 import styles from './Login.module.css';
 
