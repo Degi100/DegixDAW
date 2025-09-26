@@ -1,6 +1,5 @@
 // src/components/ui/ProjectsSection.tsx
 import Button from '../ui/Button';
-import styles from './ProjectsSection.module.css';
 
 const PROJECT_CARDS = [
   {
@@ -22,13 +21,13 @@ const PROJECT_CARDS = [
 
 export default function ProjectsSection() {
   return (
-    <section className={styles.userContentSection}>
-      <h3 className={styles.sectionTitle}>🎼 Meine Projekte</h3>
-      <div className={styles.contentGrid}>
+    <section className="content-section">
+      <h3 className="features-title">🎼 Meine Projekte</h3>
+      <div className="content-grid">
         {PROJECT_CARDS.map((card, index) => (
-          <div key={index} className={styles.contentCard}>
-            <h4>{card.title}</h4>
-            <p>{card.description}</p>
+          <div key={index} className="content-card">
+            <h4 className="content-title">{card.title}</h4>
+            <p className="content-description">{card.description}</p>
             <Button variant="secondary" size="small">
               {card.buttonText}
             </Button>

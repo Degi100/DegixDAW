@@ -1,6 +1,5 @@
 // src/components/layout/Container.tsx
 import type { ReactNode } from 'react';
-import styles from './Container.module.css';
 
 interface ContainerProps {
   children: ReactNode;
@@ -13,11 +12,10 @@ export default function Container({
   size = 'normal', 
   className = '' 
 }: ContainerProps) {
-  const containerClasses = [
-    styles.container,
-    size !== 'normal' && styles[size],
-    className
-  ].filter(Boolean).join(' ');
+  const sizeClass = size === 'narrow' ? 'container-narrow' : 
+                   size === 'wide' ? 'container-wide' : 'container';
+  
+  const containerClasses = [sizeClass, className].filter(Boolean).join(' ');
 
   return (
     <div className={containerClasses}>

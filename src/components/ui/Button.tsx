@@ -1,6 +1,5 @@
 // src/components/ui/Button.tsx
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
-import styles from './Button.module.css';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'success' | 'error' | 'outline' | 'google' | 'discord';
@@ -18,10 +17,10 @@ export default function Button({
   ...props 
 }: ButtonProps) {
   const buttonClasses = [
-    styles.button,
-    styles[variant],
-    size !== 'medium' && styles[size],
-    fullWidth && styles.fullWidth,
+    'btn',
+    `btn-${variant}`,
+    size !== 'medium' && `btn-${size}`,
+    fullWidth && 'btn-full-width',
     className
   ].filter(Boolean).join(' ');
 

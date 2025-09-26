@@ -1,6 +1,5 @@
 // src/components/ui/Toast.tsx
 import { useEffect } from 'react';
-import styles from './Toast.module.css';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -40,19 +39,19 @@ export function ToastItem({ id, type, title, message, duration = 5000, onClose, 
   };
 
   return (
-    <div className={`${styles.toast} ${styles[type]}`}>
-      <div className={styles.icon}>
+    <div className={`toast toast-${type}`}>
+      <div className="toast-icon">
         {toastIcons[type]}
       </div>
       
-      <div className={styles.content}>
-        {title && <div className={styles.title}>{title}</div>}
-        <div className={styles.message}>{message}</div>
+      <div className="toast-content">
+        {title && <div className="toast-title">{title}</div>}
+        <div className="toast-message">{message}</div>
       </div>
       
       <button 
         onClick={handleClose}
-        className={styles.closeButton}
+        className="toast-close"
         aria-label="Toast schließen"
       >
         ×
@@ -60,7 +59,7 @@ export function ToastItem({ id, type, title, message, duration = 5000, onClose, 
       
       {duration > 0 && (
         <div 
-          className={`${styles.progressBar} ${styles[type]}`}
+          className={`toast-progress toast-progress-${type}`}
           style={{ animationDuration: `${duration}ms` }}
         />
       )}
@@ -77,7 +76,7 @@ export function ToastContainer({ toasts, onRemove }: ToastContainerProps) {
   if (toasts.length === 0) return null;
 
   return (
-    <div className={styles.toastContainer}>
+    <div className="toast-container">
       {toasts.map((toast) => (
         <ToastItem 
           key={toast.id} 
