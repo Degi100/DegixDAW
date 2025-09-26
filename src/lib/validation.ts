@@ -98,27 +98,6 @@ export function validateEmailFormat(email: string): { valid: boolean; error?: st
   return { valid: true };
 }
 
-// User Settings Schema
-export const userSettingsSchema = z.object({
-  username: z
-    .string()
-    .min(3, 'Benutzername muss mindestens 3 Zeichen lang sein')
-    .max(20, 'Benutzername darf maximal 20 Zeichen lang sein')
-    .regex(/^[a-z0-9-_]+$/, 'Benutzername darf nur Kleinbuchstaben, Zahlen, Bindestriche und Unterstriche enthalten'),
-  fullName: z
-    .string()
-    .min(2, 'Name muss mindestens 2 Zeichen lang sein')
-    .max(50, 'Name darf maximal 50 Zeichen lang sein')
-    .optional()
-    .or(z.literal('')),
-  displayName: z
-    .string()
-    .min(2, 'Anzeigename muss mindestens 2 Zeichen lang sein')
-    .max(30, 'Anzeigename darf maximal 30 Zeichen lang sein')
-    .optional()
-    .or(z.literal('')),
-});
-
 // User Settings with Password Change Schema
 export const userSettingsWithPasswordSchema = z.object({
   fullName: z.string(),
@@ -186,9 +165,8 @@ export async function validateUserSettingsAsync(data: z.infer<typeof userSetting
 }
 
 // Type exports
-export type SignInData = z.infer<typeof signInSchema>;
-export type SignUpData = z.infer<typeof signUpSchema>;
-export type UserSettingsData = z.infer<typeof userSettingsSchema>;
+
+
 
 // Validation utilities
 export const validateForm = <T>(schema: z.ZodSchema<T>, data: unknown) => {
