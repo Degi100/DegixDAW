@@ -7,6 +7,7 @@ import AuthForm from '../components/auth/AuthForm';
 import OAuthSection from '../components/auth/OAuthSection';
 import ContinueSection from '../components/auth/ContinueSection';
 import { ToastContainer } from '../components/ui/Toast';
+import { APP_FULL_NAME } from '../lib/constants';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -82,7 +83,7 @@ export default function Login() {
   return (
     <>
       <div className="container-narrow page">
-        <h1 className="page-title">🎧 DegixDAW</h1>
+        <h1 className="page-title">{APP_FULL_NAME}</h1>
         <p className="page-subtitle">
           <strong>D</strong>AW-integrated, <strong>E</strong>ffortless, <strong>G</strong>lobal, <strong>I</strong>nstant e<strong>X</strong>change
         </p>

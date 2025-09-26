@@ -8,6 +8,7 @@ import { LoadingOverlay } from '../components/ui/Loading';
 import Container from '../components/layout/Container';
 import WelcomeCard from '../components/dashboard/WelcomeCard';
 import FeatureGrid from '../components/dashboard/FeatureGrid';
+import { APP_FULL_NAME } from '../lib/constants';
 import ProjectsSection from '../components/dashboard/ProjectsSection';
 import GuestPrompt from '../components/dashboard/GuestPrompt';
 
@@ -36,7 +37,7 @@ export default function Dashboard() {
       <Container>
         <div className="page">
           <header className="page-header">
-            <h1 className="page-title">🎧 DegixDAW Dashboard</h1>
+            <h1 className="page-title">{APP_FULL_NAME} Dashboard</h1>
             <p className="page-subtitle">
               <strong>D</strong>AW-integrated, <strong>E</strong>ffortless, <strong>G</strong>lobal, <strong>I</strong>nstant e<strong>X</strong>change
             </p>

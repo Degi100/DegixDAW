@@ -1,7 +1,7 @@
-// src/lib/validation.ts
+// src/lib/validation/authValidation.ts
 import { z } from 'zod';
 
-// Auth Schemas
+// Sign In Schema
 export const signInSchema = z.object({
   email: z
     .string()
@@ -13,6 +13,7 @@ export const signInSchema = z.object({
     .min(6, 'Passwort muss mindestens 6 Zeichen lang sein'),
 });
 
+// Sign Up Schema
 export const signUpSchema = z.object({
   email: z
     .string()
@@ -43,8 +44,12 @@ export const signUpSchema = z.object({
   path: ['confirmPassword'],
 });
 
+// Type exports for auth schemas
+export type SignInFormData = z.infer<typeof signInSchema>;
+export type SignUpFormData = z.infer<typeof signUpSchema>;
+
 // Async validation function für Registrierung
-export async function validateSignUpAsync(data: z.infer<typeof signUpSchema>) {
+export async function validateSignUpAsync(data: SignUpFormData) {
   // Erst die standard Validierung
   const result = signUpSchema.safeParse(data);
   if (!result.success) {
@@ -60,7 +65,7 @@ export async function validateSignUpAsync(data: z.infer<typeof signUpSchema>) {
   const asyncErrors: Record<string, string> = {};
   
   try {
-    const { checkUsernameExists } = await import('./supabase');
+    const { checkUsernameExists } = await import('../supabase');
     
     // Benutzername Prüfung (nur wenn angegeben)
     if (data.username && data.username.trim()) {
@@ -98,89 +103,37 @@ export function validateEmailFormat(email: string): { valid: boolean; error?: st
   return { valid: true };
 }
 
-// User Settings with Password Change Schema
-export const userSettingsWithPasswordSchema = z.object({
-  fullName: z.string(),
-  username: z.string(),
-  currentPassword: z.string(),
-  newPassword: z.string(),
-  confirmPassword: z.string(),
-}).refine((data) => {
-  // Only validate if password fields are filled
-  if (data.newPassword || data.confirmPassword) {
-    return data.newPassword === data.confirmPassword;
-  }
-  return true;
-}, {
-  message: 'Neue Passwörter stimmen nicht überein',
-  path: ['confirmPassword'],
-}).refine((data) => {
-  // Validate new password strength if provided
-  if (data.newPassword) {
-    return data.newPassword.length >= 6 && 
-           /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(data.newPassword);
-  }
-  return true;
-}, {
-  message: 'Neues Passwort muss mindestens 6 Zeichen lang sein und einen Großbuchstaben, Kleinbuchstaben und eine Zahl enthalten',
-  path: ['newPassword'],
-});
-
-// Async validation für UserSettings mit Passwort-Prüfung
-export async function validateUserSettingsAsync(data: z.infer<typeof userSettingsWithPasswordSchema>) {
-  // Erst die standard Validierung
-  const result = userSettingsWithPasswordSchema.safeParse(data);
-  if (!result.success) {
-    const errors: Record<string, string> = {};
-    result.error.issues.forEach((issue) => {
-      const path = issue.path.join('.');
-      errors[path] = issue.message;
-    });
-    return { success: false, errors };
-  }
-
-  // Dann die async Prüfungen
-  const asyncErrors: Record<string, string> = {};
-  
-  try {
-    // Aktuelles Passwort prüfen (nur wenn angegeben)
-    if (data.currentPassword && data.currentPassword.trim()) {
-      const { verifyCurrentPassword } = await import('./supabase');
-      const isCurrentPasswordValid = await verifyCurrentPassword(data.currentPassword);
-      if (!isCurrentPasswordValid) {
-        asyncErrors.currentPassword = 'Das aktuelle Passwort ist nicht korrekt';
-      }
-    }
-  } catch (error) {
-    console.error('Fehler bei der async Validierung:', error);
-    // Bei Fehlern bei der Prüfung, zeige Fehler
-    asyncErrors.currentPassword = 'Fehler beim Prüfen des aktuellen Passworts';
+// Password validation utilities
+export function validatePasswordStrength(password: string): { valid: boolean; error?: string } {
+  const passwordValidation = z
+    .string()
+    .min(6, 'Passwort muss mindestens 6 Zeichen lang sein')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Passwort muss mindestens einen Großbuchstaben, einen Kleinbuchstaben und eine Zahl enthalten')
+    .safeParse(password);
+    
+  if (!passwordValidation.success) {
+    return { valid: false, error: passwordValidation.error.issues[0].message };
   }
   
-  if (Object.keys(asyncErrors).length > 0) {
-    return { success: false, errors: asyncErrors };
-  }
-  
-  return { success: true, data: result.data, errors: {} };
+  return { valid: true };
 }
 
-// Type exports
-
-
-
-// Validation utilities
-export const validateForm = <T>(schema: z.ZodSchema<T>, data: unknown) => {
-  const result = schema.safeParse(data);
-  
-  if (result.success) {
-    return { success: true, data: result.data, errors: {} };
+// Username validation utilities
+export function validateUsernameFormat(username: string): { valid: boolean; error?: string } {
+  if (!username || username.trim() === '') {
+    return { valid: true }; // Username is optional
   }
   
-  const errors: Record<string, string> = {};
-  result.error.issues.forEach((issue) => {
-    const path = issue.path.join('.');
-    errors[path] = issue.message;
-  });
+  const usernameValidation = z
+    .string()
+    .min(3, 'Benutzername muss mindestens 3 Zeichen lang sein')
+    .max(20, 'Benutzername darf maximal 20 Zeichen lang sein')
+    .regex(/^[a-z0-9-_]+$/, 'Benutzername darf nur Kleinbuchstaben, Zahlen, Bindestriche und Unterstriche enthalten')
+    .safeParse(username);
+    
+  if (!usernameValidation.success) {
+    return { valid: false, error: usernameValidation.error.issues[0].message };
+  }
   
-  return { success: false, data: null, errors };
-};
+  return { valid: true };
+}

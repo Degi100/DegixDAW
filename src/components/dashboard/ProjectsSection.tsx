@@ -1,5 +1,6 @@
 // src/components/ui/ProjectsSection.tsx
 import Button from '../ui/Button';
+import { EMOJIS } from '../../lib/constants';
 
 const PROJECT_CARDS = [
   {
@@ -22,7 +23,7 @@ const PROJECT_CARDS = [
 export default function ProjectsSection() {
   return (
     <section className="content-section">
-      <h3 className="features-title">🎼 Meine Projekte</h3>
+      <h3 className="features-title">{EMOJIS.projects} Meine Projekte</h3>
       <div className="content-grid">
         {PROJECT_CARDS.map((card, index) => (
           <div key={index} className="content-card">
