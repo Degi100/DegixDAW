@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './styles/variables.css';
+import './styles/utilities.css';
 import Login from './pages/Login.advanced';
 import AuthCallback from './pages/AuthCallback';
 import Dashboard from './pages/Dashboard.advanced';

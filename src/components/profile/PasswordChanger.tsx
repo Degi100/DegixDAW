@@ -5,7 +5,6 @@ import { validateUserSettingsAsync, userSettingsWithPasswordSchema } from '../..
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import { Spinner } from '../ui/Loading';
-import styles from './PasswordChanger.module.css';
 
 interface PasswordChangerProps {
   onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>;
@@ -70,11 +69,11 @@ export default function PasswordChanger({ onChangePassword, isUpdating }: Passwo
   const hasPasswordFields = form.values.currentPassword || form.values.newPassword || form.values.confirmPassword;
 
   return (
-    <section className={styles.section}>
-      <h2 className={styles.sectionTitle}>🔐 Passwort ändern</h2>
+    <section className="card card-large">
+      <h2 className="section-title">🔐 Passwort ändern</h2>
       
-      <div className={styles.form}>
-        <div className={styles.formRow}>
+      <div className="form-grid">
+        <div className="form-row">
           <Input
             {...form.getFieldProps('currentPassword')}
             type="password"
@@ -85,7 +84,7 @@ export default function PasswordChanger({ onChangePassword, isUpdating }: Passwo
           />
         </div>
 
-        <div className={styles.formRow}>
+        <div className="form-row">
           <Input
             {...form.getFieldProps('newPassword')}
             type="password"
@@ -97,7 +96,7 @@ export default function PasswordChanger({ onChangePassword, isUpdating }: Passwo
           />
         </div>
 
-        <div className={styles.formRow}>
+        <div className="form-row">
           <Input
             {...form.getFieldProps('confirmPassword')}
             type="password"

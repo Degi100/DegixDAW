@@ -1,6 +1,5 @@
 // src/components/ui/ContinueSection.tsx
 import Button from '../ui/Button';
-import styles from './ContinueSection.module.css';
 
 interface ContinueSectionProps {
   onContinue: () => void;
@@ -8,8 +7,8 @@ interface ContinueSectionProps {
 
 export default function ContinueSection({ onContinue }: ContinueSectionProps) {
   return (
-    <div className={styles.continueSection}>
-      <p className={styles.continueText}>
+    <div className="card card-medium center">
+      <p className="text-secondary">
         Oder erkunden Sie die App ohne Anmeldung:
       </p>
       <Button 

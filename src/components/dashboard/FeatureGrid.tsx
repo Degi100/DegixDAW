@@ -1,5 +1,4 @@
 // src/components/ui/FeatureGrid.tsx
-import styles from './FeatureGrid.module.css';
 
 interface FeatureCardProps {
   icon: string;
@@ -9,10 +8,10 @@ interface FeatureCardProps {
 
 function FeatureCard({ icon, title, description }: FeatureCardProps) {
   return (
-    <div className={styles.featureCard}>
-      <div className={styles.featureIcon}>{icon}</div>
-      <h4>{title}</h4>
-      <p>{description}</p>
+    <div className="feature-card">
+      <div className="feature-icon">{icon}</div>
+      <h4 className="feature-title">{title}</h4>
+      <p className="feature-description">{description}</p>
     </div>
   );
 }
@@ -52,9 +51,9 @@ const FEATURES = [
 
 export default function FeatureGrid() {
   return (
-    <section className={styles.featuresSection}>
-      <h3 className={styles.featuresTitle}>🎵 Features</h3>
-      <div className={styles.featuresGrid}>
+    <section className="features-section">
+      <h3 className="features-title">🎵 Features</h3>
+      <div className="features-grid">
         {FEATURES.map((feature, index) => (
           <FeatureCard
             key={index}

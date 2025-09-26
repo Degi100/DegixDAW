@@ -1,6 +1,5 @@
 // src/components/ui/AccountActions.tsx
 import Button from '../ui/Button';
-import styles from './AccountActions.module.css';
 
 interface AccountActionsProps {
   onLogout: () => void;
@@ -9,15 +8,15 @@ interface AccountActionsProps {
 
 export default function AccountActions({ onLogout, onDeleteAccount }: AccountActionsProps) {
   return (
-    <section className={styles.section}>
-      <h2 className={styles.sectionTitle}>⚠️ Konto-Aktionen</h2>
+    <section className="card card-large">
+      <h2 className="section-title">⚠️ Konto-Aktionen</h2>
       
-      <div className={styles.dangerZone}>
-        <p className={styles.dangerDescription}>
+      <div className="danger-zone">
+        <p className="danger-description">
           Vorsichtsmaßnahmen für Ihr Konto
         </p>
         
-        <div className={styles.actionButtons}>
+        <div className="button-group">
           <Button
             onClick={onLogout}
             variant="outline"

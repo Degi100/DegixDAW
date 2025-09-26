@@ -1,6 +1,5 @@
 // src/components/ui/GuestPrompt.tsx
 import Button from '../ui/Button';
-import styles from './GuestPrompt.module.css';
 
 interface GuestPromptProps {
   onNavigateToLogin: () => void;
@@ -17,14 +16,14 @@ const BENEFITS = [
 export default function GuestPrompt({ onNavigateToLogin }: GuestPromptProps) {
   return (
     <>
-      <section className={styles.guestSection}>
-        <div className={styles.guestCard}>
-          <h2 className={styles.guestTitle}>Entdecken Sie DegixDAW</h2>
-          <p className={styles.guestDescription}>
+      <section className="guest-section">
+        <div className="card card-large center">
+          <h2 className="guest-title">Entdecken Sie DegixDAW</h2>
+          <p className="guest-description">
             Sie nutzen die App ohne Anmeldung. Melden Sie sich an, um alle Features zu nutzen!
           </p>
           
-          <div className={styles.actionButtons}>
+          <div className="button-group">
             <Button 
               onClick={onNavigateToLogin}
               variant="primary"
@@ -36,13 +35,13 @@ export default function GuestPrompt({ onNavigateToLogin }: GuestPromptProps) {
         </div>
       </section>
 
-      <section className={styles.guestPromptSection}>
-        <div className={styles.guestPromptCard}>
-          <h3 className={styles.guestPromptTitle}>🔓 Erweiterte Features freischalten</h3>
-          <div className={styles.benefitsList}>
+      <section className="guest-section">
+        <div className="card card-large center">
+          <h3 className="guest-title">🔓 Erweiterte Features freischalten</h3>
+          <div className="benefits-list">
             {BENEFITS.map((benefit, index) => (
-              <div key={index} className={styles.benefit}>
-                <span className={styles.benefitIcon}>{benefit.icon}</span>
+              <div key={index} className="benefit-item">
+                <span className="benefit-icon">{benefit.icon}</span>
                 <span>{benefit.text}</span>
               </div>
             ))}

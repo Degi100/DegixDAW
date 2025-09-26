@@ -1,21 +1,8 @@
-/* src/components/ui/AuthForm.module.css */
+/* src/components/auth/AuthForm.module.css */
 
-.formSection {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  padding: 2rem;
-  margin-bottom: 1.5rem;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
+/* Uses utility classes - applied in JSX as className="card card-large" */
 .formTitle {
-  font-size: 1.25rem;
-  font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 1.5rem;
-  text-align: center;
 }
 
 .form {

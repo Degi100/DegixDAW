@@ -1,7 +1,6 @@
 // src/components/ui/WelcomeCard.tsx
 import type { User } from '@supabase/supabase-js';
 import Button from '../ui/Button';
-import styles from './WelcomeCard.module.css';
 
 interface WelcomeCardProps {
   user: User;
@@ -11,10 +10,10 @@ interface WelcomeCardProps {
 
 export default function WelcomeCard({ user, onNavigateToSettings, onLogout }: WelcomeCardProps) {
   return (
-    <section className={styles.userSection}>
-      <div className={styles.welcomeCard}>
-        <h2 className={styles.welcomeTitle}>Willkommen zurück!</h2>
-        <div className={styles.userInfo}>
+    <section className="user-section">
+      <div className="card card-large center">
+        <h2 className="welcome-title">Willkommen zurück!</h2>
+        <div className="user-info">
           <p><strong>Email:</strong> {user.email}</p>
           {user.user_metadata?.full_name && (
             <p><strong>Name:</strong> {user.user_metadata.full_name}</p>
@@ -24,7 +23,7 @@ export default function WelcomeCard({ user, onNavigateToSettings, onLogout }: We
           )}
         </div>
         
-        <div className={styles.actionButtons}>
+        <div className="button-group">
           <Button 
             onClick={onNavigateToSettings}
             variant="primary"

@@ -6,7 +6,7 @@ import Button from '../ui/Button';
 import Input from '../ui/Input';
 import UsernameSuggestions from '../ui/UsernameSuggestions';
 import { Spinner } from '../ui/Loading';
-import styles from './AuthForm.module.css';
+
 
 interface AuthFormProps {
   onLogin: (email: string, password: string) => Promise<void>;
@@ -81,12 +81,12 @@ export default function AuthForm({ onLogin, onSignup, isSubmitting }: AuthFormPr
   };
 
   return (
-    <div className={styles.formSection}>
-      <h3 className={styles.formTitle}>
+    <div className="card card-large">
+      <h3 className="title-large center">
         {getToggleLabels(LOGIN_SIGNUP_LABELS, isLogin).primaryLabel} mit Email
       </h3>
       
-      <form onSubmit={currentForm.handleSubmit} className={styles.form}>
+      <form onSubmit={currentForm.handleSubmit} className="form">
         {!isLogin && (
           <>
             <Input
@@ -160,11 +160,11 @@ export default function AuthForm({ onLogin, onSignup, isSubmitting }: AuthFormPr
         </Button>
       </form>
       
-      <div className={styles.toggleText}>
+      <div className="form-toggle">
         {getToggleLabels(LOGIN_SIGNUP_LABELS, isLogin).promptLabel}{' '}
         <button
           onClick={formToggle.toggle}
-          className={styles.toggleButton}
+          className="link-button"
           type="button"
         >
           {getToggleLabels(LOGIN_SIGNUP_LABELS, isLogin).actionLabel}

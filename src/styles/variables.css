@@ -51,11 +51,21 @@
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
   
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.1);
+  
+  /* Card Properties */
+  --card-background: rgba(255, 255, 255, 0.95);
+  --card-border: 1px solid rgba(255, 255, 255, 0.2);
+  --card-backdrop: blur(10px);
+  --card-radius: var(--radius-2xl);
+  --card-shadow: var(--shadow-card);
   
   /* Transitions */
   --transition: all 0.2s ease-in-out;

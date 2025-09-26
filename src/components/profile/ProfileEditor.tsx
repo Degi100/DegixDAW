@@ -7,7 +7,6 @@ import UsernameSuggestions from '../ui/UsernameSuggestions';
 import Button from '../ui/Button';
 import { Spinner } from '../ui/Loading';
 import { userSettingsWithPasswordSchema } from '../../lib/validation';
-import styles from './ProfileEditor.module.css';
 
 interface ProfileEditorProps {
   user: User;
@@ -78,11 +77,11 @@ export default function ProfileEditor({ user, onSave, isUpdating }: ProfileEdito
   };
 
   return (
-    <section className={styles.section}>
-      <h2 className={styles.sectionTitle}>📝 Profil-Informationen</h2>
+    <section className="card card-large">
+      <h2 className="section-title">📝 Profil-Informationen</h2>
       
-      <form onSubmit={form.handleSubmit} className={styles.form}>
-        <div className={styles.formRow}>
+      <form onSubmit={form.handleSubmit} className="form-grid">
+        <div className="form-row">
           <Input
             {...form.getFieldProps('fullName')}
             type="text"
@@ -93,7 +92,7 @@ export default function ProfileEditor({ user, onSave, isUpdating }: ProfileEdito
           />
         </div>
 
-        <div className={styles.formRow}>
+        <div className="form-row">
           <Input
             {...form.getFieldProps('username')}
             type="text"
@@ -112,11 +111,11 @@ export default function ProfileEditor({ user, onSave, isUpdating }: ProfileEdito
           )}
         </div>
 
-        <div className={styles.emailField}>
-          <label className={styles.label}>Email-Adresse</label>
-          <div className={styles.emailDisplay}>
-            <span className={styles.emailValue}>{user.email}</span>
-            <small className={styles.emailNote}>
+        <div className="email-field">
+          <label className="form-label">Email-Adresse</label>
+          <div className="email-display">
+            <span className="email-value">{user.email}</span>
+            <small className="email-note">
               📧 Email-Änderungen sind derzeit nicht verfügbar
             </small>
           </div>

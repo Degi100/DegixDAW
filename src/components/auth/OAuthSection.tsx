@@ -1,6 +1,5 @@
 // src/components/ui/OAuthSection.tsx
 import Button from '../ui/Button';
-import styles from './OAuthSection.module.css';
 
 interface OAuthSectionProps {
   onOAuthLogin: (provider: 'google' | 'discord') => Promise<void>;
@@ -16,12 +15,12 @@ export default function OAuthSection({ onOAuthLogin }: OAuthSectionProps) {
   };
 
   return (
-    <div className={styles.oauthSection}>
-      <p className={styles.oauthTitle}>
+    <div className="card card-medium center">
+      <p className="text-secondary">
         Oder schnell anmelden mit:
       </p>
       
-      <div className={styles.buttonGroup}>
+      <div className="button-group">
         <Button 
           onClick={handleGoogleLogin}
           variant="google"
