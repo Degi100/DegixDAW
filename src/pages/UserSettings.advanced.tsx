@@ -57,12 +57,11 @@ export default function UserSettings() {
     }
   };
 
-  const handleProfileSave = async (profileData: { fullName: string; username: string }) => {
+  const handleProfileSave = async (profileData: { fullName: string }) => {
     setIsUpdating(true);
     try {
       await updateProfile({
-        full_name: profileData.fullName,
-        username: profileData.username
+        full_name: profileData.fullName
       });
       success('✅ Profil erfolgreich gespeichert!');
     } catch (err: unknown) {

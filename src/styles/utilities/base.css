@@ -152,3 +152,24 @@
   text-align: center;
   color: var(--text-primary);
 }
+
+/* Content Layout Utilities */
+.content-center {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 60vh;
+}
+
+.content-center .card {
+  width: 100%;
+  max-width: 500px;
+}
+
+.page-description {
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto var(--spacing-lg) auto;
+  line-height: 1.6;
+}

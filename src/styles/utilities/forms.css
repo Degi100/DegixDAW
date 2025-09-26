@@ -190,3 +190,105 @@
   font-size: var(--font-size-xs);
   margin-top: 0.25rem;
 }
+
+/* Form Actions & Footer */
+.form-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
+
+.form-footer {
+  text-align: center;
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--gray-200);
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-xs);
+  transition: var(--transition);
+}
+
+.link-button:hover {
+  color: var(--primary-dark);
+}
+
+.link-button:disabled {
+  color: var(--gray-400);
+  cursor: not-allowed;
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+/* Error Boundary Styles */
+.error-content {
+  text-align: center;
+  padding: var(--spacing-xl);
+}
+
+.error-icon {
+  font-size: 4rem;
+  margin-bottom: var(--spacing-lg);
+}
+
+.error-title {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+.error-message {
+  color: var(--text-secondary);
+  font-size: var(--font-size-lg);
+  line-height: 1.6;
+  margin-bottom: var(--spacing-xl);
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.error-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: var(--spacing-lg);
+}
+
+.error-details {
+  margin-top: var(--spacing-xl);
+  text-align: left;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md);
+}
+
+.error-details summary {
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.error-stack {
+  background: var(--gray-900);
+  color: var(--gray-100);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-sm);
+  font-family: 'Courier New', monospace;
+  font-size: var(--font-size-xs);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  margin: 0;
+}

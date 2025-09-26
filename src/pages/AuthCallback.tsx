@@ -40,15 +40,27 @@ export default function AuthCallback() {
           navigate('/');
         } else {
           // Standard OAuth-Callback
-          const { error } = await supabase.auth.getSession();
+          const { data: { session }, error } = await supabase.auth.getSession();
           
           if (error) {
             console.error('Auth-Fehler:', error);
             alert('Anmeldung fehlgeschlagen. Bitte versuche es erneut.');
             navigate('/login');
+          } else if (session?.user) {
+            // Check if user needs username onboarding
+            const user = session.user;
+            const hasUsername = !!user.user_metadata?.username;
+            const isOAuthUser = !!user.app_metadata?.provider && user.app_metadata.provider !== 'email';
+            
+            if (isOAuthUser && !hasUsername) {
+              // New OAuth user without username → onboarding
+              navigate('/onboarding/username');
+            } else {
+              // Existing user or email user → dashboard
+              navigate('/dashboard');
+            }
           } else {
-            // Erfolgreich → zur Hauptseite
-            navigate('/');
+            navigate('/login');
           }
         }
       } catch (err) {
