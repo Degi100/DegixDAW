@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useForm } from '../hooks/useForm';
 import { useToast } from '../hooks/useToast';
+import { useFormToggle, getToggleLabels, LOGIN_SIGNUP_LABELS } from '../hooks/useFormToggle';
 import { signInSchema, signUpSchema, validateSignUpAsync } from '../lib/validation';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -14,7 +15,6 @@ import styles from './Login.module.css';
 
 export default function Login() {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
   const [showUsernameSuggestions, setShowUsernameSuggestions] = useState(false);
 
   const { signInWithEmail, signUpWithEmail, signInWithOAuth } = useAuth();
@@ -73,6 +73,17 @@ export default function Login() {
     }
   });
 
+  // Form toggle logic (Login/Signup)
+  const formToggle = useFormToggle({
+    initialState: true, // true = Login, false = Signup
+    onToggle: () => {
+      // Reset forms when switching
+      loginForm.reset();
+      signupForm.reset();
+    }
+  });
+
+  const isLogin = formToggle.isFirstOption;
   const currentForm = isLogin ? loginForm : signupForm;
 
   // Zeige Username-Suggestions wenn Name oder Username eingegeben wird
@@ -116,7 +127,7 @@ export default function Login() {
         {/* Email/Password Form */}
         <div className={styles.formSection}>
           <h3 className={styles.formTitle}>
-            {isLogin ? 'Anmelden' : 'Registrieren'} mit Email
+            {getToggleLabels(LOGIN_SIGNUP_LABELS, isLogin).primaryLabel} mit Email
           </h3>
           
           <form onSubmit={currentForm.handleSubmit} className={styles.form}>
@@ -186,24 +197,19 @@ export default function Login() {
                   Lädt...
                 </>
               ) : (
-                isLogin ? 'Anmelden' : 'Registrieren'
+                getToggleLabels(LOGIN_SIGNUP_LABELS, isLogin).primaryLabel
               )}
             </Button>
           </form>
           
           <div className={styles.toggleText}>
-            {isLogin ? 'Noch kein Account?' : 'Bereits ein Account?'}{' '}
+            {getToggleLabels(LOGIN_SIGNUP_LABELS, isLogin).promptLabel}{' '}
             <button
-              onClick={() => {
-                setIsLogin(!isLogin);
-                // Reset forms when switching
-                loginForm.reset();
-                signupForm.reset();
-              }}
+              onClick={formToggle.toggle}
               className={styles.toggleButton}
               type="button"
             >
-              {isLogin ? 'Hier registrieren' : 'Hier anmelden'}
+              {getToggleLabels(LOGIN_SIGNUP_LABELS, isLogin).actionLabel}
             </button>
           </div>
         </div>
