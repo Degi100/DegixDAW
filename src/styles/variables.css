@@ -5,12 +5,17 @@
   --primary-hover: #4338CA;
   --secondary-color: #6B7280;
   --success-color: #10B981;
+  --success-hover: #059669;
   --error-color: #EF4444;
+  --error-hover: #DC2626;
   --warning-color: #F59E0B;
+  --warning-hover: #D97706;
   
   /* Social Colors */
   --google-color: #4285F4;
+  --google-hover: #3367D6;
   --discord-color: #5865F2;
+  --discord-hover: #4752C4;
   
   /* Neutral Colors */
   --white: #FFFFFF;

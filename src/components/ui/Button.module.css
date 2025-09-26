@@ -45,7 +45,7 @@
 }
 
 .success:hover:not(:disabled) {
-  background-color: #059669;
+  background-color: var(--success-hover);
 }
 
 .error {
@@ -54,7 +54,7 @@
 }
 
 .error:hover:not(:disabled) {
-  background-color: #DC2626;
+  background-color: var(--error-hover);
 }
 
 .outline {
@@ -75,7 +75,7 @@
 }
 
 .google:hover:not(:disabled) {
-  background-color: #3367D6;
+  background-color: var(--google-hover);
 }
 
 .discord {
@@ -84,7 +84,7 @@
 }
 
 .discord:hover:not(:disabled) {
-  background-color: #4752C4;
+  background-color: var(--discord-hover);
 }
 
 /* Sizes */
