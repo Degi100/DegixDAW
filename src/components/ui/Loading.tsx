@@ -1,6 +1,5 @@
 // src/components/ui/Loading.tsx
 import type { ReactNode } from 'react';
-import styles from './Loading.module.css';
 
 interface SpinnerProps {
   size?: 'small' | 'medium' | 'large';
@@ -10,9 +9,9 @@ interface SpinnerProps {
 
 export function Spinner({ size = 'medium', variant = 'white', className = '' }: SpinnerProps) {
   const spinnerClasses = [
-    styles.spinner,
-    size !== 'medium' && styles[size],
-    variant !== 'white' && styles[variant],
+    'spinner',
+    size !== 'medium' && `spinner-${size}`,
+    variant !== 'white' && `spinner-${variant}`,
     className
   ].filter(Boolean).join(' ');
 
@@ -26,10 +25,10 @@ interface LoadingOverlayProps {
 
 export function LoadingOverlay({ message = 'Lädt...', children }: LoadingOverlayProps) {
   return (
-    <div className={styles.loadingOverlay}>
-      <div className={styles.loadingContainer}>
+    <div className="loading-overlay">
+      <div className="loading-content">
         <Spinner size="large" variant="primary" />
-        {message && <p className={styles.loadingText}>{message}</p>}
+        {message && <p className="loading-text">{message}</p>}
         {children}
       </div>
     </div>
@@ -57,7 +56,7 @@ export function Skeleton({
         {Array.from({ length: lines }, (_, i) => (
           <div 
             key={i}
-            className={`${styles.skeleton} ${styles.skeletonParagraph}`}
+            className="skeleton skeleton-paragraph"
           />
         ))}
       </div>
@@ -65,9 +64,9 @@ export function Skeleton({
   }
 
   const skeletonClasses = [
-    styles.skeleton,
-    variant === 'text' && styles.skeletonText,
-    variant === 'title' && styles.skeletonTitle,
+    'skeleton',
+    variant === 'text' && 'skeleton-text',
+    variant === 'title' && 'skeleton-title',
     className
   ].filter(Boolean).join(' ');
 

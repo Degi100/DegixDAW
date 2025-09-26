@@ -1,0 +1,143 @@
+/* src/styles/utilities/buttons.css */
+/* Button system - All button variants, sizes, and button group utilities */
+
+/* Base Button */
+.btn {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  text-decoration: none;
+  line-height: 1;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Button Variants */
+.btn-primary {
+  background-color: var(--primary-color);
+  color: var(--white);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+}
+
+.btn-secondary {
+  background-color: var(--secondary-color);
+  color: var(--white);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--gray-600);
+}
+
+.btn-success {
+  background-color: var(--success-color);
+  color: var(--white);
+}
+
+.btn-success:hover:not(:disabled) {
+  background-color: var(--success-hover);
+}
+
+.btn-error {
+  background-color: var(--error-color);
+  color: var(--white);
+}
+
+.btn-error:hover:not(:disabled) {
+  background-color: var(--error-hover);
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background-color: var(--primary-color);
+  color: var(--white);
+}
+
+/* Social Button Variants */
+.btn-google {
+  background-color: var(--google-color);
+  color: var(--white);
+}
+
+.btn-google:hover:not(:disabled) {
+  background-color: var(--google-hover);
+}
+
+.btn-discord {
+  background-color: var(--discord-color);
+  color: var(--white);
+}
+
+.btn-discord:hover:not(:disabled) {
+  background-color: var(--discord-hover);
+}
+
+/* Button Sizes */
+.btn-small {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-sm);
+}
+
+.btn-large {
+  padding: var(--spacing-lg) var(--spacing-xl);
+  font-size: var(--font-size-lg);
+}
+
+.btn-full-width {
+  width: 100%;
+}
+
+/* Button Group Utilities */
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.button-group-row {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
+
+/* Link Button (for form toggles) */
+.link-button {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: inherit;
+  padding: 0;
+  margin: 0;
+  transition: color 0.2s ease;
+}
+
+.link-button:hover {
+  color: var(--primary-dark);
+}
+
+.link-button:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}

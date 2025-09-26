@@ -1,7 +1,6 @@
 // src/components/ui/Input.tsx
 import { useState } from 'react';
 import type { InputHTMLAttributes } from 'react';
-import styles from './Input.module.css';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -48,22 +47,22 @@ export default function Input({
   const hasRightIndicator = showPasswordToggle || shouldShowStar || shouldShowCheckmark;
   
   const inputClasses = [
-    styles.input,
-    error && styles.error,
-    hasMultipleIcons && styles.inputWithMultipleIcons,
-    hasRightIndicator && !hasMultipleIcons && styles.inputWithIndicator,
+    'input',
+    error && 'input-error',
+    hasMultipleIcons && 'input-with-multiple-icons',
+    hasRightIndicator && !hasMultipleIcons && 'input-with-indicator',
     className
   ].filter(Boolean).join(' ');
 
   return (
-    <div className={styles.inputGroup}>
+    <div className="input-group">
       {label && (
-        <label className={styles.label} htmlFor={props.id}>
+        <label className="input-label" htmlFor={props.id}>
           {label}
-          {required && <span className={styles.required}> *</span>}
+          {required && <span className="input-required"> *</span>}
         </label>
       )}
-      <div className={styles.inputWrapper}>
+      <div className="input-wrapper">
         <input 
           className={inputClasses} 
           type={inputType}
@@ -73,7 +72,7 @@ export default function Input({
         {showPasswordToggle && type === 'password' && (
           <button
             type="button"
-            className={`${styles.passwordToggle} ${hasMultipleIcons ? styles.passwordToggleWithOthers : ''}`}
+            className={`input-toggle ${hasMultipleIcons ? 'input-toggle-with-others' : ''}`}
             onClick={() => setShowPassword(!showPassword)}
             aria-label={showPassword ? 'Passwort verstecken' : 'Passwort anzeigen'}
           >
@@ -82,7 +81,7 @@ export default function Input({
         )}
         {shouldShowStar && (
           <span 
-            className={`${styles.requiredIndicator} ${showPasswordToggle ? styles.indicatorWithToggle : ''}`} 
+            className={`input-required-indicator ${showPasswordToggle ? 'input-indicator-with-toggle' : ''}`} 
             aria-label="Pflichtfeld - nicht ausgefüllt oder fehlerhaft"
           >
             *
@@ -90,7 +89,7 @@ export default function Input({
         )}
         {shouldShowCheckmark && (
           <span 
-            className={`${styles.checkmark} ${showPasswordToggle ? styles.indicatorWithToggle : ''}`} 
+            className={`input-checkmark ${showPasswordToggle ? 'input-indicator-with-toggle' : ''}`} 
             aria-label="Feld korrekt ausgefüllt"
           >
             ✓
@@ -98,12 +97,12 @@ export default function Input({
         )}
       </div>
       {error && (
-        <div className={styles.errorMessage}>
+        <div className="input-error-message">
           {error}
         </div>
       )}
       {helpText && !error && (
-        <div className={styles.helpText}>
+        <div className="input-help">
           {helpText}
         </div>
       )}

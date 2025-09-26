@@ -11,7 +11,6 @@ import AccountActions from '../components/profile/AccountActions';
 import { ToastContainer } from '../components/ui/Toast';
 import { LoadingOverlay } from '../components/ui/Loading';
 import Container from '../components/layout/Container';
-import styles from './UserSettings.module.css';
 
 export default function UserSettings() {
   const { user, updateProfile, updatePassword, signOut } = useAuth();
@@ -102,9 +101,9 @@ export default function UserSettings() {
 
   return (
     <Container>
-      <div className={styles.settingsContainer}>
-        <div className={styles.settingsCard}>
-          <header className={styles.header}>
+      <div className="page">
+        <div className="card card-large">
+          <header className="page-header">
             <Button
               onClick={(e) => {
                 e.preventDefault();
@@ -124,10 +123,10 @@ export default function UserSettings() {
             >
               ← Zurück zum Dashboard
             </Button>
-            <h1 className={styles.title}>⚙️ Benutzereinstellungen</h1>
+            <h1 className="page-title">⚙️ Benutzereinstellungen</h1>
           </header>
 
-          <div className={styles.content}>
+          <div className="main-content">
             <ProfileInfo user={user} />
             <ProfileEditor 
               user={user} 

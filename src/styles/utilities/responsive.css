@@ -1,0 +1,334 @@
+/* src/styles/utilities/responsive.css */
+/* Responsive utilities - Media queries, breakpoints, and responsive patterns */
+
+/* Responsive Display Utilities */
+.hidden {
+  display: none !important;
+}
+
+.block {
+  display: block !important;
+}
+
+.inline {
+  display: inline !important;
+}
+
+.inline-block {
+  display: inline-block !important;
+}
+
+.flex {
+  display: flex !important;
+}
+
+.inline-flex {
+  display: inline-flex !important;
+}
+
+.grid {
+  display: grid !important;
+}
+
+.inline-grid {
+  display: inline-grid !important;
+}
+
+/* Mobile First Responsive Utilities */
+/* Small screens and up (sm: 640px) */
+@media (min-width: 640px) {
+  .sm\:hidden { display: none !important; }
+  .sm\:block { display: block !important; }
+  .sm\:inline { display: inline !important; }
+  .sm\:inline-block { display: inline-block !important; }
+  .sm\:flex { display: flex !important; }
+  .sm\:inline-flex { display: inline-flex !important; }
+  .sm\:grid { display: grid !important; }
+  .sm\:inline-grid { display: inline-grid !important; }
+  
+  .sm\:text-left { text-align: left !important; }
+  .sm\:text-center { text-align: center !important; }
+  .sm\:text-right { text-align: right !important; }
+}
+
+/* Medium screens and up (md: 768px) */
+@media (min-width: 768px) {
+  .md\:hidden { display: none !important; }
+  .md\:block { display: block !important; }
+  .md\:inline { display: inline !important; }
+  .md\:inline-block { display: inline-block !important; }
+  .md\:flex { display: flex !important; }
+  .md\:inline-flex { display: inline-flex !important; }
+  .md\:grid { display: grid !important; }
+  .md\:inline-grid { display: inline-grid !important; }
+  
+  .md\:text-left { text-align: left !important; }
+  .md\:text-center { text-align: center !important; }
+  .md\:text-right { text-align: right !important; }
+  
+  .md\:flex-row { flex-direction: row !important; }
+  .md\:flex-col { flex-direction: column !important; }
+  
+  .md\:justify-start { justify-content: flex-start !important; }
+  .md\:justify-center { justify-content: center !important; }
+  .md\:justify-end { justify-content: flex-end !important; }
+  .md\:justify-between { justify-content: space-between !important; }
+}
+
+/* Large screens and up (lg: 1024px) */
+@media (min-width: 1024px) {
+  .lg\:hidden { display: none !important; }
+  .lg\:block { display: block !important; }
+  .lg\:inline { display: inline !important; }
+  .lg\:inline-block { display: inline-block !important; }
+  .lg\:flex { display: flex !important; }
+  .lg\:inline-flex { display: inline-flex !important; }
+  .lg\:grid { display: grid !important; }
+  .lg\:inline-grid { display: inline-grid !important; }
+  
+  .lg\:text-left { text-align: left !important; }
+  .lg\:text-center { text-align: center !important; }
+  .lg\:text-right { text-align: right !important; }
+  
+  .lg\:flex-row { flex-direction: row !important; }
+  .lg\:flex-col { flex-direction: column !important; }
+  
+  .lg\:justify-start { justify-content: flex-start !important; }
+  .lg\:justify-center { justify-content: center !important; }
+  .lg\:justify-end { justify-content: flex-end !important; }
+  .lg\:justify-between { justify-content: space-between !important; }
+}
+
+/* Extra large screens and up (xl: 1280px) */
+@media (min-width: 1280px) {
+  .xl\:hidden { display: none !important; }
+  .xl\:block { display: block !important; }
+  .xl\:inline { display: inline !important; }
+  .xl\:inline-block { display: inline-block !important; }
+  .xl\:flex { display: flex !important; }
+  .xl\:inline-flex { display: inline-flex !important; }
+  .xl\:grid { display: grid !important; }
+  .xl\:inline-grid { display: inline-grid !important; }
+  
+  .xl\:text-left { text-align: left !important; }
+  .xl\:text-center { text-align: center !important; }
+  .xl\:text-right { text-align: right !important; }
+}
+
+/* Mobile-specific patterns from the codebase */
+@media (max-width: 767px) {
+  /* Mobile form adjustments */
+  .form-grid {
+    gap: var(--spacing-md);
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Mobile button adjustments */
+  .btn-group {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+  
+  .btn-group .btn {
+    width: 100%;
+  }
+  
+  /* Mobile card adjustments */
+  .card {
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .card-large {
+    padding: var(--spacing-md);
+  }
+  
+  /* Mobile navigation and layout */
+  .page-header {
+    padding: var(--spacing-md) 0;
+    text-align: center;
+  }
+  
+  .page-title {
+    font-size: var(--font-size-xl);
+  }
+  
+  /* Mobile content grids */
+  .content-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+  
+  .feature-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+  
+  /* Mobile containers */
+  .container,
+  .container-narrow,
+  .container-wide {
+    padding-left: var(--spacing-md);
+    padding-right: var(--spacing-md);
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .content-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .feature-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Desktop optimizations */
+@media (min-width: 1024px) {
+  /* Larger form layouts */
+  .form-row.form-row-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .form-row.form-row-3 {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  
+  /* Desktop button groups */
+  .btn-group {
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+  
+  .btn-group .btn {
+    width: auto;
+  }
+  
+  /* Desktop content grids */
+  .content-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .feature-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  /* Desktop spacing */
+  .page {
+    padding: var(--spacing-xl) 0;
+  }
+  
+  .section {
+    padding: var(--spacing-xl) 0;
+  }
+}
+
+/* High-DPI and Retina display optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Better rendering for high-DPI screens */
+  .avatar {
+    image-rendering: -webkit-optimize-contrast;
+  }
+  
+  .spinner {
+    border-width: 1px;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .spinner {
+    animation: none;
+    border-top-color: transparent;
+  }
+  
+  .skeleton {
+    animation: none;
+  }
+  
+  .toast {
+    animation: none;
+  }
+}
+
+/* Dark mode support (if implemented) */
+@media (prefers-color-scheme: dark) {
+  /* These would be activated if dark mode is implemented */
+  /*
+  .card {
+    background-color: var(--dark-surface);
+    border-color: var(--dark-border);
+  }
+  
+  .input {
+    background-color: var(--dark-surface);
+    border-color: var(--dark-border);
+    color: var(--dark-text);
+  }
+  */
+}
+
+/* Print styles */
+@media print {
+  .toast-container,
+  .loading-container,
+  .spinner,
+  .btn,
+  .input {
+    display: none !important;
+  }
+  
+  .card {
+    border: 1px solid #000;
+    box-shadow: none;
+  }
+  
+  .page {
+    padding: 0;
+  }
+}
+
+/* Accessibility utilities */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.focus-visible:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Container queries (modern browsers) */
+@container (min-width: 400px) {
+  .card-responsive {
+    padding: var(--spacing-lg);
+  }
+}
+
+@container (min-width: 600px) {
+  .card-responsive {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: var(--spacing-md);
+  }
+}

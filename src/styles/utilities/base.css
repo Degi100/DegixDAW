@@ -1,0 +1,154 @@
+/* src/styles/utilities/base.css */
+/* Foundation utilities - Core layout patterns, containers, and basic typography */
+
+/* Layout Utilities */
+.center {
+  text-align: center;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.gap-small {
+  gap: 0.75rem;
+}
+
+.gap-medium {
+  gap: 1rem;
+}
+
+.gap-large {
+  gap: 1.5rem;
+}
+
+/* Container System */
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--spacing-xl);
+  font-family: var(--font-family);
+}
+
+.container-narrow {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: var(--spacing-xl);
+  font-family: var(--font-family);
+}
+
+.container-wide {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-xl);
+  font-family: var(--font-family);
+}
+
+/* Page Layout Utilities */
+.page {
+  padding: var(--spacing-lg) 0;
+  min-height: 100vh;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.page-title {
+  font-size: var(--font-size-2xl);
+  color: var(--primary-color);
+  margin: 0 0 var(--spacing-sm) 0;
+  font-weight: 700;
+}
+
+.page-subtitle {
+  color: var(--text-secondary);
+  font-size: var(--font-size-lg);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.main-content {
+  margin: var(--spacing-xl) 0;
+}
+
+/* Section Utilities */
+.user-section {
+  margin: 2rem 0;
+}
+
+.guest-section {
+  margin: 2rem 0;
+}
+
+.content-section {
+  margin: 3rem 0;
+}
+
+.features-section {
+  margin: 2rem 0;
+}
+
+/* Typography Utilities */
+.title-large {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+}
+
+.title-medium {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1.25rem;
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.text-small {
+  font-size: 0.875rem;
+}
+
+.section-title {
+  font-size: var(--font-size-lg);
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-lg) 0;
+  font-weight: 600;
+}
+
+.welcome-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.guest-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.guest-description {
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.features-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: var(--text-primary);
+}

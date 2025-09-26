@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { generateAlternativeUsernames, generateSmartUsernameSuggestions } from '../../lib/usernameGenerator';
 import { checkUsernameExists } from '../../lib/supabase';
-import styles from './UsernameSuggestions.module.css';
 
 interface UsernameSuggestionsProps {
   fullName?: string;
@@ -126,31 +125,31 @@ export default function UsernameSuggestions({
   }
 
   return (
-    <div className={styles.suggestionsContainer}>
-      <div className={styles.suggestionsHeader}>
-        <span className={styles.suggestionsTitle}>💡 Vorschläge für deinen Benutzernamen:</span>
-        {loading && <span className={styles.loadingText}>Prüfe Verfügbarkeit...</span>}
+    <div className="suggestions-container">
+      <div className="suggestions-header">
+        <span className="suggestions-title">💡 Vorschläge für deinen Benutzernamen:</span>
+        {loading && <span className="loading-text">Prüfe Verfügbarkeit...</span>}
       </div>
       
-      <div className={styles.suggestionsList}>
+      <div className="suggestions-grid">
         {suggestions.map((username) => (
           <button
             key={username}
             type="button"
-            className={`${styles.suggestionButton} ${
-              currentUsername === username ? styles.selected : ''
+            className={`suggestion-button ${
+              currentUsername === username ? 'suggestion-selected' : ''
             }`}
             onClick={() => onSelectUsername(username)}
             disabled={loading}
           >
-            <span className={styles.usernameText}>{username}</span>
-            <span className={styles.availableIndicator}>✓</span>
+            <span className="username-text">{username}</span>
+            <span className="available-indicator">✓</span>
           </button>
         ))}
       </div>
       
-      <div className={styles.suggestionsFooter}>
-        <small className={styles.helpText}>
+      <div className="suggestions-footer">
+        <small className="suggestions-help-text">
           Klicke auf einen Vorschlag um ihn zu verwenden, oder gib deinen eigenen ein.
         </small>
       </div>

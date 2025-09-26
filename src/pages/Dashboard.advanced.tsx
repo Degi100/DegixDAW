@@ -10,7 +10,6 @@ import WelcomeCard from '../components/dashboard/WelcomeCard';
 import FeatureGrid from '../components/dashboard/FeatureGrid';
 import ProjectsSection from '../components/dashboard/ProjectsSection';
 import GuestPrompt from '../components/dashboard/GuestPrompt';
-import styles from './Dashboard.module.css';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -35,10 +34,10 @@ export default function Dashboard() {
   return (
     <>
       <Container>
-        <div className={styles.dashboard}>
-          <header className={styles.header}>
-            <h1 className={styles.title}>🎧 DegixDAW Dashboard</h1>
-            <p className={styles.subtitle}>
+        <div className="page">
+          <header className="page-header">
+            <h1 className="page-title">🎧 DegixDAW Dashboard</h1>
+            <p className="page-subtitle">
               <strong>D</strong>AW-integrated, <strong>E</strong>ffortless, <strong>G</strong>lobal, <strong>I</strong>nstant e<strong>X</strong>change
             </p>
           </header>
