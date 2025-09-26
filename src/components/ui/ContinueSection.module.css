@@ -1,0 +1,31 @@
+/* src/components/ui/ContinueSection.module.css */
+
+.continueSection {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.continueText {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .continueSection {
+    padding: 1.25rem;
+    border-radius: 12px;
+  }
+
+  .continueText {
+    font-size: 0.875rem;
+    margin-bottom: 0.875rem;
+  }
+}

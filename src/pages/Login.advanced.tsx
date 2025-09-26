@@ -1,31 +1,25 @@
 // src/pages/Login.advanced.tsx
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { useForm } from '../hooks/useForm';
 import { useToast } from '../hooks/useToast';
-import { useFormToggle, getToggleLabels, LOGIN_SIGNUP_LABELS } from '../hooks/useFormToggle';
-import { signInSchema, signUpSchema, validateSignUpAsync } from '../lib/validation';
-import Button from '../components/ui/Button';
-import Input from '../components/ui/Input';
-import UsernameSuggestions from '../components/ui/UsernameSuggestions';
+import AuthForm from '../components/ui/AuthForm';
+import OAuthSection from '../components/ui/OAuthSection';
+import ContinueSection from '../components/ui/ContinueSection';
 import { ToastContainer } from '../components/ui/Toast';
-import { Spinner } from '../components/ui/Loading';
 import styles from './Login.module.css';
 
 export default function Login() {
   const navigate = useNavigate();
-  const [showUsernameSuggestions, setShowUsernameSuggestions] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { signInWithEmail, signUpWithEmail, signInWithOAuth } = useAuth();
-  const { success, error: showError } = useToast();
+  const { success, error: showError, toasts, removeToast } = useToast();
 
-  // Login Form
-  const loginForm = useForm({
-    schema: signInSchema,
-    initialValues: { email: '', password: '' },
-    onSubmit: async (data) => {
-      const result = await signInWithEmail(data.email, data.password);
+  const handleLogin = async (email: string, password: string) => {
+    setIsSubmitting(true);
+    try {
+      const result = await signInWithEmail(email, password);
       
       if (result.success) {
         success('Erfolgreich angemeldet!');
@@ -33,35 +27,23 @@ export default function Login() {
       } else {
         showError(result.error?.message || 'Anmeldung fehlgeschlagen');
       }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
+      showError(`Anmeldung fehlgeschlagen: ${errorMessage}`);
+    } finally {
+      setIsSubmitting(false);
     }
-  });
+  };
 
-  // Signup Form
-  const signupForm = useForm({
-    schema: signUpSchema,
-    initialValues: { 
-      email: '', 
-      password: '', 
-      confirmPassword: '', 
-      fullName: '', 
-      username: '' 
-    },
-    onSubmit: async (data) => {
-      // Erst async Validierung
-      const validationResult = await validateSignUpAsync(data);
-      
-      if (!validationResult.success) {
-        // Zeige Validierungsfehler über setErrors
-        signupForm.setErrors(validationResult.errors);
-        return;
-      }
-      
-      const result = await signUpWithEmail({
-        email: data.email,
-        password: data.password,
-        fullName: data.fullName,
-        username: data.username
-      });
+  const handleSignup = async (data: {
+    email: string;
+    password: string;
+    fullName: string;
+    username: string;
+  }) => {
+    setIsSubmitting(true);
+    try {
+      const result = await signUpWithEmail(data);
       
       if (result.success) {
         success('Registrierung erfolgreich! Bitte überprüfen Sie Ihre Email.', {
@@ -70,45 +52,27 @@ export default function Login() {
       } else {
         showError(result.error?.message || 'Registrierung fehlgeschlagen');
       }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
+      showError(`Registrierung fehlgeschlagen: ${errorMessage}`);
+    } finally {
+      setIsSubmitting(false);
     }
-  });
-
-  // Form toggle logic (Login/Signup)
-  const formToggle = useFormToggle({
-    initialState: true, // true = Login, false = Signup
-    onToggle: () => {
-      // Reset forms when switching
-      loginForm.reset();
-      signupForm.reset();
-    }
-  });
-
-  const isLogin = formToggle.isFirstOption;
-  const currentForm = isLogin ? loginForm : signupForm;
-
-  // Zeige Username-Suggestions wenn Name oder Username eingegeben wird
-  useEffect(() => {
-    if (!isLogin) {
-      const hasFullName = signupForm.values.fullName && signupForm.values.fullName.trim().length >= 2;
-      const hasUsername = signupForm.values.username && signupForm.values.username.trim().length >= 2;
-      
-      if (hasFullName || hasUsername) {
-        setShowUsernameSuggestions(true);
-      } else {
-        setShowUsernameSuggestions(false);
-      }
-    } else {
-      setShowUsernameSuggestions(false);
-    }
-  }, [isLogin, signupForm.values.fullName, signupForm.values.username]);
-
-
+  };
 
   const handleOAuthLogin = async (provider: 'google' | 'discord') => {
-    const result = await signInWithOAuth(provider);
-    
-    if (!result.success) {
-      showError(result.error?.message || `${provider} Login fehlgeschlagen`);
+    setIsSubmitting(true);
+    try {
+      const result = await signInWithOAuth(provider);
+      
+      if (!result.success) {
+        showError(result.error?.message || `${provider} Login fehlgeschlagen`);
+      }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
+      showError(`${provider} Login fehlgeschlagen: ${errorMessage}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -124,134 +88,21 @@ export default function Login() {
           <strong>D</strong>AW-integrated, <strong>E</strong>ffortless, <strong>G</strong>lobal, <strong>I</strong>nstant e<strong>X</strong>change
         </p>
         
-        {/* Email/Password Form */}
-        <div className={styles.formSection}>
-          <h3 className={styles.formTitle}>
-            {getToggleLabels(LOGIN_SIGNUP_LABELS, isLogin).primaryLabel} mit Email
-          </h3>
-          
-          <form onSubmit={currentForm.handleSubmit} className={styles.form}>
-            {!isLogin && (
-              <>
-                <Input
-                  {...signupForm.getFieldProps('fullName')}
-                  type="text"
-                  placeholder="Vollständiger Name"
-                  required
-                  showCheckmark
-                />
-                
-                <Input
-                  {...signupForm.getFieldProps('username')}
-                  type="text"
-                  placeholder="Benutzername"
-                  helpText="Optional - wird automatisch generiert falls leer"
-                  showCheckmark
-                />
-                
-                <UsernameSuggestions
-                  fullName={signupForm.values.fullName}
-                  currentUsername={signupForm.values.username || ''}
-                  onSelectUsername={(username) => signupForm.setValue('username', username)}
-                  show={showUsernameSuggestions}
-                />
-              </>
-            )}            <Input
-              {...currentForm.getFieldProps('email')}
-              type="email"
-              placeholder="Email-Adresse"
-              required
-              showCheckmark
-            />
-            
-            <Input
-              {...currentForm.getFieldProps('password')}
-              type="password"
-              placeholder="Passwort"
-              required
-              showPasswordToggle
-              showCheckmark
-              helpText={!isLogin ? "Mindestens 6 Zeichen, mit Groß-/Kleinbuchstaben und Zahl" : undefined}
-            />
-
-            {!isLogin && (
-              <Input
-                {...signupForm.getFieldProps('confirmPassword')}
-                type="password"
-                placeholder="Passwort bestätigen"
-                required
-                showPasswordToggle
-                showCheckmark
-              />
-            )}
-            
-            <Button
-              type="submit"
-              disabled={currentForm.isSubmitting}
-              variant={isLogin ? "success" : "primary"}
-              fullWidth
-            >
-              {currentForm.isSubmitting ? (
-                <>
-                  <Spinner size="small" />
-                  Lädt...
-                </>
-              ) : (
-                getToggleLabels(LOGIN_SIGNUP_LABELS, isLogin).primaryLabel
-              )}
-            </Button>
-          </form>
-          
-          <div className={styles.toggleText}>
-            {getToggleLabels(LOGIN_SIGNUP_LABELS, isLogin).promptLabel}{' '}
-            <button
-              onClick={formToggle.toggle}
-              className={styles.toggleButton}
-              type="button"
-            >
-              {getToggleLabels(LOGIN_SIGNUP_LABELS, isLogin).actionLabel}
-            </button>
-          </div>
-        </div>
-
-        {/* OAuth Login */}
-        <div className={styles.oauthSection}>
-          <p className={styles.oauthTitle}>
-            Oder schnell anmelden mit:
-          </p>
-          
-          <div className={styles.buttonGroup}>
-            <Button 
-              onClick={() => handleOAuthLogin('google')}
-              variant="google"
-            >
-              Mit Google anmelden
-            </Button>
-            
-            <Button 
-              onClick={() => handleOAuthLogin('discord')}
-              variant="discord"
-            >
-              Mit Discord anmelden
-            </Button>
-          </div>
-        </div>
-
-        {/* Continue without login */}
-        <div className={styles.continueSection}>
-          <p className={styles.continueText}>
-            Oder erkunden Sie die App ohne Anmeldung:
-          </p>
-          <Button 
-            onClick={handleContinueWithoutLogin}
-            variant="outline"
-          >
-            Weiter ohne Login
-          </Button>
-        </div>
+        <AuthForm 
+          onLogin={handleLogin}
+          onSignup={handleSignup}
+          isSubmitting={isSubmitting}
+        />
+        
+        <OAuthSection onOAuthLogin={handleOAuthLogin} />
+        
+        <ContinueSection onContinue={handleContinueWithoutLogin} />
       </div>
       
-      <ToastContainer toasts={useToast().toasts} onRemove={useToast().removeToast} />
+      <ToastContainer 
+        toasts={toasts}
+        onRemove={removeToast}
+      />
     </>
   );
 }
