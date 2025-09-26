@@ -167,6 +167,26 @@ export function useAuth() {
     }
   };
 
+  const resendConfirmation = async (email: string): Promise<{ success: boolean; error?: AuthError }> => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (error) {
+        return { success: false, error: handleAuthError(error) };
+      }
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: handleAuthError(error) };
+    }
+  };
+
   return {
     // State
     user: state.user,
@@ -179,6 +199,7 @@ export function useAuth() {
     signUpWithEmail,
     signInWithOAuth,
     signOut,
+    resendConfirmation,
     
     // Utilities
     displayName: state.user?.user_metadata?.display_name || 

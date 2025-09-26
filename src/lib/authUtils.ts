@@ -35,6 +35,14 @@ export function handleAuthError(error: unknown): AuthError {
       };
     }
     
+    // OTP/Email link expired
+    if (message.includes('otp_expired') || message.includes('email link is invalid') || message.includes('has expired')) {
+      return {
+        message: 'E-Mail-Bestätigungslink ist abgelaufen. Bitte registrieren Sie sich erneut.',
+        type: 'validation'
+      };
+    }
+    
     // User already registered
     if (message.includes('user already registered')) {
       return {

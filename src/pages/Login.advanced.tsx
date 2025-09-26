@@ -25,7 +25,17 @@ export default function Login() {
         success('Erfolgreich angemeldet!');
         navigate('/');
       } else {
-        showError(result.error?.message || 'Anmeldung fehlgeschlagen');
+        const errorMessage = result.error?.message || 'Anmeldung fehlgeschlagen';
+        
+        // Check if it's an email confirmation issue
+        if (result.error?.type === 'validation' && 
+            (errorMessage.includes('abgelaufen') || errorMessage.includes('bestätigen'))) {
+          // Redirect to resend confirmation page with email
+          navigate(`/auth/resend-confirmation?email=${encodeURIComponent(email)}`);
+          return;
+        }
+        
+        showError(errorMessage);
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';

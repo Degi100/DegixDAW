@@ -27,12 +27,14 @@ export default function AuthCallback() {
             
             if (errorMsg.includes('429') || errorMsg.includes('rate')) {
               alert('⏰ Rate Limit erreicht. Bitte warten Sie einige Minuten.');
-            } else if (errorMsg.includes('expired')) {
-              alert('📧 Email-Link ist abgelaufen. Bitte fordern Sie einen neuen an.');
+              navigate('/login');
+            } else if (errorMsg.includes('expired') || errorMsg.includes('invalid')) {
+              // Redirect to resend confirmation page
+              navigate('/auth/resend-confirmation');
             } else {
               alert('Email-Bestätigung fehlgeschlagen. Link ist möglicherweise abgelaufen.');
+              navigate('/auth/resend-confirmation');
             }
-            navigate('/login');
             return;
           }
           

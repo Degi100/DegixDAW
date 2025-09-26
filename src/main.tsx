@@ -8,6 +8,7 @@ import AuthCallback from './pages/AuthCallback';
 import Dashboard from './pages/Dashboard.advanced';
 import UserSettings from './pages/UserSettings.advanced';
 import UsernameOnboarding from './pages/UsernameOnboarding';
+import ResendConfirmation from './pages/ResendConfirmation';
 import NotFound from './pages/NotFound';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 
@@ -16,6 +17,7 @@ const router = createBrowserRouter([
   { path: '/dashboard', element: <Dashboard /> },
   { path: '/login', element: <Login /> },
   { path: '/auth/callback', element: <AuthCallback /> },
+  { path: '/auth/resend-confirmation', element: <ResendConfirmation /> },
   { path: '/onboarding/username', element: <UsernameOnboarding /> },
   { path: '/settings', element: <UserSettings /> },
   { path: '*', element: <NotFound /> },
