@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { generateFallbackUsername } from '../lib/usernameGenerator';
+import { handleAuthError, type AuthError } from '../lib/authUtils';
 
 interface AuthState {
   user: User | null;
@@ -16,11 +17,6 @@ interface SignUpData {
   password: string;
   username?: string;
   fullName?: string;
-}
-
-interface AuthError {
-  message: string;
-  type: 'auth' | 'rate_limit' | 'validation' | 'network';
 }
 
 export function useAuth() {
@@ -62,18 +58,29 @@ export function useAuth() {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id);
+        
         if (mounted) {
-          setState(prev => ({
-            ...prev,
+          setState({
             user: session?.user ?? null,
-            loading: false
-          }));
+            loading: false,
+            initialized: true
+          });
+        }
 
-          // Handle different auth events
-          if (event === 'SIGNED_IN') {
-            console.log('User signed in:', session?.user?.email);
-          } else if (event === 'SIGNED_OUT') {
-            console.log('User signed out');
+        // Handle sign in events
+        if (event === 'SIGNED_IN' && session?.user) {
+          console.log('User signed in:', session.user.id);
+          
+          // Check if user needs username onboarding
+          const isOAuthUser = !session.user.email_confirmed_at && 
+                             (session.user.app_metadata?.provider === 'google' || 
+                              session.user.app_metadata?.provider === 'discord');
+          const hasUsername = session.user.user_metadata?.username;
+          
+          if (isOAuthUser && !hasUsername) {
+            console.log('OAuth user without username, redirecting to onboarding');
+            navigate('/onboarding/username');
           }
         }
       }
@@ -83,52 +90,13 @@ export function useAuth() {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
-
-
-
-  const handleAuthError = (error: unknown): AuthError => {
-    const message = (error instanceof Error ? error.message : String(error)) || 'Ein unbekannter Fehler ist aufgetreten';
-    
-    if (message.includes('429') || message.includes('rate')) {
-      return {
-        message: 'Zu viele Versuche. Bitte warten Sie einige Minuten.',
-        type: 'rate_limit'
-      };
-    }
-    
-    if (message.includes('Invalid login credentials')) {
-      return {
-        message: 'Ungültige Anmeldedaten. Bitte überprüfen Sie Email und Passwort.',
-        type: 'auth'
-      };
-    }
-    
-    if (message.includes('already registered')) {
-      return {
-        message: 'Diese Email ist bereits registriert.',
-        type: 'validation'
-      };
-    }
-    
-    if (message.includes('Email not confirmed')) {
-      return {
-        message: 'Bitte bestätigen Sie Ihre Email-Adresse.',
-        type: 'validation'
-      };
-    }
-
-    return {
-      message,
-      type: 'auth'
-    };
-  };
+  }, [navigate]);
 
   const signInWithEmail = async (email: string, password: string): Promise<{ success: boolean; error?: AuthError }> => {
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
-        password,
+        password
       });
 
       if (error) {
@@ -143,17 +111,14 @@ export function useAuth() {
 
   const signUpWithEmail = async (data: SignUpData): Promise<{ success: boolean; error?: AuthError }> => {
     try {
-      const finalUsername = data.username?.trim() || generateFallbackUsername(data.fullName || '', data.email);
-      
       const { error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
-          emailRedirectTo: 'http://localhost:5173/auth/callback',
           data: {
-            username: finalUsername,
-            full_name: data.fullName?.trim() || null,
-            display_name: data.fullName?.trim() || finalUsername
+            username: data.username || generateFallbackUsername(data.fullName || '', data.email),
+            full_name: data.fullName || '',
+            display_name: data.fullName || data.username || generateFallbackUsername(data.fullName || '', data.email)
           }
         }
       });
@@ -173,8 +138,8 @@ export function useAuth() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: 'http://localhost:5173/auth/callback',
-        },
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
       });
 
       if (error) {
@@ -202,66 +167,6 @@ export function useAuth() {
     }
   };
 
-  const updateProfile = async (updates: {
-    username?: string;
-    full_name?: string;
-    display_name?: string;
-  }): Promise<{ success: boolean; error?: AuthError }> => {
-    try {
-      const { error } = await supabase.auth.updateUser({
-        data: updates
-      });
-
-      if (error) {
-        return { success: false, error: handleAuthError(error) };
-      }
-
-      return { success: true };
-    } catch (error) {
-      return { success: false, error: handleAuthError(error) };
-    }
-  };
-
-  const updatePassword = async (
-    currentPassword: string, 
-    newPassword: string
-  ): Promise<{ success: boolean; error?: AuthError }> => {
-    try {
-      // First verify current password by trying to sign in
-      if (!state.user?.email) {
-        return { 
-          success: false, 
-          error: { message: 'Keine Email-Adresse gefunden', type: 'validation' } 
-        };
-      }
-
-      const { error: verifyError } = await supabase.auth.signInWithPassword({
-        email: state.user.email,
-        password: currentPassword
-      });
-
-      if (verifyError) {
-        return { 
-          success: false, 
-          error: { message: 'Aktuelles Passwort ist falsch', type: 'auth' } 
-        };
-      }
-
-      // Update to new password
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword
-      });
-
-      if (updateError) {
-        return { success: false, error: handleAuthError(updateError) };
-      }
-
-      return { success: true };
-    } catch (error) {
-      return { success: false, error: handleAuthError(error) };
-    }
-  };
-
   return {
     // State
     user: state.user,
@@ -274,8 +179,6 @@ export function useAuth() {
     signUpWithEmail,
     signInWithOAuth,
     signOut,
-    updateProfile,
-    updatePassword,
     
     // Utilities
     displayName: state.user?.user_metadata?.display_name || 

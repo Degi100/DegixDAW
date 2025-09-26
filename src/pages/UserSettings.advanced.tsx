@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useProfile } from '../hooks/useProfile';
 import { useToast } from '../hooks/useToast';
 import Button from '../components/ui/Button';
 import ProfileInfo from '../components/profile/ProfileInfo';
@@ -13,7 +14,8 @@ import { LoadingOverlay } from '../components/ui/Loading';
 import Container from '../components/layout/Container';
 
 export default function UserSettings() {
-  const { user, updateProfile, updatePassword, signOut } = useAuth();
+  const { user, signOut } = useAuth();
+  const { updateProfile, updatePassword, deleteAccount } = useProfile(user);
   const { success, error, toasts, removeToast } = useToast();
   const navigate = useNavigate();
   const [isUpdating, setIsUpdating] = useState(false);
@@ -47,10 +49,15 @@ export default function UserSettings() {
     if (!finalConfirmation) return;
 
     try {
-      // Simuliere Account-Löschung (würde normalerweise server-side implementiert)
-      await signOut();
-      success('🗑️ Konto-Löschung angefordert - Sie wurden abgemeldet');
-      navigate('/');
+      // Echte Account-Löschung aus Supabase
+      const result = await deleteAccount();
+      
+      if (result.success) {
+        success('🗑️ Ihr Konto wurde erfolgreich gelöscht');
+        // Navigation wird automatisch in deleteAccount() durchgeführt
+      } else {
+        error(`❌ Fehler bei der Kontolöschung: ${result.error?.message || 'Unbekannter Fehler'}`);
+      }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
       error(`❌ Fehler bei der Kontolöschung: ${errorMessage}`);

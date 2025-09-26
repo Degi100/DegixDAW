@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useProfile } from '../hooks/useProfile';
 import { useToast } from '../hooks/useToast';
 import Container from '../components/layout/Container';
 import Input from '../components/ui/Input';
@@ -12,7 +13,8 @@ import { APP_FULL_NAME, EMOJIS, UI_TEXT } from '../lib/constants';
 import { validateUsernameFormat } from '../lib/validation/authValidation';
 
 export default function UsernameOnboarding() {
-  const { user, updateProfile } = useAuth();
+  const { user } = useAuth();
+  const { updateProfile } = useProfile(user);
   const { success, error, toasts, removeToast } = useToast();
   const navigate = useNavigate();
   
