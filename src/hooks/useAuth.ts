@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { generateFallbackUsername } from '../lib/usernameGenerator';
 
 interface AuthState {
   user: User | null;
@@ -84,13 +85,7 @@ export function useAuth() {
     };
   }, []);
 
-  const generateUsername = (fullName: string, email: string): string => {
-    if (fullName.trim()) {
-      return fullName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-    }
-    const emailName = email.split('@')[0];
-    return emailName.toLowerCase().replace(/[^a-z0-9]/g, '');
-  };
+
 
   const handleAuthError = (error: unknown): AuthError => {
     const message = (error instanceof Error ? error.message : String(error)) || 'Ein unbekannter Fehler ist aufgetreten';
@@ -148,7 +143,7 @@ export function useAuth() {
 
   const signUpWithEmail = async (data: SignUpData): Promise<{ success: boolean; error?: AuthError }> => {
     try {
-      const finalUsername = data.username?.trim() || generateUsername(data.fullName || '', data.email);
+      const finalUsername = data.username?.trim() || generateFallbackUsername(data.fullName || '', data.email);
       
       const { error } = await supabase.auth.signUp({
         email: data.email,

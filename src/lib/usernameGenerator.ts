@@ -1,6 +1,17 @@
 // src/lib/usernameGenerator.ts
 
 /**
+ * Einfache Username-Generierung für Fallback (ersetzt alte generateUsername Logik)
+ */
+export function generateFallbackUsername(fullName: string, email: string): string {
+  if (fullName.trim()) {
+    return fullName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  }
+  const emailName = email.split('@')[0];
+  return emailName.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+/**
  * Generiert Username-Vorschläge basierend auf dem vollständigen Namen
  */
 export function generateUsernameVariations(fullName: string): string[] {
