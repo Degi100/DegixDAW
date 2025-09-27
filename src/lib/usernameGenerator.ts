@@ -153,3 +153,52 @@ function dedupeAndClean(suggestions: string[]): string[] {
     .filter((username, index, array) => array.indexOf(username) === index)
     .slice(0, 6);
 }
+
+/**
+ * Generiert Variationen eines Usernames für Account-Recovery
+ * Hilft bei der Suche nach ähnlichen Benutzernamen
+ */
+export function generateUsernameVariations(partialUsername: string): string[] {
+  if (!partialUsername || partialUsername.length < 2) {
+    return [];
+  }
+
+  const base = cleanUsername(partialUsername.trim());
+  const variations: string[] = [];
+
+  // Originalversion
+  variations.push(base);
+
+  // Mit/ohne Unterstriche
+  variations.push(base.replace(/_/g, ''));
+  variations.push(base.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase());
+
+  // Mit häufigen Zahlen
+  const commonNumbers = ['1', '2', '3', '123', '2024', '01'];
+  commonNumbers.forEach(num => {
+    variations.push(`${base}${num}`);
+    variations.push(`${base}_${num}`);
+  });
+
+  // Häufige Präfixe/Suffixe entfernen/hinzufügen
+  const prefixes = ['the_', 'real_', 'official_'];
+  const suffixes = ['_official', '_real', '_pro'];
+
+  prefixes.forEach(prefix => {
+    if (base.startsWith(prefix)) {
+      variations.push(base.substring(prefix.length));
+    } else {
+      variations.push(`${prefix}${base}`);
+    }
+  });
+
+  suffixes.forEach(suffix => {
+    if (base.endsWith(suffix)) {
+      variations.push(base.substring(0, base.length - suffix.length));
+    } else {
+      variations.push(`${base}${suffix}`);
+    }
+  });
+
+  return dedupeAndClean(variations);
+}

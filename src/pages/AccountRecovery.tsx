@@ -6,14 +6,16 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Container from '../components/layout/Container';
 import { ToastContainer } from '../components/ui/Toast';
+import { generateUsernameVariations } from '../lib/usernameGenerator';
 
-type RecoveryStep = 'options' | 'username' | 'contact' | 'success';
+type RecoveryStep = 'options' | 'username' | 'username-suggestions' | 'contact' | 'success';
 
 export default function AccountRecovery() {
   const navigate = useNavigate();
   const { success, error, toasts, removeToast } = useToast();
   const [currentStep, setCurrentStep] = useState<RecoveryStep>('options');
   const [username, setUsername] = useState('');
+  const [usernameSuggestions, setUsernameSuggestions] = useState<string[]>([]);
   const [contactDetails, setContactDetails] = useState({
     name: '',
     description: '',
@@ -28,17 +30,27 @@ export default function AccountRecovery() {
       return;
     }
 
-    // In a real app, this would search for the user by username
-    // For now, we'll simulate the process
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Since we can't directly query user_metadata from client-side,
+      // we'll use a different approach: guide user to contact support
+      // with their username information
       
-      // For demo purposes, we'll show that username-based recovery is not available yet
-      error('Username-basierte Wiederherstellung ist noch nicht verfügbar. Bitte kontaktieren Sie den Support.');
-      setCurrentStep('contact');
+      // First, validate username format
+      const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+      if (!usernameRegex.test(username.trim())) {
+        error('❌ Ungültiges Username-Format. Benutzernamen müssen 3-20 Zeichen lang sein und nur Buchstaben, Zahlen und Unterstriche enthalten.');
+        return;
+      }
+
+      // Generate username variations to help user remember
+      const variations = generateUsernameVariations(username.trim());
+      setUsernameSuggestions(variations);
+      
+      // Show username suggestions first
+      success(`✅ Username "${username}" verarbeitet. Sehen Sie sich die Vorschläge an oder kontaktieren Sie den Support.`);
+      setCurrentStep('username-suggestions');
     } catch {
-      error('Fehler bei der Suche. Bitte versuchen Sie es später erneut.');
+      error('❌ Fehler bei der Verarbeitung. Bitte versuchen Sie es erneut.');
     }
   };
 
@@ -111,7 +123,7 @@ export default function AccountRecovery() {
     <div className="card card-large">
       <div className="card-header">
         <h1>👤 Account per Benutzername finden</h1>
-        <p>Geben Sie Ihren Benutzernamen ein, um Ihre E-Mail-Adresse zu finden:</p>
+        <p>Geben Sie Ihren Benutzernamen ein. Wir leiten Sie dann zur Support-Kontaktierung weiter:</p>
       </div>
       
       <form onSubmit={handleUsernameSearch} className="form">
@@ -121,14 +133,24 @@ export default function AccountRecovery() {
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            placeholder="Ihr Benutzername"
+            placeholder="z.B. max_mustermann oder john123"
             required
           />
+        </div>
+
+        <div className="info-box">
+          <p><strong>💡 Username-Tipps:</strong></p>
+          <ul>
+            <li>Benutzernamen sind 3-20 Zeichen lang</li>
+            <li>Enthalten nur Buchstaben, Zahlen und Unterstriche</li>
+            <li>Wurden bei der Registrierung oder beim ersten OAuth-Login erstellt</li>
+            <li>Oft basierend auf Ihrem Namen oder E-Mail-Adresse generiert</li>
+          </ul>
         </div>
         
         <div className="form-actions">
           <Button type="submit">
-            Account suchen
+            Username prüfen
           </Button>
           <Button
             type="button"
@@ -250,10 +272,74 @@ export default function AccountRecovery() {
     </div>
   );
 
+  const handleUsernameSelection = (selectedUsername: string) => {
+    setUsername(selectedUsername);
+    
+    // Pre-fill contact form with selected username
+    setContactDetails(prev => ({
+      ...prev,
+      description: `Ich möchte meinen Account mit dem Benutzernamen "${selectedUsername}" wiederherstellen. Ich habe meine E-Mail-Adresse vergessen, aber kann mich an folgende Details erinnern: [Bitte ergänzen Sie weitere Details wie Registrierungsdatum, verwendete OAuth-Provider, etc.]`
+    }));
+    
+    success(`✅ Username "${selectedUsername}" ausgewählt. Sie werden nun zum Support-Kontakt weitergeleitet.`);
+    setCurrentStep('contact');
+  };
+
+  const renderUsernameSuggestionsStep = () => (
+    <div className="card card-large">
+      <div className="card-header">
+        <h1>🔍 Username-Vorschläge</h1>
+        <p>Basierend auf "{username}" haben wir folgende Variationen gefunden:</p>
+      </div>
+      
+      <div className="card-content">
+        <div className="username-suggestions">
+          {usernameSuggestions.map((suggestion, index) => (
+            <div key={index} className="username-suggestion">
+              <span className="username-text">{suggestion}</span>
+              <Button
+                onClick={() => handleUsernameSelection(suggestion)}
+                variant="outline"
+                size="small"
+              >
+                Das ist mein Username
+              </Button>
+            </div>
+          ))}
+        </div>
+
+        <div className="info-box">
+          <p><strong>💡 Nicht dabei?</strong></p>
+          <p>Wenn keiner dieser Vorschläge Ihr Username ist, können Sie:</p>
+          <ul>
+            <li>Einen anderen Suchbegriff versuchen</li>
+            <li>Direkt den Support kontaktieren</li>
+          </ul>
+        </div>
+        
+        <div className="form-actions">
+          <Button
+            onClick={() => setCurrentStep('contact')}
+            variant="primary"
+          >
+            Support kontaktieren
+          </Button>
+          <Button
+            onClick={() => setCurrentStep('username')}
+            variant="outline"
+          >
+            ← Neue Suche
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 'options': return renderOptionsStep();
       case 'username': return renderUsernameStep();
+      case 'username-suggestions': return renderUsernameSuggestionsStep();
       case 'contact': return renderContactStep();
       case 'success': return renderSuccessStep();
       default: return renderOptionsStep();
