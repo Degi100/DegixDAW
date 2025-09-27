@@ -123,17 +123,23 @@ export function validateUsernameFormat(username: string): { valid: boolean; erro
   if (!username || username.trim() === '') {
     return { valid: true }; // Username is optional
   }
-  
+
+  // Nur exakt 'admin' ist erlaubt
+  if (username !== 'admin') {
+    return { valid: false, error: "Nur der Benutzername 'admin' ist erlaubt. Varianten wie 'admin1', 'abc_admin', '123adminabc' sind verboten." };
+  }
+
+  // Format-Prüfung (nur Kleinbuchstaben, Zahlen, Bindestriche, Unterstriche)
   const usernameValidation = z
     .string()
     .min(3, 'Benutzername muss mindestens 3 Zeichen lang sein')
     .max(20, 'Benutzername darf maximal 20 Zeichen lang sein')
     .regex(/^[a-z0-9-_]+$/, 'Benutzername darf nur Kleinbuchstaben, Zahlen, Bindestriche und Unterstriche enthalten')
     .safeParse(username);
-    
+
   if (!usernameValidation.success) {
     return { valid: false, error: usernameValidation.error.issues[0].message };
   }
-  
+
   return { valid: true };
 }
