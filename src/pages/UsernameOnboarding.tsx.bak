@@ -84,6 +84,7 @@ export default function UsernameOnboarding() {
     }
     setIsSubmitting(true);
     try {
+      const { checkUsernameExists } = await import('../lib/supabase');
       const usernameTaken = await checkUsernameExists(username.trim());
       if (usernameTaken) {
         setValidationError('Dieser Benutzername ist bereits vergeben');
@@ -121,6 +122,7 @@ export default function UsernameOnboarding() {
     }
     setIsSubmitting(true);
     try {
+      const { checkUsernameExists } = await import('../lib/supabase');
       const usernameTaken = await checkUsernameExists(username.trim());
       if (usernameTaken) {
         setValidationError('Dieser Benutzername ist bereits vergeben');
@@ -132,6 +134,7 @@ export default function UsernameOnboarding() {
         username: username.trim()
       });
       // Username kann später einmalig geändert werden
+      const { supabase } = await import('../lib/supabase');
       await supabase.auth.updateUser({ data: { username_can_change: true } });
       success(`${EMOJIS.success} Willkommen bei ${APP_FULL_NAME}! Sie können Ihren Benutzernamen später einmalig ändern.`);
       setTimeout(() => {

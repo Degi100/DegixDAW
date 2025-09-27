@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { handleAuthError, type AuthError } from '../lib/authUtils';
+import { getEmailChangeCallbackUrl } from '../lib/urlUtils';
 
 interface ProfileUpdates {
   username?: string;
@@ -97,32 +98,46 @@ export function useProfile(user: User | null) {
 
       console.log('Attempting to delete user account:', user.id);
 
-      // Create a service role client for user deletion
-      // Note: This would typically require a backend endpoint with service role key
-      // For client-side, we'll use a more practical approach
+      // WARNUNG: Vollständige Account-Löschung erfordert Backend-Integration
+      // Hier implementieren wir eine Soft-Delete-Lösung
       
-      // First, try to update the user to mark as deleted
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: { 
-          account_deleted: true,
-          deleted_at: new Date().toISOString()
-        }
-      });
+      // 1. Markiere Profil als gelöscht in der Datenbank
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ 
+          deleted_at: new Date().toISOString(),
+          username: null,
+          full_name: '[GELÖSCHT]'
+        })
+        .eq('user_id', user.id);
 
-      if (updateError) {
-        console.error('Failed to mark account as deleted:', updateError);
+      if (profileError) {
+        console.error('Failed to mark profile as deleted:', profileError);
         return { 
           success: false, 
           error: { 
-            message: 'Account-Löschung fehlgeschlagen. Bitte versuchen Sie es später erneut.', 
+            message: 'Profil konnte nicht gelöscht werden. Bitte versuchen Sie es später erneut.', 
             type: 'auth' 
           } 
         };
       }
 
+      // 2. Markiere Auth-User als gelöscht (falls verfügbar)
+      try {
+        await supabase.auth.updateUser({
+          data: { 
+            account_deleted: true,
+            deleted_at: new Date().toISOString()
+          }
+        });
+      } catch (metaError) {
+        console.warn('Could not update auth metadata:', metaError);
+        // Nicht kritisch - Profile ist bereits gelöscht
+      }
+
       console.log('Account marked as deleted successfully');
       
-      // Sign out and redirect after marking as deleted
+      // 3. Abmelden und weiterleiten
       await supabase.auth.signOut();
       navigate('/login');
       
@@ -133,7 +148,7 @@ export function useProfile(user: User | null) {
       return { 
         success: false, 
         error: { 
-          message: 'Account-Löschung fehlgeschlagen. Bitte versuchen Sie es später erneut.', 
+          message: 'Account-Löschung fehlgeschlagen. Bitte kontaktieren Sie den Support.', 
           type: 'auth' 
         } 
       };
@@ -165,10 +180,11 @@ export function useProfile(user: User | null) {
         };
       }
 
-      // Update email - Supabase will send confirmation email to new address
-      const { error: updateError } = await supabase.auth.updateUser({
-        email: newEmail
-      });
+      // Update email - Supabase will send confirmation email to new address  
+      const { error: updateError } = await supabase.auth.updateUser(
+        { email: newEmail },
+        { emailRedirectTo: getEmailChangeCallbackUrl() }
+      );
 
       if (updateError) {
         return { success: false, error: handleAuthError(updateError) };

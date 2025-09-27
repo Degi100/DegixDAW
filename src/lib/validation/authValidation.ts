@@ -1,5 +1,6 @@
 // src/lib/validation/authValidation.ts
 import { z } from 'zod';
+import { checkUsernameExists } from '../supabase';
 
 // Sign In Schema
 export const signInSchema = z.object({
@@ -65,8 +66,6 @@ export async function validateSignUpAsync(data: SignUpFormData) {
   const asyncErrors: Record<string, string> = {};
   
   try {
-    const { checkUsernameExists } = await import('../supabase');
-    
     // Benutzername Prüfung (nur wenn angegeben)
     if (data.username && data.username.trim()) {
       const usernameExists = await checkUsernameExists(data.username);

@@ -1,13 +1,11 @@
-// src/components/ui/ProfileEditor.tsx
-
-// src/components/ui/ProfileEditor.tsx
-// ...existing code...
+// src/components/profile/ProfileEditor.tsx
 import type { User } from '@supabase/supabase-js';
 import { useState } from 'react';
 import { useForm } from '../../hooks/useForm';
 import { useProfile } from '../../hooks/useProfile';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
+import { checkUsernameExists, supabase } from '../../lib/supabase';
 import { Spinner } from '../ui/Loading';
 import { userSettingsSchema } from '../../lib/validation/profileValidation';
 
@@ -63,7 +61,6 @@ export default function ProfileEditor({ user, onSave, isUpdating }: ProfileEdito
       setUsernameError(validation.error || 'Ungültiger Benutzername');
       return;
     }
-    const { checkUsernameExists } = await import('../../lib/supabase');
     const exists = await checkUsernameExists(newUsername);
     if (exists) {
       setUsernameError('Dieser Benutzername ist bereits vergeben');
@@ -72,7 +69,6 @@ export default function ProfileEditor({ user, onSave, isUpdating }: ProfileEdito
     // Username speichern und Flags setzen/entfernen
     await updateProfile({ username: newUsername, full_name: user.user_metadata?.full_name || '' });
     // Schreibe die Flags ins Auth-Metadata
-    const { supabase } = await import('../../lib/supabase');
     await supabase.auth.updateUser({ data: { username_changed: true, username_can_change: false } });
     setUsernameError('');
     window.location.reload(); // Aktualisiere die Ansicht

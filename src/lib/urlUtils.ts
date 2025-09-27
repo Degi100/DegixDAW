@@ -35,3 +35,10 @@ export function getAuthCallbackUrl(): string {
 export function getRecoveryCallbackUrl(): string {
   return `${getBaseUrl()}/auth/callback`;
 }
+
+/**
+ * Get email change callback URL for email updates
+ */
+export function getEmailChangeCallbackUrl(): string {
+  return `${getBaseUrl()}/auth/email-confirmed`;
+}

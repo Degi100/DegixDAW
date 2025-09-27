@@ -1,12 +1,3 @@
-// Hole das Profil eines Users anhand der user_id
-export async function getProfileByUserId(userId: string) {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('user_id', userId)
-    .single();
-  return { data, error };
-}
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://xcdzugnjzrkngzmtzeip.supabase.co'
@@ -25,9 +16,15 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
   }
 })
 
-
-
-
+// Hole das Profil eines Users anhand der user_id
+export async function getProfileByUserId(userId: string) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+  return { data, error };
+}
 
 // Prüfe ob Benutzername bereits existiert (vereinfachte Version für Client-Side)
 export async function checkUsernameExists(username: string): Promise<boolean> {
