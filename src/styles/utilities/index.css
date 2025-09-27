@@ -11,3 +11,8 @@
 @import './forms.css';       /* Form System: inputs, validation, layouts */
 @import './loading.css';     /* Loading States: spinners, skeletons, progress */
 @import './responsive.css';  /* Responsive: breakpoints, mobile-first utilities */
+
+/* Component Styles */
+@import '../components/admin-corporate.css';      /* Corporate Admin System */
+@import '../components/dashboard-corporate.css';  /* Corporate Dashboard */
+@import '../components/login-corporate.css';      /* Corporate Login */

@@ -8,9 +8,9 @@ import PageLoader from './components/ui/PageLoader';
 import { ToastContainer } from './components/ui/Toast';
 
 // Lazy load components for better code splitting
-const Login = lazy(() => import('./pages/Login.advanced'));
+const Login = lazy(() => import('./pages/Login.corporate'));
 const AuthCallback = lazy(() => import('./pages/AuthCallback'));
-const Dashboard = lazy(() => import('./pages/Dashboard.advanced'));
+const Dashboard = lazy(() => import('./pages/Dashboard.corporate'));
 const UserSettings = lazy(() => import('./pages/UserSettings.advanced'));
 const UsernameOnboarding = lazy(() => import('./pages/UsernameOnboarding'));
 const ResendConfirmation = lazy(() => import('./pages/ResendConfirmation'));

@@ -1,15 +1,38 @@
-// src/components/dashboard/WelcomeCard.tsx
-// Corporate WelcomeCard with streamlined interface (navigation moved to header)
+// src/components/dashboard/WelcomeCardCorporate.tsx
+// Ultimate Corporate Welcome Card with Professional Design
 
 import type { User } from '@supabase/supabase-js';
+import { useNavigate } from 'react-router-dom';
+import { useAdmin } from '../../hooks/useAdmin';
 import Button from '../ui/Button';
 
-interface WelcomeCardProps {
+interface WelcomeCardCorporateProps {
   user: User;
+  onNavigateToSettings: () => void;
+  onLogout: () => void;
 }
 
-export default function WelcomeCard({ user }: WelcomeCardProps) {
-  // All navigation now handled in main dashboard header
+export default function WelcomeCardCorporate({ user, onNavigateToSettings, onLogout }: WelcomeCardCorporateProps) {
+  const navigate = useNavigate();
+  const { isAdmin } = useAdmin();
+
+  const handleAdminPanel = () => {
+    navigate('/admin');
+  };
+
+  // Generate user avatar initials
+  const getInitials = () => {
+    const name = user.user_metadata?.full_name || user.user_metadata?.username || user.email;
+    return name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  // Get user's current time greeting
+  const getTimeGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  };
 
   return (
     <section className="welcome-section-corporate">
@@ -17,15 +40,12 @@ export default function WelcomeCard({ user }: WelcomeCardProps) {
         {/* User Profile Section */}
         <div className="profile-section">
           <div className="profile-avatar">
-            {(user.user_metadata?.full_name || user.user_metadata?.username || user.email).charAt(0).toUpperCase()}
+            {getInitials()}
           </div>
           
           <div className="profile-info">
             <div className="greeting">
-              <span className="greeting-text">
-                {new Date().getHours() < 12 ? 'Good Morning' : 
-                 new Date().getHours() < 17 ? 'Good Afternoon' : 'Good Evening'},
-              </span>
+              <span className="greeting-text">{getTimeGreeting()},</span>
               <h2 className="user-display-name">
                 {user.user_metadata?.full_name || user.user_metadata?.username || 'User'}
               </h2>
@@ -66,6 +86,7 @@ export default function WelcomeCard({ user }: WelcomeCardProps) {
             </div>
           </div>
         </div>
+
         {/* Action Buttons */}
         <div className="actions-section">
           <div className="primary-actions">
@@ -78,28 +99,30 @@ export default function WelcomeCard({ user }: WelcomeCardProps) {
             </Button>
             
             <Button 
-              onClick={() => {/* TODO: Browse projects */}}
+              onClick={onNavigateToSettings}
               variant="outline"
             >
-              📁 Browse Projects
+              ⚙️ Settings
             </Button>
           </div>
           
           <div className="secondary-actions">
-            <Button 
-              onClick={() => {/* TODO: Recent activity */}}
-              variant="outline"
-              size="small"
-            >
-              � Recent Activity
-            </Button>
+            {isAdmin && (
+              <Button 
+                onClick={handleAdminPanel}
+                variant="success"
+                size="small"
+              >
+                🛡️ Admin
+              </Button>
+            )}
             
             <Button 
-              onClick={() => {/* TODO: Help & tutorials */}}
+              onClick={onLogout}
               variant="outline"
               size="small"
             >
-              � Tutorials
+              👋 Sign Out
             </Button>
           </div>
         </div>
