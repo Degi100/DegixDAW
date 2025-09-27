@@ -45,18 +45,19 @@ export default function AuthCallback() {
             alert('OAuth-Anmeldung fehlgeschlagen. Bitte versuche es erneut.');
             navigate('/login');
           } else if (session?.user) {
-            // Check if user needs username onboarding
+            // STRICT: Check if user needs username onboarding
             const user = session.user;
             const hasUsername = !!user.user_metadata?.username;
-            const isOAuthUser = !!user.app_metadata?.provider && user.app_metadata.provider !== 'email';
+            const needsOnboarding = user.user_metadata?.needs_username_onboarding;
+            const isNewUser = !hasUsername || needsOnboarding;
             
-            if (isOAuthUser && !hasUsername) {
-              // New OAuth user without username → onboarding
-              console.log('OAuth user needs username onboarding');
+            if (isNewUser) {
+              // Any new user without username must go through onboarding
+              console.log('New user detected - redirecting to username onboarding');
               navigate('/onboarding/username');
             } else {
-              // Existing user or email user → dashboard
-              console.log('OAuth user authenticated, redirecting to dashboard');
+              // Existing user with username → dashboard
+              console.log('Existing user with username, redirecting to dashboard');
               navigate('/dashboard');
             }
           } else {
@@ -131,8 +132,18 @@ export default function AuthCallback() {
             console.error('Session check error:', error);
             navigate('/login');
           } else if (session?.user) {
-            console.log('Valid session found, redirecting to dashboard');
-            navigate('/dashboard');
+            // Apply same strict onboarding check
+            const hasUsername = !!session.user.user_metadata?.username;
+            const needsOnboarding = session.user.user_metadata?.needs_username_onboarding;
+            const isNewUser = !hasUsername || needsOnboarding;
+            
+            if (isNewUser) {
+              console.log('Session found but user needs onboarding');
+              navigate('/onboarding/username');
+            } else {
+              console.log('Valid session with username found, redirecting to dashboard');
+              navigate('/dashboard');
+            }
           } else {
             console.log('No session found, redirecting to login');
             navigate('/login');

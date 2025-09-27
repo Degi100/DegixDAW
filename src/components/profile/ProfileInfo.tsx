@@ -6,8 +6,9 @@ interface ProfileInfoProps {
 }
 
 export default function ProfileInfo({ user }: ProfileInfoProps) {
-  const displayName = user.user_metadata?.full_name || 'Unbenannter Benutzer';
-  const avatarLetter = displayName.charAt(0).toUpperCase();
+  const username = user.user_metadata?.username;
+  const displayName = user.user_metadata?.full_name || username || 'Unbenannter Benutzer';
+  const avatarLetter = (username || displayName).charAt(0).toUpperCase();
 
   return (
     <section className="card card-large">
@@ -16,11 +17,13 @@ export default function ProfileInfo({ user }: ProfileInfoProps) {
           <span>{avatarLetter}</span>
         </div>
         <div className="profile-details">
-          <h2 className="profile-name">{displayName}</h2>
-          <p className="profile-email">{user.email}</p>
-          {user.user_metadata?.username && (
-            <p className="profile-email">@{user.user_metadata.username}</p>
+          {username && (
+            <h2 className="profile-name">@{username}</h2>
           )}
+          {user.user_metadata?.full_name && (
+            <p className="profile-email">{user.user_metadata.full_name}</p>
+          )}
+          <p className="profile-email">{user.email}</p>
         </div>
       </div>
     </section>

@@ -4,17 +4,45 @@ import { useNavigate } from 'react-router-dom';
 import Container from '../components/layout/Container';
 import Button from '../components/ui/Button';
 import { APP_FULL_NAME } from '../lib/constants';
+import { supabase } from '../lib/supabase';
 
 export default function EmailConfirmed() {
   const navigate = useNavigate();
   const [countdown, setCountdown] = useState(10);
+  const [redirectTarget, setRedirectTarget] = useState('/login');
+
+  // Check if user needs onboarding and set redirect target
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const hasUsername = !!session.user.user_metadata?.username;
+        const needsOnboarding = session.user.user_metadata?.needs_username_onboarding;
+        
+        // STRICT: Any user without username OR with onboarding flag goes to onboarding
+        if (!hasUsername || needsOnboarding) {
+          console.log('Email confirmed - new user needs username onboarding');
+          setRedirectTarget('/onboarding/username');
+        } else {
+          console.log('Email confirmed - existing user with username, redirecting to dashboard');
+          setRedirectTarget('/dashboard');
+        }
+      } else {
+        // No session - redirect to login
+        console.log('No session found after email confirmation');
+        setRedirectTarget('/login');
+      }
+    };
+    
+    checkOnboardingStatus();
+  }, []);
 
   // Auto-redirect after 10 seconds
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          navigate('/login');
+          navigate(redirectTarget);
           return 0;
         }
         return prev - 1;
@@ -22,10 +50,10 @@ export default function EmailConfirmed() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [navigate]);
+  }, [navigate, redirectTarget]);
 
-  const handleLoginNow = () => {
-    navigate('/login');
+  const handleContinueNow = () => {
+    navigate(redirectTarget);
   };
 
   const handleGoHome = () => {
@@ -57,18 +85,18 @@ export default function EmailConfirmed() {
           {/* Auto-redirect info */}
           <div className="mb-6 p-4 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-700">
-              Automatische Weiterleitung zur Anmeldung in {countdown} Sekunden...
+              Automatische Weiterleitung in {countdown} Sekunden...
             </p>
           </div>
 
           {/* Action Buttons */}
           <div className="space-y-3">
             <Button
-              onClick={handleLoginNow}
+              onClick={handleContinueNow}
               className="w-full"
               variant="primary"
             >
-              Jetzt anmelden
+              {redirectTarget === '/onboarding/username' ? 'Username wählen' : 'Jetzt anmelden'}
             </Button>
             
             <Button

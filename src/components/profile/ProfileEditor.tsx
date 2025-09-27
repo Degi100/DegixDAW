@@ -51,6 +51,17 @@ export default function ProfileEditor({ user, onSave, isUpdating }: ProfileEdito
       <h2 className="section-title">📝 Profil-Informationen</h2>
       
       <form onSubmit={form.handleSubmit} className="form-grid">
+        {/* Username Field (Read-only) */}
+        <div className="username-field">
+          <label className="form-label">Benutzername</label>
+          <div className="username-display">
+            <span className="username-value">@{user.user_metadata?.username || 'Nicht festgelegt'}</span>
+            <small className="username-note">
+              🔒 Benutzername kann nicht geändert werden
+            </small>
+          </div>
+        </div>
+
         <div className="form-row">
           <Input
             {...form.getFieldProps('fullName')}
@@ -61,8 +72,6 @@ export default function ProfileEditor({ user, onSave, isUpdating }: ProfileEdito
             helpText="Wird als Anzeigename verwendet"
           />
         </div>
-
-
 
         <div className="email-field">
           <label className="form-label">Email-Adresse</label>

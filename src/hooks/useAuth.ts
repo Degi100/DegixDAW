@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { generateFallbackUsername } from '../lib/usernameGenerator';
+
 import { handleAuthError, type AuthError } from '../lib/authUtils';
 import { getAuthCallbackUrl, getRecoveryCallbackUrl } from '../lib/urlUtils';
 
@@ -74,15 +74,16 @@ export function useAuth() {
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('User signed in:', session.user.id);
           
-          // Check if user needs username onboarding
-          const isOAuthUser = !session.user.email_confirmed_at && 
-                             (session.user.app_metadata?.provider === 'google' || 
-                              session.user.app_metadata?.provider === 'discord');
+          // STRICT: Always redirect new users to onboarding
           const hasUsername = session.user.user_metadata?.username;
+          const needsOnboarding = session.user.user_metadata?.needs_username_onboarding;
+          const isNewUser = !hasUsername || needsOnboarding;
           
-          if (isOAuthUser && !hasUsername) {
-            console.log('OAuth user without username, redirecting to onboarding');
+          if (isNewUser) {
+            console.log('New user detected - redirecting to username onboarding');
             navigate('/onboarding/username');
+          } else {
+            console.log('Existing user with username - staying in current flow');
           }
         }
       }
@@ -119,9 +120,10 @@ export function useAuth() {
         options: {
           emailRedirectTo: getAuthCallbackUrl(),
           data: {
-            username: data.username || generateFallbackUsername(data.fullName || '', data.email),
+            // NEVER set username on signup - always force onboarding
             full_name: data.fullName || '',
-            display_name: data.fullName || data.username || generateFallbackUsername(data.fullName || '', data.email)
+            display_name: data.fullName || '',
+            needs_username_onboarding: true // ALWAYS trigger onboarding for new users
           }
         }
       });
