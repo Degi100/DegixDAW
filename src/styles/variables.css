@@ -1,15 +1,30 @@
 /* src/styles/variables.css */
 :root {
-  /* Colors */
-  --primary-color: #4F46E5;
-  --primary-hover: #4338CA;
-  --secondary-color: #6B7280;
-  --success-color: #10B981;
-  --success-hover: #059669;
-  --error-color: #EF4444;
-  --error-hover: #DC2626;
-  --warning-color: #F59E0B;
-  --warning-hover: #D97706;
+  /* Corporate Professional Color System */
+  --primary-color: #1E40AF;
+  --primary-hover: #1D4ED8;
+  --primary-light: #3B82F6;
+  --primary-dark: #1E3A8A;
+  --primary-50: #EFF6FF;
+  --primary-100: #DBEAFE;
+  --primary-900: #1E3A8A;
+  
+  --secondary-color: #64748B;
+  --secondary-hover: #475569;
+  --success-color: #059669;
+  --success-hover: #047857;
+  --success-light: #10B981;
+  --error-color: #DC2626;
+  --error-hover: #B91C1C;
+  --error-light: #EF4444;
+  --warning-color: #D97706;
+  --warning-hover: #B45309;
+  --warning-light: #F59E0B;
+  
+  /* Corporate Status Colors */
+  --info-color: #0EA5E9;
+  --info-hover: #0284C7;
+  --info-light: #38BDF8;
   
   /* Social Colors */
   --google-color: #4285F4;
@@ -53,6 +68,7 @@
   --radius-lg: 8px;
   --radius-xl: 12px;
   --radius-2xl: 16px;
+  --radius-full: 9999px;
   
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -67,8 +83,36 @@
   --card-radius: var(--radius-2xl);
   --card-shadow: var(--shadow-card);
   
-  /* Transitions */
+  /* Advanced Transition System */
   --transition: all 0.2s ease-in-out;
+  --transition-fast: all 0.15s ease-out;
+  --transition-slow: all 0.3s ease-in-out;
+  --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --transition-smooth: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
+  /* Corporate Theme Variables (Light Mode Default) */
+  --theme-bg-primary: #FFFFFF;
+  --theme-bg-secondary: #F8FAFC;
+  --theme-bg-tertiary: #F1F5F9;
+  --theme-text-primary: #0F172A;
+  --theme-text-secondary: #475569;
+  --theme-text-tertiary: #64748B;
+  --theme-border: #E2E8F0;
+  --theme-border-light: #F1F5F9;
+  --theme-shadow: rgba(15, 23, 42, 0.08);
+  --theme-shadow-lg: rgba(15, 23, 42, 0.15);
+  
+  /* Dark Mode Variables (CSS Custom Properties) */
+  --dark-bg-primary: #0F172A;
+  --dark-bg-secondary: #1E293B;
+  --dark-bg-tertiary: #334155;
+  --dark-text-primary: #F1F5F9;
+  --dark-text-secondary: #CBD5E1;
+  --dark-text-tertiary: #94A3B8;
+  --dark-border: #334155;
+  --dark-border-light: #475569;
+  --dark-shadow: rgba(0, 0, 0, 0.3);
+  --dark-shadow-lg: rgba(0, 0, 0, 0.5);
 }
 
 /* Global Reset */

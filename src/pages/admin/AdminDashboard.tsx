@@ -2,6 +2,7 @@
 // Main admin dashboard overview page
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { useToast } from '../../hooks/useToast';
@@ -15,6 +16,7 @@ interface SystemStats {
 }
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [loading, setLoading] = useState(true);
   const { error } = useToast();
@@ -96,40 +98,32 @@ export default function AdminDashboard() {
             <p>Loading system statistics...</p>
           </div>
         ) : stats ? (
-          <div className="admin-stats-grid">
-            <div className="admin-stat-card">
-              <div className="stat-icon">👥</div>
-              <div className="stat-content">
-                <h3>Total Users</h3>
-                <div className="stat-number">{stats.totalUsers}</div>
-              </div>
+          <div className="features-grid">
+            <div className="feature-card">
+              <div className="feature-icon">👥</div>
+              <h4 className="feature-title">Total Users</h4>
+              <div className="stat-number">{stats.totalUsers}</div>
             </div>
 
-            <div className="admin-stat-card">
-              <div className="stat-icon">🆕</div>
-              <div className="stat-content">
-                <h3>Today</h3>
-                <div className="stat-number">{stats.todaySignups}</div>
-                <div className="stat-label">New signups</div>
-              </div>
+            <div className="feature-card">
+              <div className="feature-icon">🆕</div>
+              <h4 className="feature-title">Today</h4>
+              <div className="stat-number">{stats.todaySignups}</div>
+              <p className="feature-description">New signups</p>
             </div>
 
-            <div className="admin-stat-card">
-              <div className="stat-icon">📅</div>
-              <div className="stat-content">
-                <h3>This Week</h3>
-                <div className="stat-number">{stats.weeklySignups}</div>
-                <div className="stat-label">New signups</div>
-              </div>
+            <div className="feature-card">
+              <div className="feature-icon">📅</div>
+              <h4 className="feature-title">This Week</h4>
+              <div className="stat-number">{stats.weeklySignups}</div>
+              <p className="feature-description">New signups</p>
             </div>
 
-            <div className="admin-stat-card">
-              <div className="stat-icon">📊</div>
-              <div className="stat-content">
-                <h3>This Month</h3>
-                <div className="stat-number">{stats.monthlySignups}</div>
-                <div className="stat-label">New signups</div>
-              </div>
+            <div className="feature-card">
+              <div className="feature-icon">📊</div>
+              <h4 className="feature-title">This Month</h4>
+              <div className="stat-number">{stats.monthlySignups}</div>
+              <p className="feature-description">New signups</p>
             </div>
           </div>
         ) : (
@@ -140,18 +134,26 @@ export default function AdminDashboard() {
 
         <div className="admin-quick-actions">
           <h2>Quick Actions</h2>
-          <div className="quick-actions-grid">
-            <button className="quick-action-btn">
-              👥 View All Users
+          <div className="features-grid">
+            <button className="feature-card admin-action-card" onClick={() => navigate('/admin/users')}>
+              <div className="feature-icon">👥</div>
+              <h4 className="feature-title">View All Users</h4>
+              <p className="feature-description">Manage user accounts and permissions</p>
             </button>
-            <button className="quick-action-btn">
-              🔍 Search Users
+            <button className="feature-card admin-action-card">
+              <div className="feature-icon">🔍</div>
+              <h4 className="feature-title">Search Users</h4>
+              <p className="feature-description">Find specific users quickly</p>
             </button>
-            <button className="quick-action-btn">
-              📊 System Health
+            <button className="feature-card admin-action-card">
+              <div className="feature-icon">📊</div>
+              <h4 className="feature-title">System Health</h4>
+              <p className="feature-description">Monitor system performance</p>
             </button>
-            <button className="quick-action-btn">
-              ⚙️ Settings
+            <button className="feature-card admin-action-card">
+              <div className="feature-icon">⚙️</div>
+              <h4 className="feature-title">Settings</h4>
+              <p className="feature-description">Configure system settings</p>
             </button>
           </div>
         </div>

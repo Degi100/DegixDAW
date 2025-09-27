@@ -23,7 +23,8 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Admin Components
 import AdminRoute from './components/admin/AdminRoute';
-const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+
+const AdminDashboardCorporate = lazy(() => import('./pages/admin/AdminDashboardCorporate'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 
 
@@ -131,7 +132,7 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<PageLoader />}>
         <AdminRoute>
-          <AdminDashboard />
+          <AdminDashboardCorporate />
         </AdminRoute>
       </Suspense>
     ) 
