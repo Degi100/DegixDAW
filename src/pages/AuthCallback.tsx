@@ -92,30 +92,41 @@ export default function AuthCallback() {
               return;
             }
             
-            console.log('Email change successful!', data);
+            console.log('Email change OTP verified successfully!', data);
             
-            // Force refresh the session to get updated email
-            const { data: sessionData, error: refreshError } = await supabase.auth.refreshSession();
+            // Check if we have a valid session with the new email
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            
+            if (sessionError || !session) {
+              console.error('No valid session after email change:', sessionError);
+              // Email change successful but no session - user needs to re-login
+              alert('✅ Email-Adresse erfolgreich geändert!\n\n' +
+                    'Aus Sicherheitsgründen wurden Sie abgemeldet.\n' +
+                    'Bitte melden Sie sich mit Ihrer neuen Email-Adresse an.');
+              navigate('/login');
+              return;
+            }
+            
+            console.log('Session found after email change:', session.user.email);
+            
+            // Force a complete session refresh
+            const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
             
             if (refreshError) {
               console.error('Session refresh failed:', refreshError);
-            } else {
-              console.log('Session refreshed successfully:', sessionData);
+              // Fallback: logout and ask user to login with new email
+              alert('✅ Email-Adresse geändert!\n\n' +
+                    'Bitte loggen Sie sich mit Ihrer neuen Email-Adresse ein.');
+              await supabase.auth.signOut();
+              navigate('/login');
+              return;
             }
             
-            // Also try to get the fresh session
-            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            console.log('Session refreshed after email change:', refreshData);
             
-            if (sessionError) {
-              console.error('Get session failed:', sessionError);
-            } else {
-              console.log('Current session after email change:', session);
-            }
-            
-            console.log('Email change successful! Redirecting to settings...');
-            
-            // Redirect with success parameter to trigger refresh in settings
-            window.location.href = '/settings?email_changed=true';
+            // Success - redirect to email change confirmation page
+            const newEmail = refreshData.session?.user?.email || session.user.email || 'unknown';
+            navigate(`/auth/email-change-confirmed?new_email=${encodeURIComponent(newEmail)}`);
             return;
           }
           

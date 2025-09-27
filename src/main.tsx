@@ -15,6 +15,7 @@ const UserSettings = lazy(() => import('./pages/UserSettings.advanced'));
 const UsernameOnboarding = lazy(() => import('./pages/UsernameOnboarding'));
 const ResendConfirmation = lazy(() => import('./pages/ResendConfirmation'));
 const EmailConfirmed = lazy(() => import('./pages/EmailConfirmed'));
+const EmailChangeConfirmation = lazy(() => import('./pages/EmailChangeConfirmation'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const AccountRecovery = lazy(() => import('./pages/AccountRecovery'));
 const RecoverAccount = lazy(() => import('./pages/RecoverAccount'));
@@ -68,6 +69,14 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<PageLoader />}>
         <EmailConfirmed />
+      </Suspense>
+    ) 
+  },
+  { 
+    path: '/auth/email-change-confirmed', 
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <EmailChangeConfirmation />
       </Suspense>
     ) 
   },
