@@ -158,6 +158,25 @@ export default function AuthForm({ onLogin, onSignup, isSubmitting }: AuthFormPr
             getToggleLabels(LOGIN_SIGNUP_LABELS, isLogin).primaryLabel
           )}
         </Button>
+
+        {/* Auth Help Links - nur bei Login anzeigen */}
+        {isLogin && (
+          <div className="auth-help-links">
+            <a 
+              href="/auth/forgot-password" 
+              className="text-sm text-blue-600 hover:text-blue-700"
+            >
+              Passwort vergessen?
+            </a>
+            <span className="separator">|</span>
+            <a 
+              href="/auth/recovery" 
+              className="text-sm text-blue-600 hover:text-blue-700"
+            >
+              E-Mail vergessen?
+            </a>
+          </div>
+        )}
       </form>
       
       <div className="form-toggle">

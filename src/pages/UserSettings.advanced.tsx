@@ -8,6 +8,7 @@ import Button from '../components/ui/Button';
 import ProfileInfo from '../components/profile/ProfileInfo';
 import ProfileEditor from '../components/profile/ProfileEditor';
 import PasswordChanger from '../components/profile/PasswordChanger';
+import EmailChanger from '../components/profile/EmailChanger';
 import AccountActions from '../components/profile/AccountActions';
 import { ToastContainer } from '../components/ui/Toast';
 import { LoadingOverlay } from '../components/ui/Loading';
@@ -15,7 +16,7 @@ import Container from '../components/layout/Container';
 
 export default function UserSettings() {
   const { user, signOut } = useAuth();
-  const { updateProfile, updatePassword, deleteAccount } = useProfile(user);
+  const { updateProfile, updatePassword, updateEmail, deleteAccount } = useProfile(user);
   const { success, error, toasts, removeToast } = useToast();
   const navigate = useNavigate();
   const [isUpdating, setIsUpdating] = useState(false);
@@ -97,6 +98,24 @@ export default function UserSettings() {
     }
   };
 
+  const handleEmailChange = async (newEmail: string, currentPassword: string) => {
+    setIsUpdating(true);
+    try {
+      const result = await updateEmail(newEmail, currentPassword);
+      
+      if (result.success) {
+        success('📧 Bestätigungs-E-Mail wurde an die neue Adresse gesendet! Bitte überprüfen Sie Ihr Postfach.');
+      } else {
+        error(`❌ ${result.error?.message || 'Fehler beim Ändern der E-Mail-Adresse'}`);
+      }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
+      error(`❌ Fehler beim Ändern der E-Mail-Adresse: ${errorMessage}`);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   if (!user) {
     return (
       <Container>
@@ -137,6 +156,11 @@ export default function UserSettings() {
             <ProfileEditor 
               user={user} 
               onSave={handleProfileSave}
+              isUpdating={isUpdating}
+            />
+            <EmailChanger
+              currentEmail={user.email || ''}
+              onChangeEmail={handleEmailChange}
               isUpdating={isUpdating}
             />
             <PasswordChanger 

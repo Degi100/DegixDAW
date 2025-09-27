@@ -10,6 +10,9 @@ import UserSettings from './pages/UserSettings.advanced';
 import UsernameOnboarding from './pages/UsernameOnboarding';
 import ResendConfirmation from './pages/ResendConfirmation';
 import EmailConfirmed from './pages/EmailConfirmed';
+import ForgotPassword from './pages/ForgotPassword';
+import AccountRecovery from './pages/AccountRecovery';
+import RecoverAccount from './pages/RecoverAccount';
 import NotFound from './pages/NotFound';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 
@@ -20,6 +23,9 @@ const router = createBrowserRouter([
   { path: '/auth/callback', element: <AuthCallback /> },
   { path: '/auth/resend-confirmation', element: <ResendConfirmation /> },
   { path: '/auth/email-confirmed', element: <EmailConfirmed /> },
+  { path: '/auth/forgot-password', element: <ForgotPassword /> },
+  { path: '/auth/recovery', element: <AccountRecovery /> },
+  { path: '/auth/recover', element: <RecoverAccount /> },
   { path: '/onboarding/username', element: <UsernameOnboarding /> },
   { path: '/settings', element: <UserSettings /> },
   { path: '*', element: <NotFound /> },

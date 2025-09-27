@@ -123,9 +123,50 @@ export function useProfile(user: User | null) {
     }
   };
 
+  const updateEmail = async (
+    newEmail: string,
+    currentPassword: string
+  ): Promise<{ success: boolean; error?: AuthError }> => {
+    try {
+      if (!user?.email) {
+        return { 
+          success: false, 
+          error: { message: 'Keine Email-Adresse gefunden', type: 'validation' } 
+        };
+      }
+
+      // First verify current password
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword
+      });
+
+      if (verifyError) {
+        return { 
+          success: false, 
+          error: { message: 'Aktuelles Passwort ist falsch', type: 'auth' } 
+        };
+      }
+
+      // Update email - Supabase will send confirmation email to new address
+      const { error: updateError } = await supabase.auth.updateUser({
+        email: newEmail
+      });
+
+      if (updateError) {
+        return { success: false, error: handleAuthError(updateError) };
+      }
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: handleAuthError(error) };
+    }
+  };
+
   return {
     updateProfile,
     updatePassword,
+    updateEmail,
     deleteAccount
   };
 }
