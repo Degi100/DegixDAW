@@ -20,20 +20,14 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
 
 
 
-// Prüfe ob Benutzername bereits existiert (falls in user_metadata gespeichert)
+// Prüfe ob Benutzername bereits existiert (vereinfachte Version für Client-Side)
 export async function checkUsernameExists(username: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase.auth.admin.listUsers()
-    
-    if (error) {
-      console.error('Fehler beim Prüfen des Benutzernamens:', error)
-      return false
-    }
-    
-    return data.users.some(user => 
-      user.user_metadata?.full_name === username || 
-      user.user_metadata?.username === username
-    )
+    // Für Client-Side können wir keine Admin-Operationen durchführen
+    // In einer echten App würde das über einen RPC-Call oder Backend-Endpoint laufen
+    // Für jetzt: Immer false zurückgeben (Username gilt als verfügbar)
+    console.log('Username check für:', username, '(immer verfügbar in Client-Mode)')
+    return false
   } catch (error) {
     console.error('Fehler beim Prüfen des Benutzernamens:', error)
     return false
