@@ -5,6 +5,7 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { generateFallbackUsername } from '../lib/usernameGenerator';
 import { handleAuthError, type AuthError } from '../lib/authUtils';
+import { getAuthCallbackUrl, getRecoveryCallbackUrl } from '../lib/urlUtils';
 
 interface AuthState {
   user: User | null;
@@ -116,7 +117,7 @@ export function useAuth() {
         email: data.email,
         password: data.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: getAuthCallbackUrl(),
           data: {
             username: data.username || generateFallbackUsername(data.fullName || '', data.email),
             full_name: data.fullName || '',
@@ -140,7 +141,7 @@ export function useAuth() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`
+          redirectTo: getAuthCallbackUrl()
         }
       });
 
@@ -175,7 +176,7 @@ export function useAuth() {
         type: 'signup',
         email: email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+          emailRedirectTo: getAuthCallbackUrl()
         }
       });
 
@@ -192,7 +193,7 @@ export function useAuth() {
   const resetPassword = async (email: string): Promise<{ success: boolean; error?: AuthError }> => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`
+        redirectTo: getRecoveryCallbackUrl()
       });
 
       if (error) {
