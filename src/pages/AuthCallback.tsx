@@ -77,6 +77,48 @@ export default function AuthCallback() {
             return;
           }
           
+          // Handle email change confirmation
+          if (emailType === 'email_change') {
+            console.log('Email change confirmation detected');
+            const { data, error } = await supabase.auth.verifyOtp({
+              token_hash: emailToken,
+              type: 'email_change'
+            });
+            
+            if (error) {
+              console.error('Email-Änderung fehlgeschlagen:', error);
+              alert('❌ Email-Änderung fehlgeschlagen. Bitte versuchen Sie es erneut.');
+              navigate('/settings');
+              return;
+            }
+            
+            console.log('Email change successful!', data);
+            
+            // Force refresh the session to get updated email
+            const { data: sessionData, error: refreshError } = await supabase.auth.refreshSession();
+            
+            if (refreshError) {
+              console.error('Session refresh failed:', refreshError);
+            } else {
+              console.log('Session refreshed successfully:', sessionData);
+            }
+            
+            // Also try to get the fresh session
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            
+            if (sessionError) {
+              console.error('Get session failed:', sessionError);
+            } else {
+              console.log('Current session after email change:', session);
+            }
+            
+            console.log('Email change successful! Redirecting to settings...');
+            
+            // Redirect with success parameter to trigger refresh in settings
+            window.location.href = '/settings?email_changed=true';
+            return;
+          }
+          
           // Handle other email verification types (signup, invite, magiclink)
           const { error } = await supabase.auth.verifyOtp({
             token_hash: emailToken,

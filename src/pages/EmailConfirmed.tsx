@@ -10,10 +10,22 @@ export default function EmailConfirmed() {
   const navigate = useNavigate();
   const [countdown, setCountdown] = useState(10);
   const [redirectTarget, setRedirectTarget] = useState('/login');
+  const [isEmailChange, setIsEmailChange] = useState(false);
 
   // Check if user needs onboarding and set redirect target
   useEffect(() => {
     const checkOnboardingStatus = async () => {
+      // Check URL params to see if this is an email change confirmation
+      const urlParams = new URLSearchParams(window.location.search);
+      const emailType = urlParams.get('type');
+      
+      if (emailType === 'email_change') {
+        console.log('Email change confirmation detected');
+        setIsEmailChange(true);
+        setRedirectTarget('/settings');
+        return;
+      }
+      
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         const hasUsername = !!session.user.user_metadata?.username;
@@ -74,11 +86,13 @@ export default function EmailConfirmed() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              E-Mail bestätigt!
+              {isEmailChange ? 'E-Mail geändert!' : 'E-Mail bestätigt!'}
             </h1>
             <p className="text-gray-600">
-              Ihre E-Mail-Adresse wurde erfolgreich bestätigt. 
-              Sie können sich jetzt anmelden.
+              {isEmailChange 
+                ? 'Ihre E-Mail-Adresse wurde erfolgreich geändert.'
+                : 'Ihre E-Mail-Adresse wurde erfolgreich bestätigt. Sie können sich jetzt anmelden.'
+              }
             </p>
           </div>
 
@@ -96,7 +110,12 @@ export default function EmailConfirmed() {
               className="w-full"
               variant="primary"
             >
-              {redirectTarget === '/onboarding/username' ? 'Username wählen' : 'Jetzt anmelden'}
+              {isEmailChange 
+                ? 'Zu den Einstellungen' 
+                : redirectTarget === '/onboarding/username' 
+                  ? 'Username wählen' 
+                  : 'Jetzt anmelden'
+              }
             </Button>
             
             <Button

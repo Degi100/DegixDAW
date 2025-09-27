@@ -1,9 +1,10 @@
 // src/pages/UserSettings.advanced.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { useToast } from '../hooks/useToast';
+import { supabase } from '../lib/supabase';
 import Button from '../components/ui/Button';
 import ProfileInfo from '../components/profile/ProfileInfo';
 import ProfileEditor from '../components/profile/ProfileEditor';
@@ -19,6 +20,53 @@ export default function UserSettings() {
   const { success, error } = useToast();
   const navigate = useNavigate();
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // Check for email change success from URL parameters
+  useEffect(() => {
+    const checkEmailChangeSuccess = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const emailChangeSuccess = urlParams.get('email_changed');
+      
+      if (emailChangeSuccess === 'true') {
+        // Force refresh session to get updated email
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError) {
+          console.error('Session refresh failed:', refreshError);
+        } else {
+          console.log('Session refreshed after email change');
+        }
+        
+        // Clear the URL parameter
+        window.history.replaceState({}, '', '/settings');
+        
+        // Show success message
+        success('✅ Email-Adresse erfolgreich geändert!');
+      }
+    };
+    
+    checkEmailChangeSuccess();
+  }, [success]);
+
+  const handleRefreshSession = async () => {
+    try {
+      setIsUpdating(true);
+      const { error: refreshError } = await supabase.auth.refreshSession();
+      
+      if (refreshError) {
+        throw refreshError;
+      }
+      
+      success('🔄 Session erfolgreich aktualisiert!');
+      // Force a page reload to show updated user data
+      window.location.reload();
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
+      error(`❌ Fehler beim Aktualisieren: ${errorMessage}`);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -148,6 +196,16 @@ export default function UserSettings() {
               ← Zurück zum Dashboard
             </Button>
             <h1 className="page-title">⚙️ Benutzereinstellungen</h1>
+            
+            <Button
+              onClick={handleRefreshSession}
+              variant="secondary"
+              size="small"
+              disabled={isUpdating}
+              type="button"
+            >
+              🔄 Session aktualisieren
+            </Button>
           </header>
 
           <div className="main-content">
