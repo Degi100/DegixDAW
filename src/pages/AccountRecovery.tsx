@@ -5,14 +5,13 @@ import { useToast } from '../hooks/useToast';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Container from '../components/layout/Container';
-import { ToastContainer } from '../components/ui/Toast';
 import { generateUsernameVariations } from '../lib/usernameGenerator';
 
 type RecoveryStep = 'options' | 'username' | 'username-suggestions' | 'contact' | 'success';
 
 export default function AccountRecovery() {
   const navigate = useNavigate();
-  const { success, error, toasts, removeToast } = useToast();
+  const { success, error } = useToast();
   const [currentStep, setCurrentStep] = useState<RecoveryStep>('options');
   const [username, setUsername] = useState('');
   const [usernameSuggestions, setUsernameSuggestions] = useState<string[]>([]);
@@ -352,10 +351,6 @@ export default function AccountRecovery() {
         {renderCurrentStep()}
       </div>
       
-      <ToastContainer 
-        toasts={toasts}
-        onRemove={removeToast}
-      />
     </Container>
   );
 }

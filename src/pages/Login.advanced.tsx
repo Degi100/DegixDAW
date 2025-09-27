@@ -6,7 +6,6 @@ import { useToast } from '../hooks/useToast';
 import AuthForm from '../components/auth/AuthForm';
 import OAuthSection from '../components/auth/OAuthSection';
 import ContinueSection from '../components/auth/ContinueSection';
-import { ToastContainer } from '../components/ui/Toast';
 import { APP_FULL_NAME } from '../lib/constants';
 
 export default function Login() {
@@ -14,7 +13,7 @@ export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { signInWithEmail, signUpWithEmail, signInWithOAuth } = useAuth();
-  const { success, error: showError, toasts, removeToast } = useToast();
+  const { success, error: showError } = useToast();
 
   const handleLogin = async (email: string, password: string) => {
     setIsSubmitting(true);
@@ -122,11 +121,6 @@ export default function Login() {
         
         <ContinueSection onContinue={handleContinueWithoutLogin} />
       </div>
-      
-      <ToastContainer 
-        toasts={toasts}
-        onRemove={removeToast}
-      />
     </>
   );
 }

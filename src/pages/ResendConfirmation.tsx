@@ -6,14 +6,13 @@ import { useToast } from '../hooks/useToast';
 import Container from '../components/layout/Container';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
-import { ToastContainer } from '../components/ui/Toast';
 import { APP_FULL_NAME } from '../lib/constants';
 
 export default function ResendConfirmation() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { resendConfirmation } = useAuth();
-  const { success, error, toasts, removeToast } = useToast();
+  const { success, error } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -115,8 +114,7 @@ export default function ResendConfirmation() {
           <p>{APP_FULL_NAME}</p>
         </div>
       </div>
-
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </Container>
   );
 }
+

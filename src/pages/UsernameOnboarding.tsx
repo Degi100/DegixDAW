@@ -8,14 +8,13 @@ import Container from '../components/layout/Container';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import UsernameSuggestions from '../components/ui/UsernameSuggestions';
-import { ToastContainer } from '../components/ui/Toast';
 import { APP_FULL_NAME, EMOJIS, UI_TEXT } from '../lib/constants';
 import { validateUsernameFormat } from '../lib/validation/authValidation';
 
 export default function UsernameOnboarding() {
   const { user } = useAuth();
   const { updateProfile } = useProfile(user);
-  const { success, error, toasts, removeToast } = useToast();
+  const { success, error } = useToast();
   const navigate = useNavigate();
   
   const [username, setUsername] = useState('');
@@ -204,10 +203,6 @@ export default function UsernameOnboarding() {
         </Container>
       </div>
 
-      <ToastContainer 
-        toasts={toasts} 
-        onRemove={removeToast} 
-      />
     </>
   );
 }

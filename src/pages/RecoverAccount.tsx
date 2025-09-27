@@ -6,7 +6,6 @@ import { useToast } from '../hooks/useToast';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Container from '../components/layout/Container';
-import { ToastContainer } from '../components/ui/Toast';
 import { LoadingOverlay } from '../components/ui/Loading';
 
 type RecoveryStep = 'verify' | 'reset' | 'success';
@@ -15,7 +14,7 @@ export default function RecoverAccount() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   // Future: could use useAuth for actual password reset with token
-  const { success, error, toasts, removeToast } = useToast();
+  const { success, error } = useToast();
   
   const [currentStep, setCurrentStep] = useState<RecoveryStep>('verify');
   const [isLoading, setIsLoading] = useState(true);
@@ -264,10 +263,6 @@ export default function RecoverAccount() {
         {renderCurrentStep()}
       </div>
       
-      <ToastContainer 
-        toasts={toasts}
-        onRemove={removeToast}
-      />
     </Container>
   );
 }

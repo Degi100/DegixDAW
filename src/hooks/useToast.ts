@@ -1,68 +1,58 @@
 // src/hooks/useToast.ts
-import { useState, useCallback } from 'react';
-import type { Toast, ToastType } from '../components/ui/Toast';
+// Simplified toast hook using react-hot-toast
+// Replaces complex state management with proven library
 
-let toastId = 0;
+import { useCallback } from 'react';
+import toast from 'react-hot-toast';
 
 export function useToast() {
-  const [toasts, setToasts] = useState<Toast[]>([]);
-
-  const addToast = useCallback((
-    message: string, 
-    type: ToastType = 'info', 
-    options?: {
-      title?: string;
-      duration?: number;
-      onClose?: () => void;
-    }
-  ) => {
-    const id = `toast-${++toastId}`;
-    const toast: Toast = {
-      id,
-      type,
-      message,
-      title: options?.title,
-      duration: options?.duration ?? 5000,
-      onClose: options?.onClose,
-    };
-
-    setToasts(prev => [...prev, toast]);
-    return id;
-  }, []);
-
-  const removeToast = useCallback((id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
-  }, []);
-
-  const clearAllToasts = useCallback(() => {
-    setToasts([]);
-  }, []);
-
-  // Convenience methods
+  // Convenience methods that match our previous API
   const success = useCallback((message: string, options?: { title?: string; duration?: number }) => {
-    return addToast(message, 'success', options);
-  }, [addToast]);
+    const displayMessage = options?.title ? `${options.title}\n${message}` : message;
+    return toast.success(displayMessage, {
+      duration: options?.duration ?? 5000,
+    });
+  }, []);
 
   const error = useCallback((message: string, options?: { title?: string; duration?: number }) => {
-    return addToast(message, 'error', { duration: 7000, ...options });
-  }, [addToast]);
+    const displayMessage = options?.title ? `${options.title}\n${message}` : message;
+    return toast.error(displayMessage, {
+      duration: options?.duration ?? 7000,
+    });
+  }, []);
 
   const warning = useCallback((message: string, options?: { title?: string; duration?: number }) => {
-    return addToast(message, 'warning', options);
-  }, [addToast]);
+    const displayMessage = options?.title ? `${options.title}\n${message}` : message;
+    return toast(displayMessage, {
+      duration: options?.duration ?? 5000,
+      icon: '⚠️',
+    });
+  }, []);
 
   const info = useCallback((message: string, options?: { title?: string; duration?: number }) => {
-    return addToast(message, 'info', options);
-  }, [addToast]);
+    const displayMessage = options?.title ? `${options.title}\n${message}` : message;
+    return toast(displayMessage, {
+      duration: options?.duration ?? 5000,
+      icon: 'ℹ️',
+    });
+  }, []);
 
+  // Backward compatibility - return the same interface
   return {
-    toasts,
-    addToast,
-    removeToast,
-    clearAllToasts,
     success,
     error,
     warning,
     info,
+    // Legacy methods for compatibility (just redirect to toast functions)
+    addToast: (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
+      switch (type) {
+        case 'success': return success(message);
+        case 'error': return error(message);
+        case 'warning': return warning(message);
+        default: return info(message);
+      }
+    },
+    removeToast: toast.dismiss,
+    clearAllToasts: () => toast.dismiss(),
   };
 }

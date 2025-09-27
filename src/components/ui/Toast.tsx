@@ -1,89 +1,53 @@
 // src/components/ui/Toast.tsx
-import { useEffect } from 'react';
+// Simple toast wrapper using react-hot-toast library
+// Replaces 301 lines of custom CSS with a 10KB proven library
 
-export type ToastType = 'success' | 'error' | 'warning' | 'info';
+import { Toaster } from 'react-hot-toast';
 
-export interface Toast {
-  id: string;
-  type: ToastType;
-  title?: string;
-  message: string;
-  duration?: number;
-  onClose?: () => void;
-}
-
-interface ToastProps extends Toast {
-  onRemove: (id: string) => void;
-}
-
-const toastIcons = {
-  success: '✅',
-  error: '❌',
-  warning: '⚠️',
-  info: 'ℹ️',
-};
-
-export function ToastItem({ id, type, title, message, duration = 5000, onClose, onRemove }: ToastProps) {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onRemove(id);
-      onClose?.();
-    }, duration);
-
-    return () => clearTimeout(timer);
-  }, [id, duration, onRemove, onClose]);
-
-  const handleClose = () => {
-    onRemove(id);
-    onClose?.();
-  };
-
+// Simple wrapper component for consistent styling
+export function ToastContainer() {
   return (
-    <div className={`toast toast-${type}`}>
-      <div className="toast-icon">
-        {toastIcons[type]}
-      </div>
-      
-      <div className="toast-content">
-        {title && <div className="toast-title">{title}</div>}
-        <div className="toast-message">{message}</div>
-      </div>
-      
-      <button 
-        onClick={handleClose}
-        className="toast-close"
-        aria-label="Toast schließen"
-      >
-        ×
-      </button>
-      
-      {duration > 0 && (
-        <div 
-          className={`toast-progress toast-progress-${type}`}
-          style={{ animationDuration: `${duration}ms` }}
-        />
-      )}
-    </div>
-  );
-}
-
-interface ToastContainerProps {
-  toasts: Toast[];
-  onRemove: (id: string) => void;
-}
-
-export function ToastContainer({ toasts, onRemove }: ToastContainerProps) {
-  if (toasts.length === 0) return null;
-
-  return (
-    <div className="toast-container">
-      {toasts.map((toast) => (
-        <ToastItem 
-          key={toast.id} 
-          {...toast} 
-          onRemove={onRemove} 
-        />
-      ))}
-    </div>
+    <Toaster
+      position="top-right"
+      reverseOrder={false}
+      gutter={8}
+      containerClassName="toast-container"
+      toastOptions={{
+        // Default styling that matches our design system
+        duration: 5000,
+        style: {
+          background: 'var(--white)',
+          color: 'var(--text-primary)',
+          border: '1px solid var(--gray-200)',
+          borderRadius: 'var(--radius-md)',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+          fontSize: 'var(--font-size-sm)',
+          padding: 'var(--spacing-md)',
+        },
+        // Success styling
+        success: {
+          style: {
+            borderLeft: '4px solid var(--success-color)',
+            backgroundColor: 'var(--success-50, #f0fdf4)',
+          },
+          iconTheme: {
+            primary: 'var(--success-color)',
+            secondary: 'var(--white)',
+          },
+        },
+        // Error styling  
+        error: {
+          style: {
+            borderLeft: '4px solid var(--error-color)',
+            backgroundColor: 'var(--error-50, #fef2f2)',
+          },
+          iconTheme: {
+            primary: 'var(--error-color)',
+            secondary: 'var(--white)',
+          },
+          duration: 7000,
+        },
+      }}
+    />
   );
 }

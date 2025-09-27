@@ -5,6 +5,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './styles/utilities/index.css';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import PageLoader from './components/ui/PageLoader';
+import { ToastContainer } from './components/ui/Toast';
 
 // Lazy load components for better code splitting
 const Login = lazy(() => import('./pages/Login.advanced'));
@@ -124,6 +125,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
       <RouterProvider router={router} />
+      <ToastContainer />
     </ErrorBoundary>
   </React.StrictMode>,
 );

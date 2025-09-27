@@ -1,7 +1,7 @@
 /* src/styles/utilities/components.css */
-/* Component utilities - Cards, avatars, content grids, and UI patterns */
+/* Essential component utilities - Cards, grids, and UI patterns (used in app) */
 
-/* Card Patterns */
+/* Card System - HEAVILY USED */
 .card {
   background: var(--card-background);
   border-radius: var(--card-radius);
@@ -25,64 +25,7 @@
   margin-bottom: var(--spacing-md);
 }
 
-/* Avatar Utilities */
-.avatar {
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  background: linear-gradient(135deg, var(--primary), #3B82F6);
-  color: white;
-}
-
-.avatar-large {
-  width: 64px;
-  height: 64px;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.avatar-medium {
-  width: 48px;
-  height: 48px;
-  font-size: 1.125rem;
-  font-weight: 600;
-}
-
-.avatar-small {
-  width: 32px;
-  height: 32px;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.account-info {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-lg);
-}
-
-.profile-details {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.profile-name {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.profile-email {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  margin: 0;
-}
-
-/* Content Grid System */
+/* Content Grid System - USED IN DASHBOARD */
 .content-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -116,7 +59,7 @@
   line-height: 1.5;
 }
 
-/* Features Grid */
+/* Features Grid - USED IN DASHBOARD */
 .features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -156,7 +99,7 @@
   line-height: 1.5;
 }
 
-/* Benefits List */
+/* Benefits List - USED IN GUEST PROMPT */
 .benefits-list {
   display: flex;
   flex-direction: column;
@@ -174,19 +117,6 @@
 }
 
 .benefit-icon {
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   flex-shrink: 0;
-}
-
-/* Danger Zone */
-.danger-zone {
-  border-top: 1px solid var(--error);
-  padding-top: var(--spacing-lg);
-  margin-top: var(--spacing-lg);
-}
-
-.danger-description {
-  color: var(--text-secondary);
-  margin: 0 0 var(--spacing-lg) 0;
-  font-size: var(--font-size-sm);
 }

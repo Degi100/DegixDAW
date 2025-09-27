@@ -6,7 +6,6 @@ import { useToast } from '../hooks/useToast';
 import Container from '../components/layout/Container';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
-import { ToastContainer } from '../components/ui/Toast';
 import { APP_FULL_NAME } from '../lib/constants';
 
 export default function ForgotPassword() {
@@ -14,7 +13,7 @@ export default function ForgotPassword() {
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const { resetPassword } = useAuth();
-  const { success, error, toasts, removeToast } = useToast();
+  const { success, error } = useToast();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -168,8 +167,7 @@ export default function ForgotPassword() {
           <p>{APP_FULL_NAME}</p>
         </div>
       </div>
-
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </Container>
   );
 }
+

@@ -5,7 +5,6 @@ import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import Button from '../components/ui/Button';
 import Container from '../components/layout/Container';
-import { ToastContainer } from '../components/ui/Toast';
 import { LoadingOverlay } from '../components/ui/Loading';
 
 interface RecoveryRequest {
@@ -20,7 +19,7 @@ interface RecoveryRequest {
 export default function AdminRecovery() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { success, error, toasts, removeToast } = useToast();
+  const { success, error } = useToast();
   
   const [isLoading, setIsLoading] = useState(true);
   const [requests, setRequests] = useState<RecoveryRequest[]>([]);
@@ -249,10 +248,6 @@ export default function AdminRecovery() {
         </div>
       </div>
       
-      <ToastContainer 
-        toasts={toasts}
-        onRemove={removeToast}
-      />
     </Container>
   );
 }

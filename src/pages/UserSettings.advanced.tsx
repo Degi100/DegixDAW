@@ -10,14 +10,13 @@ import ProfileEditor from '../components/profile/ProfileEditor';
 import PasswordChanger from '../components/profile/PasswordChanger';
 import EmailChanger from '../components/profile/EmailChanger';
 import AccountActions from '../components/profile/AccountActions';
-import { ToastContainer } from '../components/ui/Toast';
 import { LoadingOverlay } from '../components/ui/Loading';
 import Container from '../components/layout/Container';
 
 export default function UserSettings() {
   const { user, signOut } = useAuth();
   const { updateProfile, updatePassword, updateEmail, deleteAccount } = useProfile(user);
-  const { success, error, toasts, removeToast } = useToast();
+  const { success, error } = useToast();
   const navigate = useNavigate();
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -175,10 +174,6 @@ export default function UserSettings() {
         </div>
       </div>
       
-      <ToastContainer 
-        toasts={toasts}
-        onRemove={removeToast}
-      />
     </Container>
   );
 }

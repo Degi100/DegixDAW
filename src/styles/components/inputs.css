@@ -14,6 +14,11 @@
   font-size: 0.9rem;
 }
 
+.input-required {
+  color: var(--error-color);
+  margin-left: 0.25rem;
+}
+
 .input {
   width: 100%;
   padding: 0.75rem;
@@ -59,8 +64,72 @@
   position: relative;
 }
 
-.input-with-indicator {
-  padding-right: 2.5rem;
+/* Input padding for right indicators */
+.input-with-right-indicators {
+  padding-right: 4.5rem;
+}
+
+/* Input Indicators Container (right side) */
+.input-indicators-right {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+.input-indicators-right > * {
+  pointer-events: auto;
+}
+
+/* Required Field Indicator (Stern) */
+.input-required-indicator {
+  color: var(--error-color);
+  font-weight: bold;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* Success Checkmark */
+.input-checkmark {
+  color: var(--success-color);
+  font-weight: bold;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* Password Toggle Button */
+.input-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+  color: var(--gray-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.input-toggle:hover {
+  color: var(--gray-700);
+  background-color: var(--gray-100);
+}
+
+.input-toggle:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+
+
+.eye-icon {
+  width: 18px;
+  height: 18px;
 }
 
 /* Textarea */

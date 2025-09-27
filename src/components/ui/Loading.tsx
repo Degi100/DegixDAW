@@ -1,5 +1,9 @@
 // src/components/ui/Loading.tsx
+// Optimized loading components using react-spinners
+// Reduces custom CSS from 230 lines to ~30 lines
+
 import type { ReactNode } from 'react';
+import { ClipLoader } from 'react-spinners';
 
 interface SpinnerProps {
   size?: 'small' | 'medium' | 'large';
@@ -7,15 +11,21 @@ interface SpinnerProps {
   className?: string;
 }
 
-export function Spinner({ size = 'medium', variant = 'white', className = '' }: SpinnerProps) {
-  const spinnerClasses = [
-    'spinner',
-    size !== 'medium' && `spinner-${size}`,
-    variant !== 'white' && `spinner-${variant}`,
-    className
-  ].filter(Boolean).join(' ');
+const sizeMap = {
+  small: 16,
+  medium: 24,
+  large: 32,
+};
 
-  return <div className={spinnerClasses} />;
+export function Spinner({ size = 'medium', variant = 'white', className = '' }: SpinnerProps) {
+  const color = variant === 'primary' ? 'var(--primary-color)' : '#ffffff';
+  const spinnerSize = sizeMap[size];
+
+  return (
+    <div className={className}>
+      <ClipLoader color={color} size={spinnerSize} />
+    </div>
+  );
 }
 
 interface LoadingOverlayProps {

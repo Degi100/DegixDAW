@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import { useWelcomeMessage } from '../hooks/useWelcomeMessage';
-import { ToastContainer } from '../components/ui/Toast';
 import { LoadingOverlay } from '../components/ui/Loading';
 import Container from '../components/layout/Container';
 import WelcomeCard from '../components/dashboard/WelcomeCard';
@@ -15,7 +14,7 @@ import GuestPrompt from '../components/dashboard/GuestPrompt';
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, loading, signOut } = useAuth();
-  const { success, toasts, removeToast } = useToast();
+  const { success } = useToast();
 
   // Verwende unseren Custom Hook für Welcome-Messages
   useWelcomeMessage(user);
@@ -61,8 +60,6 @@ export default function Dashboard() {
           )}
         </div>
       </Container>
-      
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </>
   );
 }
