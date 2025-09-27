@@ -30,25 +30,20 @@ export default function AuthCallback() {
         }
         
         if (token && type) {
-          // Try the modern way first
-          const { error } = await supabase.auth.exchangeCodeForSession(window.location.search);
+          // Use the direct token verification method
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: token,
+            type: type as 'signup' | 'recovery' | 'invite' | 'magiclink'
+          });
           
           if (error) {
-            // Fallback to old method
-            const { error: otpError } = await supabase.auth.verifyOtp({
-              token_hash: token,
-              type: type as 'signup' | 'recovery' | 'invite' | 'magiclink'
-            });
-            
-            if (otpError) {
-              throw otpError;
-            }
+            throw error;
           }
           
           if (error) {
             console.error('Email-Bestätigung fehlgeschlagen:', error);
-            const errorMsg = error.message || '';
-            const errorCode = error.message || '';
+            const errorMsg = error && typeof error === 'object' && 'message' in error ? (error as { message: string }).message : '';
+            const errorCode = errorMsg;
             
             // Check for specific error codes and messages
             if (errorMsg.includes('429') || errorMsg.includes('rate')) {

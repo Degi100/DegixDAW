@@ -11,8 +11,8 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
     persistSession: true, // Session über Browser-Restart beibehalten
     detectSessionInUrl: true, // OAuth Callbacks erkennen
     
-    // Flow type für bessere Sicherheit
-    flowType: 'pkce' // Proof Key for Code Exchange - sicherer für SPAs
+    // Fallback to implicit flow for better compatibility
+    flowType: 'implicit' // Weniger streng als PKCE, besser für Tests
   }
 })
 
