@@ -12,17 +12,11 @@ export default function WelcomeCard({ user, onNavigateToSettings, onLogout }: We
   return (
     <section className="user-section">
       <div className="card card-large center">
-        <h2 className="welcome-title">Willkommen zurück!</h2>
+        <h1 className="welcome-username">{user.user_metadata?.username ? `@${user.user_metadata.username}` : 'Kein Username'}</h1>
+        <h3 className="welcome-name">{user.user_metadata?.full_name || 'Kein Name'}</h3>
         <div className="user-info">
           <p><strong>Email:</strong> {user.email}</p>
-          {user.user_metadata?.full_name && (
-            <p><strong>Name:</strong> {user.user_metadata.full_name}</p>
-          )}
-          {user.user_metadata?.username && (
-            <p><strong>Username:</strong> @{user.user_metadata.username}</p>
-          )}
         </div>
-        
         <div className="button-group">
           <Button 
             onClick={onNavigateToSettings}

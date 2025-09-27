@@ -20,8 +20,8 @@ export default function ProfileInfo({ user }: ProfileInfoProps) {
           {username && (
             <h2 className="profile-name">@{username}</h2>
           )}
-          {user.user_metadata?.full_name && (
-            <p className="profile-email">{user.user_metadata.full_name}</p>
+          {displayName && (
+            <p className="profile-email">{displayName}</p>
           )}
           <p className="profile-email">{user.email}</p>
         </div>

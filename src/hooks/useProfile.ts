@@ -15,12 +15,29 @@ export function useProfile(user: User | null) {
 
   const updateProfile = async (updates: ProfileUpdates): Promise<{ success: boolean; error?: AuthError }> => {
     try {
-      const { error } = await supabase.auth.updateUser({
-        data: updates
-      });
+      // Schreibe die Daten in die Tabelle 'profiles' (Upsert)
+      const { error } = await supabase
+        .from('profiles')
+        .upsert([
+          {
+            user_id: user?.id,
+            username: updates.username,
+            full_name: updates.full_name
+          }
+        ], { onConflict: 'user_id' });
 
       if (error) {
         return { success: false, error: handleAuthError(error) };
+      }
+
+      // Schreibe Username auch ins Auth-Metadata, damit er in der UI angezeigt wird
+      if (updates.username) {
+        const { error: metaError } = await supabase.auth.updateUser({
+          data: { username: updates.username }
+        });
+        if (metaError) {
+          return { success: false, error: handleAuthError(metaError) };
+        }
       }
 
       return { success: true };

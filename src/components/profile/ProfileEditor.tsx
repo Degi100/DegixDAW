@@ -1,7 +1,7 @@
 // src/components/ui/ProfileEditor.tsx
 
 // src/components/ui/ProfileEditor.tsx
-import { useEffect } from 'react';
+// ...existing code...
 import type { User } from '@supabase/supabase-js';
 import { useForm } from '../../hooks/useForm';
 import Input from '../ui/Input';
@@ -31,17 +31,7 @@ export default function ProfileEditor({ user, onSave, isUpdating }: ProfileEdito
   });
 
   // Initialize form values when user data loads
-  useEffect(() => {
-    if (user) {
-      const currentFullName = form.values.fullName;
-      const newFullName = user.user_metadata?.full_name || '';
-      
-      if (currentFullName !== newFullName) {
-        form.setValue('fullName', newFullName);
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  // ...existing code...
 
   // Show username suggestions when user starts editing
 
