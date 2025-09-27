@@ -4,6 +4,12 @@ export interface AuthError {
   type: 'auth' | 'rate_limit' | 'validation' | 'network';
 }
 
+export interface AuthResult {
+  success: boolean;
+  error?: AuthError;
+  message?: string;
+}
+
 export function handleAuthError(error: unknown): AuthError {
   console.error('Auth error:', error);
 

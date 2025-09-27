@@ -2,7 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { handleAuthError, type AuthError } from '../lib/authUtils';
+import { handleAuthError, type AuthError, type AuthResult } from '../lib/authUtils';
 import { getEmailChangeCallbackUrl } from '../lib/urlUtils';
 
 interface ProfileUpdates {
@@ -158,7 +158,7 @@ export function useProfile(user: User | null) {
   const updateEmail = async (
     newEmail: string,
     currentPassword: string
-  ): Promise<{ success: boolean; error?: AuthError }> => {
+  ): Promise<AuthResult> => {
     try {
       if (!user?.email) {
         return { 
@@ -190,7 +190,10 @@ export function useProfile(user: User | null) {
         return { success: false, error: handleAuthError(updateError) };
       }
 
-      return { success: true };
+      return { 
+        success: true, 
+        message: `Email-Änderung initiiert!\n\nSie erhalten 2 Bestätigungs-E-Mails:\n• An Ihre alte E-Mail (${user.email}) - zur Sicherheit\n• An Ihre neue E-Mail (${newEmail}) - zur Bestätigung\n\nKlicken Sie den Link in der E-Mail an Ihre NEUE Adresse!`
+      };
     } catch (error) {
       return { success: false, error: handleAuthError(error) };
     }

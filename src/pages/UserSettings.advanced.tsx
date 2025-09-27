@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { useToast } from '../hooks/useToast';
 import { supabase } from '../lib/supabase';
+import EmailChangeInfo from '../components/ui/EmailChangeInfo';
 import Button from '../components/ui/Button';
 import ProfileInfo from '../components/profile/ProfileInfo';
 import ProfileEditor from '../components/profile/ProfileEditor';
@@ -20,6 +21,8 @@ export default function UserSettings() {
   const { success, error } = useToast();
   const navigate = useNavigate();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showEmailInfo, setShowEmailInfo] = useState(false);
+  const [emailChangeInfo, setEmailChangeInfo] = useState<{ oldEmail: string; newEmail: string } | null>(null);
 
   // Check for email change success from URL parameters
   useEffect(() => {
@@ -151,7 +154,15 @@ export default function UserSettings() {
       const result = await updateEmail(newEmail, currentPassword);
       
       if (result.success) {
-        success('📧 Bestätigungs-E-Mail wurde an die neue Adresse gesendet! Bitte überprüfen Sie Ihr Postfach.');
+        // Show detailed info about the two emails
+        if (result.message) {
+          // Use custom message if available
+          alert(result.message);
+        } else {
+          // Set info for modal
+          setEmailChangeInfo({ oldEmail: user?.email || '', newEmail });
+          setShowEmailInfo(true);
+        }
       } else {
         error(`❌ ${result.error?.message || 'Fehler beim Ändern der E-Mail-Adresse'}`);
       }
@@ -231,6 +242,18 @@ export default function UserSettings() {
           </div>
         </div>
       </div>
+      
+      {/* Email Change Info Modal */}
+      {showEmailInfo && emailChangeInfo && (
+        <EmailChangeInfo
+          oldEmail={emailChangeInfo.oldEmail}
+          newEmail={emailChangeInfo.newEmail}
+          onClose={() => {
+            setShowEmailInfo(false);
+            setEmailChangeInfo(null);
+          }}
+        />
+      )}
       
     </Container>
   );
