@@ -37,22 +37,11 @@ export function useToast() {
     });
   }, []);
 
-  // Backward compatibility - return the same interface
+  // Return clean interface
   return {
     success,
     error,
     warning,
     info,
-    // Legacy methods for compatibility (just redirect to toast functions)
-    addToast: (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
-      switch (type) {
-        case 'success': return success(message);
-        case 'error': return error(message);
-        case 'warning': return warning(message);
-        default: return info(message);
-      }
-    },
-    removeToast: toast.dismiss,
-    clearAllToasts: () => toast.dismiss(),
   };
 }

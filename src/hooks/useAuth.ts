@@ -59,8 +59,7 @@ export function useAuth() {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
-        console.log('Full session:', session);
+
         
         if (mounted) {
           setState({
@@ -80,10 +79,8 @@ export function useAuth() {
           const isNewUser = !hasUsername || needsOnboarding;
           
           if (isNewUser) {
-            console.log('New user detected - redirecting to username onboarding');
             navigate('/onboarding/username');
           } else {
-            console.log('Existing user with username - staying in current flow');
           }
         }
       }

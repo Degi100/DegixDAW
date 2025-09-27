@@ -96,7 +96,7 @@ export function useProfile(user: User | null) {
         };
       }
 
-      console.log('Attempting to delete user account:', user.id);
+
 
       // WARNUNG: Vollständige Account-Löschung erfordert Backend-Integration
       // Hier implementieren wir eine Soft-Delete-Lösung
@@ -112,7 +112,7 @@ export function useProfile(user: User | null) {
         .eq('user_id', user.id);
 
       if (profileError) {
-        console.error('Failed to mark profile as deleted:', profileError);
+
         return { 
           success: false, 
           error: { 
@@ -131,11 +131,11 @@ export function useProfile(user: User | null) {
           }
         });
       } catch (metaError) {
-        console.warn('Could not update auth metadata:', metaError);
+
         // Nicht kritisch - Profile ist bereits gelöscht
       }
 
-      console.log('Account marked as deleted successfully');
+
       
       // 3. Abmelden und weiterleiten
       await supabase.auth.signOut();

@@ -43,10 +43,3 @@ export {
   type AsyncValidationResult,
   type AsyncValidator,
 } from './commonValidation';
-
-// Legacy exports for backward compatibility (deprecated - use specific imports)
-/** @deprecated Use specific validation functions from authValidation or profileValidation modules */
-export { validateSignUpAsync as validateSignUp } from './authValidation';
-
-/** @deprecated Use validateForm from commonValidation module */
-export { validateForm as validateFormGeneric } from './commonValidation';

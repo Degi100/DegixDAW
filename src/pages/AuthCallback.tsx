@@ -9,9 +9,6 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        console.log('AuthCallback: Processing URL:', window.location.href);
-        console.log('AuthCallback: URL params:', window.location.search);
-        console.log('AuthCallback: Hash params:', window.location.hash);
         
         // Check URL hash and search params for auth data
         const urlParams = new URLSearchParams(window.location.search);
@@ -30,18 +27,15 @@ export default function AuthCallback() {
         
         // Check for errors first
         if (error_code === 'otp_expired' || error_description?.includes('expired')) {
-          console.log('Email link expired, redirecting to resend page');
           navigate('/auth/resend-confirmation');
           return;
         }
         
         // Handle OAuth callback (Google, Discord, etc.)
         if (accessToken && refreshToken) {
-          console.log('OAuth callback detected, processing session...');
           const { data: { session }, error } = await supabase.auth.getSession();
           
           if (error) {
-            console.error('OAuth Auth-Fehler:', error);
             alert('OAuth-Anmeldung fehlgeschlagen. Bitte versuche es erneut.');
             navigate('/login');
           } else if (session?.user) {
@@ -53,25 +47,20 @@ export default function AuthCallback() {
             
             if (isNewUser) {
               // Any new user without username must go through onboarding
-              console.log('New user detected - redirecting to username onboarding');
               navigate('/onboarding/username');
             } else {
               // Existing user with username → dashboard
-              console.log('Existing user with username, redirecting to dashboard');
               navigate('/dashboard');
             }
           } else {
-            console.log('No OAuth session found, redirecting to login');
             navigate('/login');
           }
         }
         // Handle email verification callback
         else if (emailToken && emailType) {
-          console.log(`${emailType} callback detected`);
           
           // Handle password recovery differently
           if (emailType === 'recovery') {
-            console.log('Password recovery callback detected');
             // For password recovery, just redirect to reset password page with token
             navigate(`/auth/recover?token=${emailToken}&email=${urlParams.get('email') || ''}`);
             return;
@@ -79,26 +68,22 @@ export default function AuthCallback() {
           
           // Handle email change confirmation
           if (emailType === 'email_change') {
-            console.log('Email change confirmation detected');
-            const { data, error } = await supabase.auth.verifyOtp({
+            const { error } = await supabase.auth.verifyOtp({
               token_hash: emailToken,
               type: 'email_change'
             });
             
             if (error) {
-              console.error('Email-Änderung fehlgeschlagen:', error);
               alert('❌ Email-Änderung fehlgeschlagen. Bitte versuchen Sie es erneut.');
               navigate('/settings');
               return;
             }
             
-            console.log('Email change OTP verified successfully!', data);
             
             // Check if we have a valid session with the new email
             const { data: { session }, error: sessionError } = await supabase.auth.getSession();
             
             if (sessionError || !session) {
-              console.error('No valid session after email change:', sessionError);
               // Email change successful but no session - user needs to re-login
               alert('✅ Email-Adresse erfolgreich geändert!\n\n' +
                     'Aus Sicherheitsgründen wurden Sie abgemeldet.\n' +
@@ -107,13 +92,11 @@ export default function AuthCallback() {
               return;
             }
             
-            console.log('Session found after email change:', session.user.email);
             
             // Force a complete session refresh
             const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
             
             if (refreshError) {
-              console.error('Session refresh failed:', refreshError);
               // Fallback: logout and ask user to login with new email
               alert('✅ Email-Adresse geändert!\n\n' +
                     'Bitte loggen Sie sich mit Ihrer neuen Email-Adresse ein.');
@@ -122,7 +105,6 @@ export default function AuthCallback() {
               return;
             }
             
-            console.log('Session refreshed after email change:', refreshData);
             
             // Success - redirect to email change confirmation page
             const newEmail = refreshData.session?.user?.email || session.user.email || 'unknown';
@@ -137,7 +119,6 @@ export default function AuthCallback() {
           });
           
           if (error) {
-            console.error('Email-Bestätigung fehlgeschlagen:', error);
             const errorMsg = error && typeof error === 'object' && 'message' in error ? (error as { message: string }).message : '';
             
             // Check for specific error codes and messages
@@ -152,18 +133,15 @@ export default function AuthCallback() {
                 errorMsg.includes('Email link is invalid')) {
               // For recovery type, redirect to forgot password
               if (emailType === 'recovery') {
-                console.log('Recovery link expired, redirecting to forgot password');
                 navigate('/auth/forgot-password');
               } else {
                 // For other types, redirect to resend confirmation
-                console.log('Email link expired, redirecting to resend page');
                 navigate('/auth/resend-confirmation');
               }
               return;
             }
             
             // Fallback for any other email verification errors
-            console.log('Other email verification error, redirecting appropriately');
             if (emailType === 'recovery') {
               navigate('/auth/forgot-password');
             } else {
@@ -173,16 +151,13 @@ export default function AuthCallback() {
           }
           
           // Email successfully confirmed! Show confirmation page
-          console.log('Email successfully confirmed, showing confirmation page');
           navigate('/auth/email-confirmed');
         }
         // No clear callback type detected
         else {
-          console.log('No clear callback detected, checking session...');
           const { data: { session }, error } = await supabase.auth.getSession();
           
           if (error) {
-            console.error('Session check error:', error);
             navigate('/login');
           } else if (session?.user) {
             // Apply same strict onboarding check
@@ -191,19 +166,15 @@ export default function AuthCallback() {
             const isNewUser = !hasUsername || needsOnboarding;
             
             if (isNewUser) {
-              console.log('Session found but user needs onboarding');
               navigate('/onboarding/username');
             } else {
-              console.log('Valid session with username found, redirecting to dashboard');
               navigate('/dashboard');
             }
           } else {
-            console.log('No session found, redirecting to login');
             navigate('/login');
           }
         }
       } catch (err) {
-        console.error('Callback-Fehler:', err);
         alert('Ein Fehler ist aufgetreten. Bitte versuche es erneut.');
         navigate('/login');
       }

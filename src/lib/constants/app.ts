@@ -129,12 +129,3 @@ export const UI_TEXT = {
   deleteAccount: 'Konto löschen',
 } as const;
 
-export const PLACEHOLDER_TEXT = {
-  email: 'ihre@email.de',
-  password: '••••••••',
-  fullName: 'Max Mustermann',
-  username: 'maxmustermann',
-  projectName: 'Mein neues Projekt',
-  projectDescription: 'Beschreiben Sie Ihr Projekt...',
-  search: 'Suchen...',
-} as const;

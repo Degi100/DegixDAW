@@ -20,7 +20,7 @@ export default function EmailConfirmed() {
       const emailType = urlParams.get('type');
       
       if (emailType === 'email_change') {
-        console.log('Email change confirmation detected');
+
         setIsEmailChange(true);
         setRedirectTarget('/settings');
         return;
@@ -33,15 +33,15 @@ export default function EmailConfirmed() {
         
         // STRICT: Any user without username OR with onboarding flag goes to onboarding
         if (!hasUsername || needsOnboarding) {
-          console.log('Email confirmed - new user needs username onboarding');
+
           setRedirectTarget('/onboarding/username');
         } else {
-          console.log('Email confirmed - existing user with username, redirecting to dashboard');
+
           setRedirectTarget('/dashboard');
         }
       } else {
         // No session - redirect to login
-        console.log('No session found after email confirmation');
+
         setRedirectTarget('/login');
       }
     };

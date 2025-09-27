@@ -23,7 +23,6 @@ export default defineConfig({
           // UI and utilities
           'utils': [
             './src/lib/authUtils.ts',
-            './src/lib/logger.ts',
             './src/lib/usernameGenerator.ts'
           ],
           
