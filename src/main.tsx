@@ -1,34 +1,123 @@
 // src/main.tsx
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './styles/utilities/index.css';
-import Login from './pages/Login.advanced';
-import AuthCallback from './pages/AuthCallback';
-import Dashboard from './pages/Dashboard.advanced';
-import UserSettings from './pages/UserSettings.advanced';
-import UsernameOnboarding from './pages/UsernameOnboarding';
-import ResendConfirmation from './pages/ResendConfirmation';
-import EmailConfirmed from './pages/EmailConfirmed';
-import ForgotPassword from './pages/ForgotPassword';
-import AccountRecovery from './pages/AccountRecovery';
-import RecoverAccount from './pages/RecoverAccount';
-import NotFound from './pages/NotFound';
 import ErrorBoundary from './components/ui/ErrorBoundary';
+import PageLoader from './components/ui/PageLoader';
+
+// Lazy load components for better code splitting
+const Login = lazy(() => import('./pages/Login.advanced'));
+const AuthCallback = lazy(() => import('./pages/AuthCallback'));
+const Dashboard = lazy(() => import('./pages/Dashboard.advanced'));
+const UserSettings = lazy(() => import('./pages/UserSettings.advanced'));
+const UsernameOnboarding = lazy(() => import('./pages/UsernameOnboarding'));
+const ResendConfirmation = lazy(() => import('./pages/ResendConfirmation'));
+const EmailConfirmed = lazy(() => import('./pages/EmailConfirmed'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const AccountRecovery = lazy(() => import('./pages/AccountRecovery'));
+const RecoverAccount = lazy(() => import('./pages/RecoverAccount'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+
+
 
 const router = createBrowserRouter([
-  { path: '/', element: <Dashboard /> },
-  { path: '/dashboard', element: <Dashboard /> },
-  { path: '/login', element: <Login /> },
-  { path: '/auth/callback', element: <AuthCallback /> },
-  { path: '/auth/resend-confirmation', element: <ResendConfirmation /> },
-  { path: '/auth/email-confirmed', element: <EmailConfirmed /> },
-  { path: '/auth/forgot-password', element: <ForgotPassword /> },
-  { path: '/auth/recovery', element: <AccountRecovery /> },
-  { path: '/auth/recover', element: <RecoverAccount /> },
-  { path: '/onboarding/username', element: <UsernameOnboarding /> },
-  { path: '/settings', element: <UserSettings /> },
-  { path: '*', element: <NotFound /> },
+  { 
+    path: '/', 
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <Dashboard />
+      </Suspense>
+    ) 
+  },
+  { 
+    path: '/dashboard', 
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <Dashboard />
+      </Suspense>
+    ) 
+  },
+  { 
+    path: '/login', 
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <Login />
+      </Suspense>
+    ) 
+  },
+  { 
+    path: '/auth/callback', 
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <AuthCallback />
+      </Suspense>
+    ) 
+  },
+  { 
+    path: '/auth/resend-confirmation', 
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <ResendConfirmation />
+      </Suspense>
+    ) 
+  },
+  { 
+    path: '/auth/email-confirmed', 
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <EmailConfirmed />
+      </Suspense>
+    ) 
+  },
+  { 
+    path: '/auth/forgot-password', 
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <ForgotPassword />
+      </Suspense>
+    ) 
+  },
+  { 
+    path: '/auth/recovery', 
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <AccountRecovery />
+      </Suspense>
+    ) 
+  },
+  { 
+    path: '/auth/recover', 
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <RecoverAccount />
+      </Suspense>
+    ) 
+  },
+  { 
+    path: '/onboarding/username', 
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <UsernameOnboarding />
+      </Suspense>
+    ) 
+  },
+  { 
+    path: '/settings', 
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <UserSettings />
+      </Suspense>
+    ) 
+  },
+  { 
+    path: '*', 
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <NotFound />
+      </Suspense>
+    ) 
+  },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
