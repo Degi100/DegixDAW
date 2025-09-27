@@ -1,7 +1,7 @@
 // src/pages/Dashboard.advanced.tsx
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { useToast } from '../hooks/useToast';
+// Toast functionality moved to components
 import { useWelcomeMessage } from '../hooks/useWelcomeMessage';
 import { LoadingOverlay } from '../components/ui/Loading';
 import Container from '../components/layout/Container';
@@ -13,19 +13,12 @@ import GuestPrompt from '../components/dashboard/GuestPrompt';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { user, loading, signOut } = useAuth();
-  const { success } = useToast();
+  const { user, loading } = useAuth();
 
   // Verwende unseren Custom Hook für Welcome-Messages
   useWelcomeMessage(user);
 
-  const handleLogout = async () => {
-    const result = await signOut();
-    if (result.success) {
-      success('Erfolgreich abgemeldet!');
-      navigate('/login');
-    }
-  };
+  // Logout functionality moved to WelcomeCard component
 
   if (loading) {
     return <LoadingOverlay />;
@@ -46,8 +39,6 @@ export default function Dashboard() {
             <>
               <WelcomeCard 
                 user={user}
-                onNavigateToSettings={() => navigate('/settings')}
-                onLogout={handleLogout}
               />
               <FeatureGrid />
               <ProjectsSection />
