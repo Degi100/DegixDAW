@@ -116,6 +116,7 @@ export function useAuth() {
         email: data.email,
         password: data.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             username: data.username || generateFallbackUsername(data.fullName || '', data.email),
             full_name: data.fullName || '',
