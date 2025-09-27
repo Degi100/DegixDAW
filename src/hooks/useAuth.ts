@@ -59,6 +59,7 @@ export function useAuth() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.id);
+        console.log('Full session:', session);
         
         if (mounted) {
           setState({

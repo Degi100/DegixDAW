@@ -10,6 +10,8 @@ export default function AuthCallback() {
     const handleAuthCallback = async () => {
       try {
         console.log('AuthCallback: Processing URL:', window.location.href);
+        console.log('AuthCallback: URL params:', window.location.search);
+        console.log('AuthCallback: Hash params:', window.location.hash);
         // Check URL hash and search params for auth data
         const urlParams = new URLSearchParams(window.location.search);
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
