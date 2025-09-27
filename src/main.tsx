@@ -21,6 +21,11 @@ const AccountRecovery = lazy(() => import('./pages/AccountRecovery'));
 const RecoverAccount = lazy(() => import('./pages/RecoverAccount'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
+// Admin Components
+import AdminRoute from './components/admin/AdminRoute';
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+
 
 
 const router = createBrowserRouter([
@@ -117,6 +122,35 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<PageLoader />}>
         <UserSettings />
+      </Suspense>
+    ) 
+  },
+  // Admin Routes (Protected)
+  { 
+    path: '/admin', 
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <AdminRoute>
+          <AdminDashboard />
+        </AdminRoute>
+      </Suspense>
+    ) 
+  },
+  { 
+    path: '/admin/users', 
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <AdminRoute>
+          <AdminUsers />
+        </AdminRoute>
+      </Suspense>
+    ) 
+  },
+  { 
+    path: '/404', 
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <NotFound />
       </Suspense>
     ) 
   },
