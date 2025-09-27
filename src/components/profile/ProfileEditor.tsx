@@ -129,8 +129,11 @@ export default function ProfileEditor({ user, onSave, isUpdating }: ProfileEdito
           <div className="email-display">
             <span className="email-value">{user.email}</span>
             <small className="email-note">
-              📧 Email-Änderungen sind derzeit nicht verfügbar
+              📧 Wenn du deine Email änderst, wird die neue Adresse erst nach Klick auf den Bestätigungslink in deiner Mail übernommen.
             </small>
+            <div style={{ marginTop: '8px', color: '#c77', fontSize: '0.95em' }}>
+              Hinweis: Nach Bestätigung der neuen E-Mail-Adresse bitte einmal ausloggen und wieder einloggen, damit die Änderung angezeigt wird.
+            </div>
           </div>
         </div>
 
