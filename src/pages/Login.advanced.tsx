@@ -60,7 +60,21 @@ export default function Login() {
           duration: 8000
         });
       } else {
-        showError(result.error?.message || 'Registrierung fehlgeschlagen');
+        const errorMessage = result.error?.message || 'Registrierung fehlgeschlagen';
+        
+        // Special handling for duplicate email
+        if (result.error?.type === 'validation' && 
+            errorMessage.includes('bereits registriert')) {
+          // Show error with suggestion to login instead
+          showError(errorMessage);
+          
+          // Auto-switch to login tab after a moment
+          setTimeout(() => {
+            document.querySelector('[data-tab="login"]')?.scrollIntoView({ behavior: 'smooth' });
+          }, 3000);
+        } else {
+          showError(errorMessage);
+        }
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';

@@ -189,6 +189,22 @@ export function useAuth() {
     }
   };
 
+  const resetPassword = async (email: string): Promise<{ success: boolean; error?: AuthError }> => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`
+      });
+
+      if (error) {
+        return { success: false, error: handleAuthError(error) };
+      }
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: handleAuthError(error) };
+    }
+  };
+
   return {
     // State
     user: state.user,
@@ -202,6 +218,7 @@ export function useAuth() {
     signInWithOAuth,
     signOut,
     resendConfirmation,
+    resetPassword,
     
     // Utilities
     displayName: state.user?.user_metadata?.display_name || 

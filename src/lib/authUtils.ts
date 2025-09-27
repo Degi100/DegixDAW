@@ -44,9 +44,11 @@ export function handleAuthError(error: unknown): AuthError {
     }
     
     // User already registered
-    if (message.includes('user already registered')) {
+    if (message.includes('user already registered') || 
+        message.includes('email already registered') ||
+        message.includes('already been registered')) {
       return {
-        message: 'Diese E-Mail-Adresse ist bereits registriert.',
+        message: 'Diese E-Mail-Adresse ist bereits registriert. Möchten Sie sich stattdessen anmelden?',
         type: 'validation'
       };
     }
