@@ -4,7 +4,6 @@ import { useFormToggle, getToggleLabels, LOGIN_SIGNUP_LABELS } from '../../hooks
 import { signInSchema, signUpSchema, validateSignUpAsync } from '../../lib/validation';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
-import UsernameSuggestions from '../ui/UsernameSuggestions';
 import { Spinner } from '../ui/Loading';
 
 
@@ -71,14 +70,6 @@ export default function AuthForm({ onLogin, onSignup, isSubmitting }: AuthFormPr
   const currentForm = isLogin ? loginForm : signupForm;
 
   // Username suggestions logic
-  const shouldShowUsernameSuggestions = !isLogin && Boolean(
-    (signupForm.values.fullName && signupForm.values.fullName.trim().length >= 2) ||
-    (signupForm.values.username && signupForm.values.username.trim().length >= 2)
-  );
-
-  const handleUsernameSelect = (username: string) => {
-    signupForm.setValue('username', username);
-  };
 
   return (
     <div className="card card-large">
@@ -95,21 +86,6 @@ export default function AuthForm({ onLogin, onSignup, isSubmitting }: AuthFormPr
               placeholder="Vollständiger Name"
               required
               showCheckmark
-            />
-            
-            <Input
-              {...signupForm.getFieldProps('username')}
-              type="text"
-              placeholder="Benutzername"
-              helpText="Optional - wird automatisch generiert falls leer"
-              showCheckmark
-            />
-            
-            <UsernameSuggestions
-              fullName={signupForm.values.fullName}
-              currentUsername={signupForm.values.username || ''}
-              onSelectUsername={handleUsernameSelect}
-              show={shouldShowUsernameSuggestions}
             />
           </>
         )}

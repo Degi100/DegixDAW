@@ -23,14 +23,20 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
 // Prüfe ob Benutzername bereits existiert (vereinfachte Version für Client-Side)
 export async function checkUsernameExists(username: string): Promise<boolean> {
   try {
-    // Für Client-Side können wir keine Admin-Operationen durchführen
-    // In einer echten App würde das über einen RPC-Call oder Backend-Endpoint laufen
-    // Für jetzt: Immer false zurückgeben (Username gilt als verfügbar)
-    console.log('Username check für:', username, '(immer verfügbar in Client-Mode)')
-    return false
+    // Query auf die Tabelle 'profiles', um zu prüfen, ob der Username existiert
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('username', username)
+      .single();
+    if (error && error.code !== 'PGRST116') { // PGRST116 = Row not found
+      console.error('Fehler beim Prüfen des Benutzernamens:', error);
+      return false;
+    }
+    return !!data;
   } catch (error) {
-    console.error('Fehler beim Prüfen des Benutzernamens:', error)
-    return false
+    console.error('Fehler beim Prüfen des Benutzernamens:', error);
+    return false;
   }
 }
 

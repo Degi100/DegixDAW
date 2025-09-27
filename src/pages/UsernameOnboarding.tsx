@@ -65,7 +65,7 @@ export default function UsernameOnboarding() {
   // Submit username
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!username.trim()) {
       setValidationError('Benutzername ist erforderlich');
       return;
@@ -79,20 +79,29 @@ export default function UsernameOnboarding() {
     }
 
     setIsSubmitting(true);
-    
+
     try {
+      // Prüfe, ob Username bereits vergeben ist
+      const { checkUsernameExists } = await import('../lib/supabase');
+      const usernameTaken = await checkUsernameExists(username.trim());
+      if (usernameTaken) {
+        setValidationError('Dieser Benutzername ist bereits vergeben');
+        setIsSubmitting(false);
+        return;
+      }
+
       await updateProfile({
         full_name: user?.user_metadata?.full_name || '',
         username: username.trim()
       });
-      
+
       success(`${EMOJIS.success} Willkommen bei ${APP_FULL_NAME}! Ihr Benutzername wurde erfolgreich festgelegt.`);
-      
+
       // Redirect to dashboard after successful username setup
       setTimeout(() => {
         navigate('/dashboard');
       }, 1500);
-      
+
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
       error(`Fehler beim Speichern des Benutzernamens: ${errorMessage}`);
