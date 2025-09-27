@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard.advanced';
 import UserSettings from './pages/UserSettings.advanced';
 import UsernameOnboarding from './pages/UsernameOnboarding';
 import ResendConfirmation from './pages/ResendConfirmation';
+import EmailConfirmed from './pages/EmailConfirmed';
 import NotFound from './pages/NotFound';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 
@@ -18,6 +19,7 @@ const router = createBrowserRouter([
   { path: '/login', element: <Login /> },
   { path: '/auth/callback', element: <AuthCallback /> },
   { path: '/auth/resend-confirmation', element: <ResendConfirmation /> },
+  { path: '/auth/email-confirmed', element: <EmailConfirmed /> },
   { path: '/onboarding/username', element: <UsernameOnboarding /> },
   { path: '/settings', element: <UserSettings /> },
   { path: '*', element: <NotFound /> },

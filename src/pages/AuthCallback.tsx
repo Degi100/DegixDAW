@@ -37,10 +37,6 @@ export default function AuthCallback() {
           });
           
           if (error) {
-            throw error;
-          }
-          
-          if (error) {
             console.error('Email-Bestätigung fehlgeschlagen:', error);
             const errorMsg = error && typeof error === 'object' && 'message' in error ? (error as { message: string }).message : '';
             const errorCode = errorMsg;
@@ -68,8 +64,9 @@ export default function AuthCallback() {
             return;
           }
           
-          alert('Email erfolgreich bestätigt! Sie sind jetzt angemeldet.');
-          navigate('/');
+          // Email successfully confirmed! Show confirmation page
+          console.log('Email successfully confirmed, showing confirmation page');
+          navigate('/auth/email-confirmed');
         } else {
           // Standard OAuth-Callback
           const { data: { session }, error } = await supabase.auth.getSession();
