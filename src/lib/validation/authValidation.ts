@@ -124,9 +124,9 @@ export function validateUsernameFormat(username: string): { valid: boolean; erro
     return { valid: true }; // Username is optional
   }
 
-  // Nur exakt 'admin' ist erlaubt
-  if (username !== 'admin') {
-    return { valid: false, error: "Nur der Benutzername 'admin' ist erlaubt. Varianten wie 'admin1', 'abc_admin', '123adminabc' sind verboten." };
+  // Usernamen, die 'admin' enthalten, sind verboten
+  if (/admin/i.test(username)) {
+    return { valid: false, error: "Benutzernamen dürfen 'admin' nicht enthalten." };
   }
 
   // Format-Prüfung (nur Kleinbuchstaben, Zahlen, Bindestriche, Unterstriche)

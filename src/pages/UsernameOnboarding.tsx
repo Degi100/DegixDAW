@@ -17,7 +17,15 @@ export default function UsernameOnboarding() {
   const { success, error } = useToast();
   const navigate = useNavigate();
   
-  const [username, setUsername] = useState('');
+  // Generiere Phantasie-Username, falls keiner existiert
+  function generateFantasyUsername() {
+    const base = 'user';
+    const random = Math.floor(10000 + Math.random() * 90000);
+    return `${base}${random}`;
+  }
+
+  const initialUsername = user?.user_metadata?.username || generateFantasyUsername();
+  const [username, setUsername] = useState(initialUsername);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -62,26 +70,19 @@ export default function UsernameOnboarding() {
     setValidationError('');
   };
 
-  // Submit username
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  // Username festlegen (fix, keine spätere Änderung)
+  const handleSetUsername = async () => {
     if (!username.trim()) {
       setValidationError('Benutzername ist erforderlich');
       return;
     }
-
-    // Validate format
     const validation = validateUsernameFormat(username);
     if (!validation.valid && validation.error) {
       setValidationError(validation.error);
       return;
     }
-
     setIsSubmitting(true);
-
     try {
-      // Prüfe, ob Username bereits vergeben ist
       const { checkUsernameExists } = await import('../lib/supabase');
       const usernameTaken = await checkUsernameExists(username.trim());
       if (usernameTaken) {
@@ -89,19 +90,56 @@ export default function UsernameOnboarding() {
         setIsSubmitting(false);
         return;
       }
-
       await updateProfile({
         full_name: user?.user_metadata?.full_name || '',
         username: username.trim()
       });
-
+      // Username ist jetzt fixiert, keine spätere Änderung möglich
+      const { supabase } = await import('../lib/supabase');
+      await supabase.auth.updateUser({ data: { username_can_change: false } });
       success(`${EMOJIS.success} Willkommen bei ${APP_FULL_NAME}! Ihr Benutzername wurde erfolgreich festgelegt.`);
-
-      // Redirect to dashboard after successful username setup
       setTimeout(() => {
         navigate('/dashboard');
       }, 1500);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
+      error(`Fehler beim Speichern des Benutzernamens: ${errorMessage}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
+  // Mit Vorschlag fortfahren (Username kann später einmalig geändert werden)
+  const handleProceedWithSuggestion = async () => {
+    if (!username.trim()) {
+      setValidationError('Benutzername ist erforderlich');
+      return;
+    }
+    const validation = validateUsernameFormat(username);
+    if (!validation.valid && validation.error) {
+      setValidationError(validation.error);
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const { checkUsernameExists } = await import('../lib/supabase');
+      const usernameTaken = await checkUsernameExists(username.trim());
+      if (usernameTaken) {
+        setValidationError('Dieser Benutzername ist bereits vergeben');
+        setIsSubmitting(false);
+        return;
+      }
+      await updateProfile({
+        full_name: user?.user_metadata?.full_name || '',
+        username: username.trim()
+      });
+      // Username kann später einmalig geändert werden
+      const { supabase } = await import('../lib/supabase');
+      await supabase.auth.updateUser({ data: { username_can_change: true } });
+      success(`${EMOJIS.success} Willkommen bei ${APP_FULL_NAME}! Sie können Ihren Benutzernamen später einmalig ändern.`);
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1500);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
       error(`Fehler beim Speichern des Benutzernamens: ${errorMessage}`);
@@ -141,7 +179,7 @@ export default function UsernameOnboarding() {
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="form">
+              <form className="form">
                 <div className="input-group">
                   <label htmlFor="username" className="input-label">
                     Benutzername *
@@ -184,15 +222,26 @@ export default function UsernameOnboarding() {
                   />
                 )}
 
-                <div className="form-actions">
+                <div className="form-actions" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   <Button
-                    type="submit"
+                    type="button"
                     variant="primary"
                     size="large"
                     disabled={!username.trim() || !!validationError || isSubmitting}
                     fullWidth
+                    onClick={handleSetUsername}
                   >
-                    {isSubmitting ? `${UI_TEXT.saving}` : `${EMOJIS.success} Benutzername festlegen`}
+                    {isSubmitting ? `${UI_TEXT.saving}` : `${EMOJIS.success} Benutzername festlegen (fix)}`}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="large"
+                    disabled={!username.trim() || !!validationError || isSubmitting}
+                    fullWidth
+                    onClick={handleProceedWithSuggestion}
+                  >
+                    Mit Username-Vorschlag fortfahren (später einmalig änderbar)
                   </Button>
                 </div>
 
