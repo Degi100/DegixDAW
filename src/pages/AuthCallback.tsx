@@ -174,7 +174,7 @@ export default function AuthCallback() {
             navigate('/login');
           }
         }
-      } catch (err) {
+      } catch {
         alert('Ein Fehler ist aufgetreten. Bitte versuche es erneut.');
         navigate('/login');
       }

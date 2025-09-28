@@ -80,7 +80,6 @@ export function useAuth() {
           
           if (isNewUser) {
             navigate('/onboarding/username');
-          } else {
           }
         }
       }

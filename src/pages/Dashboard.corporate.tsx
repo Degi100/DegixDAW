@@ -10,6 +10,7 @@ import { useTheme } from '../hooks/useTheme';
 import { useAdmin } from '../hooks/useAdmin';
 import { LoadingOverlay } from '../components/ui/Loading';
 import Button from '../components/ui/Button';
+import Input from '../components/ui/Input'; // Import der Input-Komponente
 import WelcomeCard from '../components/dashboard/WelcomeCard';
 import FeatureGrid from '../components/dashboard/FeatureGrid';
 import ProjectsSection from '../components/dashboard/ProjectsSection';
@@ -17,7 +18,7 @@ import { APP_FULL_NAME } from '../lib/constants';
 
 export default function DashboardCorporate() {
   const navigate = useNavigate();
-  const { user, loading, signOut, signInWithEmail, signInWithOAuth } = useAuth();
+  const { user, loading, signOut, signInWithEmail, signUpWithEmail, signInWithOAuth } = useAuth();
   const { success, error: showError } = useToast();
   const { isDark, toggleTheme } = useTheme();
   const { isAdmin } = useAdmin();
@@ -120,12 +121,17 @@ export default function DashboardCorporate() {
     setIsSubmitting(true);
     
     try {
-      // Here you would call your registration API
-      // For now, we'll simulate with the existing signInWithEmail
-      const result = await signInWithEmail(registerData.email, registerData.password);
+      // Rufen Sie die Registrierungsfunktion auf
+      const result = await signUpWithEmail({
+        email: registerData.email,
+        password: registerData.password,
+        fullName: registerData.fullName,
+        // Ein Standard-Username kann hier generiert oder im Onboarding festgelegt werden
+        username: registerData.email.split('@')[0], 
+      });
       
       if (result.success) {
-        success('Konto erfolgreich erstellt! Willkommen! 🎉');
+        success('Konto erfolgreich erstellt! Bitte bestätigen Sie Ihre E-Mail. 🎉');
         setRegisterData({ fullName: '', email: '', password: '', confirmPassword: '' });
         setShowRegisterForm(false);
       } else {
@@ -426,56 +432,44 @@ export default function DashboardCorporate() {
                       <h3 className="section-title">Registrieren mit Email</h3>
                       
                       <div className="form-inputs">
-                        <div className="input-group">
-                          <label className="input-label">Vollständiger Name *</label>
-                          <input
-                            type="text"
-                            placeholder="Vor- und Nachname"
-                            value={registerData.fullName}
-                            onChange={(e) => setRegisterData(prev => ({ ...prev, fullName: e.target.value }))}
-                            className="register-form-input"
-                            required
-                          />
-                        </div>
+                        <Input
+                          label="Vollständiger Name"
+                          type="text"
+                          placeholder="Vor- und Nachname"
+                          value={registerData.fullName}
+                          onChange={(e) => setRegisterData(prev => ({ ...prev, fullName: e.target.value }))}
+                          required
+                        />
                         
-                        <div className="input-group">
-                          <label className="input-label">Email-Adresse *</label>
-                          <input
-                            type="email"
-                            placeholder="ihre@email.de"
-                            value={registerData.email}
-                            onChange={(e) => setRegisterData(prev => ({ ...prev, email: e.target.value }))}
-                            className="register-form-input"
-                            required
-                          />
-                        </div>
+                        <Input
+                          label="Email-Adresse"
+                          type="email"
+                          placeholder="ihre@email.de"
+                          value={registerData.email}
+                          onChange={(e) => setRegisterData(prev => ({ ...prev, email: e.target.value }))}
+                          required
+                        />
                         
-                        <div className="input-group">
-                          <label className="input-label">Passwort *</label>
-                          <input
-                            type="password"
-                            placeholder="Passwort eingeben"
-                            value={registerData.password}
-                            onChange={(e) => setRegisterData(prev => ({ ...prev, password: e.target.value }))}
-                            className="register-form-input"
-                            required
-                            minLength={6}
-                          />
-                          <p className="password-requirements">Mindestens 6 Zeichen, mit Groß-/Kleinbuchstaben und Zahl</p>
-                        </div>
+                        <Input
+                          label="Passwort"
+                          type="password"
+                          placeholder="Passwort eingeben"
+                          value={registerData.password}
+                          onChange={(e) => setRegisterData(prev => ({ ...prev, password: e.target.value }))}
+                          required
+                          showPasswordToggle
+                          helpText="Mind. 6 Zeichen, mit Groß-/Kleinbuchstaben und Zahl"
+                        />
                         
-                        <div className="input-group">
-                          <label className="input-label">Passwort bestätigen *</label>
-                          <input
-                            type="password"
-                            placeholder="Passwort wiederholen"
-                            value={registerData.confirmPassword}
-                            onChange={(e) => setRegisterData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                            className="register-form-input"
-                            required
-                            minLength={6}
-                          />
-                        </div>
+                        <Input
+                          label="Passwort bestätigen"
+                          type="password"
+                          placeholder="Passwort wiederholen"
+                          value={registerData.confirmPassword}
+                          onChange={(e) => setRegisterData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                          required
+                          showPasswordToggle
+                        />
                       </div>
                       
                       <div className="form-actions">

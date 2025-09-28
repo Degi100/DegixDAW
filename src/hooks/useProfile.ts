@@ -38,7 +38,7 @@ export function useProfile(user: User | null) {
       }
 
       // Aktualisiere auch die Auth-Metadata für alle relevanten Felder
-      const metadataUpdates: any = {};
+      const metadataUpdates: Record<string, unknown> = {};
       if (updates.username) metadataUpdates.username = updates.username;
       if (updates.full_name) metadataUpdates.full_name = updates.full_name;
       if (updates.display_name) metadataUpdates.display_name = updates.display_name;
@@ -144,7 +144,7 @@ export function useProfile(user: User | null) {
             deleted_at: new Date().toISOString()
           }
         });
-      } catch (metaError) {
+      } catch {
 
         // Nicht kritisch - Profile ist bereits gelöscht
       }
