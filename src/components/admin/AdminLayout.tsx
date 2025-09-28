@@ -19,8 +19,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const { adminLevel } = useAdmin();
 
   const handleLogout = async () => {
-    await signOut();
-    navigate('/login');
+  await signOut();
+  navigate('/dashboard');
   };
 
   const handleBackToDashboard = () => {

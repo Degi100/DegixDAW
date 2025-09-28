@@ -78,6 +78,7 @@ export default function DashboardCorporate() {
         setLoginData({ email: '', password: '' });
         setRegisterData({ fullName: '', email: '', password: '', confirmPassword: '' });
         setLoginStep('initial');
+        navigate('/dashboard');
       } else {
         showError(result.error?.message || 'Anmeldung fehlgeschlagen');
       }
@@ -524,14 +525,14 @@ export default function DashboardCorporate() {
                   </p>
                   <div className="hero-actions">
                     <Button
-                      onClick={() => navigate('/login')}
+                      onClick={() => navigate('/dashboard')}
                       variant="primary"
                       size="large"
                     >
                       🚀 Start Creating
                     </Button>
                     <Button
-                      onClick={() => navigate('/login')}
+                      onClick={() => navigate('/dashboard')}
                       variant="outline"
                       size="large"
                     >

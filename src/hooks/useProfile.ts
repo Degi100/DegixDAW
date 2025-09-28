@@ -153,7 +153,7 @@ export function useProfile(user: User | null) {
       
       // 3. Abmelden und weiterleiten
       await supabase.auth.signOut();
-      navigate('/login');
+  navigate('/dashboard');
       
       return { success: true };
     } catch (error) {

@@ -8,7 +8,7 @@ import PageLoader from './components/ui/PageLoader';
 import { ToastContainer } from './components/ui/Toast';
 
 // Lazy load components for better code splitting
-const Login = lazy(() => import('./pages/Login.corporate'));
+// Login-Komponente entfernt, da Route gelöscht
 const AuthCallback = lazy(() => import('./pages/AuthCallback'));
 const Dashboard = lazy(() => import('./pages/Dashboard.corporate'));
 const UserSettings = lazy(() => import('./pages/UserSettings.corporate'));
@@ -46,14 +46,7 @@ const router = createBrowserRouter([
       </Suspense>
     ) 
   },
-  { 
-    path: '/login', 
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <Login />
-      </Suspense>
-    ) 
-  },
+  // /login Route entfernt
   { 
     path: '/auth/callback', 
     element: (

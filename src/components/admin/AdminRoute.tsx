@@ -39,7 +39,7 @@ export default function AdminRoute({ children, requireSuperAdmin = false }: Admi
 
   // Redirect to login if not authenticated
   if (!user) {
-    return <Navigate to="/login" replace />;
+  return <Navigate to="/dashboard" replace />;
   }
 
   // Check admin permissions

@@ -174,7 +174,7 @@ export function useAuth() {
       });
 
       // Navigate to login page
-      navigate('/login');
+  navigate('/dashboard');
       return { success: true };
     } catch (error) {
       // Restore previous state if sign out failed

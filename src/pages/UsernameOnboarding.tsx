@@ -95,7 +95,7 @@ export default function UsernameOnboarding() {
         username: username.trim()
       });
       // Username ist jetzt fixiert, keine spätere Änderung möglich
-      await supabase.auth.updateUser({ data: { username_can_change: false } });
+      await supabase.auth.updateUser({ data: { username_can_change: false, needs_username_onboarding: false } });
       success(`${EMOJIS.success} Willkommen bei ${APP_FULL_NAME}! Ihr Benutzername wurde erfolgreich festgelegt.`);
       setTimeout(() => {
         navigate('/dashboard');
@@ -132,7 +132,7 @@ export default function UsernameOnboarding() {
         username: username.trim()
       });
       // Username kann später einmalig geändert werden
-      await supabase.auth.updateUser({ data: { username_can_change: true } });
+      await supabase.auth.updateUser({ data: { username_can_change: true, needs_username_onboarding: false } });
       success(`${EMOJIS.success} Willkommen bei ${APP_FULL_NAME}! Sie können Ihren Benutzernamen später einmalig ändern.`);
       setTimeout(() => {
         navigate('/dashboard');

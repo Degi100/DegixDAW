@@ -1305,7 +1305,15 @@
 .hover-login-form {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem; /* Reduced gap */
+  gap: 0.5rem;
+  color: #fff;
+}
+
+.hover-login-form .input-group .input {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: #fff;
+  background: #222;
 }
 
 .form-header {

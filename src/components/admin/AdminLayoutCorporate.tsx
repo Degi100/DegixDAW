@@ -34,8 +34,8 @@ export default function AdminLayoutCorporate({ children }: AdminLayoutProps) {
   };
 
   const handleLogout = async () => {
-    await signOut();
-    navigate('/login');
+  await signOut();
+  navigate('/dashboard');
   };
 
   const handleBackToDashboard = () => {
