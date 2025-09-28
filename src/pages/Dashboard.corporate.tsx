@@ -251,26 +251,21 @@ export default function DashboardCorporate() {
                         {/* Expandable Login Form - Shows on Hover */}
                         <div className="expandable-form">
                           <form onSubmit={handleQuickLogin} className="hover-login-form">
-                            <div className="form-header">
-                              <span className="form-title">🔑 Schnell Anmelden</span>
-                            </div>
-                            
                             <div className="form-inputs">
-                              <input
+                              <Input
                                 type="email"
                                 placeholder="E-Mail"
                                 value={loginData.email}
                                 onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
-                                className="hover-login-input"
                                 required
                               />
-                              <input
+                              <Input
                                 type="password"
                                 placeholder="Passwort"
                                 value={loginData.password}
                                 onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
-                                className="hover-login-input"
                                 required
+                                showPasswordToggle
                               />
                             </div>
                             
@@ -282,7 +277,7 @@ export default function DashboardCorporate() {
                                 disabled={isSubmitting}
                                 className="submit-btn"
                               >
-                                {isSubmitting ? '⏳ Anmelden...' : '✓ Anmelden'}
+                                {isSubmitting ? '⏳' : '✓'}
                               </Button>
                             </div>
                             
@@ -438,7 +433,6 @@ export default function DashboardCorporate() {
                           placeholder="Vor- und Nachname"
                           value={registerData.fullName}
                           onChange={(e) => setRegisterData(prev => ({ ...prev, fullName: e.target.value }))}
-                          required
                         />
                         
                         <Input
@@ -447,27 +441,23 @@ export default function DashboardCorporate() {
                           placeholder="ihre@email.de"
                           value={registerData.email}
                           onChange={(e) => setRegisterData(prev => ({ ...prev, email: e.target.value }))}
-                          required
                         />
                         
                         <Input
                           label="Passwort"
                           type="password"
-                          placeholder="Passwort eingeben"
+                          placeholder="Mindestens 6 Zeichen"
                           value={registerData.password}
                           onChange={(e) => setRegisterData(prev => ({ ...prev, password: e.target.value }))}
-                          required
                           showPasswordToggle
-                          helpText="Mind. 6 Zeichen, mit Groß-/Kleinbuchstaben und Zahl"
                         />
                         
                         <Input
                           label="Passwort bestätigen"
                           type="password"
-                          placeholder="Passwort wiederholen"
+                          placeholder="Passwort erneut eingeben"
                           value={registerData.confirmPassword}
                           onChange={(e) => setRegisterData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                          required
                           showPasswordToggle
                         />
                       </div>
