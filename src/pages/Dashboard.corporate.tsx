@@ -1,5 +1,5 @@
 // src/pages/Dashboard.corporate.tsx
-// Ultimate Corporate Dashboard with Modern Professional Design
+// Ultimate Corporate Dashrn Professional Design
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -22,19 +22,40 @@ export default function DashboardCorporate() {
   const { isDark, toggleTheme } = useTheme();
   const { isAdmin } = useAdmin();
   
-  // Inline login state
-  const [showLoginForm, setShowLoginForm] = useState(false);
+  // Multi-step login state
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [signOutLoading, setSignOutLoading] = useState(false);
   const [loginData, setLoginData] = useState<{ email: string; password: string }>({ email: '', password: '' });
+  const [registerData, setRegisterData] = useState<{ fullName: string; email: string; password: string; confirmPassword: string }>({ fullName: '', email: '', password: '', confirmPassword: '' });
+  const [loginStep, setLoginStep] = useState<'initial' | 'email' | 'fullForm'>('initial');
+  const [showRegisterForm, setShowRegisterForm] = useState(false);
+
 
   // Verwende unseren Custom Hook für Welcome-Messages
   useWelcomeMessage(user);
 
   const handleLogout = async () => {
-    const result = await signOut();
-    if (result.success) {
-      success('Successfully signed out! 👋');
-      navigate('/login');
+    if (signOutLoading) return; // Prevent double-clicks
+    
+    try {
+      setSignOutLoading(true);
+      console.log('Starting sign out process...');
+      
+      const result = await signOut();
+      
+      if (result.success) {
+        success('Erfolgreich abgemeldet! 👋');
+        console.log('Sign out successful');
+        // Navigation is handled by the signOut function itself
+      } else {
+        console.error('Sign out failed:', result.error);
+        showError(result.error?.message || 'Abmeldung fehlgeschlagen');
+        setSignOutLoading(false);
+      }
+    } catch (error) {
+      console.error('Sign out error:', error);
+      showError('Abmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.');
+      setSignOutLoading(false);
     }
   };
 
@@ -51,18 +72,78 @@ export default function DashboardCorporate() {
       const result = await signInWithEmail(loginData.email, loginData.password);
       
       if (result.success) {
-        success('Successfully logged in! 🎉');
-        setShowLoginForm(false);
+        success('Erfolgreich angemeldet! 🎉');
         setLoginData({ email: '', password: '' });
+        setRegisterData({ fullName: '', email: '', password: '', confirmPassword: '' });
+        setLoginStep('initial');
       } else {
-        showError(result.error?.message || 'Login failed');
+        showError(result.error?.message || 'Anmeldung fehlgeschlagen');
       }
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      showError(`Login failed: ${errorMessage}`);
+      const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
+      showError(`Anmeldung fehlgeschlagen: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleRegistration = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Check if full name is provided
+    if (!registerData.fullName.trim()) {
+      showError('Vollständiger Name ist erforderlich');
+      return;
+    }
+    
+    // Basic password confirmation check
+    if (registerData.password !== registerData.confirmPassword) {
+      showError('Passwörter stimmen nicht überein');
+      return;
+    }
+    
+    if (registerData.password.length < 6) {
+      showError('Passwort muss mindestens 6 Zeichen haben');
+      return;
+    }
+    
+    // Check for uppercase, lowercase, and number
+    const hasUppercase = /[A-Z]/.test(registerData.password);
+    const hasLowercase = /[a-z]/.test(registerData.password);
+    const hasNumber = /\d/.test(registerData.password);
+    
+    if (!hasUppercase || !hasLowercase || !hasNumber) {
+      showError('Passwort muss Groß-/Kleinbuchstaben und eine Zahl enthalten');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Here you would call your registration API
+      // For now, we'll simulate with the existing signInWithEmail
+      const result = await signInWithEmail(registerData.email, registerData.password);
+      
+      if (result.success) {
+        success('Konto erfolgreich erstellt! Willkommen! 🎉');
+        setRegisterData({ fullName: '', email: '', password: '', confirmPassword: '' });
+        setShowRegisterForm(false);
+      } else {
+        showError(result.error?.message || 'Registrierung fehlgeschlagen');
+      }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
+      showError(`Registrierung fehlgeschlagen: ${errorMessage}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const resetLoginFlow = () => {
+    setLoginStep('initial');
+    setLoginData({ email: '', password: '' });
+    setRegisterData({ fullName: '', email: '', password: '', confirmPassword: '' });
+    setShowRegisterForm(false);
   };
 
   const handleGoogleLogin = async () => {
@@ -116,7 +197,7 @@ export default function DashboardCorporate() {
                     variant="outline"
                     size="small"
                   >
-                    ⚙️ Settings
+                    ⚙️ Einstellungen
                   </Button>
                   
                   {isAdmin && (
@@ -133,73 +214,157 @@ export default function DashboardCorporate() {
                     onClick={handleLogout}
                     variant="outline"
                     size="small"
+                    disabled={signOutLoading || loading}
                   >
-                    👋 Sign Out
+                    {signOutLoading ? '⏳ Abmelden...' : '👋 Abmelden'}
                   </Button>
                 </>
               ) : (
-                <div className="inline-login">
-                  {!showLoginForm ? (
-                    <>
-                      <Button
-                        onClick={handleGoogleLogin}
-                        variant="outline"
-                        size="small"
-                        disabled={isSubmitting}
-                        className="google-login-btn"
-                      >
-                        🔍 Google
-                      </Button>
-                      
-                      <Button
-                        onClick={() => setShowLoginForm(true)}
-                        variant="primary"
-                        size="small"
-                      >
-                        📧 Sign In
-                      </Button>
-                    </>
-                  ) : (
-                    <div className="quick-login-form">
-                      <form onSubmit={handleQuickLogin} className="login-form-inline">
-                        <input
-                          type="email"
-                          placeholder="Email"
-                          value={loginData.email}
-                          onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
-                          className="login-input-inline"
-                          required
-                        />
-                        <input
-                          type="password"
-                          placeholder="Password"
-                          value={loginData.password}
-                          onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
-                          className="login-input-inline"
-                          required
-                        />
-                        <Button
-                          type="submit"
-                          variant="primary"
-                          size="small"
-                          disabled={isSubmitting}
-                        >
-                          {isSubmitting ? '⏳' : '✓'}
-                        </Button>
-                        <Button
-                          type="button"
-                          onClick={() => {
-                            setShowLoginForm(false);
-                            setLoginData({ email: '', password: '' });
-                          }}
-                          variant="outline"
-                          size="small"
-                        >
-                          ✕
-                        </Button>
+                <div className="multi-step-login">
+                  {/* Google Login Button - Always visible */}
+                  <Button
+                    onClick={handleGoogleLogin}
+                    variant="outline"
+                    size="small"
+                    disabled={isSubmitting}
+                    className="google-login-btn"
+                    title="Mit Google anmelden"
+                  >
+                    G
+                  </Button>
+                  
+                  {loginStep === 'initial' && (
+                    /* Login Button with Hover Forms */
+                    <div className="simple-login-container">
+                      <div className="expandable-login-container">
+                        <div className="login-trigger">
+                          <Button
+                            variant="primary"
+                            size="small"
+                            className="expandable-login-btn"
+                          >
+                            🔑 Anmelden
+                          </Button>
+                        </div>
+                        
+                        {/* Expandable Login Form - Shows on Hover */}
+                        <div className="expandable-form">
+                          <form onSubmit={handleQuickLogin} className="hover-login-form">
+                            <div className="form-header">
+                              <span className="form-title">🔑 Schnell Anmelden</span>
+                              <button
+                                type="button"
+                                onClick={resetLoginFlow}
+                                className="back-btn"
+                                title="Zurück"
+                              >
+                                ←
+                              </button>
+                            </div>
+                            
+                            <div className="form-inputs">
+                              <input
+                                type="email"
+                                placeholder="E-Mail"
+                                value={loginData.email}
+                                onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
+                                className="hover-login-input"
+                                required
+                              />
+                              <input
+                                type="password"
+                                placeholder="Passwort"
+                                value={loginData.password}
+                                onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
+                                className="hover-login-input"
+                                required
+                              />
+                            </div>
+                            
+                            <div className="form-actions">
+                              <Button
+                                type="submit"
+                                variant="primary"
+                                size="small"
+                                disabled={isSubmitting}
+                                className="submit-btn"
+                              >
+                                {isSubmitting ? '⏳ Anmelden...' : '✓ Anmelden'}
+                              </Button>
+                            </div>
+                            
+                            {/* Register Button - Shows on Login Hover */}
+                            <div className="register-link">
+                              <button
+                                type="button"
+                                onClick={() => setShowRegisterForm(true)}
+                                className="register-hyperlink"
+                                title="Neues Konto erstellen"
+                              >
+                                ✨ Registrieren
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+
+                  
+                  {loginStep === 'fullForm' && (
+                    /* Step 3: Login Form with Pre-filled Email */
+                    <div className="full-login-form">
+                      <form onSubmit={handleQuickLogin} className="complete-login-form">
+                        <div className="form-header">
+                          <span className="form-title">🔑 Anmeldung abschließen</span>
+                          <button
+                            type="button"
+                            onClick={resetLoginFlow}
+                            className="back-btn"
+                            title="Zurück"
+                          >
+                            ←
+                          </button>
+                        </div>
+                        
+                        <div className="form-inputs">
+                          <input
+                            type="email"
+                            placeholder="E-Mail"
+                            value={loginData.email}
+                            onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
+                            className="full-form-input"
+                            required
+                            readOnly
+                          />
+                          <input
+                            type="password"
+                            placeholder="Passwort eingeben"
+                            value={loginData.password}
+                            onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
+                            className="full-form-input"
+                            required
+                            autoFocus
+                          />
+                        </div>
+                        
+                        <div className="form-actions">
+                          <Button
+                            type="submit"
+                            variant="primary"
+                            size="small"
+                            disabled={isSubmitting}
+                            className="final-submit-btn"
+                          >
+                            {isSubmitting ? '⏳ Anmelden...' : '✓ Anmelden'}
+                          </Button>
+                        </div>
                       </form>
                     </div>
                   )}
+                  
+
                 </div>
               )}
             </div>
@@ -214,18 +379,18 @@ export default function DashboardCorporate() {
               </div>
               <div className="status-item">
                 <span className="status-icon">⚡</span>
-                <span className="status-text">High Performance</span>
+                <span className="status-text">Hohe Leistung</span>
               </div>
               <div className="status-item">
                 <span className="status-icon">🔒</span>
-                <span className="status-text">Secure</span>
+                <span className="status-text">Sicher</span>
               </div>
             </div>
             
             {user && (
               <div className="user-status">
                 <span className="user-role">
-                  {user.user_metadata?.username ? `@${user.user_metadata.username}` : 'User'}
+                  {user.user_metadata?.username ? `@${user.user_metadata.username}` : 'Benutzer'}
                 </span>
               </div>
             )}
@@ -244,6 +409,125 @@ export default function DashboardCorporate() {
               <FeatureGrid />
               <ProjectsSection />
             </>
+          ) : showRegisterForm ? (
+            /* Register Form - Shows in Main Area */
+            <div className="register-main-content">
+              <div className="form-navigation">
+                <button
+                  type="button"
+                  onClick={() => setShowRegisterForm(false)}
+                  className="nav-back-btn"
+                  title="Zurück zur Startseite"
+                >
+                  ← Zurück
+                </button>
+                <div className="breadcrumb">
+                  <button
+                    type="button"
+                    onClick={() => setShowRegisterForm(false)}
+                    className="breadcrumb-link"
+                    title="Zurück zur Startseite"
+                  >
+                    Startseite
+                  </button>
+                  <span className="breadcrumb-separator">/</span>
+                  <span className="breadcrumb-item active">Registrieren</span>
+                </div>
+              </div>
+              
+              <div className="register-form-container">
+                <div className="register-form-card">
+                  <div className="form-header">
+                    <h2 className="form-title">Get Started</h2>
+                    <p className="form-subtitle">Choose your preferred way to access the platform</p>
+                  </div>
+                  
+                  <form onSubmit={handleRegistration} className="complete-register-form">
+                    <div className="form-section">
+                      <h3 className="section-title">Registrieren mit Email</h3>
+                      
+                      <div className="form-inputs">
+                        <div className="input-group">
+                          <label className="input-label">Vollständiger Name *</label>
+                          <input
+                            type="text"
+                            placeholder="Vor- und Nachname"
+                            value={registerData.fullName}
+                            onChange={(e) => setRegisterData(prev => ({ ...prev, fullName: e.target.value }))}
+                            className="register-form-input"
+                            required
+                          />
+                        </div>
+                        
+                        <div className="input-group">
+                          <label className="input-label">Email-Adresse *</label>
+                          <input
+                            type="email"
+                            placeholder="ihre@email.de"
+                            value={registerData.email}
+                            onChange={(e) => setRegisterData(prev => ({ ...prev, email: e.target.value }))}
+                            className="register-form-input"
+                            required
+                          />
+                        </div>
+                        
+                        <div className="input-group">
+                          <label className="input-label">Passwort *</label>
+                          <input
+                            type="password"
+                            placeholder="Passwort eingeben"
+                            value={registerData.password}
+                            onChange={(e) => setRegisterData(prev => ({ ...prev, password: e.target.value }))}
+                            className="register-form-input"
+                            required
+                            minLength={6}
+                          />
+                          <p className="password-requirements">Mindestens 6 Zeichen, mit Groß-/Kleinbuchstaben und Zahl</p>
+                        </div>
+                        
+                        <div className="input-group">
+                          <label className="input-label">Passwort bestätigen *</label>
+                          <input
+                            type="password"
+                            placeholder="Passwort wiederholen"
+                            value={registerData.confirmPassword}
+                            onChange={(e) => setRegisterData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                            className="register-form-input"
+                            required
+                            minLength={6}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="form-actions">
+                        <Button
+                          type="submit"
+                          variant="success"
+                          size="large"
+                          disabled={isSubmitting}
+                          className="register-submit-btn"
+                        >
+                          {isSubmitting ? '⏳ Erstellen...' : 'Registrieren'}
+                        </Button>
+                      </div>
+                      
+                      <div className="form-footer">
+                        <p className="login-prompt">
+                          Bereits ein Account? 
+                          <button
+                            type="button"
+                            onClick={() => setShowRegisterForm(false)}
+                            className="login-link-btn"
+                          >
+                            Hier anmelden
+                          </button>
+                        </p>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
           ) : (
             <>
               <div className="guest-hero">

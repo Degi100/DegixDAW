@@ -156,15 +156,30 @@ export function useAuth() {
 
   const signOut = async (): Promise<{ success: boolean; error?: AuthError }> => {
     try {
+      // Update state immediately to show user is being signed out
+      setState(prev => ({ ...prev, loading: true }));
+      
       const { error } = await supabase.auth.signOut();
       
       if (error) {
+        // Restore previous state if sign out failed
+        setState(prev => ({ ...prev, loading: false }));
         return { success: false, error: handleAuthError(error) };
       }
 
+      // Clear user state immediately
+      setState({
+        user: null,
+        loading: false,
+        initialized: true
+      });
+
+      // Navigate to login page
       navigate('/login');
       return { success: true };
     } catch (error) {
+      // Restore previous state if sign out failed
+      setState(prev => ({ ...prev, loading: false }));
       return { success: false, error: handleAuthError(error) };
     }
   };
