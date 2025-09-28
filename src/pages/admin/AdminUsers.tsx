@@ -32,12 +32,18 @@ export default function AdminUsers() {
       
       const { data, error: fetchError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*', { count: 'exact', head: false }) // Zeige ALLE Felder, auch leere
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
 
-      setUsers(data || []);
+      if (!data) {
+        error('Keine User-Daten gefunden!');
+        setUsers([]);
+        return;
+      }
+
+      setUsers(data);
     } catch (err) {
       console.error('Error loading users:', err);
       error('Failed to load users');
@@ -193,6 +199,12 @@ export default function AdminUsers() {
                   </p>
                 </div>
               )}
+            </div>
+
+            {/* Debug: Zeige alle geladenen User als JSON */}
+            <div style={{ margin: '2rem 0', padding: '1rem', background: '#f9f9f9', border: '1px solid #eee', fontSize: '0.9em', color: '#333' }}>
+              <strong>Debug: Alle geladenen User (Rohdaten)</strong>
+              <pre>{JSON.stringify(users, null, 2)}</pre>
             </div>
           </div>
         )}

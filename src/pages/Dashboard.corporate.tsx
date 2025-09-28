@@ -15,6 +15,7 @@ import WelcomeCard from '../components/dashboard/WelcomeCard';
 import FeatureGrid from '../components/dashboard/FeatureGrid';
 import ProjectsSection from '../components/dashboard/ProjectsSection';
 import { APP_FULL_NAME } from '../lib/constants';
+import { supabase } from '../lib/supabase';
 
 export default function DashboardCorporate() {
   const navigate = useNavigate();
@@ -131,6 +132,27 @@ export default function DashboardCorporate() {
       });
       
       if (result.success) {
+        // Nach erfolgreicher Registrierung: Profil-Eintrag anlegen
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { error: profileError } = await supabase.from('profiles').insert({
+              id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : undefined,
+              user_id: user.id,
+              email: registerData.email,
+              full_name: registerData.fullName,
+              username: registerData.email.split('@')[0],
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+            if (profileError) {
+              showError('Profil konnte nicht angelegt werden: ' + profileError.message);
+            }
+          }
+        } catch (profileErr) {
+          showError('Profil konnte nicht angelegt werden: ' + (profileErr instanceof Error ? profileErr.message : String(profileErr)));
+          console.error('Profil konnte nicht angelegt werden:', profileErr);
+        }
         success('Konto erfolgreich erstellt! Bitte bestätigen Sie Ihre E-Mail. 🎉');
         setRegisterData({ fullName: '', email: '', password: '', confirmPassword: '' });
         setShowRegisterForm(false);
