@@ -11,7 +11,7 @@ import { ToastContainer } from './components/ui/Toast';
 const Login = lazy(() => import('./pages/Login.corporate'));
 const AuthCallback = lazy(() => import('./pages/AuthCallback'));
 const Dashboard = lazy(() => import('./pages/Dashboard.corporate'));
-const UserSettings = lazy(() => import('./pages/UserSettings.advanced'));
+const UserSettings = lazy(() => import('./pages/UserSettings.corporate'));
 const UsernameOnboarding = lazy(() => import('./pages/UsernameOnboarding'));
 const ResendConfirmation = lazy(() => import('./pages/ResendConfirmation'));
 const EmailConfirmed = lazy(() => import('./pages/EmailConfirmed'));

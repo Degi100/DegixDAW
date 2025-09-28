@@ -139,12 +139,7 @@ export default function DashboardCorporate() {
     }
   };
 
-  const resetLoginFlow = () => {
-    setLoginStep('initial');
-    setLoginData({ email: '', password: '' });
-    setRegisterData({ fullName: '', email: '', password: '', confirmPassword: '' });
-    setShowRegisterForm(false);
-  };
+  // resetLoginFlow function removed as it was unused
 
   const handleGoogleLogin = async () => {
     setIsSubmitting(true);
@@ -252,14 +247,6 @@ export default function DashboardCorporate() {
                           <form onSubmit={handleQuickLogin} className="hover-login-form">
                             <div className="form-header">
                               <span className="form-title">🔑 Schnell Anmelden</span>
-                              <button
-                                type="button"
-                                onClick={resetLoginFlow}
-                                className="back-btn"
-                                title="Zurück"
-                              >
-                                ←
-                              </button>
                             </div>
                             
                             <div className="form-inputs">
@@ -318,14 +305,6 @@ export default function DashboardCorporate() {
                       <form onSubmit={handleQuickLogin} className="complete-login-form">
                         <div className="form-header">
                           <span className="form-title">🔑 Anmeldung abschließen</span>
-                          <button
-                            type="button"
-                            onClick={resetLoginFlow}
-                            className="back-btn"
-                            title="Zurück"
-                          >
-                            ←
-                          </button>
                         </div>
                         
                         <div className="form-inputs">
@@ -438,8 +417,8 @@ export default function DashboardCorporate() {
               <div className="register-form-container">
                 <div className="register-form-card">
                   <div className="form-header">
-                    <h2 className="form-title">Get Started</h2>
-                    <p className="form-subtitle">Choose your preferred way to access the platform</p>
+                    <h2 className="form-title">Registrierung</h2>
+                    <p className="form-subtitle">Erstellen Sie Ihr Konto für den Zugang zur Plattform</p>
                   </div>
                   
                   <form onSubmit={handleRegistration} className="complete-register-form">

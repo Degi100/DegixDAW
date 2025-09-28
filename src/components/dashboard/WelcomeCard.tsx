@@ -17,25 +17,70 @@ export default function WelcomeCard({ user }: WelcomeCardProps) {
         {/* User Profile Section */}
         <div className="profile-section">
           <div className="profile-avatar">
-            {(user.user_metadata?.full_name || user.user_metadata?.username || user.email).charAt(0).toUpperCase()}
+            {(user.user_metadata?.first_name || user.user_metadata?.full_name || user.user_metadata?.username || user.email).charAt(0).toUpperCase()}
           </div>
           
           <div className="profile-info">
             <div className="greeting">
               <span className="greeting-text">
-                {new Date().getHours() < 12 ? 'Good Morning' : 
-                 new Date().getHours() < 17 ? 'Good Afternoon' : 'Good Evening'},
+                {new Date().getHours() < 12 ? 'Guten Morgen' : 
+                 new Date().getHours() < 17 ? 'Guten Tag' : 'Guten Abend'},
               </span>
               <h2 className="user-display-name">
-                {user.user_metadata?.full_name || user.user_metadata?.username || 'User'}
+                {user.user_metadata?.display_name || 
+                 user.user_metadata?.full_name || 
+                 `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() ||
+                 user.user_metadata?.username || 'Benutzer'}
               </h2>
             </div>
             
-            <div className="user-meta">
-              {user.user_metadata?.username && (
-                <span className="username-badge">@{user.user_metadata.username}</span>
+            {/* Detaillierte Benutzerinformationen */}
+            <div className="user-details">
+              {(user.user_metadata?.first_name || user.user_metadata?.last_name) && (
+                <div className="name-section">
+                  <span className="detail-label">👤 Name:</span>
+                  <span className="detail-value">
+                    {user.user_metadata?.first_name || ''} {user.user_metadata?.last_name || ''}
+                  </span>
+                </div>
               )}
-              <span className="user-email">{user.email}</span>
+              
+              <div className="email-section">
+                <span className="detail-label">📧 E-Mail:</span>
+                <span className="detail-value">{user.email}</span>
+              </div>
+              
+              {user.user_metadata?.username && (
+                <div className="username-section">
+                  <span className="detail-label">🏷️ Benutzername:</span>
+                  <span className="username-badge">@{user.user_metadata.username}</span>
+                </div>
+              )}
+              
+              {user.user_metadata?.bio && (
+                <div className="bio-section">
+                  <span className="detail-label">📝 Bio:</span>
+                  <span className="detail-value bio-text">{user.user_metadata.bio}</span>
+                </div>
+              )}
+              
+              <div className="account-info">
+                <span className="detail-label">📅 Mitglied seit:</span>
+                <span className="detail-value">
+                  {user.created_at ? new Date(user.created_at).toLocaleDateString('de-DE', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  }) : 'Unbekannt'}
+                </span>
+              </div>
+              
+              <div className="verification-status">
+                <span className="detail-label">✅ Status:</span>
+                <span className={`verification-badge ${user.email_confirmed_at ? 'verified' : 'unverified'}`}>
+                  {user.email_confirmed_at ? '🟢 Verifiziert' : '🟡 E-Mail-Bestätigung ausstehend'}
+                </span>
+              </div>
             </div>
           </div>
         </div>

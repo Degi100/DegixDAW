@@ -9,6 +9,9 @@ interface ProfileUpdates {
   username?: string;
   full_name?: string;
   display_name?: string;
+  first_name?: string;
+  last_name?: string;
+  bio?: string;
 }
 
 export function useProfile(user: User | null) {
@@ -23,7 +26,10 @@ export function useProfile(user: User | null) {
           {
             user_id: user?.id,
             username: updates.username,
-            full_name: updates.full_name
+            full_name: updates.full_name,
+            first_name: updates.first_name,
+            last_name: updates.last_name,
+            bio: updates.bio
           }
         ], { onConflict: 'user_id' });
 
@@ -31,10 +37,18 @@ export function useProfile(user: User | null) {
         return { success: false, error: handleAuthError(error) };
       }
 
-      // Schreibe Username auch ins Auth-Metadata, damit er in der UI angezeigt wird
-      if (updates.username) {
+      // Aktualisiere auch die Auth-Metadata für alle relevanten Felder
+      const metadataUpdates: any = {};
+      if (updates.username) metadataUpdates.username = updates.username;
+      if (updates.full_name) metadataUpdates.full_name = updates.full_name;
+      if (updates.display_name) metadataUpdates.display_name = updates.display_name;
+      if (updates.first_name) metadataUpdates.first_name = updates.first_name;
+      if (updates.last_name) metadataUpdates.last_name = updates.last_name;
+      if (updates.bio) metadataUpdates.bio = updates.bio;
+      
+      if (Object.keys(metadataUpdates).length > 0) {
         const { error: metaError } = await supabase.auth.updateUser({
-          data: { username: updates.username }
+          data: metadataUpdates
         });
         if (metaError) {
           return { success: false, error: handleAuthError(metaError) };

@@ -22,7 +22,7 @@ export default function LoginCorporate() {
 
   const handleThemeToggle = () => {
     toggleTheme();
-    success(`Switched to ${isDark ? 'Light' : 'Dark'} mode! 🎨`);
+    success(`${isDark ? 'Hell' : 'Dunkel'} Modus aktiviert! 🎨`);
   };
 
   const handleLogin = async (email: string, password: string) => {
@@ -31,10 +31,10 @@ export default function LoginCorporate() {
       const result = await signInWithEmail(email, password);
       
       if (result.success) {
-        success('Successfully logged in! 🎉');
+        success('Erfolgreich angemeldet! 🎉');
         navigate('/');
       } else {
-        const errorMessage = result.error?.message || 'Login failed';
+        const errorMessage = result.error?.message || 'Anmeldung fehlgeschlagen';
         
         // Check if it's an email confirmation issue
         if (result.error?.type === 'validation' && 
@@ -48,7 +48,7 @@ export default function LoginCorporate() {
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      showError(`Login failed: ${errorMessage}`);
+      showError(`Anmeldung fehlgeschlagen: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -65,11 +65,11 @@ export default function LoginCorporate() {
       const result = await signUpWithEmail(data);
       
       if (result.success) {
-        success('Registration successful! Please check your email for confirmation.', {
+        success('Registrierung erfolgreich! Bitte überprüfen Sie Ihre E-Mail für die Bestätigung.', {
           duration: 8000
         });
       } else {
-        const errorMessage = result.error?.message || 'Registration failed';
+        const errorMessage = result.error?.message || 'Registrierung fehlgeschlagen';
         
         // Special handling for duplicate email
         if (result.error?.type === 'validation' && 
@@ -87,7 +87,7 @@ export default function LoginCorporate() {
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      showError(`Registration failed: ${errorMessage}`);
+      showError(`Registrierung fehlgeschlagen: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -99,11 +99,11 @@ export default function LoginCorporate() {
       const result = await signInWithOAuth(provider);
       
       if (!result.success) {
-        showError(result.error?.message || `${provider} Login failed`);
+        showError(result.error?.message || `${provider} Anmeldung fehlgeschlagen`);
       }
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      showError(`${provider} Login failed: ${errorMessage}`);
+      const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
+      showError(`${provider} Anmeldung fehlgeschlagen: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -146,24 +146,28 @@ export default function LoginCorporate() {
           {/* Hero Section */}
           <div className="login-hero">
             <div className="hero-content">
-              <h2 className="hero-title">Welcome Back</h2>
+              <h2 className="hero-title">Willkommen zurück</h2>
               <p className="hero-subtitle">
-                Sign in to continue your musical journey with professional-grade tools
+                Melden Sie sich an, um Ihre musikalische Reise mit professionellen Tools fortzusetzen
               </p>
               
               {/* Feature Highlights */}
               <div className="feature-highlights">
                 <div className="highlight-item">
                   <span className="highlight-icon">🎵</span>
-                  <span className="highlight-text">Professional Audio Engine</span>
+                  <span className="highlight-text">Professionelle Audio Engine</span>
                 </div>
                 <div className="highlight-item">
                   <span className="highlight-icon">☁️</span>
-                  <span className="highlight-text">Cloud Collaboration</span>
+                  <span className="highlight-text">Cloud Zusammenarbeit</span>
                 </div>
                 <div className="highlight-item">
                   <span className="highlight-icon">🎹</span>
-                  <span className="highlight-text">Virtual Instruments</span>
+                  <span className="highlight-text">Virtuelle Instrumente</span>
+                </div>
+                <div className="highlight-item">
+                  <span className="highlight-icon">🚀</span>
+                  <span className="highlight-text">Erweiterte Funktionen</span>
                 </div>
               </div>
             </div>
@@ -183,8 +187,8 @@ export default function LoginCorporate() {
           <div className="auth-section">
             <div className="auth-card">
               <div className="auth-header">
-                <h3 className="auth-title">Get Started</h3>
-                <p className="auth-subtitle">Choose your preferred way to access the platform</p>
+                <h3 className="auth-title">Anmelden</h3>
+                <p className="auth-subtitle">Wählen Sie Ihre bevorzugte Anmeldemethode</p>
               </div>
               
               <div className="auth-content">
@@ -213,12 +217,12 @@ export default function LoginCorporate() {
       <footer className="login-footer">
         <div className="footer-content">
           <div className="footer-info">
-            <p>© 2024 {APP_FULL_NAME}. Professional music production platform.</p>
+            <p>© 2025 {APP_FULL_NAME}. Professionelle Musikproduktions-Plattform.</p>
           </div>
           
           <div className="footer-links">
-            <a href="#" className="footer-link">Privacy Policy</a>
-            <a href="#" className="footer-link">Terms of Service</a>
+            <a href="#" className="footer-link">Datenschutz</a>
+            <a href="#" className="footer-link">Nutzungsbedingungen</a>
             <a href="#" className="footer-link">Support</a>
           </div>
         </div>
