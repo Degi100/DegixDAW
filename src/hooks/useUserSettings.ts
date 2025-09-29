@@ -37,6 +37,18 @@ export function useUserSettings() {
     bio: user?.user_metadata?.bio || ''
   });
 
+  // Aktualisiere die Felder automatisch, wenn sich das User-Objekt ändert
+  useEffect(() => {
+    setProfileData({
+      firstName: user?.user_metadata?.first_name || user?.user_metadata?.full_name?.split(' ')[0] || '',
+      lastName: user?.user_metadata?.last_name || user?.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+      fullName: user?.user_metadata?.full_name || '',
+      username: user?.user_metadata?.username || '',
+      displayName: user?.user_metadata?.display_name || user?.user_metadata?.full_name || '',
+      bio: user?.user_metadata?.bio || ''
+    });
+  }, [user]);
+
   const [securityData, setSecurityData] = useState<SecurityDataState>({
     currentPassword: '',
     newPassword: '',

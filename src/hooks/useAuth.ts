@@ -18,6 +18,8 @@ interface SignUpData {
   password: string;
   username?: string;
   fullName?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 export function useAuth() {
@@ -118,6 +120,8 @@ export function useAuth() {
           data: {
             // NEVER set username on signup - always force onboarding
             full_name: data.fullName || '',
+            first_name: data.firstName || '',
+            last_name: data.lastName || '',
             display_name: data.fullName || '',
             needs_username_onboarding: true // ALWAYS trigger onboarding for new users
           }

@@ -28,7 +28,7 @@ export default function DashboardCorporate() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [signOutLoading, setSignOutLoading] = useState(false);
   const [loginData, setLoginData] = useState<{ email: string; password: string }>({ email: '', password: '' });
-  const [registerData, setRegisterData] = useState<{ fullName: string; email: string; password: string; confirmPassword: string }>({ fullName: '', email: '', password: '', confirmPassword: '' });
+  const [registerData, setRegisterData] = useState<{ firstName: string; lastName: string; email: string; password: string; confirmPassword: string }>({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' });
   const [loginStep, setLoginStep] = useState<'initial' | 'email' | 'fullForm'>('initial');
   const [showRegisterForm, setShowRegisterForm] = useState(false);
 
@@ -76,7 +76,7 @@ export default function DashboardCorporate() {
       if (result.success) {
         success('Erfolgreich angemeldet! 🎉');
         setLoginData({ email: '', password: '' });
-        setRegisterData({ fullName: '', email: '', password: '', confirmPassword: '' });
+  setRegisterData({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' });
         setLoginStep('initial');
         navigate('/dashboard');
       } else {
@@ -93,9 +93,9 @@ export default function DashboardCorporate() {
   const handleRegistration = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check if full name is provided
-    if (!registerData.fullName.trim()) {
-      showError('Vollständiger Name ist erforderlich');
+    // Check if Vorname und Nachname ausgefüllt sind
+    if (!registerData.firstName.trim() || !registerData.lastName.trim()) {
+      showError('Vorname und Nachname sind erforderlich');
       return;
     }
     
@@ -124,12 +124,14 @@ export default function DashboardCorporate() {
     
     try {
       // Rufen Sie die Registrierungsfunktion auf
+      const fullName = `${registerData.firstName} ${registerData.lastName}`.trim();
       const result = await signUpWithEmail({
         email: registerData.email,
         password: registerData.password,
-        fullName: registerData.fullName,
-        // Ein Standard-Username kann hier generiert oder im Onboarding festgelegt werden
-        username: registerData.email.split('@')[0], 
+        fullName,
+        firstName: registerData.firstName,
+        lastName: registerData.lastName,
+        username: registerData.email.split('@')[0],
       });
       
       if (result.success) {
@@ -141,7 +143,9 @@ export default function DashboardCorporate() {
               id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : undefined,
               user_id: user.id,
               email: registerData.email,
-              full_name: registerData.fullName,
+              first_name: registerData.firstName,
+              last_name: registerData.lastName,
+              full_name: fullName,
               username: registerData.email.split('@')[0],
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
@@ -155,7 +159,7 @@ export default function DashboardCorporate() {
           console.error('Profil konnte nicht angelegt werden:', profileErr);
         }
         success('Konto erfolgreich erstellt! Bitte bestätigen Sie Ihre E-Mail. 🎉');
-        setRegisterData({ fullName: '', email: '', password: '', confirmPassword: '' });
+  setRegisterData({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' });
         setShowRegisterForm(false);
       } else {
         showError(result.error?.message || 'Registrierung fehlgeschlagen');
@@ -451,11 +455,18 @@ export default function DashboardCorporate() {
                       
                       <div className="form-inputs">
                         <Input
-                          label="Vollständiger Name"
+                          label="Vorname"
                           type="text"
-                          placeholder="Vor- und Nachname"
-                          value={registerData.fullName}
-                          onChange={(e) => setRegisterData(prev => ({ ...prev, fullName: e.target.value }))}
+                          placeholder="Ihr Vorname"
+                          value={registerData.firstName}
+                          onChange={(e) => setRegisterData(prev => ({ ...prev, firstName: e.target.value }))}
+                        />
+                        <Input
+                          label="Nachname"
+                          type="text"
+                          placeholder="Ihr Nachname"
+                          value={registerData.lastName}
+                          onChange={(e) => setRegisterData(prev => ({ ...prev, lastName: e.target.value }))}
                         />
                         
                         <Input

@@ -43,6 +43,7 @@ export interface SecuritySettingsProps {
 
 export interface AccountSettingsProps {
   handleLogout: SimpleHandler;
+  isUpdating: boolean;
 }
 
 export interface DeleteAccountModalProps {

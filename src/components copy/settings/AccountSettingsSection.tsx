@@ -2,7 +2,7 @@ import React from 'react';
 import Button from '../ui/Button';
 import type { AccountSettingsProps } from './types/settings';
 
-const AccountSettingsSection: React.FC<AccountSettingsProps> = ({ handleLogout }) => (
+const AccountSettingsSection: React.FC<AccountSettingsProps> = ({ handleLogout, isUpdating }) => (
   <div className="content-card">
     <div className="card-header">
       <h2 className="card-title">⚙️ Konto Verwaltung</h2>

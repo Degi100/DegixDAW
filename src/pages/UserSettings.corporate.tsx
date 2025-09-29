@@ -156,7 +156,7 @@ export default function UserSettingsCorporate() {
             {activeSection === 'account' && (
               <AccountSettingsSection
                 handleLogout={handleLogout}
-                isUpdating={isUpdating}
+                // isUpdating entfernt, da nicht mehr benötigt
               />
             )}
           </div>
