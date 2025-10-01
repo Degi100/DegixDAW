@@ -18,6 +18,13 @@ const navItems = [
   { path: "/admin/settings", icon: "⚙️", label: "Settings" }
 ];
 
+const navSections = [
+  {
+    title: "Management",
+    items: navItems
+  }
+];
+
 export default function AdminLayoutCorporate({ children }: AdminLayoutProps) {
   const { adminLevel } = useAdmin();
 
@@ -33,18 +40,23 @@ export default function AdminLayoutCorporate({ children }: AdminLayoutProps) {
         <div className="admin-content">
           <nav className="admin-sidebar">
             <div className="admin-nav">
-              {navItems.map((item) => (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `admin-nav-link ${isActive ? 'active' : ''}`
-                  }
-                  end={item.path === '/admin'}
-                >
-                  <span>{item.icon}</span>
-                  <span>{item.label}</span>
-                </NavLink>
+              {navSections.map((section, sectionIndex) => (
+                <div key={sectionIndex} className="admin-nav-section">
+                  <h3 className="admin-nav-section-title">{section.title}</h3>
+                  {section.items.map((item) => (
+                    <NavLink
+                      key={item.path}
+                      to={item.path}
+                      className={({ isActive }) =>
+                        `admin-nav-link ${isActive ? 'active' : ''}`
+                      }
+                      end={item.path === '/admin'}
+                    >
+                      <span>{item.icon}</span>
+                      <span>{item.label}</span>
+                    </NavLink>
+                  ))}
+                </div>
               ))}
             </div>
           </nav>

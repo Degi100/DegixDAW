@@ -1,4 +1,7 @@
-// SCSS Modul: Admin Corporate
+// ============================================
+// ADMIN CORPORATE - MOBILE FIRST
+// ============================================
+
 @use '../../abstracts/variables' as *;
 
 .admin-layout {
@@ -9,13 +12,33 @@
 .admin-body {
   max-width: 1200px;
   margin: 0 auto;
-  padding: $spacing-xl;
+  padding: $spacing-lg; // Reduced padding on mobile
+
+  @media (min-width: $breakpoint-md) {
+    padding: $spacing-xl;
+  }
 }
 
+// ============================================
+// MOBILE FIRST: Sidebar unter Content
+// ============================================
+
 .admin-content {
-  display: grid;
-  grid-template-columns: 250px 1fr;
-  gap: $spacing-xl;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+// ============================================
+// TABLET+: Sidebar neben Content
+// ============================================
+
+@media (min-width: $breakpoint-md) {
+  .admin-content {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: $spacing-xl;
+  }
 }
 
 .admin-sidebar {
@@ -23,41 +46,82 @@
   border-radius: $radius-lg;
   box-shadow: $shadow-md;
   padding: $spacing-lg;
+
+  // Auf Mobile: Sidebar ist kompakter und oben
+  @media (max-width: 767px) {
+    order: -1; // Sidebar oben auf Mobile
+    padding: $spacing-md; // Weniger Padding auf Mobile
+  }
 }
 
 .admin-nav {
   display: flex;
   flex-direction: column;
-  gap: $spacing-xs;
+  gap: $spacing-sm; // Mehr Abstand zwischen Sektionen
+
+  // Auf Mobile: Noch mehr Abstand
+  @media (max-width: 767px) {
+    gap: $spacing-md;
+  }
 }
+
 .admin-nav-section {
-  margin-bottom: $spacing-lg;
+  margin-bottom: $spacing-xl; // Mehr Abstand zwischen Sektionen
+
+  // Auf Mobile: Optimierter Abstand
+  @media (max-width: 767px) {
+    margin-bottom: $spacing-lg;
+  }
+
+  &:last-child {
+    margin-bottom: 0; // Letzte Sektion hat keinen unteren Abstand
+  }
 }
+
 .admin-nav-section-title {
   font-size: $font-size-sm;
   font-weight: 600;
   color: $gray-600;
-  margin-bottom: $spacing-sm;
+  margin-bottom: $spacing-md; // Mehr Abstand unter Titel
   text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  // Auf Mobile: Optimierte Größe
+  @media (max-width: 767px) {
+    font-size: $font-size-xs;
+    margin-bottom: $spacing-sm;
+  }
 }
 
 .admin-nav-link {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
-  padding: $spacing-sm $spacing-md;
+  gap: $spacing-md; // Mehr Abstand zwischen Icon und Text
+  padding: $spacing-md $spacing-lg; // Mehr Padding
   border-radius: $radius-md;
   text-decoration: none;
   color: $gray-600;
   transition: $transition;
+  font-weight: 500;
+
+  // Auf Mobile: Größere Touch-Targets und mehr Abstand
+  @media (max-width: 767px) {
+    padding: $spacing-lg $spacing-md;
+    gap: $spacing-lg;
+    font-size: $font-size-base;
+    margin-bottom: $spacing-xs; // Abstand zwischen Links
+  }
 
   &:hover {
     background: $gray-100;
     color: $primary-color;
+    transform: translateX(2px); // Subtile Hover-Animation
   }
+
   &.active {
     background: $primary-color;
     color: $white;
+    box-shadow: 0 2px 8px rgba($primary-color, 0.2);
   }
 }
 
@@ -65,5 +129,9 @@
   background: $white;
   border-radius: $radius-lg;
   box-shadow: $shadow-md;
-  padding: $spacing-xl;
+  padding: $spacing-lg; // Reduced padding on mobile
+
+  @media (min-width: $breakpoint-md) {
+    padding: $spacing-xl;
+  }
 }

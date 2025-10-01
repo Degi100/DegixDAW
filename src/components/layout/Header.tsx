@@ -8,6 +8,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { useToast } from '../../hooks/useToast';
+import { useAdmin } from '../../hooks/useAdmin';
 import Button from '../ui/Button';
 import { APP_CONFIG } from '../../lib/constants';
 
@@ -44,6 +45,7 @@ export default function Header({
   const { user, signOut } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const { success } = useToast();
+  const { isAdmin } = useAdmin();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
@@ -82,23 +84,19 @@ export default function Header({
 
   return (
     <header className="global-header">
-      <div className="header-container">
-        {/* Logo/Brand */}
-        <div className="header-brand">
-          <button
-            onClick={() => handleNavigation('/')}
-            className="brand-link"
-            aria-label="Go to Dashboard"
-          >
-            <span className="brand-icon">{currentBrand.icon}</span>
-            <span className="brand-name">{currentBrand.name}</span>
-            {showAdminBadge && adminLevel && adminLevel.trim() && (
-              <span className="admin-badge">{adminLevel.replace('_', ' ')}</span>
-            )}
-          </button>
-        </div>
+      <div className="header-container header-row">
+        {/* Alles in einer Reihe: Branding (Icon), Navigation, User, Theme */}
+        <button
+          onClick={() => handleNavigation('/')}
+          className="brand-link compact"
+          aria-label="Go to Dashboard"
+        >
+          <span className="brand-icon">{currentBrand.icon}</span>
+          {showAdminBadge && adminLevel && adminLevel.trim() && (
+            <span className="admin-badge compact">{adminLevel.replace('_', ' ')}</span>
+          )}
+        </button>
 
-        {/* Desktop Navigation */}
         <nav className="header-nav">
           <ul className="nav-list">
             {filteredNavItems.map((item) => (
@@ -116,9 +114,7 @@ export default function Header({
           </ul>
         </nav>
 
-        {/* Header Actions */}
         <div className="header-actions">
-          {/* User Menu */}
           {user ? (
             <div className="user-menu-container">
               <button
@@ -143,7 +139,6 @@ export default function Header({
                 </span>
               </button>
 
-              {/* User Dropdown Menu */}
               {isUserMenuOpen && (
                 <div className="user-dropdown">
                   <div className="dropdown-header">
@@ -169,13 +164,15 @@ export default function Header({
                       <span>Settings</span>
                     </button>
 
-                    <button
-                      onClick={() => handleNavigation('/admin')}
-                      className="dropdown-item"
-                    >
-                      <span className="dropdown-icon">🛡️</span>
-                      <span>Admin Panel</span>
-                    </button>
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleNavigation('/admin')}
+                        className="dropdown-item"
+                      >
+                        <span className="dropdown-icon">🛡️</span>
+                        <span>Admin Panel</span>
+                      </button>
+                    )}
 
                     <hr className="dropdown-divider" />
 
@@ -200,7 +197,6 @@ export default function Header({
             </Button>
           )}
 
-          {/* Mobile Menu Toggle */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="mobile-menu-toggle"
@@ -213,7 +209,6 @@ export default function Header({
           </button>
         </div>
 
-        {/* Theme Toggle - Always positioned consistently */}
         <button
           onClick={handleThemeToggle}
           className="theme-toggle"
