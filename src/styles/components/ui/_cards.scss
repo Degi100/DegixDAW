@@ -1,0 +1,32 @@
+// SCSS Modul: Cards
+@import '../../abstracts/variables';
+
+.sidebar-card,
+.content-card,
+.modal-card {
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: $blur-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  border: 1px solid rgba(255,255,255,0.3);
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 2rem 2rem 1rem;
+  border-bottom: 1px solid rgba(226,232,240,0.5);
+}
+
+.card-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: $text-primary;
+  margin: 0 0 0.5rem 0;
+}
+
+.card-subtitle {
+  color: $text-muted;
+  font-size: 0.875rem;
+  margin: 0;
+  line-height: 1.5;
+}

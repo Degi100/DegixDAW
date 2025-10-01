@@ -1,7 +1,3 @@
 /* src/styles/utilities/forms.css */
-/* Clean, modular form system - imports focused components */
-@import '../components/forms-core.css';
-@import '../components/inputs.css';
-@import '../components/auth-forms.css';
-@import '../components/recovery.css';
-@import '../components/admin-corporate.css';
+/* Form components now imported via main.scss - no duplicates needed */
+/* These styles are already included in the main.scss import chain */

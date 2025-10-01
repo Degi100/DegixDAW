@@ -1,0 +1,28 @@
+// SCSS Modul: Responsive
+@import '../abstracts/variables';
+
+@mixin respond($breakpoint) {
+  @if $breakpoint == 'lg' {
+    @media (max-width: 968px) { @content; }
+  } @else if $breakpoint == 'md' {
+    @media (max-width: 768px) { @content; }
+  } @else if $breakpoint == 'sm' {
+    @media (max-width: 480px) { @content; }
+  }
+}
+
+.settings-container {
+  @include respond('lg') {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+.settings-main {
+  @include respond('md') {
+    padding: 1rem;
+  }
+  @include respond('sm') {
+    padding: 0.5rem;
+  }
+}

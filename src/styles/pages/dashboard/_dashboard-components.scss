@@ -1,0 +1,86 @@
+// Dashboard Corporate - Additional Components (Guest, Login, etc.)
+@import '../../abstracts/variables';
+
+// Inline Login Components
+.inline-login {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.google-login-btn {
+  background: $white;
+  color: $google-blue;
+  border: 1px solid rgba($google-blue, 0.3);
+  font-weight: 700;
+  font-size: 1.125rem;
+  font-family: 'Product Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    background: $background-hover;
+    border-color: $google-blue;
+    color: $google-blue-dark;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba($google-blue, 0.25);
+  }
+}
+
+.quick-login-form {
+  background: rgba($white,0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 0.75rem;
+  border: 1px solid rgba($white,0.2);
+}
+
+.login-form-inline {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.login-input-inline {
+  background: rgba($white,0.9);
+  border: 1px solid rgba($white,0.3);
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: $input-text;
+  width: 120px;
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    background: $white;
+    border-color: $corporate-blue-300;
+    box-shadow: 0 0 0 2px rgba($corporate-blue-500, 0.2);
+  }
+  
+  &::placeholder {
+    color: $input-placeholder;
+    font-size: 0.8125rem;
+  }
+}
+
+// Dark mode for inline login
+[data-theme="dark"] {
+  .login-input-inline {
+    background: rgba($dark-bg-2, 0.8);
+    color: $dark-text-primary;
+    border-color: rgba($dark-text-secondary, 0.3);
+    
+    &:focus {
+      background: $dark-bg-2;
+      border-color: $corporate-blue-400;
+    }
+  }
+}

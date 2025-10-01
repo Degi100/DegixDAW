@@ -35,23 +35,23 @@ export default defineConfig({
           
           // Pages - split by functionality
           'auth-pages': [
-            './src/pages/Login.advanced.tsx',
-            './src/pages/AuthCallback.tsx',
-            './src/pages/ForgotPassword.tsx',
-            './src/pages/RecoverAccount.tsx',
-            './src/pages/ResendConfirmation.tsx',
-            './src/pages/EmailConfirmed.tsx',
-            './src/pages/UsernameOnboarding.tsx'
+            './src/pages/auth/Login.advanced.tsx',
+            './src/pages/auth/AuthCallback.tsx',
+            './src/pages/auth/ForgotPassword.tsx',
+            './src/pages/auth/ResendConfirmation.tsx'
           ],
           
           'dashboard-pages': [
-            './src/pages/Dashboard.advanced.tsx',
-            './src/pages/UserSettings.advanced.tsx'
+            './src/pages/dashboard/Dashboard.advanced.tsx'
           ],
           
           'recovery-pages': [
-            './src/pages/AccountRecovery.tsx',
-            './src/pages/AdminRecovery.tsx'
+            './src/pages/account/AccountRecovery.tsx',
+            './src/pages/account/AdminRecovery.tsx',
+            './src/pages/account/RecoverAccount.tsx',
+            './src/pages/account/EmailConfirmed.tsx',
+            './src/pages/account/EmailChangeConfirmation.tsx',
+            './src/pages/onboarding/UsernameOnboarding.tsx'
           ]
         }
       }

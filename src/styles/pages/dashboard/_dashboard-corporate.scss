@@ -1,0 +1,31 @@
+// Dashboard Corporate - Main File
+// Dieses Modul importiert alle Dashboard-Corporate-Komponenten
+
+@import '../../abstracts/variables';
+
+// Base Layout
+.dashboard-corporate {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  position: relative;
+}
+
+.dashboard-main {
+  padding: 2rem 0;
+}
+
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+// Import all modules
+@import 'dashboard-header';
+@import 'dashboard-profile';
+@import 'dashboard-stats';
+@import 'dashboard-features';
+@import 'dashboard-projects';
+@import 'dashboard-components';
+@import 'dashboard-responsive';
+// Dark theme moved to themes/ folder, imported in main.scss

@@ -1,0 +1,36 @@
+// ============================================
+// Main SCSS Entry Point - Corporate Theme
+// ============================================
+
+// 1. Abstracts - No CSS output
+@import 'abstracts/variables';
+
+// 2. Layout
+@import 'layout/sidebar';
+@import 'layout/responsive';
+
+// 3. Components
+@import 'components/forms/forms-core';
+@import 'components/forms/forms';
+@import 'components/forms/inputs';
+@import 'components/forms/auth-forms';
+@import 'components/ui/cards';
+@import 'components/ui/modals';
+
+// 4. Pages
+@import 'pages/auth/login-corporate';
+@import 'pages/auth/recovery';
+@import 'pages/admin/admin-corporate';
+@import 'pages/dashboard/dashboard-corporate';
+
+// 5. Themes
+@import 'themes/dark';
+
+// 6. Settings Corporate Container
+.settings-corporate {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0f9ff 0%, $corporate-blue-100 20%, #f8fafc 100%);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}

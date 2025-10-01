@@ -1,0 +1,21 @@
+// SCSS Modul: Auth Forms
+@import '../../abstracts/variables';
+
+.form-toggle {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: $text-secondary;
+  font-size: 0.9rem;
+}
+
+.auth-help-links {
+  text-align: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid $border-color;
+
+  .separator {
+    margin: 0 0.5rem;
+    color: $text-secondary;
+  }
+}

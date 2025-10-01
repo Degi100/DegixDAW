@@ -1,0 +1,105 @@
+// SCSS Modul: Admin Corporate
+@import '../../abstracts/variables';
+
+.admin-layout {
+  min-height: 100vh;
+  background: $gray-50;
+}
+
+.admin-header {
+  background: linear-gradient(135deg, $primary-color, $primary-light);
+  color: $white;
+  padding: $spacing-md 0;
+  box-shadow: $shadow-md;
+}
+
+.admin-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 $spacing-lg;
+}
+
+.admin-branding h1 {
+  margin: 0;
+  font-size: $font-size-xl;
+}
+.admin-badge {
+  background: rgba(255,255,255,0.2);
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-full;
+  font-size: $font-size-sm;
+}
+.admin-user-info {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+.admin-actions {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.admin-body {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: $spacing-xl;
+}
+
+.admin-content {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: $spacing-xl;
+}
+
+.admin-sidebar {
+  background: $white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
+  padding: $spacing-lg;
+}
+
+.admin-nav {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+.admin-nav-section {
+  margin-bottom: $spacing-lg;
+}
+.admin-nav-section-title {
+  font-size: $font-size-sm;
+  font-weight: 600;
+  color: $gray-600;
+  margin-bottom: $spacing-sm;
+  text-transform: uppercase;
+}
+
+.admin-nav-link {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  text-decoration: none;
+  color: $gray-600;
+  transition: $transition;
+
+  &:hover {
+    background: $gray-100;
+    color: $primary-color;
+  }
+  &.active {
+    background: $primary-color;
+    color: $white;
+  }
+}
+
+.admin-main {
+  background: $white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
+  padding: $spacing-xl;
+}

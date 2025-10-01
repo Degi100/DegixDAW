@@ -1,0 +1,116 @@
+// Dashboard Corporate - Header Module
+@import '../../abstracts/variables';
+
+.dashboard-header {
+  background: linear-gradient(135deg, $corporate-blue-600 0%, $corporate-blue-700 100%);
+  color: white;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    transform: skewX(-15deg);
+  }
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.header-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.brand-section {
+  flex: 1;
+}
+
+.brand-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  background: linear-gradient(45deg, #ffffff, $corporate-blue-100);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.brand-subtitle {
+  font-size: 1rem;
+  color: rgba(255,255,255,0.8);
+  margin: 0;
+  font-weight: 400;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+
+  .btn {
+    border-radius: 6px;
+  }
+}
+
+// Status Bar
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255,255,255,0.1);
+  border-radius: $radius-md;
+  padding: 0.75rem 1rem;
+  backdrop-filter: blur(10px);
+}
+
+.status-indicators {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.status-icon {
+  font-size: 1rem;
+}
+
+.status-text {
+  color: rgba(255,255,255,0.9);
+  font-weight: 500;
+}
+
+.user-status {
+  font-size: 0.875rem;
+}
+
+.user-role {
+  background: rgba(255,255,255,0.2);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.header-stats {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
