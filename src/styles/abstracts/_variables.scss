@@ -1,10 +1,25 @@
-$success-color: #16a34a;
-$primary-color: #3b82f6;
-$bg-secondary: #f1f5f9;
-$border-color: #e2e8f0;
-$error-color: #dc2626;
-$text-secondary: #64748b;
-$border-radius: 12px;
+// ============================================
+// DESIGN SYSTEM VARIABLES
+// Corporate Theme - Clean & Consistent
+// ============================================
+
+// ============================================
+// COLOR PALETTE
+// ============================================
+
+// Primary Colors (Corporate Blue)
+$primary-50: #f0f9ff;
+$primary-100: #e0f2fe;
+$primary-200: #bae6fd;
+$primary-300: #7dd3fc;
+$primary-400: #38bdf8;
+$primary-500: #3b82f6;  // Main primary color
+$primary-600: #2563eb;
+$primary-700: #1d4ed8;
+$primary-800: #1e40af;
+$primary-900: #1e3a8a;
+
+// Neutral Colors (Gray Scale)
 $gray-50: #f8fafc;
 $gray-100: #f1f5f9;
 $gray-200: #e2e8f0;
@@ -15,52 +30,203 @@ $gray-600: #475569;
 $gray-700: #334155;
 $gray-800: #1e293b;
 $gray-900: #0f172a;
-$spacing-lg: 2rem;
-$spacing-md: 1.25rem;
-$spacing-sm: 0.75rem;
-$spacing-xs: 0.5rem;
-// SCSS Variablen für Settings Corporate
-$corporate-blue-50: #f0f9ff;
-$corporate-blue-100: #e0f2fe;
-$corporate-blue-200: #bae6fd;
-$corporate-blue-300: #7dd3fc;
-$corporate-blue-400: #38bdf8;
-$corporate-blue-500: #3b82f6;
-$corporate-blue-600: #2563eb;
-$corporate-blue-700: #1d4ed8;
-$text-primary: #1e293b;
-$text-muted: #64748b;
-$success-600: #16a34a;
-$warning-600: #f59e42;
-$danger-600: #dc2626;
-$radius-lg: 16px;
-$radius-md: 12px;
-$radius-sm: 8px;
-$shadow-card: 0 8px 32px rgba(0,0,0,0.1), 0 2px 6px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.9);
-$shadow-modal: 0 20px 60px rgba(0,0,0,0.3), 0 8px 20px rgba(0,0,0,0.2);
+
+// Semantic Colors
+$success: #16a34a;
+$success-50: #f0fdf4;
+$success-100: #dcfce7;
+$success-500: #16a34a;
+$success-600: #059669;
+
+$warning: #f59e42;
+$warning-50: #fffbeb;
+$warning-100: #fef3c7;
+$warning-500: #f59e42;
+$warning-600: #d97706;
+
+$danger: #dc2626;
+$danger-50: #fef2f2;
+$danger-100: #fee2e2;
+$danger-500: #dc2626;
+$danger-600: #b91c1c;
+
+// Special Colors
+$white: #ffffff;
+$black: #000000;
+
+// ============================================
+// TYPOGRAPHY
+// ============================================
+
+// Font Sizes (8px scale)
+$font-size-xs: 0.75rem;   // 12px
+$font-size-sm: 0.875rem;  // 14px
+$font-size-base: 1rem;    // 16px
+$font-size-lg: 1.125rem;  // 18px
+$font-size-xl: 1.25rem;   // 20px
+$font-size-2xl: 1.5rem;   // 24px
+$font-size-3xl: 1.875rem; // 30px
+$font-size-4xl: 2.25rem;  // 36px
+$font-size-5xl: 3rem;     // 48px
+
+// Font Weights
+$font-weight-light: 300;
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// Line Heights
+$line-height-tight: 1.25;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.75;
+
+// ============================================
+// SPACING (8px scale)
+// ============================================
+
+$spacing-1: 0.25rem;   // 4px
+$spacing-2: 0.5rem;    // 8px
+$spacing-3: 0.75rem;   // 12px
+$spacing-4: 1rem;      // 16px
+$spacing-5: 1.25rem;   // 20px
+$spacing-6: 1.5rem;    // 24px
+$spacing-8: 2rem;      // 32px
+$spacing-10: 2.5rem;   // 40px
+$spacing-12: 3rem;     // 48px
+$spacing-16: 4rem;     // 64px
+$spacing-20: 5rem;     // 80px
+$spacing-24: 6rem;     // 96px
+
+// ============================================
+// BORDER RADIUS
+// ============================================
+
+$radius-none: 0;
+$radius-sm: 0.25rem;   // 4px
+$radius-base: 0.375rem; // 6px
+$radius-md: 0.5rem;    // 8px
+$radius-lg: 0.75rem;   // 12px
+$radius-xl: 1rem;      // 16px
+$radius-2xl: 1.5rem;   // 24px
+$radius-full: 9999px;
+
+// ============================================
+// SHADOWS
+// ============================================
+
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$shadow-base: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+$shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+$shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+// Special blur effects
 $blur-card: blur(20px);
 $blur-modal: blur(20px);
 
-$bg-primary: #fff;
+// Special shadows for cards/modals
+$shadow-card: 0 8px 32px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+$shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.3), 0 8px 20px rgba(0, 0, 0, 0.2);
 
+// ============================================
+// BACKGROUNDS & BORDERS
+// ============================================
+
+$bg-primary: $white;
+$bg-secondary: $gray-50;
+$bg-tertiary: $gray-100;
+
+$border-color: $gray-200;
+$border-color-hover: $gray-300;
+$border-color-focus: $primary-500;
+
+// ============================================
+// TRANSITIONS
+// ============================================
+
+$transition-fast: 150ms ease-in-out;
+$transition-base: 200ms ease-in-out;
+$transition-slow: 300ms ease-in-out;
+
+// ============================================
+// Z-INDEX SCALE
+// ============================================
+
+$z-dropdown: 1000;
+$z-sticky: 1020;
+$z-fixed: 1030;
+$z-modal-backdrop: 1040;
+$z-modal: 1050;
+$z-popover: 1060;
+$z-tooltip: 1070;
+
+// ============================================
+// BREAKPOINTS (Mobile First)
+// ============================================
+
+$breakpoint-sm: 640px;   // Small devices (phones)
+$breakpoint-md: 768px;   // Medium devices (tablets)
+$breakpoint-lg: 1024px;  // Large devices (desktops)
+$breakpoint-xl: 1280px;  // Extra large devices
+$breakpoint-2xl: 1536px; // 2X large devices
+
+// ============================================
+// DARK MODE COLORS
+// ============================================
+
+$dark-bg-primary: $gray-900;
+$dark-bg-secondary: $gray-800;
+$dark-bg-tertiary: $gray-700;
+
+$dark-text-primary: $gray-50;
+$dark-text-secondary: $gray-200;
+$dark-text-muted: $gray-400;
+
+$dark-border: $gray-700;
+$dark-border-hover: $gray-600;
+
+// ============================================
+// LEGACY COMPATIBILITY (will be removed)
+// ============================================
+
+// Keep these for now to avoid breaking existing code
+$corporate-blue-50: $primary-50;
+$corporate-blue-100: $primary-100;
+$corporate-blue-200: $primary-200;
+$corporate-blue-300: $primary-300;
+$corporate-blue-400: $primary-400;
+$corporate-blue-500: $primary-500;
+$corporate-blue-600: $primary-600;
+$corporate-blue-700: $primary-700;
+
+$text-primary: $gray-900;
+$text-muted: $gray-500;
+
+// Legacy spacing (deprecated - use new spacing scale)
+$spacing-lg: $spacing-8;   // 2rem
+$spacing-md: $spacing-4;   // 1rem
+$spacing-sm: $spacing-2;   // 0.5rem
+$spacing-xs: $spacing-1;   // 0.25rem
+$spacing-xl: $spacing-12;  // 3rem
+
+// Legacy colors (deprecated - use semantic colors)
+$success-color: $success;
+$primary-color: $primary-500;
+$bg-secondary: $gray-100;
+$border-color: $gray-200;
+$error-color: $danger;
+$text-secondary: $gray-600;
+$border-radius: $radius-md;
+
+// Legacy additional colors
 $primary-light: #60a5fa;
-
-$white: #fff;
-
-$shadow-md: 0 4px 16px rgba(0,0,0,0.12);
-
-$font-size-xl: 2rem;
-
-$radius-full: 9999px;
-
-$font-size-sm: 0.875rem;
-
-$spacing-xl: 3rem;
-
-$transition: all 0.2s ease;
-
+$bg-primary: $white;
+$white: $white;
+$shadow-md: $shadow-base;
+$transition: $transition-base;
 $border-light: #e5e7eb;
-
 $background-light: #f3f4f6;
 
 $background-badge-light: #e0e7ff;
@@ -83,6 +249,19 @@ $background-stat-icon-dark: #6366f1;
 
 $background-feature-highlight: #fef9c3;
 $background-status: #f3f4f6;
+
+// OAuth/Social Media colors
+$google-blue: #4285f4;
+$google-blue-dark: #1a73e8;
+
+// Background states
+$background-hover: #f9fafb;
+
+// Input colors
+$input-text: #1e293b;
+$input-background: #fff;
+$input-border: #e2e8f0;
+$input-placeholder: #94a3b8;
 
 // Dark mode backgrounds
 $dark-bg-1: #1e293b;
@@ -112,21 +291,4 @@ $dark-unverified-text: #fecaca;
 
 // Dark mode additional borders
 $dark-border-2: #475569;
-
-// OAuth/Social Media colors
-$google-blue: #4285f4;
-$google-blue-dark: #1a73e8;
-
-// Background states
-$background-hover: #f9fafb;
-
-// Input colors
-$input-text: #1e293b;
-$input-background: #fff;
-$input-border: #e2e8f0;
-$input-placeholder: #94a3b8;
-
-// Additional missing variables
-$font-size-md: 1rem;
-$font-size-lg: 1.125rem;
 

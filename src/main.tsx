@@ -10,6 +10,7 @@ import { ToastContainer } from './components/ui/Toast';
 // Lazy load components for better code splitting
 // Auth Pages
 const AuthCallback = lazy(() => import('./pages/auth/AuthCallback'));
+const AuthLanding = lazy(() => import('./pages/auth/AuthLanding'));
 const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
 const ResendConfirmation = lazy(() => import('./pages/auth/ResendConfirmation'));
 
@@ -40,21 +41,21 @@ const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 
 
 const router = createBrowserRouter([
-  { 
-    path: '/', 
+  {
+    path: '/',
     element: (
       <Suspense fallback={<PageLoader />}>
-        <Dashboard />
+        <AuthLanding />
       </Suspense>
-    ) 
+    )
   },
-  { 
-    path: '/dashboard', 
+  {
+    path: '/dashboard',
     element: (
       <Suspense fallback={<PageLoader />}>
         <Dashboard />
       </Suspense>
-    ) 
+    )
   },
   // /login Route entfernt
   { 

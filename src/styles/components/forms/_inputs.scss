@@ -1,50 +1,149 @@
-// SCSS Modul: Inputs
+// ============================================
+// INPUT COMPONENT STYLES
+// Corporate Theme - Consistent Input Design
+// ============================================
+
 @use '../../abstracts/variables' as *;
 
+// ============================================
+// INPUT GROUP
+// ============================================
+
 .input-group {
-  margin-bottom: $spacing-md;
+  margin-bottom: $spacing-4;
 }
+
+// ============================================
+// INPUT LABEL
+// ============================================
 
 .input-label {
   display: block;
-  margin-bottom: $spacing-xs;
-  font-weight: 500;
-  color: $text-primary;
-  font-size: 0.9rem;
+  margin-bottom: $spacing-2;
+  font-weight: $font-weight-medium;
+  color: $gray-700;
+  font-size: $font-size-sm;
+  line-height: $line-height-normal;
 }
 
 .input-required {
-  color: $error-color;
-  margin-left: 0.25rem;
+  color: $danger;
+  margin-left: $spacing-1;
 }
+
+// ============================================
+// INPUT FIELD
+// ============================================
 
 .input {
   width: 100%;
-  padding: 0.75rem;
+  padding: $spacing-3 $spacing-4;
   border: 2px solid $border-color;
-  border-radius: $border-radius;
-  font-size: 1rem;
-  background-color: $bg-secondary;
-  color: $text-primary;
-  transition: border-color 0.2s ease;
+  border-radius: $radius-md;
+  font-size: $font-size-base;
+  font-weight: $font-weight-normal;
+  line-height: $line-height-normal;
+  background-color: $bg-primary;
+  color: $gray-900;
+  transition: all $transition-fast;
 
   &:focus {
     outline: none;
-    border-color: $primary-color;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: $primary-500;
+    box-shadow: 0 0 0 3px rgba($primary-500, 0.1);
   }
 
   &::placeholder {
     color: $gray-400;
   }
+
+  &:disabled {
+    background-color: $gray-50;
+    color: $gray-400;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
 }
 
+// ============================================
+// INPUT STATES
+// ============================================
+
 .input-error {
-  border-color: $error-color;
+  border-color: $danger;
 
   &:focus {
-    border-color: $error-color;
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    border-color: $danger;
+    box-shadow: 0 0 0 3px rgba($danger, 0.1);
+  }
+}
+
+.input-success {
+  border-color: $success;
+
+  &:focus {
+    border-color: $success;
+    box-shadow: 0 0 0 3px rgba($success, 0.1);
+  }
+}
+
+// ============================================
+// INPUT SIZES
+// ============================================
+
+.input-sm {
+  padding: $spacing-2 $spacing-3;
+  font-size: $font-size-sm;
+}
+
+.input-lg {
+  padding: $spacing-4 $spacing-5;
+  font-size: $font-size-lg;
+}
+
+// ============================================
+// DARK MODE INPUTS
+// ============================================
+
+[data-theme="dark"] {
+  .input-label {
+    color: $dark-text-primary;
+  }
+
+  .input {
+    background-color: $dark-bg-secondary;
+    border-color: $dark-border;
+    color: $dark-text-primary;
+
+    &:focus {
+      border-color: $primary-400;
+      box-shadow: 0 0 0 3px rgba($primary-400, 0.1);
+    }
+
+    &::placeholder {
+      color: $dark-text-muted;
+    }
+
+    &:disabled {
+      background-color: $dark-bg-tertiary;
+      color: $dark-text-muted;
+    }
+  }
+
+  .input-error {
+    border-color: $danger;
+
+    &:focus {
+      box-shadow: 0 0 0 3px rgba($danger, 0.1);
+    }
+  }
+
+  .input-success {
+    border-color: $success;
+
+    &:focus {
+      box-shadow: 0 0 0 3px rgba($success, 0.1);
+    }
   }
 }
 

@@ -1,32 +1,126 @@
-// SCSS Modul: Cards
+// ============================================
+// CARD COMPONENT STYLES
+// Corporate Theme - Consistent Card Design
+// ============================================
+
 @use '../../abstracts/variables' as *;
 
+// ============================================
+// BASE CARD STYLES
+// ============================================
+
+.card,
 .sidebar-card,
 .content-card,
 .modal-card {
-  background: rgba(255,255,255,0.95);
+  background: rgba($white, 0.95);
   backdrop-filter: $blur-card;
   border-radius: $radius-lg;
   box-shadow: $shadow-card;
-  border: 1px solid rgba(255,255,255,0.3);
+  border: 1px solid rgba($white, 0.3);
   overflow: hidden;
+  transition: all $transition-fast;
 }
 
+// ============================================
+// CARD HEADER
+// ============================================
+
 .card-header {
-  padding: 2rem 2rem 1rem;
-  border-bottom: 1px solid rgba(226,232,240,0.5);
+  padding: $spacing-8 $spacing-8 $spacing-4;
+  border-bottom: 1px solid rgba($gray-200, 0.5);
 }
 
 .card-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: $text-primary;
-  margin: 0 0 0.5rem 0;
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  color: $gray-900;
+  margin: 0 0 $spacing-2 0;
+  line-height: $line-height-tight;
 }
 
 .card-subtitle {
-  color: $text-muted;
-  font-size: 0.875rem;
+  color: $gray-500;
+  font-size: $font-size-sm;
   margin: 0;
-  line-height: 1.5;
+  line-height: $line-height-relaxed;
+}
+
+// ============================================
+// CARD BODY
+// ============================================
+
+.card-body {
+  padding: $spacing-6 $spacing-8;
+}
+
+.card-content {
+  padding: $spacing-6 $spacing-8;
+}
+
+// ============================================
+// CARD FOOTER
+// ============================================
+
+.card-footer {
+  padding: $spacing-4 $spacing-8 $spacing-8;
+  border-top: 1px solid rgba($gray-200, 0.5);
+  background-color: $gray-50;
+}
+
+// ============================================
+// CARD VARIANTS
+// ============================================
+
+.card-hover {
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-lg;
+  }
+}
+
+.card-compact {
+  .card-header {
+    padding: $spacing-4 $spacing-6 $spacing-3;
+  }
+
+  .card-body,
+  .card-content {
+    padding: $spacing-4 $spacing-6;
+  }
+
+  .card-footer {
+    padding: $spacing-3 $spacing-6 $spacing-6;
+  }
+}
+
+// ============================================
+// DARK MODE CARDS
+// ============================================
+
+[data-theme="dark"] {
+  .card,
+  .sidebar-card,
+  .content-card,
+  .modal-card {
+    background: rgba($dark-bg-secondary, 0.95);
+    border-color: rgba($dark-border, 0.3);
+  }
+
+  .card-header {
+    border-bottom-color: rgba($dark-border, 0.5);
+  }
+
+  .card-title {
+    color: $dark-text-primary;
+  }
+
+  .card-subtitle {
+    color: $dark-text-muted;
+  }
+
+  .card-footer {
+    background-color: $dark-bg-tertiary;
+    border-top-color: rgba($dark-border, 0.5);
+  }
 }

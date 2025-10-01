@@ -4,6 +4,8 @@
 
 // 1. Abstracts - No CSS output
 @use 'abstracts/variables' as *;
+@use 'abstracts/typography' as *;
+@use 'abstracts/spacing' as *;
 
 // 2. Layout
 @use 'layout/sidebar';
@@ -14,10 +16,13 @@
 @use 'components/forms/forms';
 @use 'components/forms/inputs';
 @use 'components/forms/auth-forms';
+@use 'components/ui/buttons';
 @use 'components/ui/cards';
 @use 'components/ui/modals';
+@use 'components/layout/header';
 
 // 4. Pages
+@use 'pages/auth/auth-landing';
 @use 'pages/auth/login-corporate';
 @use 'pages/auth/recovery';
 @use 'pages/admin/admin-corporate';
