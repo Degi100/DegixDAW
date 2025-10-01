@@ -2,8 +2,21 @@
 @use '../abstracts/variables' as *;
 
 [data-theme="dark"] {
+  // ============================================
+  // GLOBAL DARK THEME
+  // ============================================
+  
+  html, body {
+    background: $dark-bg-primary;
+    color: $dark-text-primary;
+  }
+  
+  // ============================================
+  // DASHBOARD SPECIFIC
+  // ============================================
+  
   .dashboard-corporate {
-    background: linear-gradient(135deg, $dark-bg-1 0%, $dark-bg-2 100%);
+    background: linear-gradient(135deg, $dark-bg-primary 0%, $dark-bg-secondary 100%);
   }
   
   .welcome-card-corporate,
@@ -114,8 +127,90 @@
     border-color: $dark-border-2;
   }
   
-  .empty-projects {
-    background: $dark-bg-2;
-    border-color: $dark-border-2;
+  // ============================================
+  // UI COMPONENTS
+  // ============================================
+  
+  .btn {
+    &.btn-primary {
+      background: $primary-600;
+      border-color: $primary-600;
+      color: $white;
+      
+      &:hover:not(:disabled) {
+        background: $primary-700;
+        border-color: $primary-700;
+      }
+    }
+    
+    &.btn-secondary, &.btn-outline {
+      background: transparent;
+      border-color: $dark-border;
+      color: $dark-text-primary;
+      
+      &:hover:not(:disabled) {
+        background: $dark-bg-tertiary;
+        border-color: $dark-border-hover;
+      }
+    }
+  }
+  
+  // Cards and containers
+  .card, .container, .section {
+    background: $dark-bg-secondary;
+    border-color: $dark-border;
+    color: $dark-text-primary;
+  }
+  
+  // Form elements
+  input, textarea, select {
+    background: $dark-bg-tertiary;
+    border-color: $dark-border;
+    color: $dark-text-primary;
+    
+    &::placeholder {
+      color: $dark-text-muted;
+    }
+    
+    &:focus {
+      border-color: $primary-500;
+      box-shadow: 0 0 0 3px rgba($primary-500, 0.1);
+    }
+  }
+  
+  // ============================================
+  // ADMIN PANEL DARK THEME
+  // ============================================
+  
+  .admin-layout {
+    background: $dark-bg-primary;
+  }
+  
+  .admin-sidebar {
+    background: $dark-bg-secondary;
+    border-color: $dark-border;
+  }
+  
+  .admin-nav-link {
+    color: $dark-text-secondary;
+    
+    &:hover {
+      background: $dark-bg-tertiary;
+      color: $dark-text-primary;
+    }
+    
+    &.active {
+      background: $primary-color;
+      color: $white;
+    }
+  }
+  
+  .admin-nav-section-title {
+    color: $dark-text-secondary;
+  }
+  
+  .admin-main {
+    background: $dark-bg-secondary;
+    border-color: $dark-border;
   }
 }

@@ -22,7 +22,6 @@ export default function LoginCorporate() {
 
   const handleThemeToggle = () => {
     toggleTheme();
-    success(`${isDark ? 'Hell' : 'Dunkel'} Modus aktiviert! 🎨`);
   };
 
   const handleLogin = async (email: string, password: string) => {

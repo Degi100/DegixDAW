@@ -8,7 +8,7 @@ import { Toaster } from 'react-hot-toast';
 export function ToastContainer() {
   return (
     <Toaster
-      position="top-right"
+      position="top-left"
       reverseOrder={false}
       gutter={8}
       containerClassName="toast-container"
@@ -17,7 +17,7 @@ export function ToastContainer() {
         duration: 5000,
         style: {
           background: 'var(--white)',
-          color: 'var(--text-primary)',
+          color: '#000000',
           border: '1px solid var(--gray-200)',
           borderRadius: 'var(--radius-md)',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',

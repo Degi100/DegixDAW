@@ -6,42 +6,6 @@
   background: $gray-50;
 }
 
-.admin-header {
-  background: linear-gradient(135deg, $primary-color, $primary-light);
-  color: $white;
-  padding: $spacing-md 0;
-  box-shadow: $shadow-md;
-}
-
-.admin-header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 $spacing-lg;
-}
-
-.admin-branding h1 {
-  margin: 0;
-  font-size: $font-size-xl;
-}
-.admin-badge {
-  background: rgba(255,255,255,0.2);
-  padding: $spacing-xs $spacing-sm;
-  border-radius: $radius-full;
-  font-size: $font-size-sm;
-}
-.admin-user-info {
-  display: flex;
-  align-items: center;
-  gap: $spacing-md;
-}
-.admin-actions {
-  display: flex;
-  gap: $spacing-sm;
-}
-
 .admin-body {
   max-width: 1200px;
   margin: 0 auto;

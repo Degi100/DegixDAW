@@ -18,12 +18,27 @@ interface NavigationItem {
   requiresAuth?: boolean;
 }
 
+interface HeaderProps {
+  customBrand?: {
+    icon: string;
+    name: string;
+  };
+  customNavItems?: NavigationItem[];
+  showAdminBadge?: boolean;
+  adminLevel?: string;
+}
+
 const navigationItems: NavigationItem[] = [
   { path: '/', label: 'Dashboard', icon: '🏠', requiresAuth: true },
   { path: '/settings', label: 'Settings', icon: '⚙️', requiresAuth: true },
 ];
 
-export default function Header() {
+export default function Header({ 
+  customBrand, 
+  customNavItems, 
+  showAdminBadge = false, 
+  adminLevel 
+}: HeaderProps = {}) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
@@ -34,7 +49,6 @@ export default function Header() {
 
   const handleThemeToggle = () => {
     toggleTheme();
-    success(`Switched to ${isDark ? 'Light' : 'Dark'} mode! 🎨`);
   };
 
   const handleLogout = async () => {
@@ -60,9 +74,11 @@ export default function Header() {
     return location.pathname.startsWith(path);
   };
 
-  const filteredNavItems = navigationItems.filter(item =>
+  const filteredNavItems = (customNavItems || navigationItems).filter(item =>
     !item.requiresAuth || user
   );
+
+  const currentBrand = customBrand || { icon: '🎛️', name: APP_CONFIG.name };
 
   return (
     <header className="global-header">
@@ -74,8 +90,11 @@ export default function Header() {
             className="brand-link"
             aria-label="Go to Dashboard"
           >
-            <span className="brand-icon">🎛️</span>
-            <span className="brand-name">{APP_CONFIG.name}</span>
+            <span className="brand-icon">{currentBrand.icon}</span>
+            <span className="brand-name">{currentBrand.name}</span>
+            {showAdminBadge && adminLevel && adminLevel.trim() && (
+              <span className="admin-badge">{adminLevel.replace('_', ' ')}</span>
+            )}
           </button>
         </div>
 
@@ -99,17 +118,6 @@ export default function Header() {
 
         {/* Header Actions */}
         <div className="header-actions">
-          {/* Theme Toggle */}
-          <button
-            onClick={handleThemeToggle}
-            className="theme-toggle"
-            aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-          >
-            <span className="theme-icon">
-              {isDark ? '☀️' : '🌙'}
-            </span>
-          </button>
-
           {/* User Menu */}
           {user ? (
             <div className="user-menu-container">
@@ -145,6 +153,7 @@ export default function Header() {
                          user.user_metadata?.full_name ||
                          `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() ||
                          user.user_metadata?.username ||
+                         user.user_metadata?.email ||
                          'User'}
                       </div>
                       <div className="dropdown-user-email">{user.email}</div>
@@ -203,6 +212,17 @@ export default function Header() {
             </span>
           </button>
         </div>
+
+        {/* Theme Toggle - Always positioned consistently */}
+        <button
+          onClick={handleThemeToggle}
+          className="theme-toggle"
+          aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+        >
+          <span className="theme-icon">
+            {isDark ? '☀️' : '🌙'}
+          </span>
+        </button>
       </div>
 
       {/* Mobile Navigation Menu */}

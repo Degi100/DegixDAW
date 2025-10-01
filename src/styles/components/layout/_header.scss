@@ -27,6 +27,7 @@
   align-items: center;
   justify-content: space-between;
   height: 4rem;
+  position: relative;
 }
 
 // ============================================
@@ -64,6 +65,22 @@
 
 .brand-name {
   white-space: nowrap;
+}
+
+.admin-badge {
+  background: $primary-600;
+  color: $white;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-full;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  margin-left: $spacing-2;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: fit-content;
 }
 
 // ============================================
@@ -130,13 +147,18 @@
   display: flex;
   align-items: center;
   gap: $spacing-2;
+  margin-right: 5rem; // More space for absolutely positioned theme toggle
 }
 
 // ============================================
-// THEME TOGGLE
+// THEME TOGGLE - Always positioned consistently
 // ============================================
 
 .theme-toggle {
+  position: absolute;
+  top: 50%;
+  right: $spacing-4;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -147,6 +169,9 @@
   border-radius: $radius-full;
   cursor: pointer;
   transition: all $transition-fast;
+  z-index: 10; // Ensure it's always on top
+  transition: all $transition-fast;
+  z-index: 10;
 
   &:hover {
     background-color: $gray-100;
@@ -508,5 +533,28 @@
       background-color: rgba($primary-500, 0.1);
       color: $primary-300;
     }
+  }
+
+  .theme-toggle-mobile {
+    color: $dark-text-secondary;
+    
+    &:hover {
+      background-color: $dark-bg-tertiary;
+      color: $dark-text-primary;
+    }
+  }
+}
+
+// ============================================
+// MOBILE NAVIGATION ADDITIONS
+// ============================================
+
+.theme-toggle-mobile {
+  font-weight: $font-weight-medium;
+  color: $gray-600;
+  
+  &:hover {
+    background-color: $gray-100;
+    color: $gray-900;
   }
 }

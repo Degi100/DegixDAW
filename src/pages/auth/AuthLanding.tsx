@@ -57,7 +57,6 @@ export default function AuthLanding() {
 
   const handleThemeToggle = () => {
     toggleTheme();
-    success(`Switched to ${isDark ? 'Light' : 'Dark'} mode! 🎨`);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -148,16 +147,18 @@ export default function AuthLanding() {
             <h1 className="auth-brand-title">🎛️ {APP_CONFIG.name}</h1>
             <p className="auth-brand-subtitle">Professional Digital Audio Workstation</p>
           </div>
-
-          <Button
-            onClick={handleThemeToggle}
-            variant="outline"
-            size="small"
-            className="theme-toggle"
-          >
-            {isDark ? '☀️ Light' : '🌙 Dark'}
-          </Button>
         </div>
+
+        {/* Theme Toggle - Same as authenticated header */}
+        <button
+          onClick={handleThemeToggle}
+          className="theme-toggle"
+          aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+        >
+          <span className="theme-icon">
+            {isDark ? '☀️' : '🌙'}
+          </span>
+        </button>
       </header>
 
       {/* Main Content */}

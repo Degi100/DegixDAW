@@ -42,7 +42,7 @@ export interface SecuritySettingsProps {
 }
 
 export interface AccountSettingsProps {
-  handleLogout: SimpleHandler;
+  handleLogout?: SimpleHandler;
 }
 
 export interface DeleteAccountModalProps {
