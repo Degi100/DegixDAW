@@ -1,5 +1,5 @@
 // Dashboard Corporate - Additional Components (Guest, Login, etc.)
-@import '../../abstracts/variables';
+@use '../../abstracts/variables' as *;
 
 // Inline Login Components
 .inline-login {

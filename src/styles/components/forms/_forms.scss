@@ -1,5 +1,5 @@
 // SCSS Modul: Forms
-@import '../../abstracts/variables';
+@use '../../abstracts/variables' as *;
 
 .settings-form {
   padding: 2rem;

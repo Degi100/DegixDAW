@@ -1,5 +1,5 @@
 // SCSS Modul: Inputs
-@import '../../abstracts/variables';
+@use '../../abstracts/variables' as *;
 
 .input-group {
   margin-bottom: $spacing-md;

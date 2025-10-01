@@ -1,7 +1,15 @@
 // Dashboard Corporate - Main File
 // Dieses Modul importiert alle Dashboard-Corporate-Komponenten
 
-@import '../../abstracts/variables';
+@use '../../abstracts/variables' as *;
+// Import all modules (muss vor allen anderen Regeln stehen)
+@use 'dashboard-header';
+@use 'dashboard-profile';
+@use 'dashboard-stats';
+@use 'dashboard-features';
+@use 'dashboard-projects';
+@use 'dashboard-components';
+@use 'dashboard-responsive';
 
 // Base Layout
 .dashboard-corporate {
@@ -20,12 +28,4 @@
   padding: 0 1.5rem;
 }
 
-// Import all modules
-@import 'dashboard-header';
-@import 'dashboard-profile';
-@import 'dashboard-stats';
-@import 'dashboard-features';
-@import 'dashboard-projects';
-@import 'dashboard-components';
-@import 'dashboard-responsive';
 // Dark theme moved to themes/ folder, imported in main.scss

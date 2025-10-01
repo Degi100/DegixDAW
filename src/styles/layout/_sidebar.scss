@@ -1,5 +1,5 @@
 // SCSS Modul: Sidebar
-@import '../abstracts/variables';
+@use '../abstracts/variables' as *;
 
 .settings-sidebar {
   position: sticky;

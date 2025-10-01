@@ -1,5 +1,5 @@
 // SCSS Modul: Auth Forms
-@import '../../abstracts/variables';
+@use '../../abstracts/variables' as *;
 
 .form-toggle {
   text-align: center;

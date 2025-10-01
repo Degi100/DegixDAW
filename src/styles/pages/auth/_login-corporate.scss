@@ -1,5 +1,5 @@
 // SCSS Modul: Login Corporate
-@import '../../abstracts/variables';
+@use '../../abstracts/variables' as *;
 
 .login-corporate {
   min-height: 100vh;

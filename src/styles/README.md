@@ -166,6 +166,14 @@ components/scss/
 ```
 abstracts/, layout/, components/, pages/, themes/
   (hierarchisch nach Verantwortlichkeit)
+
+### 2025-10-01: Sass Module Migration (@import → @use/@forward)
+- ✅ Alle `@import`-Anweisungen in `src/styles/` entfernt
+- ✅ `@use '.../variables' as *` für Design-Tokens
+- ✅ Module in `_dashboard-corporate.scss` vor allen Regeln mit `@use` eingebunden
+- ✅ Build ohne Deprecation-Warnings verifiziert
+
+Hinweis: Bei Sass müssen alle `@use`/`@forward` Anweisungen am Anfang der Datei stehen – vor jeglichen Selektoren oder CSS-Regeln.
 ```
 
 ---

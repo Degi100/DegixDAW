@@ -1,5 +1,5 @@
 // SCSS Modul: Recovery
-@import '../../abstracts/variables';
+@use '../../abstracts/variables' as *;
 
 .recovery-options {
   display: grid;

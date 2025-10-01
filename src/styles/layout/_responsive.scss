@@ -1,5 +1,5 @@
 // SCSS Modul: Responsive
-@import '../abstracts/variables';
+@use '../abstracts/variables' as *;
 
 @mixin respond($breakpoint) {
   @if $breakpoint == 'lg' {

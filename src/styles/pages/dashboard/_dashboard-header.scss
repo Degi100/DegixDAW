@@ -1,5 +1,5 @@
 // Dashboard Corporate - Header Module
-@import '../../abstracts/variables';
+@use '../../abstracts/variables' as *;
 
 .dashboard-header {
   background: linear-gradient(135deg, $corporate-blue-600 0%, $corporate-blue-700 100%);

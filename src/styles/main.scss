@@ -3,28 +3,28 @@
 // ============================================
 
 // 1. Abstracts - No CSS output
-@import 'abstracts/variables';
+@use 'abstracts/variables' as *;
 
 // 2. Layout
-@import 'layout/sidebar';
-@import 'layout/responsive';
+@use 'layout/sidebar';
+@use 'layout/responsive';
 
 // 3. Components
-@import 'components/forms/forms-core';
-@import 'components/forms/forms';
-@import 'components/forms/inputs';
-@import 'components/forms/auth-forms';
-@import 'components/ui/cards';
-@import 'components/ui/modals';
+@use 'components/forms/forms-core';
+@use 'components/forms/forms';
+@use 'components/forms/inputs';
+@use 'components/forms/auth-forms';
+@use 'components/ui/cards';
+@use 'components/ui/modals';
 
 // 4. Pages
-@import 'pages/auth/login-corporate';
-@import 'pages/auth/recovery';
-@import 'pages/admin/admin-corporate';
-@import 'pages/dashboard/dashboard-corporate';
+@use 'pages/auth/login-corporate';
+@use 'pages/auth/recovery';
+@use 'pages/admin/admin-corporate';
+@use 'pages/dashboard/dashboard-corporate';
 
 // 5. Themes
-@import 'themes/dark';
+@use 'themes/dark';
 
 // 6. Settings Corporate Container
 .settings-corporate {

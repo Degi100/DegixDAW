@@ -1,5 +1,5 @@
 // Dashboard Corporate - Dark Theme Module
-@import '../abstracts/variables';
+@use '../abstracts/variables' as *;
 
 [data-theme="dark"] {
   .dashboard-corporate {
