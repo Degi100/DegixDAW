@@ -12,6 +12,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { LoadingOverlay } from '../../components/ui/Loading';
 import { APP_CONFIG } from '../../lib/constants';
+import { supabase } from '../../lib/supabase';
 
 export default function AuthLanding() {
   const navigate = useNavigate();
@@ -41,7 +42,30 @@ export default function AuthLanding() {
   // Redirect if already logged in
   useEffect(() => {
     if (user && !loading) {
-      navigate('/dashboard');
+      // Check if user needs onboarding before redirecting to dashboard
+      const checkOnboarding = async () => {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('user_id', user.id)
+            .single();
+          
+          if (!profile) {
+            // No profile found - user needs onboarding
+            navigate('/onboarding/username');
+          } else {
+            // Profile exists - user is already onboarded
+            navigate('/dashboard');
+          }
+        } catch (error) {
+          console.warn('Error checking profile for onboarding:', error);
+          // If we can't check the profile, assume user needs onboarding for safety
+          navigate('/onboarding/username');
+        }
+      };
+      
+      checkOnboarding();
     }
   }, [user, loading, navigate]);
 
@@ -217,6 +241,7 @@ export default function AuthLanding() {
                       onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
                       required
                       placeholder="Your password"
+                      showPasswordToggle={true}
                     />
                   </div>
 
@@ -324,6 +349,7 @@ export default function AuthLanding() {
                       onChange={(e) => setRegisterData(prev => ({ ...prev, password: e.target.value }))}
                       required
                       placeholder="Create a strong password"
+                      showPasswordToggle={true}
                     />
                   </div>
 
@@ -335,6 +361,7 @@ export default function AuthLanding() {
                       onChange={(e) => setRegisterData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                       required
                       placeholder="Confirm your password"
+                      showPasswordToggle={true}
                     />
                   </div>
 

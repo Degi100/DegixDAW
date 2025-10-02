@@ -32,39 +32,26 @@ export default function RecoverAccount() {
 
   useEffect(() => {
     const verifyToken = async () => {
-      if (!recoveryToken) {
-        error('❌ Ungültiger Recovery-Link. Bitte überprüfen Sie den Link aus Ihrer E-Mail.');
-        navigate('/auth/recovery');
-        return;
-      }
-
       try {
-        // Verify the recovery token with Supabase
-        const { data, error: verifyError } = await supabase.auth.verifyOtp({
-          token_hash: recoveryToken,
-          type: 'recovery'
-        });
+        // Check if we have a valid session (Supabase handles token verification automatically via URL)
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (verifyError) {
-          console.error('Token verification failed:', verifyError);
-          if (verifyError.message.includes('expired')) {
-            error('❌ Der Recovery-Link ist abgelaufen. Bitte fordern Sie einen neuen an.');
-            navigate('/auth/forgot-password');
-          } else {
-            error('❌ Ungültiger Recovery-Link. Bitte überprüfen Sie den Link aus Ihrer E-Mail.');
-            navigate('/auth/recovery');
-          }
+        if (sessionError || !session?.user) {
+          console.error('Session error:', sessionError);
+          error('❌ Der Recovery-Link ist ungültig oder abgelaufen. Bitte fordern Sie einen neuen Link an.');
+          navigate('/auth/forgot-password');
           return;
         }
         
-        // Token is valid, get user email from session
-        const userEmail = data.user?.email || recoveryEmail || '';
+        // Session is valid, get user email
+        const userEmail = session.user.email || recoveryEmail || '';
         setRecoveryData(prev => ({ ...prev, email: userEmail }));
         setCurrentStep('reset');
       } catch (err) {
         console.error('Token verification error:', err);
-        error('❌ Token-Verifizierung fehlgeschlagen. Bitte versuchen Sie es mit einem neuen Recovery-Link.');
-        navigate('/auth/recovery');
+        const errorMsg = err instanceof Error ? err.message : 'Unbekannter Fehler';
+        error(`❌ Token-Verifizierung fehlgeschlagen: ${errorMsg}. Bitte fordern Sie einen neuen Recovery-Link an.`);
+        navigate('/auth/forgot-password');
       } finally {
         setIsLoading(false);
       }
@@ -107,6 +94,9 @@ export default function RecoverAccount() {
       if (updateError) {
         throw updateError;
       }
+
+      // Sign out the user after password reset to avoid onboarding redirects
+      await supabase.auth.signOut();
       
       success('🎉 Ihr Passwort wurde erfolgreich zurückgesetzt!');
       setCurrentStep('success');
@@ -156,6 +146,7 @@ export default function RecoverAccount() {
             error={errors.newPassword}
             disabled={isSubmitting}
             required
+            showPasswordToggle={true}
           />
         </div>
         
@@ -169,6 +160,7 @@ export default function RecoverAccount() {
             error={errors.confirmPassword}
             disabled={isSubmitting}
             required
+            showPasswordToggle={true}
           />
         </div>
         
@@ -224,16 +216,10 @@ export default function RecoverAccount() {
         
         <div className="form-actions">
           <Button
-            onClick={() => navigate('/login')}
+            onClick={() => navigate('/')}
             variant="primary"
           >
-            Jetzt anmelden
-          </Button>
-          <Button
-            onClick={() => navigate('/')}
-            variant="outline"
-          >
-            Zur Startseite
+            Zur Anmeldung
           </Button>
         </div>
       </div>

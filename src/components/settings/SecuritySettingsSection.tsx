@@ -1,5 +1,6 @@
 import React from 'react';
 import Button from '../ui/Button';
+import Input from '../ui/Input';
 import type { SecuritySettingsProps } from './types/settings';
 
 const SecuritySettingsSection: React.FC<SecuritySettingsProps> = ({ securityData, setSecurityData, isUpdating, handlePasswordChange, handleEmailChange, userEmail }) => (
@@ -12,41 +13,35 @@ const SecuritySettingsSection: React.FC<SecuritySettingsProps> = ({ securityData
       <h3 className="section-title">Passwort ändern</h3>
       <form onSubmit={handlePasswordChange} className="settings-form">
         <div className="form-grid">
-          <div className="input-group">
-            <label className="input-label">Aktuelles Passwort *</label>
-            <input
-              type="password"
-              value={securityData.currentPassword}
-              onChange={e => setSecurityData(prev => ({ ...prev, currentPassword: e.target.value }))}
-              className="settings-input"
-              placeholder="Ihr aktuelles Passwort"
-              required
-            />
-          </div>
-          <div className="input-group">
-            <label className="input-label">Neues Passwort *</label>
-            <input
-              type="password"
-              value={securityData.newPassword}
-              onChange={e => setSecurityData(prev => ({ ...prev, newPassword: e.target.value }))}
-              className="settings-input"
-              placeholder="Neues Passwort eingeben"
-              minLength={6}
-              required
-            />
-          </div>
-          <div className="input-group">
-            <label className="input-label">Passwort bestätigen *</label>
-            <input
-              type="password"
-              value={securityData.confirmPassword}
-              onChange={e => setSecurityData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-              className="settings-input"
-              placeholder="Neues Passwort wiederholen"
-              minLength={6}
-              required
-            />
-          </div>
+          <Input
+            label="Aktuelles Passwort *"
+            type="password"
+            value={securityData.currentPassword}
+            onChange={e => setSecurityData(prev => ({ ...prev, currentPassword: e.target.value }))}
+            placeholder="Ihr aktuelles Passwort"
+            required
+            showPasswordToggle={true}
+          />
+          <Input
+            label="Neues Passwort *"
+            type="password"
+            value={securityData.newPassword}
+            onChange={e => setSecurityData(prev => ({ ...prev, newPassword: e.target.value }))}
+            placeholder="Neues Passwort eingeben"
+            minLength={6}
+            required
+            showPasswordToggle={true}
+          />
+          <Input
+            label="Passwort bestätigen *"
+            type="password"
+            value={securityData.confirmPassword}
+            onChange={e => setSecurityData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+            placeholder="Neues Passwort wiederholen"
+            minLength={6}
+            required
+            showPasswordToggle={true}
+          />
         </div>
         <div className="form-actions">
           <Button
@@ -85,13 +80,13 @@ const SecuritySettingsSection: React.FC<SecuritySettingsProps> = ({ securityData
           </div>
           <div className="input-group">
             <label className="input-label">Passwort bestätigen *</label>
-            <input
+            <Input
               type="password"
               value={securityData.currentPassword}
               onChange={e => setSecurityData(prev => ({ ...prev, currentPassword: e.target.value }))}
-              className="settings-input"
               placeholder="Ihr aktuelles Passwort"
               required
+              showPasswordToggle={true}
             />
           </div>
         </div>

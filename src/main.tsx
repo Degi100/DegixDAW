@@ -13,6 +13,7 @@ const AuthCallback = lazy(() => import('./pages/auth/AuthCallback'));
 const AuthLanding = lazy(() => import('./pages/auth/AuthLanding'));
 const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
 const ResendConfirmation = lazy(() => import('./pages/auth/ResendConfirmation'));
+const SetPassword = lazy(() => import('./pages/auth/SetPassword'));
 
 // Dashboard Pages
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard.corporate'));
@@ -95,6 +96,14 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<PageLoader />}>
         <ForgotPassword />
+      </Suspense>
+    ) 
+  },
+  { 
+    path: '/auth/set-password', 
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <SetPassword />
       </Suspense>
     ) 
   },

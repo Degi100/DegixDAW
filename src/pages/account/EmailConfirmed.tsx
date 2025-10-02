@@ -28,17 +28,8 @@ export default function EmailConfirmed() {
       
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        const hasUsername = !!session.user.user_metadata?.username;
-        const needsOnboarding = session.user.user_metadata?.needs_username_onboarding;
-        
-        // STRICT: Any user without username OR with onboarding flag goes to onboarding
-        if (!hasUsername || needsOnboarding) {
-
-          setRedirectTarget('/onboarding/username');
-        } else {
-
-          setRedirectTarget('/dashboard');
-        }
+        // After email confirmation, user should set a password
+        setRedirectTarget('/auth/set-password');
       } else {
         // No session - redirect to login
 

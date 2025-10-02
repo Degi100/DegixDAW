@@ -61,8 +61,6 @@ export function useAuth() {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-
-        
         if (mounted) {
           setState({
             user: session?.user ?? null,
@@ -74,13 +72,36 @@ export function useAuth() {
         // Handle sign in events
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('User signed in:', session.user.id);
-          
-          // STRICT: Always redirect new users to onboarding
-          const hasUsername = session.user.user_metadata?.username;
-          const needsOnboarding = session.user.user_metadata?.needs_username_onboarding;
-          const isNewUser = !hasUsername || needsOnboarding;
-          
-          if (isNewUser) {
+
+          // Only trigger onboarding for new users who don't have a profile yet
+          // Skip onboarding check if user is already navigating within the app
+          const isInAppNavigation = window.location.pathname.startsWith('/dashboard/') ||
+                                   window.location.pathname.startsWith('/settings/') ||
+                                   window.location.pathname.startsWith('/admin/') ||
+                                   window.location.pathname.startsWith('/profile/') ||
+                                   window.location.pathname === '/dashboard';
+
+          if (isInAppNavigation) {
+            // User is already in the app - don't trigger onboarding
+            return;
+          }
+
+          // Check if user needs onboarding (no profile = needs onboarding)
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('username')
+              .eq('user_id', session.user.id)
+              .single();
+
+            if (!profile) {
+              // No profile found - user needs onboarding
+              navigate('/onboarding/username');
+            }
+            // If profile exists, user is already onboarded - no redirect needed
+          } catch (error) {
+            console.warn('Error checking profile for onboarding:', error);
+            // If we can't check the profile, assume user needs onboarding for safety
             navigate('/onboarding/username');
           }
         }
@@ -161,9 +182,9 @@ export function useAuth() {
     try {
       // Update state immediately to show user is being signed out
       setState(prev => ({ ...prev, loading: true }));
-      
+
       const { error } = await supabase.auth.signOut();
-      
+
       if (error) {
         // Restore previous state if sign out failed
         setState(prev => ({ ...prev, loading: false }));
@@ -178,7 +199,7 @@ export function useAuth() {
       });
 
       // Navigate to login page
-  navigate('/dashboard');
+      navigate('/dashboard');
       return { success: true };
     } catch (error) {
       // Restore previous state if sign out failed
@@ -229,7 +250,7 @@ export function useAuth() {
     loading: state.loading,
     initialized: state.initialized,
     isAuthenticated: !!state.user,
-    
+
     // Actions
     signInWithEmail,
     signUpWithEmail,
@@ -237,10 +258,10 @@ export function useAuth() {
     signOut,
     resendConfirmation,
     resetPassword,
-    
+
     // Utilities
-    displayName: state.user?.user_metadata?.display_name || 
-                 state.user?.user_metadata?.username || 
+    displayName: state.user?.user_metadata?.display_name ||
+                 state.user?.user_metadata?.username ||
                  state.user?.email || 'Benutzer',
     username: state.user?.user_metadata?.username || '',
     fullName: state.user?.user_metadata?.full_name || '',

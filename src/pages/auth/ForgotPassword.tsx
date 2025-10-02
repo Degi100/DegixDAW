@@ -27,6 +27,7 @@ export default function ForgotPassword() {
     setIsLoading(true);
     
     try {
+      console.log('🔍 Recovery URL wird verwendet:', window.location.origin + '/auth/recover');
       const result = await resetPassword(email.trim());
       
       if (result.success) {

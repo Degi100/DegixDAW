@@ -9,11 +9,12 @@ import Button from '../../components/ui/Button';
 
 interface UserProfile {
   id: string;
-  username: string | null;
-  full_name: string | null;
   email: string;
   created_at: string;
-  updated_at: string;
+  last_sign_in_at: string | null;
+  username: string | null;
+  full_name: string | null;
+  profile_created_at: string | null;
 }
 
 export default function AdminUsers() {
@@ -29,10 +30,23 @@ export default function AdminUsers() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      
+
+      // Try to use RPC function first (shows all users)
+      const { data: rpcData, error: rpcError } = await supabase
+        .rpc('get_all_users');
+
+      if (!rpcError && rpcData) {
+        // RPC function worked - we have all users
+        setUsers(rpcData);
+        return;
+      }
+
+      // Fallback: load from profiles table only (limited view)
+      console.warn('RPC function not available, falling back to profiles only:', rpcError);
+
       const { data, error: fetchError } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: false }) // Zeige ALLE Felder, auch leere
+        .select('*', { count: 'exact', head: false })
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
@@ -74,6 +88,9 @@ export default function AdminUsers() {
         <header className="admin-page-header">
           <h1>User Management</h1>
           <p>Manage all registered users in the system</p>
+          <div className="admin-notice">
+            <strong>ℹ️ Hinweis:</strong> Zeigt alle registrierten User an. User mit "Pending Onboarding" haben sich registriert aber das Onboarding noch nicht abgeschlossen.
+          </div>
         </header>
 
         <div className="admin-users-controls corporate-controls">
@@ -114,10 +131,17 @@ export default function AdminUsers() {
                 </div>
               </div>
               <div className="stats-card">
-                <div className="stats-icon">🔍</div>
+                <div className="stats-icon">✅</div>
                 <div className="stats-content">
-                  <div className="stats-number">{filteredUsers.length}</div>
-                  <div className="stats-label">Filtered Results</div>
+                  <div className="stats-number">{users.filter(u => u.profile_created_at).length}</div>
+                  <div className="stats-label">Onboarded</div>
+                </div>
+              </div>
+              <div className="stats-card">
+                <div className="stats-icon">⏳</div>
+                <div className="stats-content">
+                  <div className="stats-number">{users.filter(u => !u.profile_created_at).length}</div>
+                  <div className="stats-label">Pending</div>
                 </div>
               </div>
               {searchTerm && (
@@ -158,7 +182,11 @@ export default function AdminUsers() {
                         <div className="user-email">{user.email}</div>
                       </td>
                       <td className="user-status">
-                        <span className="status-badge active">Active</span>
+                        {user.profile_created_at ? (
+                          <span className="status-badge active">Onboarded</span>
+                        ) : (
+                          <span className="status-badge pending">Pending Onboarding</span>
+                        )}
                       </td>
                       <td className="user-created">
                         <div className="date-info">

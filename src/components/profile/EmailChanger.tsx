@@ -133,6 +133,7 @@ export default function EmailChanger({ currentEmail, onChangeEmail, isUpdating }
             error={errors.currentPassword}
             disabled={isUpdating}
             required
+            showPasswordToggle={true}
           />
         </div>
 
