@@ -48,6 +48,8 @@ export default function Header({
   const { isAdmin } = useAdmin();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [dropdownClosing, setDropdownClosing] = useState(false);
+  const [activeDropdownItem, setActiveDropdownItem] = useState<string | null>(null);
 
   const handleThemeToggle = () => {
     toggleTheme();
@@ -140,7 +142,16 @@ export default function Header({
               </button>
 
               {isUserMenuOpen && (
-                <div className="user-dropdown">
+                <div
+                  className={`user-dropdown${dropdownClosing ? ' closing' : ''}`}
+                  onMouseLeave={() => {
+                    setDropdownClosing(true);
+                    setTimeout(() => {
+                      setIsUserMenuOpen(false);
+                      setDropdownClosing(false);
+                    }, 250); // Dauer der Animation in ms
+                  }}
+                >
                   <div className="dropdown-header">
                     <div className="dropdown-user-info">
                       <div className="dropdown-user-name">
@@ -157,8 +168,9 @@ export default function Header({
 
                   <div className="dropdown-menu">
                     <button
-                      onClick={() => handleNavigation('/settings')}
-                      className="dropdown-item"
+                      onClick={() => { setActiveDropdownItem('settings'); handleNavigation('/settings'); }}
+                      className={`dropdown-item${activeDropdownItem === 'settings' ? ' no-hover' : ''}`}
+                      onMouseLeave={() => setActiveDropdownItem(null)}
                     >
                       <span className="dropdown-icon">⚙️</span>
                       <span>Settings</span>
@@ -166,8 +178,9 @@ export default function Header({
 
                     {isAdmin && (
                       <button
-                        onClick={() => handleNavigation('/admin')}
-                        className="dropdown-item"
+                        onClick={() => { setActiveDropdownItem('admin'); handleNavigation('/admin'); }}
+                        className={`dropdown-item${activeDropdownItem === 'admin' ? ' no-hover' : ''}`}
+                        onMouseLeave={() => setActiveDropdownItem(null)}
                       >
                         <span className="dropdown-icon">🛡️</span>
                         <span>Admin Panel</span>
@@ -177,8 +190,9 @@ export default function Header({
                     <hr className="dropdown-divider" />
 
                     <button
-                      onClick={handleLogout}
-                      className="dropdown-item logout-item"
+                      onClick={() => { setActiveDropdownItem('logout'); handleLogout(); }}
+                      className={`dropdown-item logout-item${activeDropdownItem === 'logout' ? ' no-hover' : ''}`}
+                      onMouseLeave={() => setActiveDropdownItem(null)}
                     >
                       <span className="dropdown-icon">🚪</span>
                       <span>Logout</span>

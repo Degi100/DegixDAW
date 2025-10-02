@@ -296,6 +296,15 @@
   box-shadow: $shadow-lg;
   z-index: $z-dropdown;
   overflow: hidden;
+  transition: opacity 0.25s, transform 0.25s;
+  opacity: 1;
+  transform: translateY(0);
+
+  &.closing {
+    opacity: 0;
+    transform: translateY(-20px);
+    pointer-events: none;
+  }
 }
 
 .dropdown-header {
@@ -359,6 +368,12 @@
       background-color: rgba($danger, 0.05);
       color: $danger;
     }
+  }
+
+  &.no-hover {
+    background: none !important;
+    color: $gray-700 !important;
+    box-shadow: none !important;
   }
 }
 
