@@ -90,12 +90,34 @@ export default function UsernameOnboarding() {
         setIsSubmitting(false);
         return;
       }
-      await updateProfile({
+
+      // Update profile first
+      const profileResult = await updateProfile({
         full_name: user?.user_metadata?.full_name || '',
         username: username.trim()
       });
-      // Username ist jetzt fixiert, keine spätere Änderung möglich
-      await supabase.auth.updateUser({ data: { username_can_change: false, needs_username_onboarding: false } });
+
+      if (!profileResult.success) {
+        error(`Fehler beim Erstellen des Profils: ${profileResult.error?.message}`);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Only update auth metadata if profile creation was successful
+      const { error: metaError } = await supabase.auth.updateUser({
+        data: {
+          username_can_change: false,
+          needs_username_onboarding: false,
+          username: username.trim()
+        }
+      });
+
+      if (metaError) {
+        error(`Fehler beim Aktualisieren der Benutzerdaten: ${metaError.message}`);
+        setIsSubmitting(false);
+        return;
+      }
+
       success(`${EMOJIS.success} Willkommen bei ${APP_FULL_NAME}! Ihr Benutzername wurde erfolgreich festgelegt.`);
       setTimeout(() => {
         navigate('/dashboard');

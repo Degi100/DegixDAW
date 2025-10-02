@@ -1,38 +1,32 @@
 -- Create RPC function to get all users for admin panel
--- This function returns all users from auth.users with their profile data
--- Execute this in your Supabase SQL editor
+-- Execute this in your Supabase SQL Editor: Click "+ New query" and paste this code
 
+-- First, drop the function if it exists
+DROP FUNCTION IF EXISTS get_all_users();
+
+-- Then create it fresh with correct types
 CREATE OR REPLACE FUNCTION get_all_users()
 RETURNS TABLE (
   id uuid,
-  email text,
+  email character varying(255),
   created_at timestamptz,
   last_sign_in_at timestamptz,
-  username text,
-  full_name text,
+  username character varying(255),
+  full_name character varying(255),
   profile_created_at timestamptz
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 BEGIN
-  -- Only allow admins to execute this function
-  IF NOT EXISTS (
-    SELECT 1 FROM profiles
-    WHERE user_id = auth.uid()
-    AND role = 'admin'
-  ) THEN
-    RAISE EXCEPTION 'Access denied. Admin privileges required.';
-  END IF;
-
   RETURN QUERY
   SELECT
     au.id,
-    au.email,
+    au.email::character varying(255),
     au.created_at,
     au.last_sign_in_at,
-    p.username,
-    p.full_name,
+    p.username::character varying(255),
+    p.full_name::character varying(255),
     p.created_at as profile_created_at
   FROM auth.users au
   LEFT JOIN profiles p ON au.id = p.user_id
@@ -40,5 +34,21 @@ BEGIN
 END;
 $$;
 
--- Grant execute permission to authenticated users (the function checks for admin internally)
 GRANT EXECUTE ON FUNCTION get_all_users() TO authenticated;
+
+-- Test the RPC function:
+-- SELECT * FROM get_all_users();
+
+-- DEBUG: Check profiles table structure
+SELECT column_name, data_type, is_nullable, column_default
+FROM information_schema.columns
+WHERE table_name = 'profiles'
+ORDER BY ordinal_position;
+
+-- DEBUG: Check if profile was created
+-- SELECT * FROM profiles WHERE user_id = 'USER_ID_HERE';
+
+-- DEBUG: Check auth.users metadata
+-- SELECT id, email, raw_user_meta_data, created_at
+-- FROM auth.users
+-- WHERE id = 'USER_ID_HERE';

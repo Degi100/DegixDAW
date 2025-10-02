@@ -8,10 +8,10 @@ import { getEmailChangeCallbackUrl } from '../lib/urlUtils';
 interface ProfileUpdates {
   username?: string;
   full_name?: string;
-  display_name?: string;
-  first_name?: string;
-  last_name?: string;
-  bio?: string;
+  // first_name, last_name, bio existieren nicht in der DB!
+  // first_name?: string;
+  // last_name?: string;
+  // bio?: string;
 }
 
 export function useProfile(user: User | null) {
@@ -20,18 +20,16 @@ export function useProfile(user: User | null) {
   const updateProfile = async (updates: ProfileUpdates): Promise<{ success: boolean; error?: AuthError }> => {
     try {
       // Schreibe die Daten in die Tabelle 'profiles' (Upsert)
+      // NUR die Spalten verwenden, die tatsächlich in der DB existieren
+      const profileData = {
+        user_id: user?.id,
+        username: updates.username,
+        full_name: updates.full_name
+      };
+
       const { error } = await supabase
         .from('profiles')
-        .upsert([
-          {
-            user_id: user?.id,
-            username: updates.username,
-            full_name: updates.full_name,
-            first_name: updates.first_name,
-            last_name: updates.last_name,
-            bio: updates.bio
-          }
-        ], { onConflict: 'user_id' });
+        .upsert([profileData], { onConflict: 'user_id' });
 
       if (error) {
         return { success: false, error: handleAuthError(error) };
@@ -41,10 +39,11 @@ export function useProfile(user: User | null) {
       const metadataUpdates: Record<string, unknown> = {};
       if (updates.username) metadataUpdates.username = updates.username;
       if (updates.full_name) metadataUpdates.full_name = updates.full_name;
-      if (updates.display_name) metadataUpdates.display_name = updates.display_name;
-      if (updates.first_name) metadataUpdates.first_name = updates.first_name;
-      if (updates.last_name) metadataUpdates.last_name = updates.last_name;
-      if (updates.bio) metadataUpdates.bio = updates.bio;
+      // display_name, first_name, last_name, bio existieren nicht in der DB!
+      // if (updates.display_name) metadataUpdates.display_name = updates.display_name;
+      // if (updates.first_name) metadataUpdates.first_name = updates.first_name;
+      // if (updates.last_name) metadataUpdates.last_name = updates.last_name;
+      // if (updates.bio) metadataUpdates.bio = updates.bio;
       
       if (Object.keys(metadataUpdates).length > 0) {
         const { error: metaError } = await supabase.auth.updateUser({

@@ -35,15 +35,13 @@ export default function AdminUsers() {
       const { data: rpcData, error: rpcError } = await supabase
         .rpc('get_all_users');
 
-      if (!rpcError && rpcData) {
+      if (!rpcError && rpcData && Array.isArray(rpcData) && rpcData.length > 0) {
         // RPC function worked - we have all users
         setUsers(rpcData);
         return;
       }
 
       // Fallback: load from profiles table only (limited view)
-      console.warn('RPC function not available, falling back to profiles only:', rpcError);
-
       const { data, error: fetchError } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: false })
@@ -64,9 +62,7 @@ export default function AdminUsers() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const filteredUsers = users.filter(user => 
+  };  const filteredUsers = users.filter(user => 
     user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.full_name?.toLowerCase().includes(searchTerm.toLowerCase())

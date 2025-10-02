@@ -37,17 +37,56 @@ export function useUserSettings() {
     bio: user?.user_metadata?.bio || ''
   });
 
+  // Load profile data from database on mount
+  useEffect(() => {
+    const loadProfileData = async () => {
+      if (!user?.id) return;
+
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+          console.warn('Error loading profile data:', error);
+          return;
+        }
+
+        if (profile) {
+          setProfileData({
+            firstName: user?.user_metadata?.first_name || user?.user_metadata?.full_name?.split(' ')[0] || '',
+            lastName: user?.user_metadata?.last_name || user?.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+            fullName: profile.full_name || user?.user_metadata?.full_name || '',
+            username: profile.username || user?.user_metadata?.username || '',
+            displayName: user?.user_metadata?.display_name || user?.user_metadata?.full_name || '',
+            bio: user?.user_metadata?.bio || ''
+            // first_name, last_name, display_name, bio existieren nicht in der profiles Tabelle!
+          });
+        }
+      } catch (err) {
+        console.warn('Error loading profile data:', err);
+      }
+    };
+
+    loadProfileData();
+  }, [user?.id]); // Removed other dependencies to avoid infinite loops
+
   // Aktualisiere die Felder automatisch, wenn sich das User-Objekt ändert
   useEffect(() => {
-    setProfileData({
-      firstName: user?.user_metadata?.first_name || user?.user_metadata?.full_name?.split(' ')[0] || '',
-      lastName: user?.user_metadata?.last_name || user?.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
-      fullName: user?.user_metadata?.full_name || '',
-      username: user?.user_metadata?.username || '',
-      displayName: user?.user_metadata?.display_name || user?.user_metadata?.full_name || '',
-      bio: user?.user_metadata?.bio || ''
-    });
-  }, [user]);
+    // Only update if we don't have profile data from database yet
+    if (!profileData.username && !profileData.fullName) {
+      setProfileData({
+        firstName: user?.user_metadata?.first_name || user?.user_metadata?.full_name?.split(' ')[0] || '',
+        lastName: user?.user_metadata?.last_name || user?.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+        fullName: user?.user_metadata?.full_name || '',
+        username: user?.user_metadata?.username || '',
+        displayName: user?.user_metadata?.display_name || user?.user_metadata?.full_name || '',
+        bio: user?.user_metadata?.bio || ''
+      });
+    }
+  }, [user, profileData.username, profileData.fullName]);
 
   const [securityData, setSecurityData] = useState<SecurityDataState>({
     currentPassword: '',
@@ -101,12 +140,14 @@ export function useUserSettings() {
     try {
       const fullName = `${profileData.firstName} ${profileData.lastName}`.trim();
       await updateProfile({
-        first_name: profileData.firstName,
-        last_name: profileData.lastName,
+        // Nur die Felder verwenden, die in der DB existieren
         full_name: fullName || profileData.fullName,
-        display_name: profileData.displayName,
-        username: profileData.username,
-        bio: profileData.bio
+        username: profileData.username
+        // first_name, last_name, display_name, bio existieren nicht in der profiles Tabelle!
+        // first_name: profileData.firstName,
+        // last_name: profileData.lastName,
+        // display_name: profileData.displayName,
+        // bio: profileData.bio
       });
       setProfileData(prev => ({ ...prev, fullName: fullName || prev.fullName }));
       success('Profil erfolgreich gespeichert! ✅');

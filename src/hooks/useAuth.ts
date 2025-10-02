@@ -86,23 +86,37 @@ export function useAuth() {
             return;
           }
 
-          // Check if user needs onboarding (no profile = needs onboarding)
-          try {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('username')
-              .eq('user_id', session.user.id)
-              .single();
+          // Check if user needs onboarding
+          // First check auth metadata, then profile
+          const needsOnboarding = session.user.user_metadata?.needs_username_onboarding !== false;
 
-            if (!profile) {
-              // No profile found - user needs onboarding
+          if (needsOnboarding) {
+            // Check if user has a profile
+            try {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('username')
+                .eq('user_id', session.user.id)
+                .single();
+
+              if (!profile) {
+                // No profile found - user needs onboarding
+                console.log('User needs onboarding: no profile found');
+                navigate('/onboarding/username');
+              } else {
+                // Profile exists but metadata says needs onboarding - this shouldn't happen
+                console.log('User has profile but metadata says needs onboarding - fixing metadata');
+                await supabase.auth.updateUser({
+                  data: { needs_username_onboarding: false }
+                });
+              }
+            } catch (error) {
+              console.warn('Error checking profile for onboarding:', error);
+              // If we can't check the profile, assume user needs onboarding for safety
               navigate('/onboarding/username');
             }
-            // If profile exists, user is already onboarded - no redirect needed
-          } catch (error) {
-            console.warn('Error checking profile for onboarding:', error);
-            // If we can't check the profile, assume user needs onboarding for safety
-            navigate('/onboarding/username');
+          } else {
+            console.log('User is already onboarded (metadata check)');
           }
         }
       }
