@@ -42,7 +42,7 @@ export default defineConfig({
           ],
           
           'dashboard-pages': [
-            './src/pages/dashboard/Dashboard.advanced.tsx'
+            './src/pages/dashboard/Dashboard.corporate.tsx'
           ],
           
           'recovery-pages': [

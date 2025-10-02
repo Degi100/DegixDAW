@@ -31,7 +31,6 @@ interface HeaderProps {
 
 const navigationItems: NavigationItem[] = [
   { path: '/', label: 'Dashboard', icon: '🏠', requiresAuth: true },
-  { path: '/settings', label: 'Settings', icon: '⚙️', requiresAuth: true },
 ];
 
 export default function Header({ 

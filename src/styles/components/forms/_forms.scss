@@ -57,6 +57,33 @@
   }
 }
 
+// ============================================
+// DARK MODE SETTINGS INPUT
+// ============================================
+
+[data-theme="dark"] {
+  .settings-input {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: rgba(51, 65, 85, 0.8);
+    color: $dark-text-primary;
+
+    &:focus {
+      background: $dark-bg-secondary;
+      border-color: $primary-400;
+      box-shadow: 0 0 0 3px rgba($primary-400, 0.1);
+    }
+
+    &:disabled {
+      background: rgba(51, 65, 85, 0.5);
+      color: $dark-text-muted;
+    }
+
+    &::placeholder {
+      color: $dark-text-muted;
+    }
+  }
+}
+
 .form-actions {
   display: flex;
   gap: 1rem;
