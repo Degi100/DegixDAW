@@ -21,6 +21,8 @@ const statusConfig: Record<Issue['status'], { icon: string; color: string; label
 
 interface IssueCardProps {
   issue: Issue;
+  isSelected?: boolean;
+  onToggleSelect?: (issueId: string) => void;
   onPriorityChange: (issueId: string, priority: Issue['priority']) => void;
   onStatusProgress: (issueId: string, newStatus: Issue['status']) => void;
   onCopy: (issue: Issue) => void;
@@ -31,6 +33,8 @@ interface IssueCardProps {
 
 export default function IssueCard({
   issue,
+  isSelected = false,
+  onToggleSelect,
   onPriorityChange,
   onStatusProgress,
   onCopy,
@@ -39,7 +43,19 @@ export default function IssueCard({
   formatDate,
 }: IssueCardProps) {
   return (
-    <div className="issue-card">
+    <div className={`issue-card ${isSelected ? 'issue-card--selected' : ''}`}>
+      {/* Checkbox for Bulk Selection */}
+      {onToggleSelect && (
+        <div className="issue-card__checkbox">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onToggleSelect(issue.id)}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+
       {/* Action Buttons */}
       <div className="issue-card__actions">
         {/* Quick Action Button - Smart Status Progression */}

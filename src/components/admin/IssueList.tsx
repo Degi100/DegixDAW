@@ -9,6 +9,9 @@ interface IssueListProps {
   searchTerm: string;
   statusFilter: string;
   priorityFilter: string;
+  selectedIssueIds?: string[];
+  onToggleSelect?: (issueId: string) => void;
+  onSelectAll?: () => void;
   onPriorityChange: (issueId: string, priority: Issue['priority']) => void;
   onStatusProgress: (issueId: string, newStatus: Issue['status']) => void;
   onCopy: (issue: Issue) => void;
@@ -22,6 +25,9 @@ export default function IssueList({
   searchTerm,
   statusFilter,
   priorityFilter,
+  selectedIssueIds = [],
+  onToggleSelect,
+  onSelectAll,
   onPriorityChange,
   onStatusProgress,
   onCopy,
@@ -46,12 +52,32 @@ export default function IssueList({
     );
   }
 
+  const isBulkMode = onToggleSelect && onSelectAll;
+  const allSelected = selectedIssueIds.length === issues.length && issues.length > 0;
+
   return (
     <div className="issue-list">
+      {/* Select All Header */}
+      {isBulkMode && (
+        <div className="issue-list__bulk-header">
+          <label className="issue-list__checkbox-label">
+            <input
+              type="checkbox"
+              checked={allSelected}
+              onChange={onSelectAll}
+              className="issue-list__checkbox"
+            />
+            <span>Alle auswählen ({issues.length})</span>
+          </label>
+        </div>
+      )}
+
       {issues.map((issue) => (
         <IssueCard
           key={issue.id}
           issue={issue}
+          isSelected={selectedIssueIds.includes(issue.id)}
+          onToggleSelect={onToggleSelect}
           onPriorityChange={onPriorityChange}
           onStatusProgress={onStatusProgress}
           onCopy={onCopy}

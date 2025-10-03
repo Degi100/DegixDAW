@@ -18,6 +18,7 @@ export default function AdminIssues() {
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('date-desc');
+  const [selectedIssueIds, setSelectedIssueIds] = useState<string[]>([]);
 
   const {
     modalOpen,
@@ -85,6 +86,52 @@ export default function AdminIssues() {
     return date.toLocaleDateString('de-DE', { day: '2-digit', month: 'short' });
   };
 
+  // Bulk Selection Handlers
+  const handleToggleSelect = (issueId: string) => {
+    setSelectedIssueIds(prev => 
+      prev.includes(issueId) 
+        ? prev.filter(id => id !== issueId)
+        : [...prev, issueId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIssueIds.length === sortedIssues.length) {
+      setSelectedIssueIds([]);
+    } else {
+      setSelectedIssueIds(sortedIssues.map(issue => issue.id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!confirm(`${selectedIssueIds.length} Issues wirklich löschen?`)) return;
+    
+    for (const id of selectedIssueIds) {
+      await deleteIssue(id);
+    }
+    setSelectedIssueIds([]);
+  };
+
+  const handleBulkStatusChange = async (newStatus: string) => {
+    const validStatuses = ['open', 'in-progress', 'done', 'closed'];
+    if (!validStatuses.includes(newStatus)) return;
+
+    for (const id of selectedIssueIds) {
+      await updateIssue(id, { status: newStatus as 'open' | 'in-progress' | 'done' | 'closed' });
+    }
+    setSelectedIssueIds([]);
+  };
+
+  const handleBulkPriorityChange = async (newPriority: string) => {
+    const validPriorities = ['low', 'medium', 'high', 'critical'];
+    if (!validPriorities.includes(newPriority)) return;
+
+    for (const id of selectedIssueIds) {
+      await updateIssue(id, { priority: newPriority as 'low' | 'medium' | 'high' | 'critical' });
+    }
+    setSelectedIssueIds([]);
+  };
+
   if (loading) {
     return (
       <AdminLayoutCorporate>
@@ -120,11 +167,43 @@ export default function AdminIssues() {
           stats={stats}
         />
 
+        {/* Bulk Actions Bar */}
+        {selectedIssueIds.length > 0 && (
+          <div className="bulk-actions-bar">
+            <div className="bulk-actions-bar__info">
+              <span>{selectedIssueIds.length} ausgewählt</span>
+              <button onClick={() => setSelectedIssueIds([])}>Auswahl aufheben</button>
+            </div>
+            <div className="bulk-actions-bar__actions">
+              <select onChange={(e) => handleBulkStatusChange(e.target.value)} defaultValue="">
+                <option value="" disabled>Status ändern</option>
+                <option value="open">🔵 Open</option>
+                <option value="in-progress">🟡 In Progress</option>
+                <option value="done">✅ Done</option>
+                <option value="closed">⚪ Closed</option>
+              </select>
+              <select onChange={(e) => handleBulkPriorityChange(e.target.value)} defaultValue="">
+                <option value="" disabled>Priorität ändern</option>
+                <option value="low">🟢 Low</option>
+                <option value="medium">🟡 Medium</option>
+                <option value="high">🔴 High</option>
+                <option value="critical">🚨 Critical</option>
+              </select>
+              <button onClick={handleBulkDelete} className="bulk-actions-bar__delete">
+                🗑️ Löschen ({selectedIssueIds.length})
+              </button>
+            </div>
+          </div>
+        )}
+
         <IssueList
           issues={sortedIssues}
           searchTerm={searchTerm}
           statusFilter={statusFilter}
           priorityFilter={priorityFilter}
+          selectedIssueIds={selectedIssueIds}
+          onToggleSelect={handleToggleSelect}
+          onSelectAll={handleSelectAll}
           onPriorityChange={handlePriorityChange}
           onStatusProgress={handleStatusProgress}
           onCopy={handleCopyClick}
