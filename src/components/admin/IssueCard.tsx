@@ -39,38 +39,14 @@ export default function IssueCard({
   formatDate,
 }: IssueCardProps) {
   return (
-    <div 
-      style={{
-        background: 'white',
-        padding: '20px',
-        borderRadius: '12px',
-        border: '1px solid #e5e7eb',
-        transition: 'all 0.2s',
-        position: 'relative',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-        e.currentTarget.style.transform = 'translateY(-2px)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = 'none';
-        e.currentTarget.style.transform = 'translateY(0)';
-      }}
-    >
+    <div className="issue-card">
       {/* Action Buttons */}
-      <div style={{ position: 'absolute', top: '16px', right: '16px', display: 'flex', gap: '8px' }}>
+      <div className="issue-card__actions">
         {/* Quick Action Button - Smart Status Progression */}
         {issue.status === 'open' && (
           <button
             onClick={() => onStatusProgress(issue.id, 'in-progress')}
-            style={{
-              padding: '6px 12px',
-              border: '1px solid #fcd34d',
-              borderRadius: '6px',
-              background: '#fef3c7',
-              cursor: 'pointer',
-              fontSize: '14px',
-            }}
+            className="issue-card__action-btn issue-card__action-btn--progress"
             title="In Bearbeitung"
           >
             ▶️
@@ -79,14 +55,7 @@ export default function IssueCard({
         {issue.status === 'in-progress' && (
           <button
             onClick={() => onStatusProgress(issue.id, 'done')}
-            style={{
-              padding: '6px 12px',
-              border: '1px solid #86efac',
-              borderRadius: '6px',
-              background: '#dcfce7',
-              cursor: 'pointer',
-              fontSize: '14px',
-            }}
+            className="issue-card__action-btn issue-card__action-btn--done"
             title="Als erledigt markieren"
           >
             ✅
@@ -94,129 +63,70 @@ export default function IssueCard({
         )}
         <button
           onClick={() => onCopy(issue)}
-          style={{
-            padding: '6px 12px',
-            border: '1px solid #93c5fd',
-            borderRadius: '6px',
-            background: '#dbeafe',
-            cursor: 'pointer',
-            fontSize: '14px',
-          }}
+          className="issue-card__action-btn issue-card__action-btn--copy"
           title="Issue kopieren"
         >
           📋
         </button>
         <button
           onClick={() => onEdit(issue)}
-          style={{
-            padding: '6px 12px',
-            border: '1px solid #d1d5db',
-            borderRadius: '6px',
-            background: 'white',
-            cursor: 'pointer',
-            fontSize: '14px',
-          }}
+          className="issue-card__action-btn issue-card__action-btn--edit"
           title="Bearbeiten"
         >
           ✏️
         </button>
         <button
           onClick={() => onDelete(issue)}
-          style={{
-            padding: '6px 12px',
-            border: '1px solid #fca5a5',
-            borderRadius: '6px',
-            background: '#fef2f2',
-            cursor: 'pointer',
-            fontSize: '14px',
-          }}
+          className="issue-card__action-btn issue-card__action-btn--delete"
           title="Löschen"
         >
           🗑️
         </button>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px', paddingRight: '200px' }}>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <select
-            value={issue.priority}
-            onChange={(e) => onPriorityChange(issue.id, e.target.value as Issue['priority'])}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '4px 12px',
-              borderRadius: '20px',
-              fontSize: '12px',
-              fontWeight: '600',
-              background: priorityConfig[issue.priority].color + '20',
-              color: priorityConfig[issue.priority].color,
-              border: `1px solid ${priorityConfig[issue.priority].color}40`,
-              cursor: 'pointer',
-              outline: 'none'
-            }}
-            title="Priorität ändern"
-          >
-            <option value="low">🟢 Low</option>
-            <option value="medium">🟡 Medium</option>
-            <option value="high">🔴 High</option>
-            <option value="critical">🚨 Critical</option>
-          </select>
-          <span style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '4px 12px',
-            borderRadius: '20px',
-            fontSize: '12px',
-            fontWeight: '600',
+      <div className="issue-card__badges">
+        <select
+          value={issue.priority}
+          onChange={(e) => onPriorityChange(issue.id, e.target.value as Issue['priority'])}
+          className="issue-card__priority-select"
+          style={{
+            background: priorityConfig[issue.priority].color + '20',
+            color: priorityConfig[issue.priority].color,
+            borderColor: priorityConfig[issue.priority].color + '40',
+          }}
+          title="Priorität ändern"
+        >
+          <option value="low">🟢 Low</option>
+          <option value="medium">🟡 Medium</option>
+          <option value="high">🔴 High</option>
+          <option value="critical">🚨 Critical</option>
+        </select>
+        <span 
+          className="issue-card__badge"
+          style={{
             background: statusConfig[issue.status].bg,
             color: statusConfig[issue.status].color,
-            border: `1px solid ${statusConfig[issue.status].color}40`
-          }}>
-            <span>{statusConfig[issue.status].icon}</span>
-            <span>{statusConfig[issue.status].label}</span>
+            borderColor: statusConfig[issue.status].color + '40'
+          }}
+        >
+          <span>{statusConfig[issue.status].icon}</span>
+          <span>{statusConfig[issue.status].label}</span>
+        </span>
+        {issue.category && (
+          <span className="issue-card__badge issue-card__badge--category">
+            📁 {issue.category}
           </span>
-          {issue.category && (
-            <span style={{
-              padding: '4px 12px',
-              borderRadius: '20px',
-              fontSize: '12px',
-              background: '#f3f4f6',
-              color: '#374151',
-              border: '1px solid #d1d5db'
-            }}>
-              📁 {issue.category}
-            </span>
-          )}
-        </div>
+        )}
       </div>
-      <h3 style={{ 
-        fontSize: '16px', 
-        fontWeight: '600', 
-        marginBottom: '8px',
-        color: '#111827'
-      }}>
+      <h3 className="issue-card__title">
         {issue.title}
       </h3>
       {issue.description && (
-        <p style={{ 
-          fontSize: '14px', 
-          color: '#6b7280', 
-          marginBottom: '12px',
-          lineHeight: '1.5'
-        }}>
+        <p className="issue-card__description">
           {issue.description}
         </p>
       )}
-      <div style={{ 
-        display: 'flex', 
-        gap: '16px', 
-        fontSize: '12px', 
-        color: '#9ca3af',
-        paddingTop: '12px',
-        borderTop: '1px solid #f3f4f6'
-      }}>
+      <div className="issue-card__footer">
         <span>📅 Erstellt: {formatDate(issue.created_at)}</span>
         {issue.updated_at !== issue.created_at && (
           <span>🔄 Aktualisiert: {formatDate(issue.updated_at)}</span>

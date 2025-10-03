@@ -19,6 +19,7 @@
 @use 'components/ui/modals';
 @use 'components/layout/header/index' as header;
 @use 'components/mock-data-badge';
+@use 'components/admin/index' as admin-components;
 
 // 4. Pages
 @use 'pages/auth/auth-landing/index' as auth-landing;

@@ -33,17 +33,11 @@ export default function IssueList({
 
   if (issues.length === 0) {
     return (
-      <div style={{
-        textAlign: 'center',
-        padding: '60px 20px',
-        background: 'white',
-        borderRadius: '12px',
-        border: '2px dashed #d1d5db'
-      }}>
-        <div style={{ fontSize: '64px', marginBottom: '16px' }}>
+      <div className="issue-list issue-list--empty">
+        <div className="issue-list__empty-icon">
           {hasFilters ? '🔍' : '📦'}
         </div>
-        <p style={{ fontSize: '16px', color: '#6b7280' }}>
+        <p className="issue-list__empty-text">
           {hasFilters 
             ? 'Keine Issues gefunden mit diesen Filtern.'
             : 'Keine Issues vorhanden.'}
@@ -53,7 +47,7 @@ export default function IssueList({
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <div className="issue-list">
       {issues.map((issue) => (
         <IssueCard
           key={issue.id}
