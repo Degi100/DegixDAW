@@ -10,7 +10,12 @@
     "preview": "vite preview",
     "setup:issues": "node scripts/setup-issues-table.js",
     "api": "node server/api.js",
-    "app": "concurrently \"npm run dev\" \"npm run api\" --names \"dev,api\" --prefix-colors \"cyan,green\""
+    "app": "concurrently \"npm run dev\" \"npm run api\" --names \"dev,api\" --prefix-colors \"cyan,green\"",
+    "db:migrate": "node scripts/db/migrate.js",
+    "db:seed": "node scripts/db/seed.js",
+    "db:cleanup": "node scripts/db/cleanup.js",
+    "db:mark-done": "node scripts/db/mark-done.js",
+    "db:sql": "node scripts/db/run-sql.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
