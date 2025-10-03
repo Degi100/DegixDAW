@@ -3,9 +3,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-
 import { handleAuthError, type AuthError } from '../lib/authUtils';
 import { getAuthCallbackUrl, getRecoveryCallbackUrl } from '../lib/urlUtils';
+import { checkUserOnboarding } from '../lib/auth/onboardingCheck';
 
 interface AuthState {
   user: User | null;
@@ -69,55 +69,9 @@ export function useAuth() {
           });
         }
 
-        // Handle sign in events
+        // Handle sign in events - check if user needs onboarding
         if (event === 'SIGNED_IN' && session?.user) {
-          console.log('User signed in:', session.user.id);
-
-          // Only trigger onboarding for new users who don't have a profile yet
-          // Skip onboarding check if user is already navigating within the app
-          const isInAppNavigation = window.location.pathname.startsWith('/dashboard/') ||
-                                   window.location.pathname.startsWith('/settings/') ||
-                                   window.location.pathname.startsWith('/admin/') ||
-                                   window.location.pathname.startsWith('/profile/') ||
-                                   window.location.pathname === '/dashboard';
-
-          if (isInAppNavigation) {
-            // User is already in the app - don't trigger onboarding
-            return;
-          }
-
-          // Check if user needs onboarding
-          // First check auth metadata, then profile
-          const needsOnboarding = session.user.user_metadata?.needs_username_onboarding !== false;
-
-          if (needsOnboarding) {
-            // Check if user has a profile
-            try {
-              const { data: profile } = await supabase
-                .from('profiles')
-                .select('username')
-                .eq('user_id', session.user.id)
-                .single();
-
-              if (!profile) {
-                // No profile found - user needs onboarding
-                console.log('User needs onboarding: no profile found');
-                navigate('/onboarding/username');
-              } else {
-                // Profile exists but metadata says needs onboarding - this shouldn't happen
-                console.log('User has profile but metadata says needs onboarding - fixing metadata');
-                await supabase.auth.updateUser({
-                  data: { needs_username_onboarding: false }
-                });
-              }
-            } catch (error) {
-              console.warn('Error checking profile for onboarding:', error);
-              // If we can't check the profile, assume user needs onboarding for safety
-              navigate('/onboarding/username');
-            }
-          } else {
-            console.log('User is already onboarded (metadata check)');
-          }
+          await checkUserOnboarding(session.user, navigate);
         }
       }
     );
