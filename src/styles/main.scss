@@ -20,6 +20,7 @@
 @use 'components/ui/cards';
 @use 'components/ui/modals';
 @use 'components/layout/header';
+@use 'components/mock-data-badge';
 
 // 4. Pages
 @use 'pages/auth/auth-landing';

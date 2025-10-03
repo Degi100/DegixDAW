@@ -1,5 +1,6 @@
 // src/components/admin/SystemHealthCard.tsx
 import type { SystemHealth } from '../../hooks/useSystemHealth';
+import { MockDataBadge } from './MockDataBadge';
 
 interface SystemHealthCardProps {
   health: SystemHealth;
@@ -105,6 +106,10 @@ export default function SystemHealthCard({ health, loading, onRefresh }: SystemH
           <div className="health-item-label">
             <span className="health-icon">💾</span>
             <span>Last Backup</span>
+            <MockDataBadge 
+              message="Fake"
+              tooltip="Last Backup Zeitstempel ist noch nicht mit echtem Backend verbunden"
+            />
           </div>
           <span className="health-value">
             {formatLastBackup(health.lastBackup)}
@@ -115,12 +120,49 @@ export default function SystemHealthCard({ health, loading, onRefresh }: SystemH
           <div className="health-item-label">
             <span className="health-icon">⏱️</span>
             <span>Uptime</span>
+            <MockDataBadge 
+              message="Fake"
+              tooltip="Uptime wird aktuell zufällig berechnet, nicht vom Backend"
+            />
           </div>
           <span className="health-value">
             {health.uptime}
           </span>
         </div>
+
+        {/* Token Usage */}
+        <div className="health-item token-usage">
+          <div className="health-item-label">
+            <span className="health-icon">🎫</span>
+            <span>Token Usage</span>
+            <MockDataBadge 
+              message="Mock"
+              tooltip="Token-Verbrauch ist simuliert. In Zukunft echte API-Integration."
+            />
+          </div>
+          <div className="token-info">
+            <span className="token-count">
+              {health.tokensUsed.toLocaleString()} / {health.tokensMax.toLocaleString()}
+            </span>
+            <span className="token-percentage">
+              {health.tokensPercentage.toFixed(1)}%
+            </span>
+          </div>
+          <div className="token-progress">
+            <div 
+              className={`token-progress-bar ${getTokenColorClass(health.tokensPercentage)}`}
+              style={{ width: `${Math.min(health.tokensPercentage, 100)}%` }}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
+}
+
+function getTokenColorClass(percentage: number): string {
+  if (percentage >= 90) return 'danger';
+  if (percentage >= 75) return 'warning';
+  if (percentage >= 50) return 'caution';
+  return 'success';
 }

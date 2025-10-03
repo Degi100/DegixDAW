@@ -7,6 +7,9 @@ export interface SystemHealth {
   databaseStatus: 'connected' | 'disconnected' | 'error';
   lastBackup: string | null;
   uptime: string;
+  tokensUsed: number;
+  tokensMax: number;
+  tokensPercentage: number;
 }
 
 export function useSystemHealth() {
@@ -14,7 +17,10 @@ export function useSystemHealth() {
     systemStatus: 'online',
     databaseStatus: 'connected',
     lastBackup: null,
-    uptime: '0h 0m'
+    uptime: '0h 0m',
+    tokensUsed: 0,
+    tokensMax: 200000,
+    tokensPercentage: 0
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,11 +46,20 @@ export function useSystemHealth() {
       // Mock last backup (in production this would come from backend)
       const lastBackup = new Date(Date.now() - Math.random() * 86400000).toISOString();
 
+      // Mock token usage (in production this would come from API)
+      // Simulating current session token usage
+      const tokensMax = 200000;
+      const tokensUsed = Math.floor(30000 + Math.random() * 5000); // Mock: ~30k-35k
+      const tokensPercentage = (tokensUsed / tokensMax) * 100;
+
       setHealth({
         systemStatus,
         databaseStatus,
         lastBackup,
-        uptime
+        uptime,
+        tokensUsed,
+        tokensMax,
+        tokensPercentage
       });
     } catch (err) {
       console.error('Failed to check system health:', err);
@@ -53,7 +68,10 @@ export function useSystemHealth() {
         systemStatus: 'offline',
         databaseStatus: 'disconnected',
         lastBackup: null,
-        uptime: '0h 0m'
+        uptime: '0h 0m',
+        tokensUsed: 0,
+        tokensMax: 200000,
+        tokensPercentage: 0
       });
     } finally {
       setLoading(false);

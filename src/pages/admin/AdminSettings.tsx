@@ -6,6 +6,7 @@ import AdminLayoutCorporate from '../../components/admin/AdminLayoutCorporate';
 import { useTheme } from '../../hooks/useTheme';
 import { useToast } from '../../hooks/useToast';
 import Button from '../../components/ui/Button';
+import { MockDataBadge } from '../../components/admin/MockDataBadge';
 
 interface SystemInfo {
   appVersion: string;
@@ -127,6 +128,13 @@ export default function AdminSettings() {
           <h1>⚙️ System Settings</h1>
           <p>Configure system-wide settings and preferences</p>
         </header>
+
+        {/* Mock Data Warning Banner */}
+        <MockDataBadge 
+          variant="banner"
+          message="⚠️ Diese Einstellungen können aktuell noch nicht gespeichert werden. Das Backend befindet sich in Entwicklung."
+          tooltip="Alle Änderungen hier sind nur temporär und werden beim Neuladen zurückgesetzt"
+        />
 
         {/* Tabs Navigation */}
         <div className="settings-tabs">
