@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Backup files
+*.backup
+*.bak
+
+# Generated markdown reports
+ISSUES_*.md
+

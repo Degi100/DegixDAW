@@ -58,6 +58,15 @@ export function useIssues() {
       if (fetchError) throw fetchError;
 
       setIssues(data || []);
+      
+      // Debug: Log stats
+      console.log('📊 Issues geladen:', {
+        total: data?.length || 0,
+        open: data?.filter(i => i.status === 'open').length || 0,
+        inProgress: data?.filter(i => i.status === 'in-progress').length || 0,
+        done: data?.filter(i => i.status === 'done').length || 0,
+        closed: data?.filter(i => i.status === 'closed').length || 0,
+      });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load issues';
       setError(errorMessage);

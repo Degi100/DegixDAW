@@ -27,10 +27,11 @@ const statusConfig: Record<Issue['status'], { icon: string; color: string; label
 
 export default function AdminIssues() {
   const { loading, filterIssues, getStats, refresh, createIssue, updateIssue, deleteIssue } = useIssues();
-  const { showSuccess, showError } = useToast();
+  const { success: showSuccess, error: showError } = useToast();
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('date-desc');
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
@@ -39,6 +40,34 @@ export default function AdminIssues() {
     status: statusFilter === 'all' ? undefined : statusFilter,
     priority: priorityFilter === 'all' ? undefined : priorityFilter,
     search: searchTerm || undefined,
+  });
+
+  // Sort issues based on selected option
+  const sortedIssues = [...filteredIssues].sort((a, b) => {
+    switch (sortBy) {
+      case 'date-desc':
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      case 'date-asc':
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      case 'priority-desc': {
+        const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+        return priorityOrder[b.priority] - priorityOrder[a.priority];
+      }
+      case 'priority-asc': {
+        const priorityOrderAsc = { critical: 4, high: 3, medium: 2, low: 1 };
+        return priorityOrderAsc[a.priority] - priorityOrderAsc[b.priority];
+      }
+      case 'status': {
+        const statusOrder = { open: 1, 'in-progress': 2, done: 3, closed: 4 };
+        return statusOrder[a.status] - statusOrder[b.status];
+      }
+      case 'title-asc':
+        return a.title.localeCompare(b.title);
+      case 'title-desc':
+        return b.title.localeCompare(a.title);
+      default:
+        return 0;
+    }
   });
 
   const stats = getStats();
@@ -94,6 +123,138 @@ export default function AdminIssues() {
     }
   };
 
+  const handleCopyClick = async (issue: Issue) => {
+    const copiedIssue = {
+      title: `${issue.title} (Kopie)`,
+      description: issue.description || '',
+      status: issue.status,
+      priority: issue.priority,
+      category: issue.category || '',
+    };
+    
+    const result = await createIssue(copiedIssue);
+    if (result.success) {
+      showSuccess('Issue erfolgreich kopiert');
+    } else {
+      showError('Fehler beim Kopieren des Issues');
+    }
+  };
+
+  const handleExportClick = () => {
+    const exportData = sortedIssues.map(issue => ({
+      id: issue.id,
+      title: issue.title,
+      description: issue.description,
+      status: issue.status,
+      priority: issue.priority,
+      category: issue.category,
+      created_at: issue.created_at,
+    }));
+
+    const jsonString = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `issues-export-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showSuccess(`${exportData.length} Issues exportiert`);
+  };
+
+  const handleSaveMarkdown = async () => {
+    const date = new Date().toISOString().split('T')[0];
+    let markdown = `# Issue Management Report\n\n`;
+    markdown += `**Datum:** ${date}\n`;
+    markdown += `**Total Issues:** ${stats.total}\n\n`;
+    
+    // Stats
+    markdown += `## 📊 Statistiken\n\n`;
+    markdown += `- 🔵 **Open:** ${stats.open}\n`;
+    markdown += `- 🟡 **In Progress:** ${stats.inProgress}\n`;
+    markdown += `- ✅ **Done:** ${stats.done}\n`;
+    markdown += `- ⚪ **Closed:** ${stats.closed}\n`;
+    markdown += `- 🚨 **Urgent (High/Critical):** ${stats.urgentCount}\n\n`;
+    
+    // Issues grouped by status
+    const groupedByStatus = {
+      open: sortedIssues.filter(i => i.status === 'open'),
+      'in-progress': sortedIssues.filter(i => i.status === 'in-progress'),
+      done: sortedIssues.filter(i => i.status === 'done'),
+      closed: sortedIssues.filter(i => i.status === 'closed'),
+    };
+
+    Object.entries(groupedByStatus).forEach(([status, issues]) => {
+      if (issues.length === 0) return;
+      
+      const statusConfig = {
+        open: '🔵 Open',
+        'in-progress': '🟡 In Progress',
+        done: '✅ Done',
+        closed: '⚪ Closed',
+      };
+
+      markdown += `## ${statusConfig[status as keyof typeof statusConfig]} (${issues.length})\n\n`;
+      
+      issues.forEach(issue => {
+        const priorityEmoji = priorityConfig[issue.priority].emoji;
+        markdown += `### ${priorityEmoji} ${issue.title}\n\n`;
+        markdown += `- **Priority:** ${priorityConfig[issue.priority].label}\n`;
+        markdown += `- **Category:** ${issue.category || 'N/A'}\n`;
+        markdown += `- **Created:** ${new Date(issue.created_at).toLocaleDateString('de-DE')}\n`;
+        if (issue.description) {
+          markdown += `- **Description:** ${issue.description}\n`;
+        }
+        markdown += `\n---\n\n`;
+      });
+    });
+
+    // Save to server (local dev) or download (production)
+    const isProduction = import.meta.env.PROD;
+    const isDevelopment = window.location.hostname === 'localhost';
+
+    if (isDevelopment && !isProduction) {
+      // LOCAL: Save via Express API server
+      try {
+        const response = await fetch('http://localhost:3001/api/save-markdown', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            content: markdown,
+            filename: `ISSUES_${date}.md`,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showSuccess(`📝 Markdown-Report im Projekt gespeichert: ISSUES_${date}.md`);
+        } else {
+          throw new Error(result.error || 'Failed to save file');
+        }
+      } catch (error) {
+        console.error('Error saving markdown:', error);
+        showError('Fehler beim Speichern. Ist der API-Server gestartet? (npm run api)');
+      }
+    } else {
+      // PRODUCTION: Download file to browser
+      const blob = new Blob([markdown], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ISSUES_${date}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showSuccess(`📥 Markdown-Report heruntergeladen: ISSUES_${date}.md`);
+    }
+  };
+
   if (loading) {
     return (
       <AdminLayoutCorporate>
@@ -119,6 +280,24 @@ export default function AdminIssues() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
+            <button 
+              className="btn btn-secondary" 
+              onClick={handleExportClick} 
+              title="Issues als JSON exportieren"
+              style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <span>📥</span>
+              <span>JSON</span>
+            </button>
+            <button 
+              className="btn btn-secondary" 
+              onClick={handleSaveMarkdown} 
+              title="Issues als Markdown-Report speichern"
+              style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <span>📝</span>
+              <span>MD</span>
+            </button>
             <button 
               className="btn btn-secondary" 
               onClick={refresh} 
@@ -278,10 +457,32 @@ export default function AdminIssues() {
             <option value="medium" style={{ color: '#000000' }}>🟡 Medium</option>
             <option value="low" style={{ color: '#000000' }}>🟢 Low</option>
           </select>
+          <select 
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            style={{
+              padding: '10px 36px 10px 12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              fontSize: '14px',
+              background: 'white',
+              cursor: 'pointer',
+              minWidth: '200px',
+              color: '#000000'
+            }}
+          >
+            <option value="date-desc" style={{ color: '#000000' }}>📅 Neueste zuerst</option>
+            <option value="date-asc" style={{ color: '#000000' }}>📅 Älteste zuerst</option>
+            <option value="priority-desc" style={{ color: '#000000' }}>🚨 Priorität: Hoch → Niedrig</option>
+            <option value="priority-asc" style={{ color: '#000000' }}>🟢 Priorität: Niedrig → Hoch</option>
+            <option value="status" style={{ color: '#000000' }}>📊 Status: Open → Done</option>
+            <option value="title-asc" style={{ color: '#000000' }}>🔤 Titel: A → Z</option>
+            <option value="title-desc" style={{ color: '#000000' }}>🔤 Titel: Z → A</option>
+          </select>
         </div>
 
         {/* Issues List */}
-        {filteredIssues.length === 0 ? (
+        {sortedIssues.length === 0 ? (
           <div style={{
             textAlign: 'center',
             padding: '60px 20px',
@@ -300,7 +501,7 @@ export default function AdminIssues() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {filteredIssues.map((issue) => (
+            {sortedIssues.map((issue) => (
               <div 
                 key={issue.id} 
                 style={{
@@ -322,7 +523,29 @@ export default function AdminIssues() {
               >
                 {/* Action Buttons */}
                 <div style={{ position: 'absolute', top: '16px', right: '16px', display: 'flex', gap: '8px' }}>
-                  {issue.status !== 'done' && (
+                  {/* Quick Action Button - Smart Status Progression */}
+                  {issue.status === 'open' && (
+                    <button
+                      onClick={async () => {
+                        const result = await updateIssue(issue.id, { status: 'in-progress' });
+                        if (result.success) {
+                          showSuccess('Issue in Bearbeitung');
+                        }
+                      }}
+                      style={{
+                        padding: '6px 12px',
+                        border: '1px solid #fcd34d',
+                        borderRadius: '6px',
+                        background: '#fef3c7',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                      }}
+                      title="In Bearbeitung"
+                    >
+                      ▶️
+                    </button>
+                  )}
+                  {issue.status === 'in-progress' && (
                     <button
                       onClick={async () => {
                         const result = await updateIssue(issue.id, { status: 'done' });
@@ -343,6 +566,20 @@ export default function AdminIssues() {
                       ✅
                     </button>
                   )}
+                  <button
+                    onClick={() => handleCopyClick(issue)}
+                    style={{
+                      padding: '6px 12px',
+                      border: '1px solid #93c5fd',
+                      borderRadius: '6px',
+                      background: '#dbeafe',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                    }}
+                    title="Issue kopieren"
+                  >
+                    📋
+                  </button>
                   <button
                     onClick={() => handleEditClick(issue)}
                     style={{
@@ -373,23 +610,38 @@ export default function AdminIssues() {
                   </button>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px', paddingRight: '150px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px', paddingRight: '200px' }}>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                    <span style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      padding: '4px 12px',
-                      borderRadius: '20px',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      background: priorityConfig[issue.priority].color + '20',
-                      color: priorityConfig[issue.priority].color,
-                      border: `1px solid ${priorityConfig[issue.priority].color}40`
-                    }}>
-                      <span>{priorityConfig[issue.priority].emoji}</span>
-                      <span>{priorityConfig[issue.priority].label}</span>
-                    </span>
+                    <select
+                      value={issue.priority}
+                      onChange={async (e) => {
+                        const newPriority = e.target.value as Issue['priority'];
+                        const result = await updateIssue(issue.id, { priority: newPriority });
+                        if (result.success) {
+                          showSuccess(`Priorität auf ${priorityConfig[newPriority].label} geändert`);
+                        }
+                      }}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '4px 12px',
+                        borderRadius: '20px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        background: priorityConfig[issue.priority].color + '20',
+                        color: priorityConfig[issue.priority].color,
+                        border: `1px solid ${priorityConfig[issue.priority].color}40`,
+                        cursor: 'pointer',
+                        outline: 'none'
+                      }}
+                      title="Priorität ändern"
+                    >
+                      <option value="low">🟢 Low</option>
+                      <option value="medium">🟡 Medium</option>
+                      <option value="high">🔴 High</option>
+                      <option value="critical">🚨 Critical</option>
+                    </select>
                     <span style={{
                       display: 'inline-flex',
                       alignItems: 'center',

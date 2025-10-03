@@ -166,6 +166,7 @@ npm run dev          # Development server
 npm run build        # Production build
 npm run preview      # Preview production build
 npm run lint         # ESLint check
+npm run api          # Start API server (local only)
 ```
 
 ### **Code Quality**
@@ -173,3 +174,20 @@ npm run lint         # ESLint check
 - ESLint + Prettier configuration
 - CSS Modules for scoped styling
 - Zod for runtime validation
+
+## 📚 Documentation
+
+Comprehensive documentation is available in the [`docs/`](./docs/) directory:
+
+- **[📖 Documentation Index](./docs/README.md)** - Complete documentation overview
+- **[📋 Project Summary](./docs/PROJECT_SUMMARY.md)** - Architecture & features
+- **[🗄️ Supabase Setup](./docs/SUPABASE_SETUP.md)** - Database configuration
+- **[🔐 Token Management](./docs/TOKEN_MANAGEMENT.md)** - Auth & sessions
+- **[🚀 Deployment Guide](./DEPLOYMENT.md)** - Production deployment
+
+### Additional Docs
+- **[🔌 API Server](./server/README.md)** - Local development API
+- **[💾 SQL Scripts](./scripts/sql/README.md)** - Database setup & migrations
+- **[📄 Pages Structure](./src/pages/README.md)** - Route organization
+- **[🎨 Styles Guide](./src/styles/README.md)** - SCSS architecture
+
