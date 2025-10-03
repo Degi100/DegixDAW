@@ -3,6 +3,8 @@
 
 import { useState, useEffect } from 'react';
 import type { Issue } from '../../hooks/useIssues';
+import { getCategories } from '../../lib/constants/categories';
+import CategoryManager from './CategoryManager';
 
 interface IssueModalProps {
   isOpen: boolean;
@@ -30,6 +32,8 @@ export default function IssueModal({ isOpen, onClose, onSubmit, issue, mode }: I
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [categories, setCategories] = useState(getCategories());
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
 
   // Initialize form data when issue changes
   useEffect(() => {
@@ -289,36 +293,46 @@ export default function IssueModal({ isOpen, onClose, onSubmit, issue, mode }: I
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '14px' }}>
               Kategorie
             </label>
-            <select
-              value={formData.category}
-              onChange={(e) => handleChange('category', e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #d1d5db',
-                borderRadius: '8px',
-                fontSize: '14px',
-                background: 'white',
-                cursor: 'pointer',
-                outline: 'none',
-                color: '#000000',
-              }}
-            >
-              <option value="" style={{ color: '#000000' }}>-- Kategorie wählen --</option>
-              <option value="Auth/Login" style={{ color: '#000000' }}>🔐 Auth/Login</option>
-              <option value="Routing" style={{ color: '#000000' }}>🛣️ Routing</option>
-              <option value="Admin/Users" style={{ color: '#000000' }}>👥 Admin/Users</option>
-              <option value="Admin/Analytics" style={{ color: '#000000' }}>📊 Admin/Analytics</option>
-              <option value="Admin/UI" style={{ color: '#000000' }}>🎨 Admin/UI</option>
-              <option value="Admin/Features" style={{ color: '#000000' }}>⚙️ Admin/Features</option>
-              <option value="Profile/Settings" style={{ color: '#000000' }}>⚙️ Profile/Settings</option>
-              <option value="UI/Style" style={{ color: '#000000' }}>💅 UI/Style</option>
-              <option value="Database" style={{ color: '#000000' }}>🗄️ Database</option>
-              <option value="Performance" style={{ color: '#000000' }}>⚡ Performance</option>
-              <option value="Security" style={{ color: '#000000' }}>🔒 Security</option>
-              <option value="Documentation" style={{ color: '#000000' }}>📚 Documentation</option>
-              <option value="Other" style={{ color: '#000000' }}>📦 Other</option>
-            </select>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <select
+                value={formData.category}
+                onChange={(e) => handleChange('category', e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: '10px 12px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  background: 'white',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  color: '#000000',
+                }}
+              >
+                <option value="" style={{ color: '#000000' }}>-- Kategorie wählen --</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.name} style={{ color: '#000000' }}>
+                    {cat.emoji} {cat.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => setShowCategoryManager(true)}
+                style={{
+                  padding: '10px 16px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  background: 'white',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                title="Kategorien verwalten"
+              >
+                ⚙️
+              </button>
+            </div>
           </div>
 
           {/* Actions */}
@@ -388,6 +402,13 @@ export default function IssueModal({ isOpen, onClose, onSubmit, issue, mode }: I
           to { transform: rotate(360deg); }
         }
       `}</style>
+
+      {/* Category Manager Modal */}
+      <CategoryManager
+        isOpen={showCategoryManager}
+        onClose={() => setShowCategoryManager(false)}
+        onCategoryAdded={() => setCategories(getCategories())}
+      />
     </div>
   );
 }

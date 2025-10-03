@@ -18,6 +18,7 @@ export default function AdminIssues() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('date-desc');
   const [selectedIssueIds, setSelectedIssueIds] = useState<string[]>([]);
+  const [showCompleted, setShowCompleted] = useState(false);
 
   const {
     modalOpen,
@@ -41,8 +42,25 @@ export default function AdminIssues() {
     search: searchTerm || undefined,
   });
 
-  // Sort issues based on selected option
-  const sortedIssues = [...filteredIssues].sort((a, b) => {
+  // Filter completed issues if toggle is off
+  const visibleIssues = showCompleted 
+    ? filteredIssues 
+    : filteredIssues.filter(issue => issue.status !== 'done' && issue.status !== 'closed');
+
+  // Count completed issues
+  const completedCount = filteredIssues.filter(issue => issue.status === 'done' || issue.status === 'closed').length;
+
+  // Sort issues: DONE/CLOSED always at the bottom, then by selected sort option
+  const sortedIssues = [...visibleIssues].sort((a, b) => {
+    // First: Separate completed from active issues
+    const aCompleted = a.status === 'done' || a.status === 'closed';
+    const bCompleted = b.status === 'done' || b.status === 'closed';
+    
+    if (aCompleted !== bCompleted) {
+      return aCompleted ? 1 : -1; // Completed issues go to bottom
+    }
+
+    // Then: Apply selected sort option
     switch (sortBy) {
       case 'date-desc':
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -151,10 +169,13 @@ export default function AdminIssues() {
           statusFilter={statusFilter}
           priorityFilter={priorityFilter}
           sortBy={sortBy}
+          showCompleted={showCompleted}
+          completedCount={completedCount}
           onSearchChange={setSearchTerm}
           onStatusChange={setStatusFilter}
           onPriorityChange={setPriorityFilter}
           onSortChange={setSortBy}
+          onShowCompletedToggle={() => setShowCompleted(!showCompleted)}
           stats={stats}
         />
 

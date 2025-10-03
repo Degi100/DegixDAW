@@ -6,10 +6,13 @@ interface IssueFiltersProps {
   statusFilter: string;
   priorityFilter: string;
   sortBy: string;
+  showCompleted: boolean;
+  completedCount: number;
   onSearchChange: (value: string) => void;
   onStatusChange: (value: string) => void;
   onPriorityChange: (value: string) => void;
   onSortChange: (value: string) => void;
+  onShowCompletedToggle: () => void;
   stats: {
     open: number;
     inProgress: number;
@@ -24,10 +27,13 @@ export default function IssueFilters({
   statusFilter,
   priorityFilter,
   sortBy,
+  showCompleted,
+  completedCount,
   onSearchChange,
   onStatusChange,
   onPriorityChange,
   onSortChange,
+  onShowCompletedToggle,
   stats,
 }: IssueFiltersProps) {
   return (
@@ -77,6 +83,14 @@ export default function IssueFilters({
         <option value="title-asc">🔤 Titel: A → Z</option>
         <option value="title-desc">🔤 Titel: Z → A</option>
       </select>
+      <button 
+        onClick={onShowCompletedToggle}
+        className={`issue-filters__toggle ${showCompleted ? 'issue-filters__toggle--active' : ''}`}
+        title={showCompleted ? 'Abgeschlossene ausblenden' : 'Abgeschlossene anzeigen'}
+      >
+        {showCompleted ? '👁️' : '👁️‍🗨️'} 
+        {showCompleted ? 'Abgeschlossene ausblenden' : `Abgeschlossene anzeigen (${completedCount})`}
+      </button>
     </div>
   );
 }
