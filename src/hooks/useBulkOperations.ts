@@ -33,11 +33,11 @@ export function useBulkOperations(selectedUsers: Set<string>, onUsersUpdated: ()
 
       if (bulkError) throw bulkError;
 
-      success(`Deactivated ${userIds.length} users`);
+      success(`${userIds.length} Benutzer deaktiviert`);
       clearSelection();
       onUsersUpdated();
     } catch {
-      error('Failed to deactivate users');
+      error('Fehler beim Deaktivieren der Benutzer');
     }
   };
 
@@ -52,11 +52,11 @@ export function useBulkOperations(selectedUsers: Set<string>, onUsersUpdated: ()
         await supabase.auth.admin.deleteUser(userId);
       }
 
-      success(`Deleted ${userIds.length} users`);
+      success(`${userIds.length} Benutzer gelöscht`);
       clearSelection();
       onUsersUpdated();
     } catch {
-      error('Failed to delete users');
+      error('Fehler beim Löschen der Benutzer');
     }
   };
 

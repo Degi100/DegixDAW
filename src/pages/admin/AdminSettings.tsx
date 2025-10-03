@@ -71,7 +71,7 @@ export default function AdminSettings() {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      success('Settings saved successfully!');
+      success('Einstellungen erfolgreich gespeichert!');
     } catch (err) {
       console.error('Failed to save settings:', err);
     } finally {
@@ -81,7 +81,7 @@ export default function AdminSettings() {
 
   const handleTestEmail = useCallback(async () => {
     try {
-      success('Test email sent successfully!');
+      success('Test-E-Mail erfolgreich gesendet!');
     } catch (err) {
       console.error('Failed to send test email:', err);
     }

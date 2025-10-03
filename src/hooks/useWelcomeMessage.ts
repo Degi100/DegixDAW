@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { useToast } from './useToast';
+import { supabase } from '../lib/supabase';
 
 /**
  * Custom hook für intelligente Welcome-Message-Verwaltung
@@ -24,8 +25,27 @@ export function useWelcomeMessage(user: User | null) {
     const shouldShowWelcome = checkWelcomeEligibility(sessionKey, dailyKey, today);
     
     if (shouldShowWelcome) {
-      const displayName = user.user_metadata?.full_name || user.email;
-      success(`Willkommen zurück, ${displayName}!`);
+      // Hole Username aus profiles-Tabelle
+      const fetchProfile = async () => {
+        try {
+          const { data } = await supabase
+            .from('profiles')
+            .select('full_name, username')
+            .eq('user_id', user.id)
+            .single();
+          
+          const fullName = data?.full_name || user.user_metadata?.full_name || user.email;
+          const username = data?.username;
+          const displayName = username ? `${fullName} (${username})` : fullName;
+          success(`Willkommen zurück, ${displayName}!`);
+        } catch {
+          // Fallback ohne Username
+          const displayName = user.user_metadata?.full_name || user.email;
+          success(`Willkommen zurück, ${displayName}!`);
+        }
+      };
+      
+      fetchProfile();
       
       // Markiere für diese Session und heute
       sessionStorage.setItem(sessionKey, 'true');

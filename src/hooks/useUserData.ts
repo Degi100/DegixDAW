@@ -70,7 +70,7 @@ export function useUserData() {
       }, (payload) => {
         console.log('Real-time update:', payload);
         loadUsers();
-        success('User data updated in real-time');
+        success('Benutzerdaten in Echtzeit aktualisiert');
       })
       .subscribe();
 
@@ -126,7 +126,7 @@ export function useUserData() {
         if (profileError) console.warn('Profile update warning:', profileError);
       }
 
-      success('✅ User invited successfully! They will receive a confirmation email.');
+      success('✅ Benutzer erfolgreich eingeladen! Er erhält eine Bestätigungs-E-Mail.');
       loadUsers();
     } catch (err) {
       console.error('Error creating user:', err);
@@ -150,11 +150,11 @@ export function useUserData() {
 
       if (profileError) throw profileError;
 
-      success('User updated successfully!');
+      success('Benutzer erfolgreich aktualisiert!');
       loadUsers();
     } catch (err) {
       console.error('Error updating user:', err);
-      error('Failed to update user');
+      error('Fehler beim Aktualisieren des Benutzers');
     }
   }, [success, error, loadUsers]);
 
@@ -163,11 +163,11 @@ export function useUserData() {
       const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
       if (deleteError) throw deleteError;
 
-      success('User deleted successfully!');
+      success('Benutzer erfolgreich gelöscht!');
       loadUsers();
     } catch (err) {
       console.error('Error deleting user:', err);
-      error('Failed to delete user');
+      error('Fehler beim Löschen des Benutzers');
     }
   }, [success, error, loadUsers]);
 

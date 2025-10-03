@@ -19,11 +19,15 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false }
 });
 
-// Issues completed in v0.1.1
+// Issues completed in v0.1.1 & v0.2.0
 const COMPLETED_ISSUES = [
   '404 bei "Zurück zur Anmeldung"',
   'Add User schlägt fehl',
-  'Doppelter Toast bei Login'
+  'Doppelter Toast bei Login',
+  'Datenbank scripte automatisch',  // v0.2.0 - DB Automation
+  'Toast-Sprache einheitlich',  // v0.2.0 - Quick Win 1
+  'Toast Text anpassen',  // v0.2.0 - Quick Win 2
+  'Begrüßung Format ändern'  // v0.2.0 - Quick Win 3
 ];
 
 async function markIssuesAsDone() {

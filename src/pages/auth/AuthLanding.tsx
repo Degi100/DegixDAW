@@ -120,13 +120,13 @@ export default function AuthLanding() {
 
     // Validate passwords match
     if (registerData.password !== registerData.confirmPassword) {
-      showError('Passwords do not match');
+      showError('Passwörter stimmen nicht überein');
       return;
     }
 
     // Validate required fields
     if (!registerData.firstName.trim() || !registerData.lastName.trim()) {
-      showError('First name and last name are required');
+      showError('Vor- und Nachname sind erforderlich');
       return;
     }
 
@@ -141,7 +141,7 @@ export default function AuthLanding() {
       });
 
       if (result.success) {
-        success('Account created successfully! Please check your email to confirm your account.');
+        success('Konto erfolgreich erstellt! Bitte überprüfen Sie Ihre E-Mail zur Bestätigung.');
         setShowRegisterForm(false);
         setRegisterData({
           firstName: '',

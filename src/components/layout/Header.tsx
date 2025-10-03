@@ -54,7 +54,7 @@ export default function Header({
   const handleLogout = async () => {
     try {
       await signOut();
-      success('Successfully logged out! 👋');
+      success('Erfolgreich abgemeldet! 👋');
     } catch (error) {
       console.error('Logout error:', error);
     }
