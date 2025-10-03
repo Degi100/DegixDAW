@@ -1,0 +1,36 @@
+// ============================================
+// USER SETTINGS BASE - Layout & Container
+// ============================================
+
+@use '../../../abstracts/variables' as *;
+@use '../../../abstracts/typography' as *;
+@use '../../../abstracts/spacing' as *;
+
+// ============================================
+// MAIN LAYOUT
+// ============================================
+
+.settings-corporate {
+  min-height: 100vh;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+.settings-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: $spacing-6;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: $spacing-8;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    padding: $spacing-4;
+    gap: $spacing-6;
+  }
+}
+
+.settings-container {
+  display: contents; // Use CSS Grid from parent
+}

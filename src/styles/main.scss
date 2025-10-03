@@ -2,8 +2,8 @@
 // Main SCSS Entry Point - Corporate Theme
 // ============================================
 
-// 1. Abstracts - No CSS output
-@use 'abstracts/variables' as *;
+// 1. Abstracts - No CSS output (now using modular index)
+@use 'abstracts/index' as *;
 @use 'abstracts/typography' as *;
 @use 'abstracts/spacing' as *;
 
@@ -28,7 +28,7 @@
 @use 'pages/auth/recovery';
 @use 'pages/admin/index' as admin;
 @use 'pages/dashboard/dashboard-corporate';
-@use 'pages/settings/user-settings';
+@use 'pages/settings/user-settings/index' as user-settings;
 
 // 5. Themes
 @use 'themes/dark';
