@@ -1,4 +1,8 @@
-// src/pages/AdminRecovery.tsx
+// ============================================
+// ADMIN RECOVERY PAGE
+// Admin management of account recovery requests
+// ============================================
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -7,14 +11,12 @@ import Button from '../../components/ui/Button';
 import Container from '../../components/layout/Container';
 import { LoadingOverlay } from '../../components/ui/Loading';
 
-interface RecoveryRequest {
-  id: string;
-  name: string;
-  alternateEmail?: string;
-  description: string;
-  status: 'pending' | 'in-progress' | 'resolved' | 'rejected';
-  createdAt: string;
-}
+// Import modular components
+import RecoveryRequestCard from './components/RecoveryRequestCard';
+import RecoveryInfoBox from './components/RecoveryInfoBox';
+
+// Import types
+import type { RecoveryRequest, RecoveryRequestStatus } from './types/admin-recovery.types';
 
 export default function AdminRecovery() {
   const navigate = useNavigate();
@@ -23,6 +25,10 @@ export default function AdminRecovery() {
   
   const [isLoading, setIsLoading] = useState(true);
   const [requests, setRequests] = useState<RecoveryRequest[]>([]);
+
+  // ============================================
+  // EFFECTS
+  // ============================================
 
   useEffect(() => {
     // Check if user has admin privileges (simplified check)
@@ -69,7 +75,11 @@ export default function AdminRecovery() {
     loadRecoveryRequests();
   }, [user, navigate, error]);
 
-  const handleStatusChange = async (requestId: string, newStatus: RecoveryRequest['status']) => {
+  // ============================================
+  // EVENT HANDLERS
+  // ============================================
+
+  const handleStatusChange = async (requestId: string, newStatus: RecoveryRequestStatus) => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -96,25 +106,9 @@ export default function AdminRecovery() {
     }
   };
 
-  const getStatusColor = (status: RecoveryRequest['status']) => {
-    switch (status) {
-      case 'pending': return 'orange';
-      case 'in-progress': return 'blue';
-      case 'resolved': return 'green';
-      case 'rejected': return 'red';
-      default: return 'gray';
-    }
-  };
-
-  const getStatusText = (status: RecoveryRequest['status']) => {
-    switch (status) {
-      case 'pending': return 'Wartend';
-      case 'in-progress': return 'In Bearbeitung';
-      case 'resolved': return 'Gelöst';
-      case 'rejected': return 'Abgelehnt';
-      default: return status;
-    }
-  };
+  // ============================================
+  // RENDER
+  // ============================================
 
   if (isLoading) {
     return (
@@ -148,106 +142,20 @@ export default function AdminRecovery() {
             ) : (
               <div className="recovery-requests">
                 {requests.map(request => (
-                  <div key={request.id} className="recovery-request-card">
-                    <div className="request-header">
-                      <div className="request-info">
-                        <h3>{request.name}</h3>
-                        <p className="request-date">
-                          {new Date(request.createdAt).toLocaleDateString('de-DE')}
-                        </p>
-                      </div>
-                      <div className={`status-badge status-${getStatusColor(request.status)}`}>
-                        {getStatusText(request.status)}
-                      </div>
-                    </div>
-
-                    {request.alternateEmail && (
-                      <div className="request-detail">
-                        <strong>Alternative E-Mail:</strong> {request.alternateEmail}
-                      </div>
-                    )}
-
-                    <div className="request-detail">
-                      <strong>Beschreibung:</strong>
-                      <p>{request.description}</p>
-                    </div>
-
-                    <div className="request-actions">
-                      {request.status === 'pending' && (
-                        <>
-                          <Button
-                            onClick={() => handleStatusChange(request.id, 'in-progress')}
-                            variant="primary"
-                            size="small"
-                          >
-                            In Bearbeitung
-                          </Button>
-                          <Button
-                            onClick={() => sendRecoveryEmail(request.id)}
-                            variant="success"
-                            size="small"
-                          >
-                            Recovery-E-Mail senden
-                          </Button>
-                          <Button
-                            onClick={() => handleStatusChange(request.id, 'rejected')}
-                            variant="error"
-                            size="small"
-                          >
-                            Ablehnen
-                          </Button>
-                        </>
-                      )}
-
-                      {request.status === 'in-progress' && (
-                        <>
-                          <Button
-                            onClick={() => sendRecoveryEmail(request.id)}
-                            variant="success"
-                            size="small"
-                          >
-                            Recovery-E-Mail senden
-                          </Button>
-                          <Button
-                            onClick={() => handleStatusChange(request.id, 'rejected')}
-                            variant="error"
-                            size="small"
-                          >
-                            Ablehnen
-                          </Button>
-                        </>
-                      )}
-
-                      {(request.status === 'resolved' || request.status === 'rejected') && (
-                        <Button
-                          onClick={() => handleStatusChange(request.id, 'pending')}
-                          variant="outline"
-                          size="small"
-                        >
-                          Wieder öffnen
-                        </Button>
-                      )}
-                    </div>
-                  </div>
+                  <RecoveryRequestCard
+                    key={request.id}
+                    request={request}
+                    onStatusChange={handleStatusChange}
+                    onSendRecoveryEmail={sendRecoveryEmail}
+                  />
                 ))}
               </div>
             )}
           </div>
         </div>
 
-        <div className="admin-info">
-          <div className="info-box">
-            <h3>💡 Recovery-Prozess</h3>
-            <ol>
-              <li>Nutzer stellt Anfrage über "/auth/recovery"</li>
-              <li>Admin prüft die Anfrage und Identität</li>
-              <li>Bei Erfolg: Recovery-Link per E-Mail senden</li>
-              <li>Nutzer kann über Link Passwort zurücksetzen</li>
-            </ol>
-          </div>
-        </div>
+        <RecoveryInfoBox />
       </div>
-      
     </Container>
   );
 }

@@ -1,25 +1,33 @@
-// src/pages/RecoverAccount.tsx
+// ============================================
+// RECOVER ACCOUNT PAGE
+// Password reset via recovery link
+// ============================================
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useToast } from '../../hooks/useToast';
-import Button from '../../components/ui/Button';
-import Input from '../../components/ui/Input';
 import Container from '../../components/layout/Container';
 import { LoadingOverlay } from '../../components/ui/Loading';
 
-type RecoveryStep = 'verify' | 'reset' | 'success';
+// Import modular step components
+import PasswordResetVerifyStep from './components/PasswordResetVerifyStep';
+import PasswordResetFormStep from './components/PasswordResetFormStep';
+import PasswordResetSuccessStep from './components/PasswordResetSuccessStep';
+
+// Import types
+import type { PasswordResetStep, PasswordResetData } from './types/password-reset.types';
 
 export default function RecoverAccount() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  // Future: could use useAuth for actual password reset with token
   const { success, error } = useToast();
   
-  const [currentStep, setCurrentStep] = useState<RecoveryStep>('verify');
+  // State management
+  const [currentStep, setCurrentStep] = useState<PasswordResetStep>('verify');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [recoveryData, setRecoveryData] = useState({
+  const [recoveryData, setRecoveryData] = useState<PasswordResetData>({
     email: '',
     newPassword: '',
     confirmPassword: ''
@@ -29,6 +37,10 @@ export default function RecoverAccount() {
   // Extract recovery token and email from URL parameters
   const recoveryToken = searchParams.get('token');
   const recoveryEmail = searchParams.get('email');
+
+  // ============================================
+  // EFFECTS
+  // ============================================
 
   useEffect(() => {
     const verifyToken = async () => {
@@ -59,6 +71,10 @@ export default function RecoverAccount() {
 
     verifyToken();
   }, [recoveryToken, recoveryEmail, error, navigate]);
+
+  // ============================================
+  // EVENT HANDLERS
+  // ============================================
 
   const validatePasswordForm = () => {
     const newErrors: Record<string, string> = {};
@@ -108,132 +124,48 @@ export default function RecoverAccount() {
     }
   };
 
-  const renderVerifyStep = () => (
-    <div className="card card-large">
-      <div className="card-header">
-        <h1>🔍 Recovery-Link wird verifiziert...</h1>
-        <p>Bitte warten Sie, während wir Ihren Recovery-Link überprüfen.</p>
-      </div>
-      <LoadingOverlay message="Verifiziere Recovery-Token..." />
-    </div>
-  );
+  const handlePasswordChange = (field: 'newPassword' | 'confirmPassword', value: string) => {
+    setRecoveryData(prev => ({ ...prev, [field]: value }));
+  };
 
-  const renderResetStep = () => (
-    <div className="card card-large">
-      <div className="card-header">
-        <h1>🔐 Passwort zurücksetzen</h1>
-        <p>Erstellen Sie ein neues Passwort für: <strong>{recoveryData.email}</strong></p>
-      </div>
-      
-      <form onSubmit={handlePasswordReset} className="form">
-        <div className="form-group">
-          <Input
-            label="E-Mail-Adresse"
-            type="email"
-            value={recoveryData.email}
-            disabled
-            readOnly
-          />
-        </div>
-        
-        <div className="form-group">
-          <Input
-            label="Neues Passwort"
-            type="password"
-            value={recoveryData.newPassword}
-            onChange={(e) => setRecoveryData(prev => ({ ...prev, newPassword: e.target.value }))}
-            placeholder="Mindestens 8 Zeichen"
-            error={errors.newPassword}
-            disabled={isSubmitting}
-            required
-            showPasswordToggle={true}
-          />
-        </div>
-        
-        <div className="form-group">
-          <Input
-            label="Neues Passwort bestätigen"
-            type="password"
-            value={recoveryData.confirmPassword}
-            onChange={(e) => setRecoveryData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-            placeholder="Passwort wiederholen"
-            error={errors.confirmPassword}
-            disabled={isSubmitting}
-            required
-            showPasswordToggle={true}
-          />
-        </div>
-        
-        <div className="info-box">
-          <p><strong>💡 Passwort-Tipps:</strong></p>
-          <ul>
-            <li>Mindestens 8 Zeichen lang</li>
-            <li>Kombination aus Buchstaben, Zahlen und Sonderzeichen</li>
-            <li>Vermeiden Sie einfache Wörter oder persönliche Daten</li>
-          </ul>
-        </div>
-        
-        <div className="form-actions">
-          <Button
-            type="submit"
-            disabled={isSubmitting || !recoveryData.newPassword || !recoveryData.confirmPassword}
-          >
-            {isSubmitting ? 'Passwort wird zurückgesetzt...' : 'Passwort zurücksetzen'}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate('/login')}
-            disabled={isSubmitting}
-          >
-            Zur Anmeldung
-          </Button>
-        </div>
-      </form>
-    </div>
-  );
-
-  const renderSuccessStep = () => (
-    <div className="card card-large">
-      <div className="card-header">
-        <div className="success-icon">🎉</div>
-        <h1>Passwort erfolgreich zurückgesetzt!</h1>
-      </div>
-      
-      <div className="card-content">
-        <div className="success-message">
-          <p>Ihr Passwort wurde erfolgreich geändert. Sie können sich jetzt mit Ihrem neuen Passwort anmelden.</p>
-          
-          <div className="info-box">
-            <p><strong>📋 Nächste Schritte:</strong></p>
-            <ul>
-              <li>Melden Sie sich mit Ihrer E-Mail-Adresse und dem neuen Passwort an</li>
-              <li>Überprüfen Sie Ihre Account-Einstellungen</li>
-              <li>Erwägen Sie das Aktivieren der Zwei-Faktor-Authentifizierung</li>
-            </ul>
-          </div>
-        </div>
-        
-        <div className="form-actions">
-          <Button
-            onClick={() => navigate('/')}
-            variant="primary"
-          >
-            Zur Anmeldung
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
+  // ============================================
+  // STEP RENDERING
+  // ============================================
 
   const renderCurrentStep = () => {
     switch (currentStep) {
-      case 'verify': return renderVerifyStep();
-      case 'reset': return renderResetStep();
-      case 'success': return renderSuccessStep();
-      default: return renderVerifyStep();
+      case 'verify':
+        return <PasswordResetVerifyStep />;
+
+      case 'reset':
+        return (
+          <PasswordResetFormStep
+            email={recoveryData.email}
+            newPassword={recoveryData.newPassword}
+            confirmPassword={recoveryData.confirmPassword}
+            errors={errors}
+            isSubmitting={isSubmitting}
+            onPasswordChange={handlePasswordChange}
+            onSubmit={handlePasswordReset}
+            onBackToLogin={() => navigate('/login')}
+          />
+        );
+
+      case 'success':
+        return (
+          <PasswordResetSuccessStep
+            onGoToLogin={() => navigate('/')}
+          />
+        );
+
+      default:
+        return <PasswordResetVerifyStep />;
     }
   };
+
+  // ============================================
+  // RENDER
+  // ============================================
 
   if (isLoading) {
     return (
@@ -248,7 +180,6 @@ export default function RecoverAccount() {
       <div className="page">
         {renderCurrentStep()}
       </div>
-      
     </Container>
   );
 }
