@@ -23,7 +23,7 @@
 @use 'components/mock-data-badge';
 
 // 4. Pages
-@use 'pages/auth/auth-landing';
+@use 'pages/auth/auth-landing/index' as auth-landing;
 @use 'pages/auth/login-corporate';
 @use 'pages/auth/recovery';
 @use 'pages/admin/index' as admin;
