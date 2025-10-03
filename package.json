@@ -14,7 +14,7 @@
     "db:migrate": "node scripts/db/migrate.js",
     "db:seed": "node scripts/db/seed.js",
     "db:cleanup": "node scripts/db/cleanup.js",
-    "db:mark-done": "node scripts/db/mark-done.js",
+    "db:mark-done": "node scripts/db/mark-issues-done-v2.js",
     "db:sql": "node scripts/db/run-sql.js"
   },
   "dependencies": {
