@@ -1,5 +1,5 @@
 // src/pages/admin/AdminUsers.tsx
-// ADVANCED User Management - Refactored & Slim
+// ADVANCED User Management - Refactored with Modular Components
 
 import { useState, useRef } from 'react';
 import AdminLayoutCorporate from '../../components/admin/AdminLayoutCorporate';
@@ -14,6 +14,16 @@ import AdvancedFilters from '../../components/admin/AdvancedFilters';
 import SearchControls from '../../components/admin/SearchControls';
 import RealtimeIndicator from '../../components/admin/RealtimeIndicator';
 import UserTableRow from '../../components/admin/UserTableRow';
+
+// Modal Components
+import UserCreateModal from './components/modals/UserCreateModal';
+import UserEditModal from './components/modals/UserEditModal';
+import UserDeleteModal from './components/modals/UserDeleteModal';
+import BulkActionsModal from './components/modals/BulkActionsModal';
+import ExportModal from './components/modals/ExportModal';
+import AnalyticsModal from './components/modals/AnalyticsModal';
+
+import type { NewUserData, ExportFormat } from './types/admin.types';
 
 export default function AdminUsers() {
   // Core state
@@ -30,20 +40,6 @@ export default function AdminUsers() {
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
-
-  // Form states
-  const [newUserData, setNewUserData] = useState({
-    email: '',
-    password: '',
-    full_name: '',
-    username: '',
-    role: 'user' as 'admin' | 'user' | 'moderator',
-    phone: '',
-    sendWelcomeEmail: true
-  });
-
-  // Advanced features
-  const [exportFormat, setExportFormat] = useState<'csv' | 'json' | 'xlsx'>('csv');
 
   // Refs
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -89,42 +85,24 @@ export default function AdminUsers() {
   const totalPages = Math.ceil(filteredAndSortedUsers.length / pageSize);
 
   // ============================================
-  // CRUD OPERATIONS
+  // MODAL HANDLERS
   // ============================================
 
-  const handleCreateUser = async () => {
-    await createUser(newUserData);
-    setShowCreateModal(false);
-    setNewUserData({
-      email: '',
-      password: '',
-      full_name: '',
-      username: '',
-      role: 'user',
-      phone: '',
-      sendWelcomeEmail: true
-    });
+  const handleCreateUser = async (userData: NewUserData) => {
+    await createUser(userData);
   };
 
-  const handleEditUser = async () => {
-    if (!selectedUser) return;
-    await updateUser(selectedUser);
-    setShowEditModal(false);
-    setSelectedUser(null);
+  const handleEditUser = async (user: UserProfile) => {
+    await updateUser(user);
   };
 
   const handleDeleteUser = async () => {
     if (!selectedUser) return;
     await deleteUser(selectedUser.id);
-    setShowDeleteModal(false);
     setSelectedUser(null);
   };
 
-  // ============================================
-  // EXPORT FUNCTIONALITY
-  // ============================================
-
-  const handleExport = () => {
+  const handleExport = (format: ExportFormat) => {
     const dataToExport = filteredAndSortedUsers.map(user => ({
       id: user.id,
       email: user.email,
@@ -138,7 +116,7 @@ export default function AdminUsers() {
       phone: user.phone
     }));
 
-    if (exportFormat === 'json') {
+    if (format === 'json') {
       const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -146,7 +124,7 @@ export default function AdminUsers() {
       a.download = `users_export_${new Date().toISOString().split('T')[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
-    } else if (exportFormat === 'csv') {
+    } else if (format === 'csv') {
       const headers = Object.keys(dataToExport[0] || {}).join(',');
       const rows = dataToExport.map(row =>
         Object.values(row).map(val =>
@@ -163,8 +141,6 @@ export default function AdminUsers() {
       a.click();
       URL.revokeObjectURL(url);
     }
-
-    setShowExportModal(false);
   };
 
   // ============================================
@@ -367,364 +343,64 @@ export default function AdminUsers() {
           </>
         )}
 
-        {/* Modals */}
-        {showCreateModal && (
-          <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h3>➕ Create New User</h3>
-                <button className="modal-close" onClick={() => setShowCreateModal(false)}>×</button>
-              </div>
-              <div className="modal-body">
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>Email *</label>
-                    <input
-                      type="email"
-                      value={newUserData.email}
-                      onChange={(e) => setNewUserData({...newUserData, email: e.target.value})}
-                      placeholder="user@example.com"
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Password *</label>
-                    <input
-                      type="password"
-                      value={newUserData.password}
-                      onChange={(e) => setNewUserData({...newUserData, password: e.target.value})}
-                      placeholder="Minimum 6 characters"
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Full Name *</label>
-                    <input
-                      type="text"
-                      value={newUserData.full_name}
-                      onChange={(e) => setNewUserData({...newUserData, full_name: e.target.value})}
-                      placeholder="John Doe"
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Username</label>
-                    <input
-                      type="text"
-                      value={newUserData.username}
-                      onChange={(e) => setNewUserData({...newUserData, username: e.target.value})}
-                      placeholder="johndoe"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Role</label>
-                    <select
-                      value={newUserData.role}
-                      onChange={(e) => setNewUserData({...newUserData, role: e.target.value as 'admin' | 'user' | 'moderator'})}
-                    >
-                      <option value="user">User</option>
-                      <option value="moderator">Moderator</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Phone</label>
-                    <input
-                      type="tel"
-                      value={newUserData.phone}
-                      onChange={(e) => setNewUserData({...newUserData, phone: e.target.value})}
-                      placeholder="+49 123 456789"
-                    />
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={newUserData.sendWelcomeEmail}
-                      onChange={(e) => setNewUserData({...newUserData, sendWelcomeEmail: e.target.checked})}
-                    />
-                    Send welcome email to user
-                  </label>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <Button variant="outline" onClick={() => setShowCreateModal(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={handleCreateUser}
-                  disabled={!newUserData.email || !newUserData.password || !newUserData.full_name}
-                >
-                  Create User
-                </Button>
-              </div>
-            </div>
-          </div>
+        {/* Modals - Now as separate components */}
+        <UserCreateModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onCreateUser={handleCreateUser}
+        />
+
+        {selectedUser && (
+          <>
+            <UserEditModal
+              isOpen={showEditModal}
+              onClose={() => {
+                setShowEditModal(false);
+                setSelectedUser(null);
+              }}
+              user={selectedUser}
+              onUpdateUser={handleEditUser}
+            />
+
+            <UserDeleteModal
+              isOpen={showDeleteModal}
+              onClose={() => {
+                setShowDeleteModal(false);
+                setSelectedUser(null);
+              }}
+              user={selectedUser}
+              onDeleteUser={handleDeleteUser}
+            />
+          </>
         )}
 
-        {showEditModal && selectedUser && (
-          <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h3>✏️ Edit User</h3>
-                <button className="modal-close" onClick={() => setShowEditModal(false)}>×</button>
-              </div>
-              <div className="modal-body">
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>Email (read-only)</label>
-                    <input type="email" value={selectedUser.email} disabled />
-                  </div>
-                  <div className="form-group">
-                    <label>Full Name</label>
-                    <input
-                      type="text"
-                      value={selectedUser.full_name || ''}
-                      onChange={(e) => setSelectedUser({...selectedUser, full_name: e.target.value})}
-                      placeholder="John Doe"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Username</label>
-                    <input
-                      type="text"
-                      value={selectedUser.username || ''}
-                      onChange={(e) => setSelectedUser({...selectedUser, username: e.target.value})}
-                      placeholder="johndoe"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Role</label>
-                    <select
-                      value={selectedUser.role || 'user'}
-                      onChange={(e) => setSelectedUser({...selectedUser, role: e.target.value as 'admin' | 'user' | 'moderator'})}
-                    >
-                      <option value="user">User</option>
-                      <option value="moderator">Moderator</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Phone</label>
-                    <input
-                      type="tel"
-                      value={selectedUser.phone || ''}
-                      onChange={(e) => setSelectedUser({...selectedUser, phone: e.target.value})}
-                      placeholder="+49 123 456789"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Status</label>
-                    <select
-                      value={selectedUser.is_active === false ? 'inactive' : 'active'}
-                      onChange={(e) => setSelectedUser({...selectedUser, is_active: e.target.value === 'active'})}
-                    >
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <Button variant="outline" onClick={() => setShowEditModal(false)}>
-                  Cancel
-                </Button>
-                <Button variant="primary" onClick={handleEditUser}>
-                  Update User
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
+        <BulkActionsModal
+          isOpen={showBulkModal}
+          onClose={() => setShowBulkModal(false)}
+          selectedCount={selectedUsers.size}
+          onBulkActivate={handleBulkActivate}
+          onBulkDeactivate={handleBulkDeactivate}
+          onBulkDelete={handleBulkDelete}
+        />
 
-        {showDeleteModal && selectedUser && (
-          <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h3>���️ Delete User</h3>
-                <button className="modal-close" onClick={() => setShowDeleteModal(false)}>×</button>
-              </div>
-              <div className="modal-body">
-                <p>Are you sure you want to delete this user?</p>
-                <div className="user-delete-info">
-                  <strong>{selectedUser.full_name || selectedUser.username || 'Unnamed User'}</strong>
-                  <br />
-                  <small>{selectedUser.email}</small>
-                </div>
-                <p style={{ color: '#dc3545', marginTop: '1rem' }}>
-                  <strong>Warning:</strong> This action cannot be undone. The user will be permanently removed from the system.
-                </p>
-              </div>
-              <div className="modal-footer">
-                <Button variant="outline" onClick={() => setShowDeleteModal(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={handleDeleteUser}
-                  style={{ backgroundColor: '#dc3545', borderColor: '#dc3545' }}
-                >
-                  Delete User
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
+        <ExportModal
+          isOpen={showExportModal}
+          onClose={() => setShowExportModal(false)}
+          totalUsers={filteredAndSortedUsers.length}
+          onExport={handleExport}
+        />
 
-        {showBulkModal && selectedUsers.size > 0 && (
-          <div className="modal-overlay" onClick={() => setShowBulkModal(false)}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h3>⚡ Bulk Actions</h3>
-                <button className="modal-close" onClick={() => setShowBulkModal(false)}>×</button>
-              </div>
-              <div className="modal-body">
-                <p>Apply action to {selectedUsers.size} selected users:</p>
-                <div className="bulk-actions">
-                  <Button variant="success" onClick={handleBulkActivate}>
-                    ✅ Activate Users
-                  </Button>
-                  <Button variant="error" onClick={handleBulkDeactivate}>
-                    ⏸️ Deactivate Users
-                  </Button>
-                  <Button
-                    variant="error"
-                    onClick={handleBulkDelete}
-                    style={{ backgroundColor: '#dc3545', borderColor: '#dc3545' }}
-                  >
-                    ���️ Delete Users
-                  </Button>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <Button variant="outline" onClick={() => setShowBulkModal(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {showExportModal && (
-          <div className="modal-overlay" onClick={() => setShowExportModal(false)}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h3>��� Export Users</h3>
-                <button className="modal-close" onClick={() => setShowExportModal(false)}>×</button>
-              </div>
-              <div className="modal-body">
-                <p>Export {filteredAndSortedUsers.length} users in the current filter:</p>
-                <div className="form-group">
-                  <label>Export Format</label>
-                  <select
-                    value={exportFormat}
-                    onChange={(e) => setExportFormat(e.target.value as 'csv' | 'json' | 'xlsx')}
-                  >
-                    <option value="csv">CSV (Spreadsheet)</option>
-                    <option value="json">JSON (Developer)</option>
-                  </select>
-                </div>
-                <div className="export-preview">
-                  <strong>Columns to export:</strong>
-                  <div className="export-columns">
-                    ID, Email, Full Name, Username, Role, Status, Created At, Last Sign In, Phone
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <Button variant="outline" onClick={() => setShowExportModal(false)}>
-                  Cancel
-                </Button>
-                <Button variant="primary" onClick={handleExport}>
-                  ��� Export {exportFormat.toUpperCase()}
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {showAnalyticsModal && stats && (
-          <div className="modal-overlay" onClick={() => setShowAnalyticsModal(false)}>
-            <div className="modal-content large-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h3>��� User Analytics</h3>
-                <button className="modal-close" onClick={() => setShowAnalyticsModal(false)}>×</button>
-              </div>
-              <div className="modal-body">
-                <div className="analytics-grid">
-                  <div className="analytics-card">
-                    <h4>Growth Metrics</h4>
-                    <div className="metric">
-                      <span className="metric-label">Recent Signups (7d)</span>
-                      <span className="metric-value">{stats.recentSignups}</span>
-                    </div>
-                    <div className="metric">
-                      <span className="metric-label">Active (24h)</span>
-                      <span className="metric-value">{stats.last24h}</span>
-                    </div>
-                    <div className="metric">
-                      <span className="metric-label">Active (7d)</span>
-                      <span className="metric-value">{stats.last7d}</span>
-                    </div>
-                    <div className="metric">
-                      <span className="metric-label">Active (30d)</span>
-                      <span className="metric-value">{stats.last30d}</span>
-                    </div>
-                  </div>
-
-                  <div className="analytics-card">
-                    <h4>User Distribution</h4>
-                    <div className="metric">
-                      <span className="metric-label">Total Users</span>
-                      <span className="metric-value">{stats.total}</span>
-                    </div>
-                    <div className="metric">
-                      <span className="metric-label">Active Users</span>
-                      <span className="metric-value">{stats.active}</span>
-                      <span className="metric-percent">({((stats.active / stats.total) * 100).toFixed(1)}%)</span>
-                    </div>
-                    <div className="metric">
-                      <span className="metric-label">Inactive Users</span>
-                      <span className="metric-value">{stats.inactive}</span>
-                      <span className="metric-percent">({((stats.inactive / stats.total) * 100).toFixed(1)}%)</span>
-                    </div>
-                    <div className="metric">
-                      <span className="metric-label">Pending Users</span>
-                      <span className="metric-value">{stats.pending}</span>
-                      <span className="metric-percent">({((stats.pending / stats.total) * 100).toFixed(1)}%)</span>
-                    </div>
-                  </div>
-
-                  <div className="analytics-card">
-                    <h4>Role Distribution</h4>
-                    <div className="metric">
-                      <span className="metric-label">Administrators</span>
-                      <span className="metric-value">{stats.admins}</span>
-                      <span className="metric-percent">({((stats.admins / stats.total) * 100).toFixed(1)}%)</span>
-                    </div>
-                    <div className="metric">
-                      <span className="metric-label">Moderators</span>
-                      <span className="metric-value">{users.filter(u => u.role === 'moderator').length}</span>
-                    </div>
-                    <div className="metric">
-                      <span className="metric-label">Regular Users</span>
-                      <span className="metric-value">{users.filter(u => !u.role || u.role === 'user').length}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <Button variant="outline" onClick={() => setShowExportModal(true)}>
-                  ��� Export Data
-                </Button>
-                <Button variant="primary" onClick={() => setShowAnalyticsModal(false)}>
-                  Close
-                </Button>
-              </div>
-            </div>
-          </div>
+        {stats && (
+          <AnalyticsModal
+            isOpen={showAnalyticsModal}
+            onClose={() => setShowAnalyticsModal(false)}
+            stats={stats}
+            users={users}
+            onOpenExport={() => {
+              setShowAnalyticsModal(false);
+              setShowExportModal(true);
+            }}
+          />
         )}
       </div>
     </AdminLayoutCorporate>
