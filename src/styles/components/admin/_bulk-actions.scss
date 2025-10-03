@@ -95,7 +95,7 @@
       }
 
       &:hover {
-        background: darken($danger, 10%);
+        background: $danger-600;
         transform: translateY(-1px);
         box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
       }
