@@ -1,5 +1,7 @@
 // Dashboard Corporate - Dark Theme Module
-@use '../abstracts/variables' as *;
+// src/styles/themes/_dark.scss
+
+@use '../abstracts/index' as *;
 
 [data-theme="dark"] {
   // ============================================

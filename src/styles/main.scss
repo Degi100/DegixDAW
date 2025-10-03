@@ -4,8 +4,6 @@
 
 // 1. Abstracts - No CSS output (now using modular index)
 @use 'abstracts/index' as *;
-@use 'abstracts/typography' as *;
-@use 'abstracts/spacing' as *;
 
 // 2. Layout
 @use 'layout/sidebar';

@@ -1,7 +1,7 @@
 // Dashboard Corporate - Main File
 // Dieses Modul importiert alle Dashboard-Corporate-Komponenten
 
-@use '../../abstracts/variables' as *;
+@use '../../abstracts/index' as *;
 // Import all modules (muss vor allen anderen Regeln stehen)
 @use 'dashboard-header';
 @use 'dashboard-profile';
