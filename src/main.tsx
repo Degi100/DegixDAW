@@ -38,6 +38,7 @@ import AdminRoute from './components/admin/AdminRoute';
 
 const AdminDashboardCorporate = lazy(() => import('./pages/admin/AdminDashboardCorporate'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 
 
 
@@ -156,6 +157,16 @@ const router = createBrowserRouter([
       <Suspense fallback={<PageLoader />}>
         <AdminRoute>
           <AdminUsers />
+        </AdminRoute>
+      </Suspense>
+    ) 
+  },
+  { 
+    path: '/admin/settings', 
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <AdminRoute>
+          <AdminSettings />
         </AdminRoute>
       </Suspense>
     ) 
