@@ -1,12 +1,13 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js';
 import { useAuth } from '../useAuth';
-import { useProfile } from '../useProfile';
 import { useToast } from '../useToast';
+import { deleteAccount } from '../../lib/profile/profileActions';
 
 export function useAccountSection(user: User | null) {
+  const navigate = useNavigate();
   const { signOut } = useAuth();
-  const { deleteAccount } = useProfile(user);
   const { success, error: showError } = useToast();
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -27,7 +28,7 @@ export function useAccountSection(user: User | null) {
 
   const handleDeleteAccount = async () => {
     try {
-      const result = await deleteAccount();
+      const result = await deleteAccount(user?.id || '', navigate);
       if (result.success) {
         success('Konto erfolgreich gelöscht 🗑️');
       } else {

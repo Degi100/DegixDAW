@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { useProfile } from '../useProfile';
 import { useToast } from '../useToast';
 import { supabase } from '../../lib/supabase';
+import { updatePassword, updateEmail } from '../../lib/profile/profileActions';
 import type { SecurityDataState, EmailChangeInfo } from '../../components/settings/types/settings';
 
 export function useSecuritySection(user: User | null) {
-  const { updatePassword, updateEmail } = useProfile(user);
   const { success, error: showError } = useToast();
 
   const [isUpdating, setIsUpdating] = useState(false);
@@ -48,7 +47,11 @@ export function useSecuritySection(user: User | null) {
     }
     setIsUpdating(true);
     try {
-      const result = await updatePassword(securityData.currentPassword, securityData.newPassword);
+      const result = await updatePassword(
+        user?.email || '',
+        securityData.currentPassword, 
+        securityData.newPassword
+      );
       if (result.success) {
         success('Passwort erfolgreich geändert! 🔑');
         setSecurityData(prev => ({ ...prev, currentPassword: '', newPassword: '', confirmPassword: '' }));
@@ -71,7 +74,11 @@ export function useSecuritySection(user: User | null) {
     }
     setIsUpdating(true);
     try {
-      const result = await updateEmail(securityData.newEmail, securityData.currentPassword);
+      const result = await updateEmail(
+        user?.email || '',
+        securityData.newEmail, 
+        securityData.currentPassword
+      );
       if (result.success) {
         setEmailChangeInfo({ oldEmail: user?.email || '', newEmail: securityData.newEmail });
         setShowEmailInfo(true);

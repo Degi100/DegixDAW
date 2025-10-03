@@ -2,7 +2,7 @@
 import type { User } from '@supabase/supabase-js';
 import { useState } from 'react';
 import { useForm } from '../../hooks/useForm';
-import { useProfile } from '../../hooks/useProfile';
+import { updateProfile } from '../../lib/profile/profileActions';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import { checkUsernameExists, supabase } from '../../lib/supabase';
@@ -46,7 +46,6 @@ export default function ProfileEditor({ user, onSave, isUpdating }: ProfileEdito
   const allowUsernameEdit = usernameCanChange && !usernameChanged;
   const [newUsername, setNewUsername] = useState(user.user_metadata?.username || '');
   const [usernameError, setUsernameError] = useState('');
-  const { updateProfile } = useProfile(user);
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNewUsername(e.target.value);
@@ -67,7 +66,7 @@ export default function ProfileEditor({ user, onSave, isUpdating }: ProfileEdito
       return;
     }
     // Username speichern und Flags setzen/entfernen
-    await updateProfile({ username: newUsername, full_name: user.user_metadata?.full_name || '' });
+    await updateProfile(user.id, { username: newUsername, full_name: user.user_metadata?.full_name || '' });
     // Schreibe die Flags ins Auth-Metadata
     await supabase.auth.updateUser({ data: { username_changed: true, username_can_change: false } });
     setUsernameError('');

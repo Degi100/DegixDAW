@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { useProfile } from '../useProfile';
 import { useToast } from '../useToast';
 import { supabase } from '../../lib/supabase';
+import { updateProfile } from '../../lib/profile/profileActions';
 import type { ProfileDataState } from '../../components/settings/types/settings';
 
 export function useProfileSection(user: User | null) {
-  const { updateProfile } = useProfile(user);
   const { success, error: showError } = useToast();
 
   const [isUpdating, setIsUpdating] = useState(false);
@@ -74,12 +73,17 @@ export function useProfileSection(user: User | null) {
     setIsUpdating(true);
     try {
       const fullName = `${profileData.firstName} ${profileData.lastName}`.trim();
-      await updateProfile({
+      const result = await updateProfile(user?.id || '', {
         full_name: fullName || profileData.fullName,
         username: profileData.username
       });
-      setProfileData(prev => ({ ...prev, fullName: fullName || prev.fullName }));
-      success('Profil erfolgreich gespeichert! ✅');
+      
+      if (result.success) {
+        setProfileData(prev => ({ ...prev, fullName: fullName || prev.fullName }));
+        success('Profil erfolgreich gespeichert! ✅');
+      } else {
+        showError(result.error?.message || 'Fehler beim Speichern');
+      }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
       showError(`Fehler beim Speichern: ${errorMessage}`);

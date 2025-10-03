@@ -6,8 +6,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { useProfile } from '../../hooks/useProfile';
 import { useToast } from '../../hooks/useToast';
+import { updateProfile } from '../../lib/profile/profileActions';
 import Container from '../../components/layout/Container';
 import UsernameSuggestions from '../../components/ui/UsernameSuggestions';
 import { APP_FULL_NAME, EMOJIS } from '../../lib/constants';
@@ -20,7 +20,6 @@ import UsernameActionButtons from './components/UsernameActionButtons';
 
 export default function UsernameOnboarding() {
   const { user } = useAuth();
-  const { updateProfile } = useProfile(user);
   const { success, error } = useToast();
   const navigate = useNavigate();
   
@@ -108,7 +107,7 @@ export default function UsernameOnboarding() {
       }
 
       // Update profile first
-      const profileResult = await updateProfile({
+      const profileResult = await updateProfile(user?.id || '', {
         full_name: user?.user_metadata?.full_name || '',
         username: username.trim()
       });
@@ -169,7 +168,7 @@ export default function UsernameOnboarding() {
         return;
       }
       
-      await updateProfile({
+      await updateProfile(user?.id || '', {
         full_name: user?.user_metadata?.full_name || '',
         username: username.trim()
       });
