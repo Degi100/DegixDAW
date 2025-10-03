@@ -93,21 +93,24 @@ export function useUserData() {
     sendWelcomeEmail: boolean;
   }) => {
     try {
-      const { data, error: createError } = await supabase.auth.admin.createUser({
+      // WORKAROUND: Admin API requires service role key
+      // Use regular signUp + auto-signout approach
+      const { data, error: createError } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
-        user_metadata: {
-          full_name: userData.full_name,
-          username: userData.username,
-          role: userData.role,
-          phone: userData.phone
-        },
-        email_confirm: true
+        options: {
+          data: {
+            full_name: userData.full_name,
+            username: userData.username,
+            role: userData.role,
+            phone: userData.phone
+          }
+        }
       });
 
       if (createError) throw createError;
 
-      // Update profile with additional data
+      // Update profile with role (admin only can set roles)
       if (data.user) {
         const { error: profileError } = await supabase
           .from('profiles')
@@ -123,11 +126,12 @@ export function useUserData() {
         if (profileError) console.warn('Profile update warning:', profileError);
       }
 
-      success('User created successfully!');
+      success('✅ User invited successfully! They will receive a confirmation email.');
       loadUsers();
     } catch (err) {
       console.error('Error creating user:', err);
-      error('Failed to create user');
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+      error(`❌ Failed to create user: ${errorMsg}`);
     }
   }, [success, error, loadUsers]);
 

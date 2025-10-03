@@ -79,7 +79,7 @@ export default function ForgotPassword() {
             {/* Actions */}
             <div className="space-y-3">
               <Button
-                onClick={() => navigate('/login')}
+                onClick={() => navigate('/')}
                 variant="outline"
                 className="w-full"
               >
@@ -146,7 +146,7 @@ export default function ForgotPassword() {
           <div className="mt-6 pt-6 border-t border-gray-200 text-center space-y-3">
             <Button
               variant="outline"
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/')}
               className="text-sm"
             >
               ← Zurück zur Anmeldung
@@ -154,7 +154,7 @@ export default function ForgotPassword() {
             
             <p className="text-xs text-gray-500">
               Haben Sie Ihr Passwort wieder? <button 
-                onClick={() => navigate('/login')} 
+                onClick={() => navigate('/')} 
                 className="text-blue-600 hover:text-blue-700 font-medium"
               >
                 Jetzt anmelden

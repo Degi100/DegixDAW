@@ -147,7 +147,7 @@ export default function RecoverAccount() {
             isSubmitting={isSubmitting}
             onPasswordChange={handlePasswordChange}
             onSubmit={handlePasswordReset}
-            onBackToLogin={() => navigate('/login')}
+            onBackToLogin={() => navigate('/')}
           />
         );
 

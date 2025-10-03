@@ -102,7 +102,7 @@ export default function AuthLanding() {
       const result = await signInWithEmail(loginData.email, loginData.password);
 
       if (result.success) {
-        success('Successfully logged in! 🎉');
+        // Welcome message wird von useWelcomeMessage Hook angezeigt
         navigate('/dashboard');
       } else {
         showError(result.error?.message || 'Login failed');
