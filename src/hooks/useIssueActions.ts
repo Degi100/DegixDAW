@@ -77,21 +77,13 @@ export function useIssueActions() {
   };
 
   const handlePriorityChange = async (issueId: string, newPriority: Issue['priority']) => {
-    const result = await updateIssue(issueId, { priority: newPriority });
-    if (result.success) {
-      showSuccess(`Priorität auf ${priorityConfig[newPriority].label} geändert`);
-    }
+    // Optimistic update in useIssues provides instant feedback
+    await updateIssue(issueId, { priority: newPriority });
   };
 
   const handleStatusProgress = async (issueId: string, newStatus: Issue['status']) => {
-    const result = await updateIssue(issueId, { status: newStatus });
-    if (result.success) {
-      const messages = {
-        'in-progress': 'Issue in Bearbeitung',
-        'done': 'Issue als erledigt markiert',
-      };
-      showSuccess(messages[newStatus as keyof typeof messages] || 'Status aktualisiert');
-    }
+    // Optimistic update in useIssues provides instant feedback
+    await updateIssue(issueId, { status: newStatus });
   };
 
   const handleExportClick = (issues: Issue[]) => {

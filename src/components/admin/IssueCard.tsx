@@ -102,7 +102,7 @@ export default function IssueCard({
           <option value="critical">🚨 Critical</option>
         </select>
         <span 
-          className="issue-card__badge"
+          className={`issue-card__badge issue-card__badge--${issue.status}`}
           style={{
             background: statusConfig[issue.status].bg,
             color: statusConfig[issue.status].color,

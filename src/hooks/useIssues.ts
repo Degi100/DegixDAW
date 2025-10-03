@@ -114,6 +114,13 @@ export function useIssues() {
   // Update existing issue
   const updateIssue = useCallback(async (id: string, updates: Partial<Issue>) => {
     try {
+      // Optimistic update: Update UI immediately
+      const optimisticIssue = { ...updates, updated_at: new Date().toISOString() };
+      
+      setIssues(prev => prev.map(issue => 
+        issue.id === id ? { ...issue, ...optimisticIssue } : issue
+      ));
+
       const { data, error: updateError } = await supabase
         .from('issues')
         .update(updates)
@@ -123,15 +130,18 @@ export function useIssues() {
 
       if (updateError) throw updateError;
 
+      // Sync with server response
       setIssues(prev => prev.map(issue => issue.id === id ? data : issue));
-      success('Issue aktualisiert! ✅');
+      
       return { success: true, data };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update issue';
       showError(errorMessage);
+      // Revert optimistic update by reloading
+      loadIssues();
       return { success: false, error: errorMessage };
     }
-  }, [success, showError]);
+  }, [showError, loadIssues]);
 
   // Delete issue
   const deleteIssue = useCallback(async (id: string) => {
