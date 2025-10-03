@@ -74,6 +74,19 @@ export function useIssueActions(
   };
 
   const handleCopyClick = async (issue: Issue) => {
+    // Copy issue text to clipboard
+    const textToCopy = `${issue.title}\n\n${issue.description || 'Keine Beschreibung'}`;
+    
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      showSuccess('Text in Zwischenablage kopiert! 📋');
+    } catch {
+      showError('Fehler beim Kopieren in die Zwischenablage');
+    }
+  };
+
+  const handleDuplicateClick = async (issue: Issue) => {
+    // Duplicate issue (create new copy)
     const copiedIssue = {
       title: `${issue.title} (Kopie)`,
       description: issue.description || '',
@@ -84,9 +97,9 @@ export function useIssueActions(
     
     const result = await createIssue(copiedIssue);
     if (result.success) {
-      showSuccess('Issue erfolgreich kopiert');
+      showSuccess('Issue erfolgreich dupliziert');
     } else {
-      showError('Fehler beim Kopieren des Issues');
+      showError('Fehler beim Duplizieren des Issues');
     }
   };
 
@@ -226,6 +239,7 @@ export function useIssueActions(
     handleDeleteClick,
     handleModalSubmit,
     handleCopyClick,
+    handleDuplicateClick,
     handlePriorityChange,
     handleStatusProgress,
     handleExportClick,
