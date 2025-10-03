@@ -15,6 +15,7 @@ interface AdminLayoutProps {
 const navItems = [
   { path: "/admin", icon: "📊", label: "Übersicht" },
   { path: "/admin/users", icon: "👥", label: "Users" },
+  { path: "/admin/issues", icon: "🐛", label: "Issues" },
   { path: "/admin/settings", icon: "⚙️", label: "Settings" }
 ];
 
