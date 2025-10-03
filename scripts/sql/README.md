@@ -18,11 +18,18 @@ Dieses Verzeichnis enthält alle SQL-Skripte für die Datenbank-Einrichtung und 
 
 ## 🔧 Maintenance Scripts
 
-### `cleanup_issues.sql`
-**Duplikate entfernen**
+### `safety_check_issues.sql` ⭐ NEW
+**Cleanup Vorschau (SICHER)**
+- Zeigt was gelöscht werden würde
+- Preview ohne Änderungen
+- **Führe DIES ZUERST aus!**
+
+### `cleanup_issues.sql` ⚠️
+**Duplikate entfernen (DESTRUCTIVE)**
 - Findet doppelte Issues
 - Löscht Duplikate (behält ältesten Eintrag)
 - Verifiziert Cleanup
+- **Siehe `CLEANUP_ANLEITUNG.md` für Details!**
 
 ### `set_admin_flag.sql`
 **Admin-Flag setzen**
