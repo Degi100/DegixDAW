@@ -61,6 +61,20 @@
   white-space: nowrap;
 }
 
+.brand-container {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-1;
+}
+
+.app-version {
+  font-size: $font-size-xs;
+  color: $gray-500;
+  font-weight: $font-weight-normal;
+  margin-left: $spacing-1;
+  user-select: none;
+}
+
 .admin-badge {
   background: $primary-600;
   color: $white;

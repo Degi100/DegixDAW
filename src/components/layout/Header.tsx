@@ -70,16 +70,19 @@ export default function Header({
     <header className="global-header">
       <div className="header-container header-row">
         {/* Alles in einer Reihe: Branding (Icon), Navigation, User, Theme */}
-        <Link
-          to="/"
-          className="brand-link compact"
-          aria-label="Go to Dashboard"
-        >
-          <span className="brand-icon">{currentBrand.icon}</span>
-          {showAdminBadge && adminLevel && adminLevel.trim() && (
-            <span className="admin-badge compact">{adminLevel.replace('_', ' ')}</span>
-          )}
-        </Link>
+        <div className="brand-container">
+          <Link
+            to="/"
+            className="brand-link compact"
+            aria-label="Go to Dashboard"
+          >
+            <span className="brand-icon">{currentBrand.icon}</span>
+            {showAdminBadge && adminLevel && adminLevel.trim() && (
+              <span className="admin-badge compact">{adminLevel.replace('_', ' ')}</span>
+            )}
+          </Link>
+          <span className="app-version">v{APP_CONFIG.version}</span>
+        </div>
 
         <HeaderNav navItems={filteredNavItems} />
 

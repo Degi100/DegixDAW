@@ -1,12 +1,14 @@
 // src/lib/constants/app.ts
 // Application-wide constants and branding
 
+import packageJson from '../../../package.json';
+
 export const APP_CONFIG = {
   name: 'DegixDAW',
   fullName: '🎧 DegixDAW',
   tagline: 'Professional Digital Audio Workstation',
   description: 'Collaborative music production platform for professionals',
-  version: '1.0.0',
+  version: packageJson.version,
 } as const;
 
 export const EMOJIS = {

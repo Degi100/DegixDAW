@@ -34,8 +34,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <Container>
           <div className="admin-header-content">
             <div className="admin-branding">
-              <h1>🛡️ {APP_CONFIG.name} Admin</h1>
-              <span className="admin-badge">{adminLevel.replace('_', ' ').toUpperCase()}</span>
+              <div className="admin-branding-main">
+                <h1>🛡️ {APP_CONFIG.name} Admin</h1>
+                <span className="admin-badge">{adminLevel.replace('_', ' ').toUpperCase()}</span>
+              </div>
+              <span className="app-version">v{APP_CONFIG.version}</span>
             </div>
             
             <div className="admin-user-info">

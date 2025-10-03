@@ -5,6 +5,101 @@
 @use '../../abstracts/index' as *;
 
 // ============================================
+// ADMIN LAYOUT HEADER
+// ============================================
+
+.admin-header {
+  background: var(--theme-bg-primary);
+  border-bottom: 1px solid var(--theme-border);
+  padding: var(--spacing-lg) 0;
+  margin-bottom: var(--spacing-xl);
+  box-shadow: var(--theme-shadow);
+  transition: var(--transition);
+}
+
+.admin-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-lg);
+
+  @media (max-width: 767px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.admin-branding {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+
+  .admin-branding-main {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+
+    h1 {
+      font-size: var(--font-size-xl);
+      font-weight: 700;
+      color: var(--theme-text-primary);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+
+      @media (max-width: 767px) {
+        font-size: var(--font-size-lg);
+      }
+    }
+  }
+
+  .admin-badge {
+    background: $primary-600;
+    color: $white;
+    padding: $spacing-xs $spacing-sm;
+    border-radius: $radius-full;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+  }
+
+  .app-version {
+    font-size: $font-size-xs;
+    color: $gray-500;
+    font-weight: $font-weight-normal;
+    margin-left: $spacing-2;
+    user-select: none;
+  }
+}
+
+.admin-user-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+
+  @media (max-width: 767px) {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+.admin-user-email {
+  color: var(--theme-text-secondary);
+  font-size: var(--font-size-sm);
+
+  @media (max-width: 767px) {
+    display: none;
+  }
+}
+
+.admin-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+// ============================================
 // MODERN ADMIN HEADER
 // ============================================
 

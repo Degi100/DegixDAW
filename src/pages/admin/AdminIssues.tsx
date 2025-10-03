@@ -6,7 +6,6 @@ import AdminLayoutCorporate from '../../components/admin/AdminLayoutCorporate';
 import { useIssues } from '../../hooks/useIssues';
 import { Spinner } from '../../components/ui/Loading';
 import IssueModal from '../../components/admin/IssueModal';
-import IssueActions from '../../components/admin/IssueActions';
 import IssueStatsCards from '../../components/admin/IssueStatsCards';
 import IssueFilters from '../../components/admin/IssueFilters';
 import IssueList from '../../components/admin/IssueList';
@@ -145,14 +144,6 @@ export default function AdminIssues() {
   return (
     <AdminLayoutCorporate>
       <div className="admin-issues">
-        <IssueActions
-          totalIssues={stats.total}
-          onExport={() => handleExportClick(sortedIssues)}
-          onSaveMarkdown={() => handleSaveMarkdown(sortedIssues)}
-          onRefresh={refresh}
-          onCreateNew={handleCreateClick}
-        />
-
         <IssueStatsCards stats={stats} />
 
         <IssueFilters
