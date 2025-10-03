@@ -13,7 +13,7 @@ import IssueList from '../../components/admin/IssueList';
 import { useIssueActions } from '../../hooks/useIssueActions';
 
 export default function AdminIssues() {
-  const { loading, filterIssues, getStats, refresh } = useIssues();
+  const { loading, filterIssues, getStats, refresh, createIssue, updateIssue, deleteIssue } = useIssues();
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,7 +33,7 @@ export default function AdminIssues() {
     handleStatusProgress,
     handleExportClick,
     handleSaveMarkdown,
-  } = useIssueActions();
+  } = useIssueActions(createIssue, updateIssue, deleteIssue, getStats);
 
   const filteredIssues = filterIssues({
     status: statusFilter === 'all' ? undefined : statusFilter,

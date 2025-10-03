@@ -2,8 +2,7 @@
 // Custom hook for all issue action handlers
 
 import { useState } from 'react';
-import { useIssues } from './useIssues';
-import type { Issue } from './useIssues';
+import type { Issue, NewIssue } from './useIssues';
 import type { IssueFormData } from '../components/admin/IssueModal';
 import { useToast } from './useToast';
 
@@ -15,8 +14,23 @@ const priorityConfig: Record<Issue['priority'], { emoji: string; color: string; 
   low: { emoji: '🟢', color: '#16a34a', label: 'Low' },
 };
 
-export function useIssueActions() {
-  const { createIssue, updateIssue, deleteIssue, getStats } = useIssues();
+interface IssueStats {
+  total: number;
+  open: number;
+  inProgress: number;
+  done: number;
+  closed: number;
+  highPriority: number;
+  criticalPriority: number;
+  urgentCount: number;
+}
+
+export function useIssueActions(
+  createIssue: (data: NewIssue) => Promise<{ success: boolean; data?: Issue; error?: string }>,
+  updateIssue: (id: string, updates: Partial<Issue>) => Promise<{ success: boolean; data?: Issue; error?: string }>,
+  deleteIssue: (id: string) => Promise<{ success: boolean; error?: string }>,
+  getStats: () => IssueStats
+) {
   const { success: showSuccess, error: showError } = useToast();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
