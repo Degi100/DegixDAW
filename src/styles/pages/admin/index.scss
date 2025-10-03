@@ -1,0 +1,14 @@
+// ============================================
+// ADMIN CORPORATE - MODULAR INDEX
+// ============================================
+// This file aggregates all admin-corporate modules
+// for clean, maintainable imports
+
+@forward 'admin-base';
+@forward 'admin-header';
+@forward 'admin-users-table';
+@forward 'admin-components';
+@forward 'admin-modals';
+@forward 'admin-settings';
+@forward 'admin-dashboard';
+@forward 'admin-system';

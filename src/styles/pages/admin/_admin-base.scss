@@ -1,0 +1,260 @@
+// ============================================
+// ADMIN BASE - Layout & Theme
+// ============================================
+
+@use '../../abstracts/index' as *;
+
+// ============================================
+// THEME SUPPORT
+// ============================================
+
+.admin-layout {
+  min-height: 100vh;
+  background: var(--theme-bg-secondary);
+  transition: var(--transition);
+}
+
+.admin-users,
+.admin-settings,
+.admin-dashboard-corporate {
+  &.dark {
+    --theme-bg-primary: var(--dark-bg-primary);
+    --theme-bg-secondary: var(--dark-bg-secondary);
+    --theme-bg-tertiary: var(--dark-bg-tertiary);
+    --theme-text-primary: var(--dark-text-primary);
+    --theme-text-secondary: var(--dark-text-secondary);
+    --theme-text-tertiary: var(--dark-text-tertiary);
+    --theme-border: var(--dark-border);
+    --theme-border-light: var(--dark-border-light);
+    --theme-shadow: var(--dark-shadow);
+    --theme-shadow-lg: var(--dark-shadow-lg);
+  }
+}
+
+.admin-body {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+  color: var(--theme-text-primary);
+  transition: var(--transition);
+
+  @media (min-width: $breakpoint-md) {
+    padding: var(--spacing-xl);
+  }
+}
+
+// ============================================
+// LAYOUT - Mobile First
+// ============================================
+
+.admin-content {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+
+  @media (min-width: $breakpoint-md) {
+    flex-direction: row;
+    
+    .admin-sidebar {
+      flex: 0 0 250px;
+    }
+
+    .admin-main {
+      flex: 1;
+    }
+  }
+}
+
+.admin-sidebar {
+  background: var(--theme-bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--theme-shadow);
+  padding: var(--spacing-lg);
+  border: 1px solid var(--theme-border);
+  transition: var(--transition);
+
+  @media (max-width: 767px) {
+    order: -1;
+    padding: var(--spacing-md);
+  }
+}
+
+.admin-main {
+  background: var(--theme-bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--theme-shadow);
+  padding: var(--spacing-lg);
+  transition: var(--transition);
+
+  @media (min-width: $breakpoint-md) {
+    padding: var(--spacing-xl);
+  }
+}
+
+// ============================================
+// NAVIGATION
+// ============================================
+
+.admin-nav {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+
+  @media (max-width: 767px) {
+    gap: $spacing-md;
+  }
+}
+
+.admin-nav-section {
+  margin-bottom: $spacing-xl;
+
+  @media (max-width: 767px) {
+    margin-bottom: $spacing-lg;
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.admin-nav-section-title {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--theme-text-tertiary);
+  margin-bottom: var(--spacing-md);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: var(--transition);
+
+  @media (max-width: 767px) {
+    font-size: var(--font-size-xs);
+    margin-bottom: var(--spacing-sm);
+  }
+}
+
+.admin-nav-link {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--theme-text-secondary);
+  transition: var(--transition);
+  font-weight: 500;
+
+  @media (max-width: 767px) {
+    padding: var(--spacing-lg) var(--spacing-md);
+    gap: var(--spacing-lg);
+    font-size: var(--font-size-base);
+    margin-bottom: var(--spacing-xs);
+  }
+
+  &:hover {
+    background: var(--theme-bg-tertiary);
+    color: var(--primary-color);
+    transform: translateX(2px);
+  }
+
+  &.active {
+    background: var(--primary-color);
+    color: var(--white);
+    box-shadow: 0 2px 8px rgba(30, 64, 175, 0.2);
+  }
+}
+
+// ============================================
+// LOADING STATES
+// ============================================
+
+.admin-loading,
+.no-users {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--theme-text-secondary);
+  background: var(--theme-bg-primary);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-lg);
+  margin: var(--spacing-lg) 0;
+  transition: var(--transition);
+
+  p {
+    margin: 0;
+    font-size: var(--font-size-base);
+    font-weight: 500;
+  }
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--theme-border);
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto $spacing-md auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// ============================================
+// NOTICE & ERROR STATES
+// ============================================
+
+.admin-notice {
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.1), rgba(30, 64, 175, 0.1));
+  border: 1px solid rgba(30, 64, 175, 0.3);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-md);
+  font-size: var(--font-size-sm);
+  color: var(--theme-text-primary);
+  transition: var(--transition);
+
+  strong {
+    color: var(--primary-color);
+  }
+}
+
+.admin-error {
+  background: var(--theme-bg-primary);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  text-align: center;
+  box-shadow: var(--theme-shadow);
+  transition: var(--transition);
+
+  h3 {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--theme-text-primary);
+    margin: 0 0 var(--spacing-md) 0;
+  }
+
+  p {
+    color: var(--theme-text-secondary);
+    font-size: var(--font-size-base);
+    margin: 0 0 var(--spacing-lg) 0;
+  }
+
+  .retry-button {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+
+    &:hover {
+      background: var(--primary-light);
+      transform: translateY(-1px);
+    }
+  }
+}

@@ -1,0 +1,11 @@
+// ============================================
+// AUTH LANDING - MODULAR INDEX
+// ============================================
+// This file aggregates all auth-landing modules
+// for clean, maintainable imports
+
+@forward 'auth-landing-base';
+@forward 'auth-landing-header';
+@forward 'auth-landing-hero';
+@forward 'auth-landing-form';
+@forward 'auth-landing-theme';

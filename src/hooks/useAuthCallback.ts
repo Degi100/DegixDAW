@@ -31,13 +31,26 @@ export function useAuthCallback() {
             navigate('/login');
           } else if (session?.user) {
             const user = session.user;
-            const hasUsername = !!user.user_metadata?.username;
-            const needsOnboarding = user.user_metadata?.needs_username_onboarding;
-            const isNewUser = !hasUsername || needsOnboarding;
-            if (isNewUser) {
+            
+            // Check if user needs onboarding (no profile = needs onboarding)
+            try {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('username')
+                .eq('user_id', user.id)
+                .single();
+              
+              if (!profile) {
+                // No profile found - user needs onboarding
+                navigate('/onboarding/username');
+              } else {
+                // Profile exists - user is already onboarded
+                navigate('/dashboard');
+              }
+            } catch (error) {
+              console.warn('Error checking profile for onboarding:', error);
+              // If we can't check the profile, assume user needs onboarding for safety
               navigate('/onboarding/username');
-            } else {
-              navigate('/dashboard');
             }
           } else {
             navigate('/login');

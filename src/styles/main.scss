@@ -1,0 +1,32 @@
+// ============================================
+// Main SCSS Entry Point - Corporate Theme
+// ============================================
+
+// 1. Abstracts - No CSS output (now using modular index)
+@use 'abstracts/index' as *;
+
+// 2. Layout
+@use 'layout/sidebar';
+@use 'layout/responsive';
+
+// 3. Components
+@use 'components/forms/forms-core';
+@use 'components/forms/forms';
+@use 'components/forms/inputs';
+@use 'components/forms/auth-forms';
+@use 'components/ui/buttons';
+@use 'components/ui/cards';
+@use 'components/ui/modals';
+@use 'components/layout/header/index' as header;
+@use 'components/mock-data-badge';
+
+// 4. Pages
+@use 'pages/auth/auth-landing/index' as auth-landing;
+@use 'pages/auth/login-corporate';
+@use 'pages/auth/recovery';
+@use 'pages/admin/index' as admin;
+@use 'pages/dashboard/dashboard-corporate';
+@use 'pages/settings/user-settings/index' as user-settings;
+
+// 5. Themes
+@use 'themes/dark';

@@ -33,7 +33,9 @@ export function getAuthCallbackUrl(): string {
  * Get recovery callback URL for password reset
  */
 export function getRecoveryCallbackUrl(): string {
-  return `${getBaseUrl()}/auth/callback`;
+  const url = `${getBaseUrl()}/auth/recover`;
+  console.log('🔍 Recovery URL:', JSON.stringify(url), 'Length:', url.length);
+  return url.trim(); // Trim any whitespace
 }
 
 /**

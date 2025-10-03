@@ -1,5 +1,5 @@
 // src/components/profile/EmailChanger.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFormToggle } from '../../hooks/useFormToggle';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
@@ -16,12 +16,26 @@ export default function EmailChanger({ currentEmail, onChangeEmail, isUpdating }
   const [currentPassword, setCurrentPassword] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  useEffect(() => {
+    if (!isViewMode) {
+      // Small delay to ensure the input is rendered
+      setTimeout(() => {
+        const input = document.querySelector('input[type="email"][placeholder="ihre.neue@email.com"]') as HTMLInputElement;
+        input?.focus();
+      }, 100);
+    }
+  }, [isViewMode]);
+
+  const isValidEmail = (email: string): boolean => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     
     if (!newEmail.trim()) {
       newErrors.newEmail = 'Neue E-Mail-Adresse ist erforderlich';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+    } else if (!isValidEmail(newEmail)) {
       newErrors.newEmail = 'Ungültige E-Mail-Adresse';
     } else if (newEmail === currentEmail) {
       newErrors.newEmail = 'Die neue E-Mail-Adresse muss sich von der aktuellen unterscheiden';
@@ -92,20 +106,13 @@ export default function EmailChanger({ currentEmail, onChangeEmail, isUpdating }
       <form onSubmit={handleSubmit} className="form">
         <div className="form-group">
           <Input
-            label="Aktuelle E-Mail-Adresse"
-            type="email"
-            value={currentEmail}
-            disabled
-            readOnly
-          />
-        </div>
-
-        <div className="form-group">
-          <Input
             label="Neue E-Mail-Adresse"
             type="email"
             value={newEmail}
-            onChange={(e) => setNewEmail(e.target.value)}
+            onChange={(e) => {
+              setNewEmail(e.target.value);
+              setErrors(prev => ({ ...prev, newEmail: '' }));
+            }}
             placeholder="ihre.neue@email.com"
             error={errors.newEmail}
             disabled={isUpdating}
@@ -118,11 +125,15 @@ export default function EmailChanger({ currentEmail, onChangeEmail, isUpdating }
             label="Aktuelles Passwort zur Bestätigung"
             type="password"
             value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
+            onChange={(e) => {
+              setCurrentPassword(e.target.value);
+              setErrors(prev => ({ ...prev, currentPassword: '' }));
+            }}
             placeholder="Ihr aktuelles Passwort"
             error={errors.currentPassword}
             disabled={isUpdating}
             required
+            showPasswordToggle={true}
           />
         </div>
 

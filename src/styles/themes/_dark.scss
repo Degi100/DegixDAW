@@ -1,0 +1,218 @@
+// Dashboard Corporate - Dark Theme Module
+// src/styles/themes/_dark.scss
+
+@use '../abstracts/index' as *;
+
+[data-theme="dark"] {
+  // ============================================
+  // GLOBAL DARK THEME
+  // ============================================
+  
+  html, body {
+    background: $dark-bg-primary;
+    color: $dark-text-primary;
+  }
+  
+  // ============================================
+  // DASHBOARD SPECIFIC
+  // ============================================
+  
+  .dashboard-corporate {
+    background: linear-gradient(135deg, $dark-bg-primary 0%, $dark-bg-secondary 100%);
+  }
+  
+  .welcome-card-corporate,
+  .feature-card-corporate,
+  .project-card-corporate,
+  .projects-stats {
+    background: $dark-bg-2;
+    border-color: $dark-border;
+  }
+  
+  .guest-hero {
+    background: $dark-bg-2;
+    border-color: $dark-border;
+  }
+  
+  .profile-section {
+    border-color: $dark-border;
+  }
+  
+  .actions-section {
+    background: $dark-bg-1;
+  }
+  
+  .stats-section {
+    background: $dark-border;
+  }
+  
+  .stat-card {
+    background: $dark-bg-2;
+  }
+  
+  // Text colors
+  .user-display-name,
+  .section-title,
+  .hero-title,
+  .feature-title-corporate,
+  .project-name,
+  .cta-title,
+  .empty-title,
+  .stat-number,
+  .progress-value {
+    color: $dark-text-primary;
+  }
+  
+  .greeting-text,
+  .user-email,
+  .section-subtitle,
+  .hero-description,
+  .feature-description-corporate,
+  .cta-description,
+  .empty-description,
+  .stat-label,
+  .project-type,
+  .progress-label,
+  .meta-text {
+    color: $dark-text-secondary;
+  }
+  
+  .user-details {
+    background: linear-gradient(135deg, $dark-bg-1 0%, $dark-bg-2 100%);
+    border-color: rgba($dark-text-secondary, 0.2);
+  }
+  
+  // Details styling
+  .username-section,
+  .bio-section,
+  .account-info,
+  .verification-status {
+    border-color: rgba($dark-text-secondary, 0.1);
+  }
+  
+  .detail-label {
+    color: $dark-text-secondary;
+  }
+  
+  .detail-value {
+    color: $dark-text-light;
+  }
+  
+  .bio-text {
+    color: $dark-text-bio;
+  }
+  
+  // Badges
+  .username-badge {
+    background: linear-gradient(135deg, $dark-badge-1 0%, $dark-badge-2 100%);
+    color: $dark-badge-text;
+    border-color: rgba($dark-badge-text, 0.3);
+    box-shadow: 0 2px 4px rgba($dark-badge-text, 0.1);
+  }
+  
+  .verification-badge.verified {
+    background: linear-gradient(135deg, $dark-verified-1 0%, $dark-verified-2 100%);
+    color: $dark-verified-text;
+    border-color: rgba($dark-verified-text, 0.3);
+    box-shadow: 0 2px 4px rgba($dark-verified-text, 0.1);
+  }
+  
+  .verification-badge.unverified {
+    background: linear-gradient(135deg, $dark-unverified-1 0%, $dark-unverified-2 100%);
+    color: $dark-unverified-text;
+    border-color: rgba($dark-unverified-text, 0.3);
+    box-shadow: 0 2px 4px rgba($dark-unverified-text, 0.1);
+  }
+  
+  .features-cta {
+    background: linear-gradient(135deg, $dark-bg-2 0%, $dark-border 100%);
+    border-color: $dark-border-2;
+  }
+  
+  // ============================================
+  // UI COMPONENTS
+  // ============================================
+  
+  .btn {
+    &.btn-primary {
+      background: $primary-600;
+      border-color: $primary-600;
+      color: $white;
+      
+      &:hover:not(:disabled) {
+        background: $primary-700;
+        border-color: $primary-700;
+      }
+    }
+    
+    &.btn-secondary, &.btn-outline {
+      background: transparent;
+      border-color: $dark-border;
+      color: $dark-text-primary;
+      
+      &:hover:not(:disabled) {
+        background: $dark-bg-tertiary;
+        border-color: $dark-border-hover;
+      }
+    }
+  }
+  
+  // Cards and containers
+  .card, .container, .section {
+    background: $dark-bg-secondary;
+    border-color: $dark-border;
+    color: $dark-text-primary;
+  }
+  
+  // Form elements
+  input, textarea, select {
+    background: $dark-bg-tertiary;
+    border-color: $dark-border;
+    color: $dark-text-primary;
+    
+    &::placeholder {
+      color: $dark-text-muted;
+    }
+    
+    &:focus {
+      border-color: $primary-500;
+      box-shadow: 0 0 0 3px rgba($primary-500, 0.1);
+    }
+  }
+  
+  // ============================================
+  // ADMIN PANEL DARK THEME
+  // ============================================
+  
+  .admin-layout {
+    background: $dark-bg-primary;
+  }
+  
+  .admin-sidebar {
+    background: $dark-bg-secondary;
+    border-color: $dark-border;
+  }
+  
+  .admin-nav-link {
+    color: $dark-text-secondary;
+    
+    &:hover {
+      background: $dark-bg-tertiary;
+      color: $dark-text-primary;
+    }
+    
+    &.active {
+      background: $primary-color;
+      color: $white;
+    }
+  }
+  
+  .admin-nav-section-title {
+    color: $dark-text-secondary;
+  }
+  
+  .admin-main {
+    background: $dark-bg-secondary;
+    border-color: $dark-border;
+  }
+}

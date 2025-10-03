@@ -20,12 +20,14 @@ const AccountSettingsSection: React.FC<AccountSettingsProps> = ({ handleLogout }
         >
           🔄 Session aktualisieren
         </Button>
-        <Button
-          onClick={handleLogout}
-          variant="secondary"
-        >
-          👋 Abmelden
-        </Button>
+        {handleLogout && (
+          <Button
+            onClick={handleLogout}
+            variant="secondary"
+          >
+            👋 Abmelden
+          </Button>
+        )}
       </div>
     </div>
     {/* Weitere Account-Aktionen können hier ergänzt werden */}

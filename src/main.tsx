@@ -8,17 +8,29 @@ import PageLoader from './components/ui/PageLoader';
 import { ToastContainer } from './components/ui/Toast';
 
 // Lazy load components for better code splitting
-// Login-Komponente entfernt, da Route gelöscht
-const AuthCallback = lazy(() => import('./pages/AuthCallback'));
-const Dashboard = lazy(() => import('./pages/Dashboard.corporate'));
-const UserSettings = lazy(() => import('./pages/UserSettings.corporate'));
-const UsernameOnboarding = lazy(() => import('./pages/UsernameOnboarding'));
-const ResendConfirmation = lazy(() => import('./pages/ResendConfirmation'));
-const EmailConfirmed = lazy(() => import('./pages/EmailConfirmed'));
-const EmailChangeConfirmation = lazy(() => import('./pages/EmailChangeConfirmation'));
-const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
-const AccountRecovery = lazy(() => import('./pages/AccountRecovery'));
-const RecoverAccount = lazy(() => import('./pages/RecoverAccount'));
+// Auth Pages
+const AuthCallback = lazy(() => import('./pages/auth/AuthCallback'));
+const AuthLanding = lazy(() => import('./pages/auth/AuthLanding'));
+const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
+const ResendConfirmation = lazy(() => import('./pages/auth/ResendConfirmation'));
+const SetPassword = lazy(() => import('./pages/auth/SetPassword'));
+
+// Dashboard Pages
+const Dashboard = lazy(() => import('./pages/dashboard/Dashboard.corporate'));
+
+// Settings Pages
+const UserSettings = lazy(() => import('./pages/settings/UserSettings.corporate'));
+
+// Account Management Pages
+const AccountRecovery = lazy(() => import('./pages/account/AccountRecovery'));
+const RecoverAccount = lazy(() => import('./pages/account/RecoverAccount'));
+const EmailConfirmed = lazy(() => import('./pages/account/EmailConfirmed'));
+const EmailChangeConfirmation = lazy(() => import('./pages/account/EmailChangeConfirmation'));
+
+// Onboarding Pages
+const UsernameOnboarding = lazy(() => import('./pages/onboarding/UsernameOnboarding'));
+
+// Other Pages
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Admin Components
@@ -26,25 +38,26 @@ import AdminRoute from './components/admin/AdminRoute';
 
 const AdminDashboardCorporate = lazy(() => import('./pages/admin/AdminDashboardCorporate'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 
 
 
 const router = createBrowserRouter([
-  { 
-    path: '/', 
+  {
+    path: '/',
     element: (
       <Suspense fallback={<PageLoader />}>
-        <Dashboard />
+        <AuthLanding />
       </Suspense>
-    ) 
+    )
   },
-  { 
-    path: '/dashboard', 
+  {
+    path: '/dashboard',
     element: (
       <Suspense fallback={<PageLoader />}>
         <Dashboard />
       </Suspense>
-    ) 
+    )
   },
   // /login Route entfernt
   { 
@@ -84,6 +97,14 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<PageLoader />}>
         <ForgotPassword />
+      </Suspense>
+    ) 
+  },
+  { 
+    path: '/auth/set-password', 
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <SetPassword />
       </Suspense>
     ) 
   },
@@ -136,6 +157,16 @@ const router = createBrowserRouter([
       <Suspense fallback={<PageLoader />}>
         <AdminRoute>
           <AdminUsers />
+        </AdminRoute>
+      </Suspense>
+    ) 
+  },
+  { 
+    path: '/admin/settings', 
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <AdminRoute>
+          <AdminSettings />
         </AdminRoute>
       </Suspense>
     ) 
