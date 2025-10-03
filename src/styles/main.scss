@@ -26,7 +26,7 @@
 @use 'pages/auth/auth-landing';
 @use 'pages/auth/login-corporate';
 @use 'pages/auth/recovery';
-@use 'pages/admin/admin-corporate';
+@use 'pages/admin/index' as admin;
 @use 'pages/dashboard/dashboard-corporate';
 @use 'pages/settings/user-settings';
 
