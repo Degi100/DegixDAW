@@ -18,6 +18,10 @@ interface IssueListProps {
   onEdit: (issue: Issue) => void;
   onDelete: (issue: Issue) => void;
   formatDate: (dateString: string) => string;
+  onExport?: () => void;
+  onSaveMarkdown?: () => void;
+  onRefresh?: () => void;
+  onCreateNew?: () => void;
 }
 
 export default function IssueList({
@@ -34,6 +38,10 @@ export default function IssueList({
   onEdit,
   onDelete,
   formatDate,
+  onExport,
+  onSaveMarkdown,
+  onRefresh,
+  onCreateNew,
 }: IssueListProps) {
   const hasFilters = searchTerm || statusFilter !== 'all' || priorityFilter !== 'all';
 
@@ -69,6 +77,28 @@ export default function IssueList({
             />
             <span>Alle auswählen ({issues.length})</span>
           </label>
+          <div className="issue-list__bulk-actions">
+            {onExport && (
+              <button onClick={onExport} className="issue-list__action-btn">
+                📦 JSON
+              </button>
+            )}
+            {onSaveMarkdown && (
+              <button onClick={onSaveMarkdown} className="issue-list__action-btn">
+                📝 MD
+              </button>
+            )}
+            {onRefresh && (
+              <button onClick={onRefresh} className="issue-list__action-btn">
+                🔄 Refresh
+              </button>
+            )}
+            {onCreateNew && (
+              <button onClick={onCreateNew} className="issue-list__action-btn issue-list__action-btn--primary">
+                ➕ New Issue
+              </button>
+            )}
+          </div>
         </div>
       )}
 

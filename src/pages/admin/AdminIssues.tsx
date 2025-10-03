@@ -210,6 +210,10 @@ export default function AdminIssues() {
           onEdit={handleEditClick}
           onDelete={handleDeleteClick}
           formatDate={formatDate}
+          onExport={() => handleExportClick(sortedIssues.filter(i => selectedIssueIds.includes(i.id)))}
+          onSaveMarkdown={() => handleSaveMarkdown(sortedIssues.filter(i => selectedIssueIds.includes(i.id)))}
+          onRefresh={refresh}
+          onCreateNew={handleCreateClick}
         />
       </div>
 
