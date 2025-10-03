@@ -1,0 +1,12 @@
+// ============================================
+// HEADER - MODULAR INDEX
+// ============================================
+// This file aggregates all header modules
+// for clean, maintainable imports
+
+@forward 'header-base';
+@forward 'header-brand';
+@forward 'header-navigation';
+@forward 'header-user-menu';
+@forward 'header-mobile';
+@forward 'header-theme';

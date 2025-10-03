@@ -1,0 +1,62 @@
+// ============================================
+// HEADER NAVIGATION - Desktop Nav Links
+// ============================================
+
+@use '../../../abstracts/variables' as *;
+
+// ============================================
+// DESKTOP NAVIGATION
+// ============================================
+
+.header-nav {
+  display: none;
+  margin-left: $spacing-2;
+
+  @media (min-width: $breakpoint-lg) {
+    display: block;
+  }
+}
+
+.nav-list {
+  display: flex;
+  align-items: center;
+  gap: $spacing-1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  padding: $spacing-2 $spacing-3;
+  background: none;
+  border: none;
+  color: $gray-600;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background-color: $gray-100;
+    color: $gray-900;
+  }
+
+  &:focus {
+    outline: 2px solid $primary-500;
+    outline-offset: 2px;
+  }
+
+  &.active {
+    background-color: $primary-50;
+    color: $primary-700;
+  }
+}
+
+.nav-icon {
+  font-size: $font-size-base;
+  line-height: 1;
+}
