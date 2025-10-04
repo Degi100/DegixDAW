@@ -88,6 +88,43 @@ export function useFollowers(userId?: string) {
     }
   }, [currentUserId, loadFollowers]);
 
+  // Real-time subscription for followers
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const channel = supabase
+      .channel('followers_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'followers',
+          filter: `follower_id=eq.${currentUserId}`,
+        },
+        () => {
+          loadFollowers();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'followers',
+          filter: `following_id=eq.${currentUserId}`,
+        },
+        () => {
+          loadFollowers();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUserId, loadFollowers]);
+
   // Follow a user
   const followUser = useCallback(async (targetUserId: string) => {
     if (!currentUserId) return;

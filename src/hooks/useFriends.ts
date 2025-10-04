@@ -113,6 +113,43 @@ export function useFriends(userId?: string) {
     }
   }, [currentUserId, loadFriendships]);
 
+  // Real-time subscription for friendships
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const channel = supabase
+      .channel('friendships_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'friendships',
+          filter: `user_id=eq.${currentUserId}`,
+        },
+        () => {
+          loadFriendships();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'friendships',
+          filter: `friend_id=eq.${currentUserId}`,
+        },
+        () => {
+          loadFriendships();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUserId, loadFriendships]);
+
   // Send friend request
   const sendFriendRequest = useCallback(async (friendId: string) => {
     if (!currentUserId) return;

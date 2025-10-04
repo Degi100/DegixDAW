@@ -2,6 +2,7 @@
 // User Card with Friend/Follow Actions
 
 import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
 import { useFriends } from '../../hooks/useFriends';
 import { useFollowers } from '../../hooks/useFollowers';
 import type { SearchUser } from '../../hooks/useUserSearch';
@@ -19,10 +20,6 @@ export default function UserCard({ user, showActions = true }: UserCardProps) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    loadStatus();
-  }, [user.id]);
-
   const loadStatus = async () => {
     const [friendship, following] = await Promise.all([
       getFriendshipStatus(user.id),
@@ -31,6 +28,45 @@ export default function UserCard({ user, showActions = true }: UserCardProps) {
     setFriendshipStatus(friendship);
     setIsFollowing(following);
   };
+
+  useEffect(() => {
+    loadStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.id]);
+
+  // Real-time subscription for this specific user's status
+  useEffect(() => {
+    const channel = supabase
+      .channel(`user_status_${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'friendships',
+        },
+        () => {
+          loadStatus();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'followers',
+        },
+        () => {
+          loadStatus();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.id]);
 
   const handleFriendRequest = async () => {
     setLoading(true);
