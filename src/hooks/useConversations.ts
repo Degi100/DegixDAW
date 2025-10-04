@@ -1,3 +1,9 @@
+// Typ für Profile
+export interface Profile {
+  id: string;
+  full_name: string;
+  username: string;
+}
 // src/hooks/useConversations.ts
 // Conversation Management Hook
 
@@ -110,12 +116,21 @@ export function useConversations() {
 
       // 4. Get profiles for all member user_ids
       const allUserIds = Array.from(new Set(allMembers?.map(m => m.user_id) || []));
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name, username, avatar_url, is_online')
-        .in('id', allUserIds);
+  console.debug('User-IDs für Profile-Abfrage:', allUserIds);
+  let profiles: Profile[] = [];
+      if (allUserIds.length > 0) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, full_name, username')
+          .in('id', allUserIds);
+        if (error) {
+          console.error('Fehler beim Laden der Profile:', error);
+        }
+        profiles = data || [];
+        console.debug('Geladene Profile:', profiles);
+      }
 
-      const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+  const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
       // 5. Get last message for each conversation
       const { data: lastMessages } = await supabase
@@ -160,10 +175,7 @@ export function useConversations() {
           const profile = profilesMap.get(m.user_id);
           return {
             ...m,
-            username: profile?.username,
-            display_name: profile?.full_name || profile?.username,
-            avatar_url: profile?.avatar_url,
-            is_online: profile?.is_online || false
+            display_name: profile?.full_name || profile?.username
           };
         });
 
@@ -260,14 +272,18 @@ export function useConversations() {
 
   // Create a new direct conversation
   const createDirectConversation = useCallback(async (otherUserId: string) => {
-    if (!currentUserId) return null;
+    // Get current user (fresh, not from state)
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const userId = user.id;
 
     try {
       // Check if conversation already exists
       const { data: existingMemberships } = await supabase
         .from('conversation_members')
         .select('conversation_id')
-        .eq('user_id', currentUserId);
+        .eq('user_id', userId);
 
       if (existingMemberships) {
         for (const membership of existingMemberships) {
@@ -290,30 +306,39 @@ export function useConversations() {
         .from('conversations')
         .insert({
           type: 'direct',
-          created_by: currentUserId,
+          created_by: userId,
         })
         .select()
         .single();
 
       if (convError) throw convError;
 
-      // Add both members
-      const { error: membersError } = await supabase
+      // Add both members (mit .upsert() statt .insert() für Idempotenz)
+      const { error: member1Error } = await supabase
         .from('conversation_members')
-        .insert([
+        .upsert(
           {
             conversation_id: conversation.id,
-            user_id: currentUserId,
+            user_id: userId,
             role: 'admin',
           },
+          { onConflict: 'conversation_id,user_id' }
+        );
+
+      if (member1Error) throw member1Error;
+
+      const { error: member2Error } = await supabase
+        .from('conversation_members')
+        .upsert(
           {
             conversation_id: conversation.id,
             user_id: otherUserId,
             role: 'member',
           },
-        ]);
+          { onConflict: 'conversation_id,user_id' }
+        );
 
-      if (membersError) throw membersError;
+      if (member2Error) throw member2Error;
 
       success('Chat erstellt! 💬');
       loadConversations();
@@ -323,7 +348,7 @@ export function useConversations() {
       error('Fehler beim Erstellen des Chats');
       return null;
     }
-  }, [currentUserId, success, error, loadConversations]);
+  }, [success, error, loadConversations]);
 
   // Create a group conversation
   const createGroupConversation = useCallback(async (
@@ -448,14 +473,18 @@ export function useConversations() {
 
   // Find or create direct conversation with a user
   const createOrOpenDirectConversation = useCallback(async (otherUserId: string): Promise<string | null> => {
-    if (!currentUserId) return null;
+    // Get current user (fresh, not from state)
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const userId = user.id;
 
     try {
       // 1. Check if conversation already exists
       const { data: existingMembers, error: searchError } = await supabase
         .from('conversation_members')
         .select('conversation_id, conversations!inner(type)')
-        .eq('user_id', currentUserId);
+        .eq('user_id', userId);
 
       if (searchError) throw searchError;
 
@@ -488,7 +517,7 @@ export function useConversations() {
       error('Fehler beim Öffnen des Chats');
       return null;
     }
-  }, [currentUserId, createDirectConversation, error]);
+  }, [createDirectConversation, error]);
 
   return {
     conversations,
