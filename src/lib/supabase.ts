@@ -20,12 +20,12 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
   }
 })
 
-// Hole das Profil eines Users anhand der user_id
+// Hole das Profil eines Users anhand der id
 export async function getProfileByUserId(userId: string) {
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
-    .eq('user_id', userId)
+    .eq('id', userId)
     .single();
   return { data, error };
 }
