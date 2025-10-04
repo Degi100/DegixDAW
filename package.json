@@ -15,7 +15,14 @@
     "db:seed": "node scripts/db/seed.js",
     "db:cleanup": "node scripts/db/cleanup.js",
     "db:mark-done": "node scripts/db/mark-issues-done-v2.js",
-    "db:sql": "node scripts/db/run-sql.js"
+    "db:sql": "node scripts/db/run-sql.js",
+    "db:show": "node scripts/db/show-sql.js",
+    "db:sync-profiles": "node scripts/db/show-sql.js scripts/sql/sync_profiles_auth_users.sql",
+    "db:fix-profiles-rls": "node scripts/db/show-sql.js scripts/sql/fix_profiles_rls.sql",
+    "db:social-setup": "node scripts/db/show-sql.js scripts/sql/social_connections_setup.sql",
+    "db:debug-profiles": "node scripts/db/show-sql.js scripts/sql/debug_orphaned_profiles.sql",
+    "db:create-profiles": "node scripts/db/show-sql.js scripts/sql/create_missing_profiles.sql",
+    "db:fix-profile-ids": "node scripts/db/show-sql.js scripts/sql/fix_profile_ids.sql"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",

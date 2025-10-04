@@ -20,6 +20,7 @@
 @use 'components/layout/header/index' as header;
 @use 'components/mock-data-badge';
 @use 'components/admin/index' as admin-components;
+@use 'components/social/index' as social-components;
 
 // 4. Pages
 @use 'pages/auth/auth-landing/index' as auth-landing;
@@ -28,6 +29,7 @@
 @use 'pages/admin/index' as admin;
 @use 'pages/dashboard/dashboard-corporate';
 @use 'pages/settings/user-settings/index' as user-settings;
+@use 'pages/social';
 
 // 5. Themes
 @use 'themes/dark';

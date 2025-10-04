@@ -17,6 +17,7 @@ const SetPassword = lazy(() => import('./pages/auth/SetPassword'));
 
 // Dashboard Pages
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard.corporate'));
+const Social = lazy(() => import('./pages/dashboard/Social'));
 
 // Settings Pages
 const UserSettings = lazy(() => import('./pages/settings/UserSettings.corporate'));
@@ -57,6 +58,14 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<PageLoader />}>
         <Dashboard />
+      </Suspense>
+    )
+  },
+  {
+    path: '/social',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <Social />
       </Suspense>
     )
   },
