@@ -29,6 +29,8 @@ interface HeaderProps {
   customNavItems?: NavigationItem[];
   showAdminBadge?: boolean;
   adminLevel?: string;
+  onChatToggle?: () => void;
+  unreadChatCount?: number;
 }
 
 const navigationItems: NavigationItem[] = [
@@ -40,7 +42,9 @@ export default function Header({
   customBrand,
   customNavItems,
   showAdminBadge = false,
-  adminLevel
+  adminLevel,
+  onChatToggle,
+  unreadChatCount = 0
 }: HeaderProps) {
   const { user, signOut } = useAuth();
   const { isDark, toggleTheme } = useTheme();
@@ -93,6 +97,20 @@ export default function Header({
         <HeaderNav navItems={filteredNavItems} />
 
         <div className="header-actions">
+          {/* Chat Toggle Button */}
+          {user && onChatToggle && (
+            <button
+              onClick={onChatToggle}
+              className="chat-toggle-btn"
+              aria-label="Chat öffnen"
+            >
+              <span className="chat-icon">💬</span>
+              {unreadChatCount > 0 && (
+                <span className="chat-badge">{unreadChatCount}</span>
+              )}
+            </button>
+          )}
+
           {user ? (
             <UserDropdown
               user={user}

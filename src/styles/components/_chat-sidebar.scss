@@ -209,6 +209,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  animation: pulse 2s infinite;
+}
+
+.chat-item-online-indicator {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  width: 12px;
+  height: 12px;
+  background: #10b981;
+  border: 2px solid $white;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.3);
 }
 
 // Quick Reply
@@ -274,6 +287,74 @@
 
   &:hover {
     background: rgba(59, 130, 246, 0.1);
+  }
+}
+
+// Dark Mode Support
+[data-theme="dark"] {
+  .chat-sidebar {
+    background: $dark-bg-primary;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .chat-sidebar-header {
+    border-bottom-color: $dark-border;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent);
+  }
+
+  .chat-sidebar-title h3 {
+    color: $dark-text-primary;
+  }
+
+  .chat-close-btn {
+    color: $dark-text-secondary;
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+    }
+  }
+
+  .chat-item {
+    &:hover {
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    &--active {
+      background: rgba(59, 130, 246, 0.15);
+    }
+  }
+
+  .chat-item-name {
+    color: $dark-text-primary;
+  }
+
+  .chat-item-message {
+    color: $dark-text-secondary;
+  }
+
+  .chat-input {
+    background: $dark-bg-secondary;
+    border-color: $dark-border;
+    color: $dark-text-primary;
+
+    &:focus {
+      border-color: $primary-400;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+  }
+
+  .chat-sidebar-footer {
+    border-top-color: $dark-border;
+  }
+
+  .chat-view-all-btn {
+    border-color: $primary-400;
+    color: $primary-300;
+
+    &:hover {
+      background: rgba(59, 130, 246, 0.1);
+    }
   }
 }
 
