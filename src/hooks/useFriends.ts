@@ -155,6 +155,24 @@ export function useFriends(userId?: string) {
     if (!currentUserId) return;
 
     try {
+      // Check if friendship already exists
+      const { data: existing } = await supabase
+        .from('friendships')
+        .select('id, status')
+        .or(`and(user_id.eq.${currentUserId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${currentUserId})`)
+        .single();
+
+      if (existing) {
+        if (existing.status === 'pending') {
+          error('Freundschaftsanfrage bereits gesendet');
+        } else if (existing.status === 'accepted') {
+          error('Ihr seid bereits befreundet');
+        } else if (existing.status === 'rejected') {
+          error('Anfrage wurde bereits abgelehnt');
+        }
+        return;
+      }
+
       const { error: insertError } = await supabase
         .from('friendships')
         .insert({
