@@ -1,10 +1,15 @@
 // src/components/social/FriendList.tsx
 // Friend List with Requests
 
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useFriends } from '../../hooks/useFriends';
+import { useConversations } from '../../hooks/useConversations';
 import { Spinner } from '../ui/Loading';
 
 export default function FriendList() {
+  const navigate = useNavigate();
+  const [loadingChat, setLoadingChat] = useState<string | null>(null);
   const {
     friends,
     pendingRequests,
@@ -14,6 +19,19 @@ export default function FriendList() {
     rejectFriendRequest,
     removeFriend,
   } = useFriends();
+  const { createOrOpenDirectConversation } = useConversations();
+
+  const handleOpenChat = async (userId: string) => {
+    setLoadingChat(userId);
+    try {
+      const conversationId = await createOrOpenDirectConversation(userId);
+      if (conversationId) {
+        navigate(`/chat/${conversationId}`);
+      }
+    } finally {
+      setLoadingChat(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -124,13 +142,23 @@ export default function FriendList() {
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => removeFriend(friendship.id)}
-                  className="friend-card__btn friend-card__btn--remove"
-                  title="Freundschaft beenden"
-                >
-                  🗑️
-                </button>
+                <div className="friend-card__actions">
+                  <button
+                    onClick={() => handleOpenChat(friendship.friend_id)}
+                    className="friend-card__btn friend-card__btn--chat"
+                    title="Nachricht senden"
+                    disabled={loadingChat === friendship.friend_id}
+                  >
+                    {loadingChat === friendship.friend_id ? '⏳' : '💬'}
+                  </button>
+                  <button
+                    onClick={() => removeFriend(friendship.id)}
+                    className="friend-card__btn friend-card__btn--remove"
+                    title="Freundschaft beenden"
+                  >
+                    🗑️
+                  </button>
+                </div>
               </div>
             ))}
           </div>

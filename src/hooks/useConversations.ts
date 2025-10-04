@@ -446,6 +446,50 @@ export function useConversations() {
     }
   }, [currentUserId]);
 
+  // Find or create direct conversation with a user
+  const createOrOpenDirectConversation = useCallback(async (otherUserId: string): Promise<string | null> => {
+    if (!currentUserId) return null;
+
+    try {
+      // 1. Check if conversation already exists
+      const { data: existingMembers, error: searchError } = await supabase
+        .from('conversation_members')
+        .select('conversation_id, conversations!inner(type)')
+        .eq('user_id', currentUserId);
+
+      if (searchError) throw searchError;
+
+      // Filter for direct conversations
+      const directConvIds = existingMembers
+        ?.filter((m) => (m as any).conversations.type === 'direct')
+        .map((m) => (m as any).conversation_id) || [];
+
+      if (directConvIds.length > 0) {
+        // Check which of these conversations includes the other user
+        const { data: otherUserMembers, error: otherSearchError } = await supabase
+          .from('conversation_members')
+          .select('conversation_id')
+          .eq('user_id', otherUserId)
+          .in('conversation_id', directConvIds);
+
+        if (otherSearchError) throw otherSearchError;
+
+        // Found existing conversation
+        if (otherUserMembers && otherUserMembers.length > 0) {
+          return otherUserMembers[0].conversation_id;
+        }
+      }
+
+      // 2. No existing conversation, create new one
+      const conversationId = await createDirectConversation(otherUserId);
+      return conversationId;
+    } catch (err) {
+      console.error('Error finding/creating conversation:', err);
+      error('Fehler beim Öffnen des Chats');
+      return null;
+    }
+  }, [currentUserId, createDirectConversation, error]);
+
   return {
     conversations,
     loading,
@@ -453,6 +497,7 @@ export function useConversations() {
     loadConversations,
     createDirectConversation,
     createGroupConversation,
+    createOrOpenDirectConversation,
     updateConversation,
     leaveConversation,
     markAsRead,

@@ -155,6 +155,24 @@
       }
     }
 
+    &--chat {
+      background: #25D366;
+      color: $white;
+      border: none;
+      font-size: 1.25rem;
+      padding: $spacing-2 $spacing-4;
+
+      &:hover:not(:disabled) {
+        background: #128C7E;
+        transform: scale(1.05);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+
     &--remove {
       background: #fee;
       color: #dc2626;
