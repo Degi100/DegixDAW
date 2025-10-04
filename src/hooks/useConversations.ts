@@ -13,10 +13,11 @@ export interface ConversationMember {
   last_read_at: string | null;
   is_muted: boolean;
   is_pinned: boolean;
-  profile?: {
-    full_name: string;
-    username: string;
-  };
+  // Profile enrichment
+  username?: string;
+  display_name?: string;
+  avatar_url?: string;
+  is_online?: boolean;
 }
 
 export interface Conversation {
@@ -32,13 +33,22 @@ export interface Conversation {
   is_archived: boolean;
   // Computed fields
   members?: ConversationMember[];
+  lastMessage?: {
+    content: string;
+    sender_id: string;
+    created_at: string;
+    message_type: string;
+  };
   last_message?: {
     content: string;
     sender_id: string;
     created_at: string;
     message_type: string;
   };
+  unreadCount?: number;
   unread_count?: number;
+  isPinned?: boolean;
+  currentUserId?: string;
   other_user?: {
     id: string;
     full_name: string;
@@ -69,7 +79,7 @@ export function useConversations() {
       // 1. Get conversation memberships
       const { data: memberships, error: membershipsError } = await supabase
         .from('conversation_members')
-        .select('conversation_id, last_read_at')
+        .select('conversation_id, last_read_at, is_pinned')
         .eq('user_id', currentUserId);
 
       if (membershipsError) throw membershipsError;
@@ -102,7 +112,7 @@ export function useConversations() {
       const allUserIds = Array.from(new Set(allMembers?.map(m => m.user_id) || []));
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, full_name, username')
+        .select('id, full_name, username, avatar_url, is_online')
         .in('id', allUserIds);
 
       const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
@@ -143,24 +153,35 @@ export function useConversations() {
 
       // 7. Enrich conversations with all data
       const enrichedConversations: Conversation[] = conversationsData?.map(conv => {
-        const members = allMembers
-          ?.filter(m => m.conversation_id === conv.id)
-          .map(m => ({
+        const convMembers = allMembers?.filter(m => m.conversation_id === conv.id) || [];
+        const currentMembership = memberships?.find(m => m.conversation_id === conv.id);
+        
+        const members: ConversationMember[] = convMembers.map(m => {
+          const profile = profilesMap.get(m.user_id);
+          return {
             ...m,
-            profile: profilesMap.get(m.user_id)
-          }));
+            username: profile?.username,
+            display_name: profile?.full_name || profile?.username,
+            avatar_url: profile?.avatar_url,
+            is_online: profile?.is_online || false
+          };
+        });
 
-        const otherMember = members?.find(m => m.user_id !== currentUserId);
+        const otherMember = members.find(m => m.user_id !== currentUserId);
 
         return {
           ...conv,
           members,
+          lastMessage: lastMessageMap.get(conv.id),
           last_message: lastMessageMap.get(conv.id),
+          unreadCount: unreadCountMap.get(conv.id) || 0,
           unread_count: unreadCountMap.get(conv.id) || 0,
-          other_user: conv.type === 'direct' && otherMember?.profile ? {
+          isPinned: currentMembership?.is_pinned || false,
+          currentUserId: currentUserId,
+          other_user: conv.type === 'direct' && otherMember ? {
             id: otherMember.user_id,
-            full_name: otherMember.profile.full_name,
-            username: otherMember.profile.username
+            full_name: otherMember.display_name || 'Unknown',
+            username: otherMember.username || 'unknown'
           } : undefined
         };
       }) || [];
@@ -428,6 +449,8 @@ export function useConversations() {
   return {
     conversations,
     loading,
+    error: undefined, // TODO: Add error state to hook
+    loadConversations,
     createDirectConversation,
     createGroupConversation,
     updateConversation,

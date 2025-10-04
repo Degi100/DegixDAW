@@ -113,6 +113,30 @@
   --dark-border-light: #475569;
   --dark-shadow: rgba(0, 0, 0, 0.3);
   --dark-shadow-lg: rgba(0, 0, 0, 0.5);
+  
+  /* Chat System Colors (WhatsApp-inspired) */
+  --chat-primary: #25D366;
+  --chat-primary-dark: #20BA5A;
+  --chat-primary-light: #DCF8C6;
+  --chat-bg: #F0F2F5;
+  --chat-bg-dark: #E5DDD5;
+  --chat-bubble-sent: #DCF8C6;
+  --chat-bubble-received: #FFFFFF;
+  --chat-text-sent: #111827;
+  --chat-text-received: #111827;
+  --chat-online: #22C55E;
+  
+  /* Semantic Chat Variables (switch based on context) */
+  --bg-primary: var(--theme-bg-primary);
+  --bg-secondary: var(--theme-bg-secondary);
+  --bg-tertiary: var(--theme-bg-tertiary);
+  --bg-hover: var(--gray-100);
+  --bg-active: var(--primary-50);
+  --text-primary: var(--theme-text-primary);
+  --text-secondary: var(--theme-text-secondary);
+  --text-muted: var(--theme-text-tertiary);
+  --border-color: var(--theme-border);
+  --primary-color-dark: var(--primary-dark);
 }
 
 /* Global Reset */
