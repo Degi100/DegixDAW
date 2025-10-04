@@ -101,7 +101,7 @@ export function useAuth() {
 
   const signUpWithEmail = async (data: SignUpData): Promise<{ success: boolean; error?: AuthError }> => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data: signUpData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
@@ -119,6 +119,26 @@ export function useAuth() {
 
       if (error) {
         return { success: false, error: handleAuthError(error) };
+      }
+
+      // Automatically create profile for new user
+      if (signUpData.user) {
+        try {
+          const emailPrefix = data.email.split('@')[0];
+          const userIdShort = signUpData.user.id.substring(0, 6);
+          
+          await supabase.from('profiles').insert({
+            id: signUpData.user.id,
+            full_name: data.fullName || emailPrefix,
+            username: `${emailPrefix}_${userIdShort}`,
+            created_at: new Date().toISOString()
+          });
+          
+          console.log('Profile created automatically for new user');
+        } catch (profileError) {
+          console.warn('Profile creation failed (will be handled by onboarding):', profileError);
+          // Don't fail signup if profile creation fails - onboarding will handle it
+        }
       }
 
       return { success: true };

@@ -42,7 +42,7 @@ export async function checkUserOnboarding(user: User, navigate: NavigateFunction
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('username')
-      .eq('user_id', user.id)
+      .eq('id', user.id)
       .single();
 
     if (error) {
