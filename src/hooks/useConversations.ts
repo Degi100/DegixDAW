@@ -490,8 +490,8 @@ export function useConversations() {
 
       // Filter for direct conversations
       const directConvIds = existingMembers
-        ?.filter((m) => (m as any).conversations.type === 'direct')
-        .map((m) => (m as any).conversation_id) || [];
+        ?.filter((m: { conversation_id: string; conversations: { type: string }[] }) => m.conversations[0]?.type === 'direct')
+        .map((m: { conversation_id: string; conversations: { type: string }[] }) => m.conversation_id) || [];
 
       if (directConvIds.length > 0) {
         // Check which of these conversations includes the other user
