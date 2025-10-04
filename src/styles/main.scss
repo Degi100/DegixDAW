@@ -26,6 +26,7 @@
 @use 'components/chat-window';
 @use 'components/message-bubble';
 @use 'components/message-input';
+@use 'components/chat-sidebar';
 
 // 4. Pages
 @use 'pages/auth/auth-landing/index' as auth-landing;
