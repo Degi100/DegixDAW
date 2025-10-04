@@ -239,9 +239,7 @@
 }
 
 .detail-expanded {
-  padding: 1rem;
-  background: rgba(59, 130, 246, 0.02);
-  border-radius: 8px;
+  padding: 0.75rem 0;
   margin-top: 0.5rem;
   animation: expandDown 0.3s ease-out;
 }
@@ -257,3 +255,208 @@
     transform: scaleY(1);
   }
 }
+
+// ============================================
+// SOCIAL PREVIEW (Inline expanded content)
+// ============================================
+
+.social-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.social-preview-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: max-height 0.3s ease-out;
+  
+  // Expanded state - show all
+  &--expanded {
+    max-height: 600px;
+  }
+  
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.3);
+    border-radius: 3px;
+    
+    &:hover {
+      background: rgba(148, 163, 184, 0.5);
+    }
+  }
+}
+
+.social-preview-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(59, 130, 246, 0.03);
+  }
+}
+
+.preview-item-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, $corporate-blue-400, $corporate-blue-500);
+  color: $white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.preview-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.preview-item-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $text-primary;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.preview-item-handle {
+  font-size: 0.75rem;
+  color: $text-muted;
+}
+
+.preview-item-actions {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.preview-action-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+
+  // Message Button - Green
+  &--message {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: $white;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+
+    &:hover {
+      background: linear-gradient(135deg, #059669, #047857);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+  }
+
+  // Profile Button - Blue
+  &--profile {
+    background: rgba(59, 130, 246, 0.1);
+    
+    &:hover {
+      background: rgba(59, 130, 246, 0.2);
+    }
+  }
+
+  // Accept Button - Green
+  &--accept {
+    background: rgba(34, 197, 94, 0.1);
+    
+    &:hover {
+      background: rgba(34, 197, 94, 0.2);
+    }
+  }
+
+  // Decline/Remove Button - Red
+  &--decline,
+  &--remove {
+    background: rgba(239, 68, 68, 0.1);
+    
+    &:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+  }
+}
+
+.social-preview-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.social-preview-load-more {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid $border-color;
+  border-radius: 6px;
+  color: $text-secondary;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(59, 130, 246, 0.05);
+    border-color: $corporate-blue-400;
+    color: $corporate-blue-600;
+  }
+}
+
+.social-preview-view-all {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid $border-color;
+  border-radius: 6px;
+  color: $corporate-blue-600;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+
+  &:hover {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: $corporate-blue-500;
+  }
+}
+
+.social-preview-empty {
+  padding: 1rem;
+  text-align: center;
+  color: $text-muted;
+  font-size: 0.875rem;
+}
+

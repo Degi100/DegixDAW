@@ -23,7 +23,8 @@
     "db:debug-profiles": "node scripts/db/show-sql.js scripts/sql/debug_orphaned_profiles.sql",
     "db:create-profiles": "node scripts/db/show-sql.js scripts/sql/create_missing_profiles.sql",
     "db:fix-profile-ids": "node scripts/db/show-sql.js scripts/sql/fix_profile_ids.sql",
-    "db:chat-setup": "node scripts/db/show-sql.js scripts/sql/chat_system_setup.sql"
+    "db:chat-setup": "node scripts/db/show-sql.js scripts/sql/chat_system_setup.sql",
+    "test:create-100-friends": "node scripts/db/show-sql.js scripts/sql/create_100_test_friends.sql"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
