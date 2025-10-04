@@ -1,7 +1,7 @@
 // src/components/ui/AuthForm.tsx
 import { useForm } from '../../hooks/useForm';
 import { useFormToggle, getToggleLabels, LOGIN_SIGNUP_LABELS } from '../../hooks/useFormToggle';
-import { signInSchema, signUpSchema, validateSignUpAsync } from '../../lib/validation';
+import { signInSchema, signUpSchema, validateSignUpAsync, type SignUpFormData } from '../../lib/validation';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import { Spinner } from '../ui/Loading';
@@ -40,13 +40,12 @@ export default function AuthForm({ onLogin, onSignup, isSubmitting }: AuthFormPr
     },
     onSubmit: async (data) => {
       // Erst async Validierung
-      const validationResult = await validateSignUpAsync(data);
+      const validationResult = await validateSignUpAsync(data as SignUpFormData);
       
       if (!validationResult.success) {
         signupForm.setErrors(validationResult.errors);
         return;
       }
-      
       await onSignup({
         email: data.email,
         password: data.password,
@@ -105,7 +104,7 @@ export default function AuthForm({ onLogin, onSignup, isSubmitting }: AuthFormPr
           required
           showPasswordToggle
           showCheckmark
-          helpText={!isLogin ? "Mindestens 6 Zeichen, mit Groß-/Kleinbuchstaben und Zahl" : undefined}
+          {...(!isLogin ? { helpText: "Mindestens 6 Zeichen, mit Groß-/Kleinbuchstaben und Zahl" } : {})}
         />
 
         {!isLogin && (

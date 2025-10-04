@@ -266,7 +266,7 @@ export function useMessageAttachments() {
         progress: 100,
         status: 'completed',
         url: result.url,
-        thumbnailUrl: result.thumbnailUrl
+        ...(result.thumbnailUrl ? { thumbnailUrl: result.thumbnailUrl } : {})
       }));
 
       return result;

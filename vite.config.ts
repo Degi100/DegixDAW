@@ -20,10 +20,12 @@ export default defineConfig({
           // Supabase and auth
           'supabase-vendor': ['@supabase/supabase-js'],
           
-          // UI and utilities
+          // Validation and utilities
+          'zod-vendor': ['zod'],
           'utils': [
             './src/lib/authUtils.ts',
-            './src/lib/usernameGenerator.ts'
+            './src/lib/usernameGenerator.ts',
+            './src/lib/urlUtils.ts'
           ],
           
           // Validation
@@ -31,6 +33,13 @@ export default defineConfig({
             './src/lib/validation/authValidation.ts',
             './src/lib/validation/commonValidation.ts',
             './src/lib/validation/profileValidation.ts'
+          ],
+          
+          // Hooks
+          'hooks': [
+            './src/hooks/useAuth.ts',
+            './src/hooks/useConversations.ts',
+            './src/hooks/useMessages.ts'
           ],
           
           // Pages - split by functionality
