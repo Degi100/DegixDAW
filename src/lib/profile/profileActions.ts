@@ -9,6 +9,7 @@ import { getEmailChangeCallbackUrl } from '../urlUtils';
 export interface ProfileUpdates {
   username?: string;
   full_name?: string;
+  bio?: string;
 }
 
 /**
@@ -24,7 +25,8 @@ export async function updateProfile(
     const profileData = {
       id: userId,
       username: updates.username,
-      full_name: updates.full_name
+      full_name: updates.full_name,
+      bio: updates.bio
     };
 
     const { error } = await supabase
@@ -39,6 +41,7 @@ export async function updateProfile(
     const metadataUpdates: Record<string, unknown> = {};
     if (updates.username) metadataUpdates.username = updates.username;
     if (updates.full_name) metadataUpdates.full_name = updates.full_name;
+    if (updates.bio) metadataUpdates.bio = updates.bio;
     
     if (Object.keys(metadataUpdates).length > 0) {
       const { error: metaError } = await supabase.auth.updateUser({
