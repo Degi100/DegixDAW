@@ -22,6 +22,7 @@
 @use 'components/admin/index' as admin-components;
 @use 'components/social/index' as social-components;
 @use 'components/conversation-list';
+@use 'components/chat-window';
 
 // 4. Pages
 @use 'pages/auth/auth-landing/index' as auth-landing;
