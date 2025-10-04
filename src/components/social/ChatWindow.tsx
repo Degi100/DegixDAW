@@ -1,6 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useMessages } from '../../hooks/useMessages';
 import { useConversations } from '../../hooks/useConversations';
+import { MessageBubble } from './MessageBubble';
+import { MessageInput } from './MessageInput';
 import type { Conversation } from '../../hooks/useConversations';
 
 interface ChatWindowProps {
@@ -12,6 +14,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
     messages, 
     loading, 
     sendMessage,
+    editMessage,
+    deleteMessage,
+    addReaction,
+    removeReaction,
     typingUsers,
     startTyping,
     stopTyping,
@@ -19,12 +25,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
   } = useMessages(conversationId);
   
   const { conversations } = useConversations();
-  const [messageInput, setMessageInput] = useState('');
-  const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Find current conversation
   const conversation = conversations.find(c => c.id === conversationId);
@@ -43,65 +45,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    setMessageInput(value);
-
-    // Typing indicator
-    if (value.trim()) {
-      startTyping();
-      
-      // Clear existing timeout
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-      
-      // Set new timeout to stop typing after 3s
-      typingTimeoutRef.current = setTimeout(() => {
-        stopTyping();
-      }, 3000);
-    } else {
-      stopTyping();
-    }
-  };
-
-  const handleSendMessage = async () => {
-    if (!messageInput.trim() || isSending) return;
-
-    const content = messageInput.trim();
-    setMessageInput('');
-    setIsSending(true);
-
-    // Stop typing indicator
-    stopTyping();
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-
-    try {
-      await sendMessage(content, 'text');
-      
-      // Focus back to input
-      inputRef.current?.focus();
-      
-      // Scroll to bottom
-      scrollToBottom();
-    } catch (error) {
-      console.error('Error sending message:', error);
-      // Restore message on error
-      setMessageInput(content);
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
   };
 
   const getConversationName = (conv?: Conversation) => {
@@ -128,37 +71,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
     if (!conv || conv.type === 'group') return false;
     const otherMember = conv.members?.find(m => m.user_id !== conv.currentUserId);
     return otherMember?.is_online || false;
-  };
-
-  const formatMessageTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    // Heute: Nur Uhrzeit
-    if (diffDays === 0) {
-      return date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-    }
-    
-    // Gestern
-    if (diffDays === 1) {
-      return `Gestern ${date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`;
-    }
-    
-    // Diese Woche: Wochentag + Uhrzeit
-    if (diffDays < 7) {
-      return date.toLocaleDateString('de-DE', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
-    }
-    
-    // Älter: Datum + Uhrzeit
-    return date.toLocaleDateString('de-DE', { 
-      day: '2-digit', 
-      month: '2-digit', 
-      year: 'numeric',
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
   };
 
   const renderTypingIndicator = () => {
@@ -235,39 +147,16 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
         ) : (
           <>
             {messages.map((message) => (
-              <div
+              <MessageBubble
                 key={message.id}
-                className={`message-wrapper ${
-                  message.sender_id === conversation?.currentUserId ? 'sent' : 'received'
-                }`}
-              >
-                <div className="message-bubble">
-                  {/* Sender Name (nur in Gruppen für received messages) */}
-                  {conversation?.type === 'group' && 
-                   message.sender_id !== conversation?.currentUserId && (
-                    <div className="message-sender">
-                      {message.sender?.full_name || message.sender?.username || 'User'}
-                    </div>
-                  )}
-                  
-                  {/* Message Content */}
-                  <div className="message-content">
-                    {message.content}
-                  </div>
-                  
-                  {/* Message Footer: Time + Read Receipts */}
-                  <div className="message-footer">
-                    <span className="message-time">
-                      {formatMessageTime(message.created_at)}
-                    </span>
-                    {message.sender_id === conversation?.currentUserId && (
-                      <span className="message-status">
-                        {message.read_receipts && message.read_receipts.length > 1 ? '✓✓' : '✓'}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
+                message={message}
+                isOwnMessage={message.sender_id === conversation?.currentUserId}
+                showSender={conversation?.type === 'group'}
+                onEdit={editMessage}
+                onDelete={deleteMessage}
+                onReact={addReaction}
+                onRemoveReaction={removeReaction}
+              />
             ))}
             
             {/* Typing Indicator */}
@@ -280,30 +169,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId }) => {
       </div>
 
       {/* Input Area */}
-      <div className="chat-window__input">
-        <button className="icon-button" aria-label="Emoji">😊</button>
-        <button className="icon-button" aria-label="Datei anhängen">📎</button>
-        
-        <textarea
-          ref={inputRef}
-          value={messageInput}
-          onChange={handleInputChange}
-          onKeyPress={handleKeyPress}
-          placeholder="Nachricht eingeben..."
-          rows={1}
-          disabled={isSending}
-          className="message-input"
-        />
-        
-        <button
-          onClick={handleSendMessage}
-          disabled={!messageInput.trim() || isSending}
-          className="send-button"
-          aria-label="Senden"
-        >
-          {isSending ? '⏳' : '📤'}
-        </button>
-      </div>
+      <MessageInput
+        conversationId={conversationId}
+        onSend={sendMessage}
+        onTyping={startTyping}
+        onStopTyping={stopTyping}
+        disabled={loading}
+      />
     </div>
   );
 };
