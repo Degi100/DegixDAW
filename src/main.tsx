@@ -19,6 +19,9 @@ const SetPassword = lazy(() => import('./pages/auth/SetPassword'));
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard.corporate'));
 const Social = lazy(() => import('./pages/dashboard/Social'));
 
+// Chat Pages
+const ChatPage = lazy(() => import('./pages/chat/ChatPage'));
+
 // Settings Pages
 const UserSettings = lazy(() => import('./pages/settings/UserSettings.corporate'));
 
@@ -66,6 +69,22 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<PageLoader />}>
         <Social />
+      </Suspense>
+    )
+  },
+  {
+    path: '/chat',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <ChatPage />
+      </Suspense>
+    )
+  },
+  {
+    path: '/chat/:conversationId',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <ChatPage />
       </Suspense>
     )
   },
