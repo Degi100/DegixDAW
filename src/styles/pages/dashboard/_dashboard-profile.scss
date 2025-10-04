@@ -167,3 +167,93 @@
   color: $text-secondary;
   font-size: 0.875rem;
 }
+
+// ============================================
+// CLICKABLE DETAIL ROWS (for Social)
+// ============================================
+
+.detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: default;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &--clickable {
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    margin: 0 -0.75rem;
+
+    &:hover {
+      background: rgba(59, 130, 246, 0.05);
+      
+      .detail-arrow {
+        opacity: 1;
+        transform: translateX(4px);
+      }
+    }
+  }
+
+  &--highlight {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.04));
+    
+    &:hover {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(59, 130, 246, 0.06));
+    }
+  }
+
+  &--expanded {
+    background: rgba(59, 130, 246, 0.05);
+  }
+}
+
+.detail-arrow {
+  margin-left: 0.5rem;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: all 0.2s;
+  color: $corporate-blue-500;
+}
+
+.detail-toggle {
+  margin-left: auto;
+  color: $text-muted;
+  font-size: 0.875rem;
+}
+
+.detail-divider {
+  height: 1px;
+  background: rgba(148, 163, 184, 0.2);
+  margin: 0.75rem 0;
+}
+
+.detail-expanded {
+  padding: 1rem;
+  background: rgba(59, 130, 246, 0.02);
+  border-radius: 8px;
+  margin-top: 0.5rem;
+  animation: expandDown 0.3s ease-out;
+}
+
+@keyframes expandDown {
+  from {
+    opacity: 0;
+    transform: scaleY(0.8);
+    transform-origin: top;
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
