@@ -7,6 +7,9 @@ import ErrorBoundary from './components/ui/ErrorBoundary';
 import PageLoader from './components/ui/PageLoader';
 import { ToastContainer } from './components/ui/Toast';
 
+// Layout Components
+import AppLayout from './components/layout/AppLayout';
+
 // Lazy load components for better code splitting
 // Auth Pages
 const AuthCallback = lazy(() => import('./pages/auth/AuthCallback'));
@@ -45,9 +48,8 @@ const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 const AdminIssues = lazy(() => import('./pages/admin/AdminIssues'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 
-
-
 const router = createBrowserRouter([
+  // Auth Landing (no header)
   {
     path: '/',
     element: (
@@ -56,39 +58,113 @@ const router = createBrowserRouter([
       </Suspense>
     )
   },
+  // Main App Routes (with AppLayout + Header)
   {
     path: '/dashboard',
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <Dashboard />
-      </Suspense>
-    )
+    element: <AppLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <Dashboard />
+          </Suspense>
+        )
+      }
+    ]
   },
   {
     path: '/social',
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <Social />
-      </Suspense>
-    )
+    element: <AppLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <Social />
+          </Suspense>
+        )
+      }
+    ]
   },
   {
     path: '/chat',
+    element: <AppLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <ChatPage />
+          </Suspense>
+        )
+      },
+      {
+        path: ':conversationId',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <ChatPage />
+          </Suspense>
+        )
+      }
+    ]
+  },
+  {
+    path: '/settings',
+    element: <AppLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <UserSettings />
+          </Suspense>
+        )
+      }
+    ]
+  },
+  // Admin Routes (with own AdminLayoutCorporate - no AppLayout!)
+  {
+    path: '/admin',
     element: (
       <Suspense fallback={<PageLoader />}>
-        <ChatPage />
+        <AdminRoute>
+          <AdminDashboardCorporate />
+        </AdminRoute>
       </Suspense>
     )
   },
   {
-    path: '/chat/:conversationId',
+    path: '/admin/users',
     element: (
       <Suspense fallback={<PageLoader />}>
-        <ChatPage />
+        <AdminRoute>
+          <AdminUsers />
+        </AdminRoute>
       </Suspense>
     )
   },
-  // /login Route entfernt
+  {
+    path: '/admin/issues',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <AdminRoute>
+          <AdminIssues />
+        </AdminRoute>
+      </Suspense>
+    )
+  },
+  {
+    path: '/admin/settings',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <AdminRoute>
+          <AdminSettings />
+        </AdminRoute>
+      </Suspense>
+    )
+  },
+  // Auth Routes (no header)
   { 
     path: '/auth/callback', 
     element: (
@@ -158,55 +234,6 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<PageLoader />}>
         <UsernameOnboarding />
-      </Suspense>
-    ) 
-  },
-  { 
-    path: '/settings', 
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <UserSettings />
-      </Suspense>
-    ) 
-  },
-  // Admin Routes (Protected)
-  { 
-    path: '/admin', 
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <AdminRoute>
-          <AdminDashboardCorporate />
-        </AdminRoute>
-      </Suspense>
-    ) 
-  },
-  { 
-    path: '/admin/users', 
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <AdminRoute>
-          <AdminUsers />
-        </AdminRoute>
-      </Suspense>
-    ) 
-  },
-  { 
-    path: '/admin/issues', 
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <AdminRoute>
-          <AdminIssues />
-        </AdminRoute>
-      </Suspense>
-    ) 
-  },
-  { 
-    path: '/admin/settings', 
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <AdminRoute>
-          <AdminSettings />
-        </AdminRoute>
       </Suspense>
     ) 
   },

@@ -33,6 +33,7 @@ export function useAuth() {
   // Initialize auth state
   useEffect(() => {
     let mounted = true;
+    let isInitialLoad = true;
 
     const initializeAuth = async () => {
       try {
@@ -61,6 +62,12 @@ export function useAuth() {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        // Skip initial load event to prevent unnecessary checks
+        if (isInitialLoad) {
+          isInitialLoad = false;
+          return;
+        }
+
         if (mounted) {
           setState({
             user: session?.user ?? null,
@@ -69,9 +76,10 @@ export function useAuth() {
           });
         }
 
-        // Handle sign in events - check if user needs onboarding
+        // Only check onboarding on actual SIGNED_IN events (not TOKEN_REFRESHED or INITIAL_SESSION)
         if (event === 'SIGNED_IN' && session?.user) {
-          await checkUserOnboarding(session.user, navigate);
+          // Pass true to indicate this is an actual sign-in event
+          await checkUserOnboarding(session.user, navigate, true);
         }
       }
     );

@@ -8,6 +8,7 @@
 // 2. Layout
 @use 'layout/sidebar';
 @use 'layout/responsive';
+@use 'components/layout/app-layout';
 
 // 3. Components
 @use 'components/forms/forms-core';
