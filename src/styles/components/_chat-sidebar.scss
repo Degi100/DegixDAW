@@ -60,6 +60,12 @@
   }
 }
 
+.chat-sidebar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .chat-icon {
   font-size: 1.5rem;
 }
@@ -77,6 +83,24 @@
   font-weight: 700;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.chat-refresh-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 1rem;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(59, 130, 246, 0.1);
+    color: $primary-600;
+    transform: rotate(180deg);
+  }
 }
 
 .chat-close-btn {
@@ -182,8 +206,13 @@
 }
 
 .chat-item-time {
+  display: block;
   font-size: 0.75rem;
   color: $text-muted;
+  margin-top: 0.05rem;
+  margin-bottom: 0.1rem;
+  text-align: left;
+  line-height: 1.2;
 }
 
 .chat-item-message {
@@ -192,6 +221,19 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin-bottom: 0.15rem;
+}
+
+.chat-message-prefix {
+  color: $primary-600;
+  font-weight: 600;
+  margin-right: 0.25rem;
+}
+
+.chat-new-conversation {
+  color: $success;
+  font-weight: 600;
+  margin-right: 0.25rem;
 }
 
 .chat-item-badge {
@@ -306,6 +348,15 @@
     color: $dark-text-primary;
   }
 
+  .chat-refresh-btn {
+    color: $dark-text-secondary;
+
+    &:hover {
+      background: rgba(59, 130, 246, 0.2);
+      color: $primary-400;
+    }
+  }
+
   .chat-close-btn {
     color: $dark-text-secondary;
 
@@ -331,6 +382,14 @@
 
   .chat-item-message {
     color: $dark-text-secondary;
+  }
+
+  .chat-message-prefix {
+    color: $primary-400;
+  }
+
+  .chat-new-conversation {
+    color: $success-500;
   }
 
   .chat-input {
