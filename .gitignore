@@ -30,3 +30,7 @@ dist-ssr
 # Generated markdown reports
 ISSUES_*.md
 
+# Environment files
+.env
+.env.local
+
