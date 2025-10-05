@@ -13,7 +13,7 @@
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  z-index: 998;
+  z-index: 1070; // Above header (1030) and modals (1050)
   animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -32,7 +32,7 @@
     -4px 0 16px rgba(0, 0, 0, 0.08),
     inset 1px 0 0 rgba(255, 255, 255, 0.8);
   border-left: 1px solid rgba(59, 130, 246, 0.1);
-  z-index: 999;
+  z-index: 1080; // Highest priority - above everything
   display: flex;
   flex-direction: column;
   transition: right 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
