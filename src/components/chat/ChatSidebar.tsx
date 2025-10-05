@@ -130,78 +130,79 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
     setRefreshTimeout(timeout);
   }, [loadConversations, refreshTimeout]);
 
-  // Real-time subscriptions for live updates
   useEffect(() => {
     if (!isOpen || !currentUserId) return;
 
     console.log('🔔 Setting up real-time subscriptions for ChatSidebar');
 
-    // Subscribe to conversation changes
-    const conversationsChannel = supabase
-      .channel('chat_sidebar_conversations')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'conversations',
-        },
-        (payload) => {
-          console.log('📢 Conversation changed:', payload);
-          refreshConversations();
-        }
-      )
-      .subscribe();
-
-    // Subscribe to message changes - only for conversations user is part of
+    // Optimierte Subscription für neue Nachrichten (nur Preview aktualisieren)
     const messagesChannel = supabase
-      .channel('chat_sidebar_messages')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-        },
-        async (payload) => {
-          console.log('💬 New message:', payload);
-          
-          // Check if this message is for a conversation the user is part of
-          const { data: membership } = await supabase
-            .from('conversation_members')
-            .select('conversation_id')
-            .eq('user_id', currentUserId)
-            .eq('conversation_id', payload.new.conversation_id)
-            .single();
+      .channel(`sidebar_messages:${currentUserId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+      }, async (payload) => {
+        const newMessage = payload.new as any;
+        console.log('💬 Sidebar new message:', newMessage.conversation_id);
 
-          if (membership) {
-            console.log('✅ Message is for user, updating sidebar');
-            refreshConversations();
-            // Play sound for new messages (only if not from current user)
-            if (payload.new.sender_id !== currentUserId) {
-              playMessageReceived();
-            }
-          }
+        // Prüfe ob diese Conversation bereits in unserer Liste ist
+        const conversationExists = conversations.some(conv => conv.id === newMessage.conversation_id);
+        if (!conversationExists) {
+          console.log('🔄 Loading conversations for new message');
+          refreshConversations();
+          return;
         }
-      )
+
+        // Optimistisch: Conversation aktualisieren (ohne komplettes Reload)
+        setConversations(prev => prev.map(conv => {
+          if (conv.id === newMessage.conversation_id) {
+            const isFromMe = newMessage.sender_id === currentUserId;
+            const unreadIncrement = isFromMe ? 0 : 1;
+
+            return {
+              ...conv,
+              last_message_at: newMessage.created_at,
+              lastMessage: {
+                content: newMessage.content,
+                sender_id: newMessage.sender_id,
+                created_at: newMessage.created_at,
+                message_type: newMessage.message_type
+              },
+              last_message: {
+                content: newMessage.content,
+                sender_id: newMessage.sender_id,
+                created_at: newMessage.created_at,
+                message_type: newMessage.message_type
+              },
+              unread_count: (conv.unread_count || 0) + unreadIncrement,
+              unreadCount: (conv.unreadCount || 0) + unreadIncrement
+            };
+          }
+          return conv;
+        }));
+
+        // Sound abspielen für empfangene Nachrichten
+        if (newMessage.sender_id !== currentUserId) {
+          playMessageReceived();
+        }
+      })
       .subscribe();
 
-    // Subscribe to conversation members changes
+    // Subscription für Conversation-Member-Änderungen (nur strukturelle)
     const membersChannel = supabase
-      .channel('chat_sidebar_members')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'conversation_members',
-          filter: `user_id=eq.${currentUserId}`,
-        },
-        (payload) => {
-          console.log('👥 Membership changed:', payload);
+      .channel('sidebar_members')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'conversation_members',
+        filter: `user_id=eq.${currentUserId}`,
+      }, (payload) => {
+        console.log('👥 Sidebar member changed:', payload.eventType);
+        if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
           refreshConversations();
         }
-      )
+      })
       .subscribe();
 
     return () => {
