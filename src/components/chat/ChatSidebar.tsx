@@ -69,6 +69,8 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [refreshTimeout, setRefreshTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isPinned, setIsPinned] = useState<boolean>(false);
+  const [isBlurEnabled, setIsBlurEnabled] = useState<boolean>(false);
 
   // Get current user ID
   useEffect(() => {
@@ -286,19 +288,27 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
 
   const totalUnreadCount = allChats.reduce((sum, chat) => sum + chat.unreadCount, 0);
 
+  const handleTogglePin = useCallback(() => {
+    setIsPinned(prev => !prev);
+  }, []);
+
+  const handleToggleBlur = useCallback(() => {
+    setIsBlurEnabled(prev => !prev);
+  }, []);
+
   return (
     <>
-      {/* Overlay */}
-      {isOpen && (
+      {/* Overlay - only show when not pinned */}
+      {isOpen && !isPinned && (
         <div 
-          className="chat-sidebar-overlay"
+          className={`chat-sidebar-overlay ${isBlurEnabled ? 'blur-enabled' : ''}`}
           onClick={onClose}
           aria-hidden="true"
         />
       )}
 
       {/* Sidebar */}
-      <div className={`chat-sidebar ${isOpen ? 'chat-sidebar--open' : ''} ${className}`}>
+      <div className={`chat-sidebar ${isOpen ? 'chat-sidebar--open' : ''} ${isPinned ? 'chat-sidebar--pinned' : ''} ${className}`}>
         {/* Header */}
         <div className="chat-sidebar-header">
           <div className="chat-sidebar-title">
@@ -310,12 +320,20 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
           </div>
           <div className="chat-sidebar-actions">
             <button
-              onClick={refreshConversations}
-              className="chat-refresh-btn"
-              aria-label="Chats aktualisieren"
-              title="Chats aktualisieren"
+              onClick={handleToggleBlur}
+              className={`chat-blur-btn ${isBlurEnabled ? 'active' : ''}`}
+              aria-label="Blur-Effekt umschalten"
+              title={isBlurEnabled ? 'Blur deaktivieren' : 'Blur aktivieren'}
             >
-              🔄
+              {isBlurEnabled ? '🌫️' : '🔆'}
+            </button>
+            <button
+              onClick={handleTogglePin}
+              className={`chat-pin-btn ${isPinned ? 'pinned' : ''}`}
+              aria-label="Sidebar fixieren"
+              title={isPinned ? 'Sidebar lösen' : 'Sidebar fixieren'}
+            >
+              {isPinned ? '📌' : '📍'}
             </button>
             <button
               onClick={onClose}
