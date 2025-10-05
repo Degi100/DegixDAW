@@ -69,11 +69,12 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [refreshTimeout, setRefreshTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [isPinned, setIsPinned] = useState<boolean>(false);
-  const [isBlurEnabled, setIsBlurEnabled] = useState<boolean>(false);
+  const [isGradientEnabled, setIsGradientEnabled] = useState<boolean>(true);
   const [sidebarWidth, setSidebarWidth] = useState<number>(420);
+  const [sidebarHeight, setSidebarHeight] = useState<number>(window.innerHeight - 70);
   const [sidebarPosition, setSidebarPosition] = useState<{ top: number; right: number }>({ top: 70, right: 0 });
-  const [isResizing, setIsResizing] = useState<boolean>(false);
+  const [isResizingWidth, setIsResizingWidth] = useState<boolean>(false);
+  const [isResizingHeight, setIsResizingHeight] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
 
@@ -293,31 +294,32 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
 
   const totalUnreadCount = allChats.reduce((sum, chat) => sum + chat.unreadCount, 0);
 
-  const handleTogglePin = useCallback(() => {
-    setIsPinned(prev => !prev);
+  const handleToggleGradient = useCallback(() => {
+    setIsGradientEnabled(prev => !prev);
   }, []);
 
-  const handleToggleBlur = useCallback(() => {
-    setIsBlurEnabled(prev => !prev);
+  const handleResetPosition = useCallback(() => {
+    setSidebarWidth(420);
+    setSidebarHeight(window.innerHeight - 70);
+    setSidebarPosition({ top: 70, right: 0 });
   }, []);
 
-  // Resize handler
-  const handleResizeStart = useCallback((e: React.MouseEvent) => {
-    if (!isPinned) return;
+  // Resize width handler
+  const handleResizeWidthStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
-    setIsResizing(true);
-  }, [isPinned]);
+    setIsResizingWidth(true);
+  }, []);
 
   useEffect(() => {
-    if (!isResizing) return;
+    if (!isResizingWidth) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const newWidth = window.innerWidth - e.clientX;
-      setSidebarWidth(Math.max(300, Math.min(800, newWidth)));
+      const newWidth = window.innerWidth - e.clientX - sidebarPosition.right;
+      setSidebarWidth(Math.max(280, Math.min(window.innerWidth - 100, newWidth)));
     };
 
     const handleMouseUp = () => {
-      setIsResizing(false);
+      setIsResizingWidth(false);
     };
 
     document.addEventListener('mousemove', handleMouseMove);
@@ -327,15 +329,41 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isResizing]);
+  }, [isResizingWidth, sidebarPosition.right]);
+
+  // Resize height handler
+  const handleResizeHeightStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizingHeight(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isResizingHeight) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newHeight = window.innerHeight - e.clientY;
+      setSidebarHeight(Math.max(200, Math.min(window.innerHeight - sidebarPosition.top, newHeight)));
+    };
+
+    const handleMouseUp = () => {
+      setIsResizingHeight(false);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizingHeight, sidebarPosition.top]);
 
   // Drag handler
   const handleDragStart = useCallback((e: React.MouseEvent) => {
-    if (!isPinned) return;
     e.preventDefault();
     setIsDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
-  }, [isPinned]);
+  }, []);
 
   useEffect(() => {
     if (!isDragging || !dragStart) return;
@@ -368,10 +396,10 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
 
   return (
     <>
-      {/* Overlay - only show when not pinned */}
-      {isOpen && !isPinned && (
+      {/* Overlay */}
+      {isOpen && (
         <div 
-          className={`chat-sidebar-overlay ${isBlurEnabled ? 'blur-enabled' : ''}`}
+          className="chat-sidebar-overlay"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -379,26 +407,36 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
 
       {/* Sidebar */}
       <div 
-        className={`chat-sidebar ${isOpen ? 'chat-sidebar--open' : ''} ${isPinned ? 'chat-sidebar--pinned' : ''} ${isResizing ? 'chat-sidebar--resizing' : ''} ${isDragging ? 'chat-sidebar--dragging' : ''} ${className}`}
-        style={isPinned ? {
+        className={`chat-sidebar ${isOpen ? 'chat-sidebar--open' : ''} ${isResizingWidth || isResizingHeight ? 'chat-sidebar--resizing' : ''} ${isDragging ? 'chat-sidebar--dragging' : ''} ${isGradientEnabled ? 'chat-sidebar--gradient' : ''} ${className}`}
+        style={{
           width: `${sidebarWidth}px`,
+          height: `${sidebarHeight}px`,
           top: `${sidebarPosition.top}px`,
           right: `${sidebarPosition.right}px`
-        } : undefined}
+        }}
       >
-        {/* Resize handle - only visible when pinned */}
-        {isPinned && (
-          <div 
-            className="chat-sidebar-resize-handle"
-            onMouseDown={handleResizeStart}
-          />
-        )}
+        {/* Resize handles */}
+        <div 
+          className="chat-sidebar-resize-handle chat-sidebar-resize-handle--left"
+          onMouseDown={handleResizeWidthStart}
+        />
+        <div 
+          className="chat-sidebar-resize-handle chat-sidebar-resize-handle--bottom"
+          onMouseDown={handleResizeHeightStart}
+        />
+        <div 
+          className="chat-sidebar-resize-handle chat-sidebar-resize-handle--corner"
+          onMouseDown={(e) => {
+            handleResizeWidthStart(e);
+            handleResizeHeightStart(e);
+          }}
+        />
 
         {/* Header */}
         <div 
           className="chat-sidebar-header"
-          onMouseDown={isPinned ? handleDragStart : undefined}
-          style={{ cursor: isPinned ? 'move' : 'default' }}
+          onMouseDown={handleDragStart}
+          style={{ cursor: 'move' }}
         >
           <div className="chat-sidebar-title">
             <span className="chat-icon">💬</span>
@@ -409,20 +447,20 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
           </div>
           <div className="chat-sidebar-actions">
             <button
-              onClick={handleToggleBlur}
-              className={`chat-blur-btn ${isBlurEnabled ? 'active' : ''}`}
-              aria-label="Blur-Effekt umschalten"
-              title={isBlurEnabled ? 'Blur deaktivieren' : 'Blur aktivieren'}
+              onClick={handleToggleGradient}
+              className={`chat-gradient-btn ${isGradientEnabled ? 'active' : ''}`}
+              aria-label="Gradient-Border umschalten"
+              title={isGradientEnabled ? 'Gradient deaktivieren' : 'Gradient aktivieren'}
             >
-              {isBlurEnabled ? '🌫️' : '🔆'}
+              {isGradientEnabled ? '✨' : '⭐'}
             </button>
             <button
-              onClick={handleTogglePin}
-              className={`chat-pin-btn ${isPinned ? 'pinned' : ''}`}
-              aria-label="Sidebar fixieren"
-              title={isPinned ? 'Sidebar lösen' : 'Sidebar fixieren'}
+              onClick={handleResetPosition}
+              className="chat-reset-btn"
+              aria-label="Sidebar zurücksetzen"
+              title="Zurück zum Ursprung"
             >
-              {isPinned ? '📌' : '📍'}
+              🔄
             </button>
             <button
               onClick={onClose}
