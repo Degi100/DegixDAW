@@ -71,6 +71,7 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
   const [messageText, setMessageText] = useState<string>('');
   const [isSendingMessage, setIsSendingMessage] = useState<boolean>(false);
   const [showAttachMenu, setShowAttachMenu] = useState<boolean>(false);
+  const [chatMessages, setChatMessages] = useState<Record<string, Array<{id: string; content: string; sender_id: string; created_at: string; is_read: boolean}>>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [refreshTimeout, setRefreshTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -289,6 +290,11 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
       } catch (error) {
         console.error('Error:', error);
       }
+    }
+    // Load messages
+    if (chat.isExistingConversation) {
+      const { data } = await supabase.from('messages').select('*').eq('conversation_id', chatId).order('created_at', { ascending: false }).limit(5);
+      if (data) setChatMessages(prev => ({ ...prev, [chatId]: data.reverse() }));
     }
   }, [expandedChatId, allChats, playMessageReceived, createOrOpenDirectConversation, success, loadConversations]);
 
@@ -591,18 +597,30 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
                   {chat.isOnline && <div className="chat-item-online-indicator" />}
                 </button>
                 {expandedChatId === chat.id && chat.isExistingConversation && (
-                  <div className="chat-quick-message">
-                    <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={(e) => e.target.files?.[0] && handleFileUpload(chat.id, e.target.files[0])} accept="audio/*,video/*,image/*,.mid,.midi,.pdf,.doc,.docx" />
-                    <div className="chat-quick-attach-menu" style={{ display: showAttachMenu ? 'flex' : 'none' }}>
-                      <button onClick={() => { fileInputRef.current?.setAttribute('accept', 'audio/*'); fileInputRef.current?.click(); }} title="Audio">🎧</button>
-                      <button onClick={() => { fileInputRef.current?.setAttribute('accept', '.mid,.midi'); fileInputRef.current?.click(); }} title="MIDI">🎹</button>
-                      <button onClick={() => { fileInputRef.current?.setAttribute('accept', 'image/*'); fileInputRef.current?.click(); }} title="Bild">🖼️</button>
-                      <button onClick={() => { fileInputRef.current?.setAttribute('accept', '.pdf,.doc,.docx'); fileInputRef.current?.click(); }} title="Dokument">📄</button>
+                  <div className="chat-expanded">
+                    {chatMessages[chat.id] && chatMessages[chat.id].length > 0 && (
+                      <div className="chat-history">
+                        {chatMessages[chat.id].map(msg => (
+                          <div key={msg.id} className={`chat-history-msg ${msg.sender_id === currentUserId ? 'sent' : 'received'} ${msg.is_read ? 'read' : 'unread'}`}>
+                            <div className="chat-history-msg-content">{msg.content}</div>
+                            <div className="chat-history-msg-status">{msg.sender_id === currentUserId && (msg.is_read ? '✓✓' : '✓')}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className="chat-quick-message">
+                      <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={(e) => e.target.files?.[0] && handleFileUpload(chat.id, e.target.files[0])} accept="audio/*,video/*,image/*,.mid,.midi,.pdf,.doc,.docx" />
+                      <div className="chat-quick-attach-menu" style={{ display: showAttachMenu ? 'flex' : 'none' }}>
+                        <button onClick={() => { fileInputRef.current?.setAttribute('accept', 'audio/*'); fileInputRef.current?.click(); }} title="Audio">🎧</button>
+                        <button onClick={() => { fileInputRef.current?.setAttribute('accept', '.mid,.midi'); fileInputRef.current?.click(); }} title="MIDI">🎹</button>
+                        <button onClick={() => { fileInputRef.current?.setAttribute('accept', 'image/*'); fileInputRef.current?.click(); }} title="Bild">🖼️</button>
+                        <button onClick={() => { fileInputRef.current?.setAttribute('accept', '.pdf,.doc,.docx'); fileInputRef.current?.click(); }} title="Dokument">📄</button>
+                      </div>
+                      <button onClick={() => setShowAttachMenu(!showAttachMenu)} className="chat-quick-attach">📎</button>
+                      <input type="text" value={messageText} onChange={(e) => setMessageText(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSendQuickMessage(chat.id)} placeholder="Nachricht..." className="chat-quick-input" />
+                      <button onClick={() => handleSendQuickMessage(chat.id)} className="chat-quick-send" disabled={isSendingMessage}>📤</button>
+                      <button onClick={() => navigate(`/chat/${chat.id}`)} className="chat-quick-open">🔗</button>
                     </div>
-                    <button onClick={() => setShowAttachMenu(!showAttachMenu)} className="chat-quick-attach">📎</button>
-                    <input type="text" value={messageText} onChange={(e) => setMessageText(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSendQuickMessage(chat.id)} placeholder="Nachricht..." className="chat-quick-input" />
-                    <button onClick={() => handleSendQuickMessage(chat.id)} className="chat-quick-send" disabled={isSendingMessage}>📤</button>
-                    <button onClick={() => navigate(`/chat/${chat.id}`)} className="chat-quick-open">🔗</button>
                   </div>
                 )}
               </div>
