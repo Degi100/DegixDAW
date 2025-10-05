@@ -67,6 +67,9 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
   const { success } = useToast();
   const navigate = useNavigate();
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
+  const [expandedChatId, setExpandedChatId] = useState<string | null>(null);
+  const [messageText, setMessageText] = useState<string>('');
+  const [isSendingMessage, setIsSendingMessage] = useState<boolean>(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [refreshTimeout, setRefreshTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isGradientEnabled, setIsGradientEnabled] = useState<boolean>(true);
@@ -265,37 +268,48 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
   }, [conversations, friends, currentUserId]);
 
   const handleChatSelect = useCallback(async (chatId: string) => {
+    if (expandedChatId === chatId) {
+      setExpandedChatId(null);
+      return;
+    }
+    setExpandedChatId(chatId);
     setSelectedChat(chatId);
     const chat = allChats.find(c => c.id === chatId);
     if (!chat) return;
-
-    // Play message received sound when selecting a chat with unread messages
-    if (chat.unreadCount > 0) {
-      playMessageReceived();
-    }
-
-    // If existing conversation, navigate to full chat view
-    if (chat.isExistingConversation) {
-      navigate(`/chat/${chat.id}`);
-      return;
-    }
-
-    // Otherwise create conversation (friend without chat) and navigate
-    if (chat.friendId) {
+    if (chat.unreadCount > 0) playMessageReceived();
+    if (!chat.isExistingConversation && chat.friendId) {
       try {
-        console.log('🚀 Creating new conversation with friend:', chat.friendId);
         const conversationId = await createOrOpenDirectConversation(chat.friendId);
         if (conversationId) {
-          success(`Chat mit ${chat.name} gestartet! 💬`);
+          success(`Chat mit ${chat.name} gestartet!`);
           await loadConversations();
-          navigate(`/chat/${conversationId}`);
         }
       } catch (error) {
-        console.error('Error creating conversation:', error);
-        success('Fehler beim Erstellen des Chats');
+        console.error('Error:', error);
       }
     }
-  }, [allChats, playMessageReceived, createOrOpenDirectConversation, success, loadConversations, navigate]);
+  }, [expandedChatId, allChats, playMessageReceived, createOrOpenDirectConversation, success, loadConversations]);
+
+  const handleSendQuickMessage = useCallback(async (chatId: string) => {
+    if (!messageText.trim() || isSendingMessage) return;
+    setIsSendingMessage(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase.from('messages').insert({
+        conversation_id: chatId,
+        sender_id: user.id,
+        content: messageText.trim(),
+        message_type: 'text'
+      });
+      setMessageText('');
+      success('Nachricht gesendet!');
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setIsSendingMessage(false);
+    }
+  }, [messageText, isSendingMessage, success]);
 
   // Aktueller Chat: sidebar zeigt nur die Chat-Liste; volle Chat-Ansicht öffnet beim Klick
 
@@ -523,40 +537,43 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
             </div>
           ) : (
             allChats.map((chat) => (
-              <button
-                key={chat.id}
-                className={`chat-item ${selectedChat === chat.id ? 'chat-item--active' : ''}`}
-                onClick={() => handleChatSelect(chat.id)}
-              >
-                <div className="chat-item-avatar">
-                  {chat.avatar ? (
-                    <img src={chat.avatar} alt={chat.name} />
-                  ) : (
-                    chat.name.charAt(0).toUpperCase()
-                  )}
-                </div>
-                <div className="chat-item-content">
-                  <div className="chat-item-header">
-                    <span className="chat-item-name">{chat.name}</span>
+              <div key={chat.id} className="chat-item-wrapper">
+                <button
+                  className={`chat-item ${selectedChat === chat.id ? 'chat-item--active' : ''}`}
+                  onClick={() => handleChatSelect(chat.id)}
+                >
+                  <div className="chat-item-avatar">
+                    {chat.avatar ? <img src={chat.avatar} alt={chat.name} /> : chat.name.charAt(0).toUpperCase()}
                   </div>
-                  <div className="chat-item-message">
-                    {chat.isLastMessageFromMe && (
-                      <span className="chat-message-prefix">Du: </span>
-                    )}
-                    {!chat.isExistingConversation && (
-                      <span className="chat-new-conversation">💬 </span>
-                    )}
-                    {chat.lastMessage}
+                  <div className="chat-item-content">
+                    <div className="chat-item-header">
+                      <span className="chat-item-name">{chat.name}</span>
+                    </div>
+                    <div className="chat-item-message">
+                      {chat.isLastMessageFromMe && <span className="chat-message-prefix">Du: </span>}
+                      {!chat.isExistingConversation && <span className="chat-new-conversation">💬 </span>}
+                      {chat.lastMessage}
+                    </div>
+                    <span className="chat-item-time">{chat.timestamp}</span>
                   </div>
-                  <span className="chat-item-time">{chat.timestamp}</span>
-                </div>
-                {chat.unreadCount > 0 && (
-                  <span className="chat-item-badge">{chat.unreadCount}</span>
+                  {chat.unreadCount > 0 && <span className="chat-item-badge">{chat.unreadCount}</span>}
+                  {chat.isOnline && <div className="chat-item-online-indicator" />}
+                </button>
+                {expandedChatId === chat.id && chat.isExistingConversation && (
+                  <div className="chat-quick-message">
+                    <input
+                      type="text"
+                      value={messageText}
+                      onChange={(e) => setMessageText(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleSendQuickMessage(chat.id)}
+                      placeholder="Nachricht schreiben..."
+                      className="chat-quick-input"
+                    />
+                    <button onClick={() => handleSendQuickMessage(chat.id)} className="chat-quick-send" disabled={isSendingMessage}>📤</button>
+                    <button onClick={() => navigate(`/chat/${chat.id}`)} className="chat-quick-open">🔗</button>
+                  </div>
                 )}
-                {chat.isOnline && (
-                  <div className="chat-item-online-indicator" />
-                )}
-              </button>
+              </div>
             ))
           )}
         </div>

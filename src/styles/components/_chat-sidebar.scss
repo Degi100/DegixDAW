@@ -440,12 +440,15 @@
   }
 }
 
+.chat-item-wrapper {
+  margin-bottom: 0.5rem;
+}
+
 .chat-item {
   display: flex;
   align-items: flex-start;
   gap: 0.875rem;
   padding: 1rem;
-  margin-bottom: 0.5rem;
   border: none;
   background: rgba(255, 255, 255, 0.5);
   border-radius: 12px;
@@ -571,6 +574,53 @@
 .chat-new-conversation {
   font-size: 1rem;
   filter: drop-shadow(0 1px 2px rgba(59, 130, 246, 0.3));
+}
+
+// Quick message input
+.chat-quick-message {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(59, 130, 246, 0.05);
+  border-radius: 0 0 12px 12px;
+  margin-top: -0.5rem;
+}
+
+.chat-quick-input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s;
+  &:focus {
+    border-color: rgba(59, 130, 246, 0.5);
+    background: $white;
+  }
+}
+
+.chat-quick-send, .chat-quick-open {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chat-quick-send {
+  background: linear-gradient(135deg, #3b82f6, #9333ea);
+  color: $white;
+  &:hover { transform: scale(1.1); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.chat-quick-open {
+  background: rgba(59, 130, 246, 0.1);
+  color: $corporate-blue-600;
+  &:hover { background: rgba(59, 130, 246, 0.2); transform: scale(1.1); }
 }
 
 .chat-item-badge {
