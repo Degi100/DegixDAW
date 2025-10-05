@@ -4,6 +4,7 @@
 // ============================================
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useGlobalMessagesSubscription } from '../../hooks/useGlobalMessagesSubscription';
 import ChatList from './ChatList';
 import ExpandedChat from './ExpandedChat';
 import type { Message } from '../../hooks/useMessages';
@@ -133,35 +134,26 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
     setRefreshTimeout(timeout);
   }, [loadConversations, refreshTimeout]);
 
-  // Zentrale Subscription für alle Updates (vereinfacht)
-  useEffect(() => {
-    if (!isOpen || !currentUserId) return;
-
-    console.log('Setting up unified real-time subscription');
-
-    // Eine Subscription für alle Messages
-    const globalMessagesChannel = supabase
-      .channel(`sidebar_global:${currentUserId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-      }, (payload) => {
-        console.log('New message received:', payload.new.conversation_id);
-        // Einfach: Conversations neu laden bei neuer Nachricht
+  // Centralized subscription for message inserts
+  useGlobalMessagesSubscription({
+    channelId: `sidebar_global:${currentUserId}`,
+    enabled: !!isOpen && !!currentUserId,
+    onInsert: (payload) => {
+      // payload is unknown; assume shape similar to previous implementation
+      try {
+  // @ts-expect-error supabase-payload
+        const conversationId = payload.new?.conversation_id;
+        console.log('New message received:', conversationId);
         refreshConversations();
-        // Sound für empfangene Nachrichten
-        if (payload.new.sender_id !== currentUserId) {
+  // @ts-expect-error supabase-payload
+        if (payload.new?.sender_id !== currentUserId) {
           playMessageReceived();
         }
-      })
-      .subscribe();
-
-    return () => {
-      console.log('Cleaning up unified subscription');
-      supabase.removeChannel(globalMessagesChannel);
-    };
-  }, [isOpen, currentUserId, refreshConversations, playMessageReceived]);
+      } catch {
+        // swallow any shape errors
+      }
+    }
+  });
 
   // Play sounds on open/close
   useEffect(() => {
