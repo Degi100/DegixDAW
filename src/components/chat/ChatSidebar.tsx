@@ -294,19 +294,19 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
         console.error('Error:', error);
       }
     }
-    // Load messages - always reload to get latest from DB
-    if (chat.isExistingConversation) {
+    // Load messages ONLY if not already loaded
+    if (chat.isExistingConversation && !chatMessages[chatId]) {
       const { data } = await supabase.from('messages').select('*').eq('conversation_id', chatId).order('created_at', { ascending: true }).limit(20);
       if (data) {
         setChatMessages(prev => ({ ...prev, [chatId]: data }));
         setShowScrollButton(prev => ({ ...prev, [chatId]: false }));
-        // Instant scroll to bottom on load
+        // Instant scroll to bottom ONLY on first load
         setTimeout(() => {
           historyEndRef.current?.scrollIntoView({ behavior: 'instant' });
         }, 50);
       }
     }
-  }, [expandedChatId, allChats, playMessageReceived, createOrOpenDirectConversation, success, loadConversations]);
+  }, [expandedChatId, allChats, playMessageReceived, createOrOpenDirectConversation, success, loadConversations, chatMessages]);
 
   // Real-time message subscription
   useEffect(() => {
@@ -328,12 +328,15 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
     return () => { supabase.removeChannel(channel); };
   }, [expandedChatId]);
 
-  // Auto-scroll to bottom when messages change (only if not manually scrolled)
+  // Auto-scroll to bottom when NEW messages arrive (only if user is at bottom)
   useEffect(() => {
-    if (expandedChatId && chatMessages[expandedChatId] && !showScrollButton[expandedChatId]) {
-      setTimeout(() => {
-        historyEndRef.current?.scrollIntoView({ behavior: 'instant' });
-      }, 50);
+    if (expandedChatId && chatMessages[expandedChatId]) {
+      const isAtBottom = !showScrollButton[expandedChatId];
+      if (isAtBottom) {
+        setTimeout(() => {
+          historyEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 50);
+      }
     }
   }, [chatMessages, expandedChatId, showScrollButton]);
 
