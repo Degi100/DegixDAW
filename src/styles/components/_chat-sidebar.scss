@@ -595,20 +595,25 @@
 
 .chat-history-msg {
   display: flex;
-  align-items: flex-end;
-  gap: 0.25rem;
-  max-width: 80%;
+  max-width: 85%;
+  margin-bottom: 0.25rem;
   &.sent {
     align-self: flex-end;
-    .chat-history-msg-content {
+    .chat-history-msg-bubble {
       background: linear-gradient(135deg, #3b82f6, #9333ea);
       color: $white;
       border-radius: 12px 12px 0 12px;
     }
+    .chat-history-msg-time {
+      color: rgba(255, 255, 255, 0.8);
+    }
+    .chat-history-msg-status {
+      color: rgba(255, 255, 255, 0.9);
+    }
   }
   &.received {
     align-self: flex-start;
-    .chat-history-msg-content {
+    .chat-history-msg-bubble {
       background: rgba(59, 130, 246, 0.1);
       color: $text-primary;
       border-radius: 12px 12px 12px 0;
@@ -616,16 +621,35 @@
   }
 }
 
-.chat-history-msg-content {
+.chat-history-msg-bubble {
   padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.chat-history-msg-content {
   font-size: 0.8125rem;
   word-wrap: break-word;
+  line-height: 1.4;
+}
+
+.chat-history-msg-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  justify-content: flex-end;
+}
+
+.chat-history-msg-time {
+  font-size: 0.625rem;
+  color: $text-muted;
+  opacity: 0.7;
 }
 
 .chat-history-msg-status {
-  font-size: 0.625rem;
-  color: $text-muted;
-  margin-bottom: 0.25rem;
+  font-size: 0.75rem;
+  color: $corporate-blue-600;
 }
 
 // Quick message input

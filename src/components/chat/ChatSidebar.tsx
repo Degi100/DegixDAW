@@ -292,11 +292,11 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
       }
     }
     // Load messages
-    if (chat.isExistingConversation) {
-      const { data } = await supabase.from('messages').select('*').eq('conversation_id', chatId).order('created_at', { ascending: false }).limit(5);
-      if (data) setChatMessages(prev => ({ ...prev, [chatId]: data.reverse() }));
+    if (chat.isExistingConversation && !chatMessages[chatId]) {
+      const { data } = await supabase.from('messages').select('*').eq('conversation_id', chatId).order('created_at', { ascending: true }).limit(10);
+      if (data) setChatMessages(prev => ({ ...prev, [chatId]: data }));
     }
-  }, [expandedChatId, allChats, playMessageReceived, createOrOpenDirectConversation, success, loadConversations]);
+  }, [expandedChatId, allChats, playMessageReceived, createOrOpenDirectConversation, success, loadConversations, chatMessages]);
 
   const handleSendQuickMessage = useCallback(async (chatId: string) => {
     if (!messageText.trim() || isSendingMessage) return;
@@ -304,20 +304,40 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      await supabase.from('messages').insert({
+      const newMsg = {
+        id: `temp-${Date.now()}`,
+        conversation_id: chatId,
+        sender_id: user.id,
+        content: messageText.trim(),
+        message_type: 'text',
+        created_at: new Date().toISOString(),
+        is_read: false
+      };
+      // Optimistic update
+      setChatMessages(prev => ({
+        ...prev,
+        [chatId]: [...(prev[chatId] || []), newMsg]
+      }));
+      setMessageText('');
+      const { data } = await supabase.from('messages').insert({
         conversation_id: chatId,
         sender_id: user.id,
         content: messageText.trim(),
         message_type: 'text'
-      });
-      setMessageText('');
-      success('Nachricht gesendet!');
+      }).select().single();
+      // Replace temp with real message
+      if (data) {
+        setChatMessages(prev => ({
+          ...prev,
+          [chatId]: prev[chatId].map(m => m.id === newMsg.id ? data : m)
+        }));
+      }
     } catch (error) {
       console.error('Error:', error);
     } finally {
       setIsSendingMessage(false);
     }
-  }, [messageText, isSendingMessage, success]);
+  }, [messageText, isSendingMessage]);
 
   const handleFileUpload = useCallback(async (chatId: string, file: File) => {
     setIsSendingMessage(true);
@@ -600,12 +620,23 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
                   <div className="chat-expanded">
                     {chatMessages[chat.id] && chatMessages[chat.id].length > 0 && (
                       <div className="chat-history">
-                        {chatMessages[chat.id].map(msg => (
-                          <div key={msg.id} className={`chat-history-msg ${msg.sender_id === currentUserId ? 'sent' : 'received'} ${msg.is_read ? 'read' : 'unread'}`}>
-                            <div className="chat-history-msg-content">{msg.content}</div>
-                            <div className="chat-history-msg-status">{msg.sender_id === currentUserId && (msg.is_read ? '✓✓' : '✓')}</div>
-                          </div>
-                        ))}
+                        {chatMessages[chat.id].map(msg => {
+                          const msgDate = new Date(msg.created_at);
+                          const timeStr = msgDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                          return (
+                            <div key={msg.id} className={`chat-history-msg ${msg.sender_id === currentUserId ? 'sent' : 'received'}`}>
+                              <div className="chat-history-msg-bubble">
+                                <div className="chat-history-msg-content">{msg.content}</div>
+                                <div className="chat-history-msg-meta">
+                                  <span className="chat-history-msg-time">{timeStr}</span>
+                                  {msg.sender_id === currentUserId && (
+                                    <span className="chat-history-msg-status">{msg.is_read ? '✓✓' : '✓'}</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                     <div className="chat-quick-message">
