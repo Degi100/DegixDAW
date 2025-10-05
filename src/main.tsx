@@ -47,6 +47,7 @@ const AdminDashboardCorporate = lazy(() => import('./pages/admin/AdminDashboardC
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 const AdminIssues = lazy(() => import('./pages/admin/AdminIssues'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
+const VersionsManagement = lazy(() => import('./pages/admin/VersionsManagement'));
 
 const router = createBrowserRouter([
   // Auth Landing (no header)
@@ -164,94 +165,104 @@ const router = createBrowserRouter([
       </Suspense>
     )
   },
+  {
+    path: '/admin/settings/versions',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <AdminRoute>
+          <VersionsManagement />
+        </AdminRoute>
+      </Suspense>
+    )
+  },
   // Auth Routes (no header)
-  { 
-    path: '/auth/callback', 
+  {
+    path: '/auth/callback',
     element: (
       <Suspense fallback={<PageLoader />}>
         <AuthCallback />
       </Suspense>
-    ) 
+    )
   },
-  { 
-    path: '/auth/resend-confirmation', 
+  {
+    path: '/auth/resend-confirmation',
     element: (
       <Suspense fallback={<PageLoader />}>
         <ResendConfirmation />
       </Suspense>
-    ) 
+    )
   },
-  { 
-    path: '/auth/email-confirmed', 
+  {
+    path: '/auth/email-confirmed',
     element: (
       <Suspense fallback={<PageLoader />}>
         <EmailConfirmed />
       </Suspense>
-    ) 
+    )
   },
-  { 
-    path: '/auth/email-change-confirmed', 
+  {
+    path: '/auth/email-change-confirmed',
     element: (
       <Suspense fallback={<PageLoader />}>
         <EmailChangeConfirmation />
       </Suspense>
-    ) 
+    )
   },
-  { 
-    path: '/auth/forgot-password', 
+  {
+    path: '/auth/forgot-password',
     element: (
       <Suspense fallback={<PageLoader />}>
         <ForgotPassword />
       </Suspense>
-    ) 
+    )
   },
-  { 
-    path: '/auth/set-password', 
+  {
+    path: '/auth/set-password',
     element: (
       <Suspense fallback={<PageLoader />}>
         <SetPassword />
       </Suspense>
-    ) 
+    )
   },
-  { 
-    path: '/auth/recovery', 
+  {
+    path: '/auth/recovery',
     element: (
       <Suspense fallback={<PageLoader />}>
         <AccountRecovery />
       </Suspense>
-    ) 
+    )
   },
-  { 
-    path: '/auth/recover', 
+  {
+    path: '/auth/recover',
     element: (
       <Suspense fallback={<PageLoader />}>
         <RecoverAccount />
       </Suspense>
-    ) 
+    )
   },
-  { 
-    path: '/onboarding/username', 
+  {
+    path: '/onboarding/username',
     element: (
       <Suspense fallback={<PageLoader />}>
         <UsernameOnboarding />
       </Suspense>
-    ) 
+    )
   },
-  { 
-    path: '/404', 
+  {
+    path: '/404',
     element: (
       <Suspense fallback={<PageLoader />}>
         <NotFound />
       </Suspense>
-    ) 
+    )
   },
-  { 
-    path: '*', 
+  {
+    path: '*',
     element: (
       <Suspense fallback={<PageLoader />}>
         <NotFound />
       </Suspense>
-    ) 
+    )
   },
 ]);
 

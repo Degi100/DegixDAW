@@ -4,9 +4,9 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useWelcomeMessage } from '../../hooks/useWelcomeMessage';
-import WelcomeCard from '../../components/dashboard/WelcomeCard';
-import FeatureGrid from '../../components/dashboard/FeatureGrid';
-import ProjectsSection from '../../components/dashboard/ProjectsSection';
+import WelcomeCard from '../../components/dashboard/WelcomeCard.tsx';
+import FeatureGrid from '../../components/dashboard/FeatureGrid.tsx';
+import ProjectsSection from '../../components/dashboard/ProjectsSection.tsx';
 
 export default function DashboardCorporate() {
   const navigate = useNavigate();

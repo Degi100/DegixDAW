@@ -163,6 +163,47 @@
   }
 }
 
+// Sub-Navigation für untergeordnete Seiten
+.admin-subnav {
+  margin-left: var(--spacing-lg);
+  margin-top: var(--spacing-xs);
+
+  @media (max-width: 767px) {
+    margin-left: var(--spacing-md);
+  }
+}
+
+.admin-nav-sublink {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-bottom: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: var(--theme-text-tertiary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  transition: var(--transition);
+
+  @media (max-width: 767px) {
+    padding: var(--spacing-md) var(--spacing-lg);
+    gap: var(--spacing-md);
+  }
+
+  &:hover {
+    background: var(--theme-bg-tertiary);
+    color: var(--primary-color);
+    transform: translateX(2px);
+  }
+
+  &.active {
+    background: rgba(30, 64, 175, 0.1);
+    color: var(--primary-color);
+    border-left: 3px solid var(--primary-color);
+  }
+}
+
 // ============================================
 // LOADING STATES
 // ============================================
