@@ -77,6 +77,7 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
   const [isResizingHeight, setIsResizingHeight] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 768);
 
   // Get current user ID
   useEffect(() => {
@@ -85,6 +86,16 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
       setCurrentUserId(data.user?.id || null);
     };
     getUser();
+  }, []);
+
+  // Handle window resize for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // Debounced refresh function to prevent too many updates
@@ -306,9 +317,11 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
 
   // Resize width handler
   const handleResizeWidthStart = useCallback((e: React.MouseEvent) => {
+    if (isMobile) return; // Disable on mobile
     e.preventDefault();
+    e.stopPropagation();
     setIsResizingWidth(true);
-  }, []);
+  }, [isMobile]);
 
   useEffect(() => {
     if (!isResizingWidth) return;
@@ -333,9 +346,11 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
 
   // Resize height handler
   const handleResizeHeightStart = useCallback((e: React.MouseEvent) => {
+    if (isMobile) return; // Disable on mobile
     e.preventDefault();
+    e.stopPropagation();
     setIsResizingHeight(true);
-  }, []);
+  }, [isMobile]);
 
   useEffect(() => {
     if (!isResizingHeight) return;
@@ -360,10 +375,13 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
 
   // Drag handler
   const handleDragStart = useCallback((e: React.MouseEvent) => {
+    if (isMobile) return; // Disable on mobile
+    // Don't drag if clicking on buttons
+    if ((e.target as HTMLElement).closest('button')) return;
     e.preventDefault();
     setIsDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
-  }, []);
+  }, [isMobile]);
 
   useEffect(() => {
     if (!isDragging || !dragStart) return;
@@ -415,28 +433,35 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
           right: `${sidebarPosition.right}px`
         }}
       >
-        {/* Resize handles */}
-        <div 
-          className="chat-sidebar-resize-handle chat-sidebar-resize-handle--left"
-          onMouseDown={handleResizeWidthStart}
-        />
-        <div 
-          className="chat-sidebar-resize-handle chat-sidebar-resize-handle--bottom"
-          onMouseDown={handleResizeHeightStart}
-        />
-        <div 
-          className="chat-sidebar-resize-handle chat-sidebar-resize-handle--corner"
-          onMouseDown={(e) => {
-            handleResizeWidthStart(e);
-            handleResizeHeightStart(e);
-          }}
-        />
+        {/* Resize handles - hidden on mobile */}
+        {!isMobile && (
+          <>
+            <div 
+              className="chat-sidebar-resize-handle chat-sidebar-resize-handle--left"
+              onMouseDown={handleResizeWidthStart}
+            />
+            <div 
+              className="chat-sidebar-resize-handle chat-sidebar-resize-handle--bottom"
+              onMouseDown={handleResizeHeightStart}
+            />
+            <div 
+              className="chat-sidebar-resize-handle chat-sidebar-resize-handle--corner"
+              onMouseDown={(e) => {
+                if (isMobile) return;
+                e.preventDefault();
+                e.stopPropagation();
+                setIsResizingWidth(true);
+                setIsResizingHeight(true);
+              }}
+            />
+          </>
+        )}
 
         {/* Header */}
         <div 
           className="chat-sidebar-header"
           onMouseDown={handleDragStart}
-          style={{ cursor: 'move' }}
+          style={{ cursor: isMobile ? 'default' : 'move' }}
         >
           <div className="chat-sidebar-title">
             <span className="chat-icon">💬</span>
