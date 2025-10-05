@@ -8,6 +8,7 @@ import Header from '../../components/layout/Header';
 import WelcomeCard from '../../components/dashboard/WelcomeCard';
 import FeatureGrid from '../../components/dashboard/FeatureGrid';
 import ProjectsSection from '../../components/dashboard/ProjectsSection';
+import VersionDisplay from '../../components/ui/VersionDisplay';
 
 export default function DashboardCorporate() {
   const navigate = useNavigate();
@@ -50,6 +51,7 @@ export default function DashboardCorporate() {
           />
           <FeatureGrid />
           <ProjectsSection />
+          <VersionDisplay />
         </div>
       </main>
     </div>
