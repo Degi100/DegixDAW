@@ -292,14 +292,18 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
         console.error('Error:', error);
       }
     }
-    // Load messages only once
-    if (chat.isExistingConversation && !chatMessages[chatId]) {
-      const { data } = await supabase.from('messages').select('*').eq('conversation_id', chatId).order('created_at', { ascending: true }).limit(10);
+    // Load messages - always reload to get latest from DB
+    if (chat.isExistingConversation) {
+      const { data } = await supabase.from('messages').select('*').eq('conversation_id', chatId).order('created_at', { ascending: true }).limit(20);
       if (data) {
         setChatMessages(prev => ({ ...prev, [chatId]: data }));
+        // Scroll after loading
+        setTimeout(() => {
+          historyEndRef.current?.scrollIntoView({ behavior: 'auto' });
+        }, 150);
       }
     }
-  }, [expandedChatId, allChats, playMessageReceived, createOrOpenDirectConversation, success, loadConversations, chatMessages]);
+  }, [expandedChatId, allChats, playMessageReceived, createOrOpenDirectConversation, success, loadConversations]);
 
   // Real-time message subscription
   useEffect(() => {
@@ -321,9 +325,13 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
     return () => { supabase.removeChannel(channel); };
   }, [expandedChatId]);
 
-  // Auto-scroll to bottom
+  // Auto-scroll to bottom when messages change
   useEffect(() => {
-    historyEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (expandedChatId && chatMessages[expandedChatId]) {
+      setTimeout(() => {
+        historyEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
   }, [chatMessages, expandedChatId]);
 
   const handleSendQuickMessage = useCallback(async (chatId: string) => {
