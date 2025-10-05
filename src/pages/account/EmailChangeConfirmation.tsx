@@ -1,5 +1,5 @@
 // src/pages/EmailChangeConfirmation.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Container from '../../components/layout/Container';
 import Button from '../../components/ui/Button';
@@ -12,6 +12,10 @@ export default function EmailChangeConfirmation() {
   const { user, signOut } = useAuth();
   const [countdown, setCountdown] = useState(10);
   const [newEmail, setNewEmail] = useState<string | null>(null);
+
+  const handleContinueWithCurrentEmail = useCallback(() => {
+    navigate('/settings');
+  }, [navigate]);
 
   useEffect(() => {
     // Check URL parameters for new email
@@ -31,11 +35,7 @@ export default function EmailChangeConfirmation() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
-
-  const handleContinueWithCurrentEmail = () => {
-    navigate('/settings');
-  };
+  }, [handleContinueWithCurrentEmail]);
 
   const handleLogoutAndUseNewEmail = async () => {
     try {
