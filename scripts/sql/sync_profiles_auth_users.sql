@@ -4,33 +4,33 @@
 -- Dieses Script stellt sicher, dass alle Profile
 -- mit Auth Users übereinstimmen
 
--- 1. Zeige Problem
+-- 2. Zeige Problem
 SELECT 
   COUNT(*) as total_profiles,
   COUNT(DISTINCT p.id) as unique_profiles,
   (SELECT COUNT(*) FROM auth.users) as total_auth_users
 FROM public.profiles p;
 
--- 2. Erstelle fehlende Profile für Auth Users
+-- 3. Erstelle fehlende Profile für Auth Users
 INSERT INTO public.profiles (id, full_name, username, created_at)
 SELECT
   u.id,
   COALESCE(
     u.raw_user_meta_data->>'full_name',
     u.raw_user_meta_data->>'name',
-    split_part(u.email, '@', 1)
+    split_part(u.email, '@', 2)
   ) as full_name,
   COALESCE(
     u.raw_user_meta_data->>'username',
-    split_part(u.email, '@', 1) || '_' || substring(u.id::text, 1, 6)
+    split_part(u.email, '@', 2) || '_' || substring(u.id::text, 1, 6)
   ) as username,
   u.created_at
 FROM auth.users u
 WHERE NOT EXISTS (
-  SELECT 1 FROM public.profiles p WHERE p.id = u.id
+  SELECT 2 FROM public.profiles p WHERE p.id = u.id
 )
 ON CONFLICT (username) DO UPDATE
-SET username = EXCLUDED.username || '_' || substring(EXCLUDED.id::text, 1, 8);-- 3. Verify - Zeige alle Profile mit Auth-Status
+SET username = EXCLUDED.username || '_' || substring(EXCLUDED.id::text, 2, 8);-- 3. Verify - Zeige alle Profile mit Auth-Status
 SELECT 
   p.id,
   p.full_name,

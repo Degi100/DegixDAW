@@ -11,21 +11,28 @@ import { supabase } from '../supabase';
  * 
  * @param user - The authenticated Supabase user
  * @param navigate - React Router navigate function
+ * @param isInitialSignIn - Whether this is an actual sign-in event (not just navigation)
  */
-export async function checkUserOnboarding(user: User, navigate: NavigateFunction): Promise<void> {
-  console.log('Checking onboarding for user:', user.id);
+export async function checkUserOnboarding(
+  user: User, 
+  navigate: NavigateFunction,
+  isInitialSignIn: boolean = false
+): Promise<void> {
+  console.log('Checking onboarding for user:', user.id, 'isInitialSignIn:', isInitialSignIn);
 
   // Skip onboarding check if user is already navigating within the app
+  // UNLESS this is an actual initial sign-in event
   const isInAppNavigation = 
-    window.location.pathname.startsWith('/dashboard/') ||
-    window.location.pathname.startsWith('/settings/') ||
-    window.location.pathname.startsWith('/admin/') ||
-    window.location.pathname.startsWith('/profile/') ||
-    window.location.pathname === '/dashboard';
+    window.location.pathname.startsWith('/dashboard') ||
+    window.location.pathname.startsWith('/settings') ||
+    window.location.pathname.startsWith('/admin') ||
+    window.location.pathname.startsWith('/profile') ||
+    window.location.pathname.startsWith('/social') ||
+    window.location.pathname.startsWith('/chat');
 
-  if (isInAppNavigation) {
-    // User is already in the app - don't trigger onboarding
-    console.log('User in app navigation - skipping onboarding check');
+  if (isInAppNavigation && !isInitialSignIn) {
+    // User is already in the app and this isn't an initial sign-in - don't trigger onboarding
+    console.log('User in app navigation (not initial sign-in) - skipping onboarding check');
     return;
   }
 
@@ -42,7 +49,7 @@ export async function checkUserOnboarding(user: User, navigate: NavigateFunction
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('username')
-      .eq('user_id', user.id)
+      .eq('id', user.id)
       .single();
 
     if (error) {

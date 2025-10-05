@@ -69,7 +69,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ activeConver
       return conv.name || 'Unbenannte Gruppe';
     }
     // Direct Chat: Zeige den anderen User
-    const otherMember = conv.members?.find(m => m.id !== conv.currentUserId);
+    const otherMember = conv.members?.find(m => m.user_id !== conv.currentUserId);
     return otherMember?.display_name || otherMember?.username || 'Unbekannter User';
   };
 
@@ -78,37 +78,49 @@ export const ConversationList: React.FC<ConversationListProps> = ({ activeConver
       return conv.avatar_url || '/default-group-avatar.png';
     }
     // Direct Chat: Avatar des anderen Users
-    const otherMember = conv.members?.find(m => m.id !== conv.currentUserId);
+    const otherMember = conv.members?.find(m => m.user_id !== conv.currentUserId);
     return otherMember?.avatar_url || '/default-avatar.png';
   };
 
   const getLastMessagePreview = (conv: Conversation) => {
     if (!conv.lastMessage) return 'Keine Nachrichten';
-    
     const { content, message_type, sender_id } = conv.lastMessage;
     const isOwnMessage = sender_id === conv.currentUserId;
-    const prefix = isOwnMessage ? 'Du: ' : '';
 
+    // Bestimme Namen-Präfix: eigene Nachrichten -> 'Du', fremde -> Name der anderen Person
+    let prefix = 'Du';
+    if (!isOwnMessage) {
+      const otherMember = conv.members?.find(m => m.user_id !== conv.currentUserId);
+      prefix = otherMember?.display_name || otherMember?.username || 'Unbekannter User';
+    }
+
+    let preview = '';
     switch (message_type) {
       case 'text':
-        return `${prefix}${content || ''}`;
+        preview = content || '';
+        break;
       case 'image':
-        return `${prefix}📷 Bild`;
+        preview = '📷 Bild';
+        break;
       case 'video':
-        return `${prefix}🎥 Video`;
+        preview = '🎥 Video';
+        break;
       case 'voice':
-        return `${prefix}🎤 Sprachnachricht`;
+        preview = '🎤 Sprachnachricht';
+        break;
       case 'file':
-        return `${prefix}📎 Datei`;
+        preview = '📎 Datei';
+        break;
       default:
-        return `${prefix}Nachricht`;
+        preview = 'Nachricht';
     }
+    return `${prefix}: ${preview}`;
   };
 
   const getOnlineStatus = (conv: Conversation) => {
-    if (conv.type === 'group') return false;
-    const otherMember = conv.members?.find(m => m.id !== conv.currentUserId);
-    return otherMember?.is_online || false;
+  if (conv.type === 'group') return false;
+  const otherMember = conv.members?.find(m => m.user_id !== conv.currentUserId);
+  return otherMember?.is_online || false;
   };
 
   if (loading) {

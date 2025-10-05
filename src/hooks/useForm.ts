@@ -9,7 +9,7 @@ interface UseFormOptions<T> {
   onSubmit: (data: T) => Promise<void> | void;
 }
 
-export function useForm<T extends Record<string, string>>({ 
+export function useForm<T extends Record<string, string | undefined>>({ 
   schema, 
   initialValues, 
   onSubmit 
@@ -101,4 +101,4 @@ export function useForm<T extends Record<string, string>>({
     hasErrors: Object.keys(errors).length > 0,
     isValid: Object.keys(errors).length === 0,
   };
-}
+} 

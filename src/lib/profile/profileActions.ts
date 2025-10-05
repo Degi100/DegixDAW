@@ -9,6 +9,7 @@ import { getEmailChangeCallbackUrl } from '../urlUtils';
 export interface ProfileUpdates {
   username?: string;
   full_name?: string;
+  bio?: string;
 }
 
 /**
@@ -22,14 +23,15 @@ export async function updateProfile(
     // Schreibe die Daten in die Tabelle 'profiles' (Upsert)
     // NUR die Spalten verwenden, die tatsächlich in der DB existieren
     const profileData = {
-      user_id: userId,
+      id: userId,
       username: updates.username,
-      full_name: updates.full_name
+      full_name: updates.full_name,
+      bio: updates.bio
     };
 
     const { error } = await supabase
       .from('profiles')
-      .upsert([profileData], { onConflict: 'user_id' });
+      .upsert([profileData], { onConflict: 'id' });
 
     if (error) {
       return { success: false, error: handleAuthError(error) };
@@ -39,6 +41,7 @@ export async function updateProfile(
     const metadataUpdates: Record<string, unknown> = {};
     if (updates.username) metadataUpdates.username = updates.username;
     if (updates.full_name) metadataUpdates.full_name = updates.full_name;
+    if (updates.bio) metadataUpdates.bio = updates.bio;
     
     if (Object.keys(metadataUpdates).length > 0) {
       const { error: metaError } = await supabase.auth.updateUser({
@@ -175,7 +178,7 @@ export async function deleteAccount(
         username: null,
         full_name: '[GELÖSCHT]'
       })
-      .eq('user_id', userId);
+      .eq('id', userId);
 
     if (profileError) {
       return { 

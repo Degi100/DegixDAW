@@ -3,7 +3,7 @@
 // Set username during OAuth onboarding
 // ============================================
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../hooks/useToast';
@@ -46,6 +46,13 @@ export default function UsernameOnboarding() {
                           user?.email || 'Benutzer';
   
   const hasExistingUsername = !!user?.user_metadata?.username;
+
+  // Redirect if user already has username (in useEffect to avoid render issues)
+  useEffect(() => {
+    if (hasExistingUsername) {
+      navigate('/dashboard');
+    }
+  }, [hasExistingUsername, navigate]);
 
   // ============================================
   // EVENT HANDLERS
@@ -202,9 +209,8 @@ export default function UsernameOnboarding() {
   // RENDER
   // ============================================
 
-  // Redirect if user already has username
+  // Show nothing while redirecting
   if (hasExistingUsername) {
-    navigate('/dashboard');
     return null;
   }
 

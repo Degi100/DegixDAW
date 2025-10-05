@@ -37,9 +37,9 @@ export default function AdminIssues() {
   } = useIssueActions(createIssue, updateIssue, deleteIssue, getStats);
 
   const filteredIssues = filterIssues({
-    status: statusFilter === 'all' ? undefined : statusFilter,
-    priority: priorityFilter === 'all' ? undefined : priorityFilter,
-    search: searchTerm || undefined,
+    ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
+    ...(priorityFilter !== 'all' ? { priority: priorityFilter } : {}),
+    ...(searchTerm ? { search: searchTerm } : {}),
   });
 
   // Filter completed issues if toggle is off

@@ -20,9 +20,11 @@ export default function HeaderNav({ navItems }: HeaderNavProps) {
   const location = useLocation();
 
   const isActivePath = (path: string) => {
-    if (path === '/') {
-      return location.pathname === '/';
+    // Exact match for dashboard
+    if (path === '/dashboard') {
+      return location.pathname === '/dashboard' || location.pathname === '/';
     }
+    // For other paths, check if current path starts with it
     return location.pathname.startsWith(path);
   };
 

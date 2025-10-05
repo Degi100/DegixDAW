@@ -33,6 +33,7 @@ export function useAuth() {
   // Initialize auth state
   useEffect(() => {
     let mounted = true;
+    let isInitialLoad = true;
 
     const initializeAuth = async () => {
       try {
@@ -61,6 +62,12 @@ export function useAuth() {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        // Skip initial load event to prevent unnecessary checks
+        if (isInitialLoad) {
+          isInitialLoad = false;
+          return;
+        }
+
         if (mounted) {
           setState({
             user: session?.user ?? null,
@@ -69,9 +76,10 @@ export function useAuth() {
           });
         }
 
-        // Handle sign in events - check if user needs onboarding
+        // Only check onboarding on actual SIGNED_IN events (not TOKEN_REFRESHED or INITIAL_SESSION)
         if (event === 'SIGNED_IN' && session?.user) {
-          await checkUserOnboarding(session.user, navigate);
+          // Pass true to indicate this is an actual sign-in event
+          await checkUserOnboarding(session.user, navigate, true);
         }
       }
     );
@@ -101,7 +109,7 @@ export function useAuth() {
 
   const signUpWithEmail = async (data: SignUpData): Promise<{ success: boolean; error?: AuthError }> => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data: signUpData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
@@ -119,6 +127,26 @@ export function useAuth() {
 
       if (error) {
         return { success: false, error: handleAuthError(error) };
+      }
+
+      // Automatically create profile for new user
+      if (signUpData.user) {
+        try {
+          const emailPrefix = data.email.split('@')[0];
+          const userIdShort = signUpData.user.id.substring(0, 6);
+          
+          await supabase.from('profiles').insert({
+            id: signUpData.user.id,
+            full_name: data.fullName || emailPrefix,
+            username: `${emailPrefix}_${userIdShort}`,
+            created_at: new Date().toISOString()
+          });
+          
+          console.log('Profile created automatically for new user');
+        } catch (profileError) {
+          console.warn('Profile creation failed (will be handled by onboarding):', profileError);
+          // Don't fail signup if profile creation fails - onboarding will handle it
+        }
       }
 
       return { success: true };

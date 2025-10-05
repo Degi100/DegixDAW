@@ -1,9 +1,9 @@
 // ============================================
 // GLOBAL HEADER COMPONENT
-// Corporate Theme - Consistent Navigation
+// corporate Theme - Consistent Navigation
 // ============================================
 
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
@@ -29,10 +29,12 @@ interface HeaderProps {
   customNavItems?: NavigationItem[];
   showAdminBadge?: boolean;
   adminLevel?: string;
+  onChatToggle?: () => void;
+  unreadChatCount?: number;
 }
 
 const navigationItems: NavigationItem[] = [
-  { path: '/', label: 'Dashboard', icon: '🏠', requiresAuth: true },
+  { path: '/dashboard', label: 'Dashboard', icon: '🏠', requiresAuth: true },
   { path: '/social', label: 'Social', icon: '👥', requiresAuth: true },
 ];
 
@@ -40,7 +42,9 @@ export default function Header({
   customBrand,
   customNavItems,
   showAdminBadge = false,
-  adminLevel
+  adminLevel,
+  onChatToggle,
+  unreadChatCount = 0
 }: HeaderProps) {
   const { user, signOut } = useAuth();
   const { isDark, toggleTheme } = useTheme();
@@ -48,24 +52,29 @@ export default function Header({
   const { isAdmin } = useAdmin();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const handleThemeToggle = () => {
+  const handleThemeToggle = useCallback(() => {
     toggleTheme();
-  };
+  }, [toggleTheme]);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       await signOut();
       success('Erfolgreich abgemeldet! 👋');
     } catch (error) {
       console.error('Logout error:', error);
     }
-  };
+  }, [signOut, success]);
 
-  const filteredNavItems = (customNavItems || navigationItems).filter(item =>
-    !item.requiresAuth || user
+  const filteredNavItems = useMemo(() => 
+    (customNavItems || navigationItems).filter(item =>
+      !item.requiresAuth || user
+    ), [customNavItems, user]
   );
 
-  const currentBrand = customBrand || { icon: '🎛️', name: APP_CONFIG.name };
+  const currentBrand = useMemo(() => 
+    customBrand || { icon: '🎛️', name: APP_CONFIG.name }, 
+    [customBrand]
+  );
 
   return (
     <header className="global-header">
@@ -73,7 +82,7 @@ export default function Header({
         {/* Alles in einer Reihe: Branding (Icon), Navigation, User, Theme */}
         <div className="brand-container">
           <Link
-            to="/"
+            to="/dashboard"
             className="brand-link compact"
             aria-label="Go to Dashboard"
           >
@@ -88,6 +97,20 @@ export default function Header({
         <HeaderNav navItems={filteredNavItems} />
 
         <div className="header-actions">
+          {/* Chat Toggle Button */}
+          {user && onChatToggle && (
+            <button
+              onClick={onChatToggle}
+              className="chat-toggle-btn"
+              aria-label="Chat öffnen"
+            >
+              <span className="chat-icon">💬</span>
+              {unreadChatCount > 0 && (
+                <span className="chat-badge">{unreadChatCount}</span>
+              )}
+            </button>
+          )}
+
           {user ? (
             <UserDropdown
               user={user}

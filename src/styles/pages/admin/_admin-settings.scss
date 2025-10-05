@@ -129,6 +129,22 @@
     transform: translateY(-1px);
   }
 
+  &--clickable {
+    cursor: pointer;
+
+    &:hover {
+      box-shadow: var(--theme-shadow-lg);
+      transform: translateY(-2px);
+      border-color: var(--primary-color);
+      background: linear-gradient(135deg, rgba(30, 64, 175, 0.05), rgba(30, 64, 175, 0.02));
+    }
+
+    .info-icon {
+      background: linear-gradient(135deg, var(--primary-color), rgba(30, 64, 175, 0.8));
+      color: white;
+    }
+  }
+
   .info-icon {
     width: 48px;
     height: 48px;

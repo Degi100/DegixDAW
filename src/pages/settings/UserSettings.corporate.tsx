@@ -1,9 +1,8 @@
 // src/pages/settings/UserSettings.corporate.tsx
-// Ultimate Corporate User Settings - Professional & Modern Design
+// Ultimate corporate User Settings - Professional & Modern Design
 
 import { useState } from 'react';
 import { LoadingOverlay } from '../../components/ui/Loading';
-import Header from '../../components/layout/Header';
 import ProfileSettingsSection from '../../components/settings/ProfileSettingsSection';
 import SecuritySettingsSection from '../../components/settings/SecuritySettingsSection';
 import AccountSettingsSection from '../../components/settings/AccountSettingsSection';
@@ -16,8 +15,6 @@ import { useAccountSection } from '../../hooks/settings/useAccountSection';
 
 export default function UserSettingsCorporate() {
   const { user } = useAuth();
-
-  // Navigation state
   const [activeSection, setActiveSection] = useState<'profile' | 'security' | 'account'>('profile');
 
   // Section hooks
@@ -31,8 +28,6 @@ export default function UserSettingsCorporate() {
 
   return (
     <div className="settings-corporate">
-      <Header />
-
       {/* Settings Content */}
       <main className="settings-main">
         <div className="settings-container">

@@ -27,7 +27,7 @@ export function useProfileSection(user: User | null) {
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('id', user.id)
           .single();
 
         if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
@@ -42,7 +42,7 @@ export function useProfileSection(user: User | null) {
             fullName: profile.full_name || user?.user_metadata?.full_name || '',
             username: profile.username || user?.user_metadata?.username || '',
             displayName: user?.user_metadata?.display_name || user?.user_metadata?.full_name || '',
-            bio: user?.user_metadata?.bio || ''
+            bio: profile.bio || user?.user_metadata?.bio || ''
           });
         }
       } catch (err) {
@@ -75,7 +75,8 @@ export function useProfileSection(user: User | null) {
       const fullName = `${profileData.firstName} ${profileData.lastName}`.trim();
       const result = await updateProfile(user?.id || '', {
         full_name: fullName || profileData.fullName,
-        username: profileData.username
+        username: profileData.username,
+        bio: profileData.bio
       });
       
       if (result.success) {

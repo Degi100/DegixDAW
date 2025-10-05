@@ -1,7 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://xcdzugnjzrkngzmtzeip.supabase.co'
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjZHp1Z25qenJrbmd6bXR6ZWlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3MzY4NjAsImV4cCI6MjA3NDMxMjg2MH0.5W99cq4lNO_5XqVWkGJ8_q4C6PzD0gSKnJjj37NU-rU'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Fehlende Umgebungsvariablen: VITE_SUPABASE_URL und VITE_SUPABASE_ANON_KEY müssen in .env definiert sein.');
+}
 
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
@@ -16,12 +20,12 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
   }
 })
 
-// Hole das Profil eines Users anhand der user_id
+// Hole das Profil eines Users anhand der id
 export async function getProfileByUserId(userId: string) {
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
-    .eq('user_id', userId)
+    .eq('id', userId)
     .single();
   return { data, error };
 }
@@ -68,4 +72,3 @@ export async function verifyCurrentPassword(password: string): Promise<boolean> 
     return false
   }
 }
-

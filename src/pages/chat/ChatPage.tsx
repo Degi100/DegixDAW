@@ -11,7 +11,7 @@ const ChatPage: React.FC = () => {
     <div className="chat-page">
       {/* Sidebar: Conversation List */}
       <aside className="chat-page__sidebar">
-        <ConversationList activeConversationId={conversationId} />
+        <ConversationList {...(conversationId ? { activeConversationId: conversationId } : {})} />
       </aside>
 
       {/* Main: Chat Window */}

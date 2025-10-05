@@ -7,6 +7,9 @@ import ErrorBoundary from './components/ui/ErrorBoundary';
 import PageLoader from './components/ui/PageLoader';
 import { ToastContainer } from './components/ui/Toast';
 
+// Layout Components
+import AppLayout from './components/layout/AppLayout';
+
 // Lazy load components for better code splitting
 // Auth Pages
 const AuthCallback = lazy(() => import('./pages/auth/AuthCallback'));
@@ -44,10 +47,10 @@ const AdminDashboardCorporate = lazy(() => import('./pages/admin/AdminDashboardC
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 const AdminIssues = lazy(() => import('./pages/admin/AdminIssues'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
-
-
+const VersionsManagement = lazy(() => import('./pages/admin/VersionsManagement'));
 
 const router = createBrowserRouter([
+  // Auth Landing (no header)
   {
     path: '/',
     element: (
@@ -56,175 +59,210 @@ const router = createBrowserRouter([
       </Suspense>
     )
   },
+  // Main App Routes (with AppLayout + Header)
   {
     path: '/dashboard',
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <Dashboard />
-      </Suspense>
-    )
+    element: <AppLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <Dashboard />
+          </Suspense>
+        )
+      }
+    ]
   },
   {
     path: '/social',
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <Social />
-      </Suspense>
-    )
+    element: <AppLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <Social />
+          </Suspense>
+        )
+      }
+    ]
   },
   {
     path: '/chat',
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <ChatPage />
-      </Suspense>
-    )
+    element: <AppLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <ChatPage />
+          </Suspense>
+        )
+      },
+      {
+        path: ':conversationId',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <ChatPage />
+          </Suspense>
+        )
+      }
+    ]
   },
   {
-    path: '/chat/:conversationId',
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <ChatPage />
-      </Suspense>
-    )
+    path: '/settings',
+    element: <AppLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <UserSettings />
+          </Suspense>
+        )
+      }
+    ]
   },
-  // /login Route entfernt
-  { 
-    path: '/auth/callback', 
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <AuthCallback />
-      </Suspense>
-    ) 
-  },
-  { 
-    path: '/auth/resend-confirmation', 
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <ResendConfirmation />
-      </Suspense>
-    ) 
-  },
-  { 
-    path: '/auth/email-confirmed', 
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <EmailConfirmed />
-      </Suspense>
-    ) 
-  },
-  { 
-    path: '/auth/email-change-confirmed', 
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <EmailChangeConfirmation />
-      </Suspense>
-    ) 
-  },
-  { 
-    path: '/auth/forgot-password', 
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <ForgotPassword />
-      </Suspense>
-    ) 
-  },
-  { 
-    path: '/auth/set-password', 
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <SetPassword />
-      </Suspense>
-    ) 
-  },
-  { 
-    path: '/auth/recovery', 
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <AccountRecovery />
-      </Suspense>
-    ) 
-  },
-  { 
-    path: '/auth/recover', 
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <RecoverAccount />
-      </Suspense>
-    ) 
-  },
-  { 
-    path: '/onboarding/username', 
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <UsernameOnboarding />
-      </Suspense>
-    ) 
-  },
-  { 
-    path: '/settings', 
-    element: (
-      <Suspense fallback={<PageLoader />}>
-        <UserSettings />
-      </Suspense>
-    ) 
-  },
-  // Admin Routes (Protected)
-  { 
-    path: '/admin', 
+  // Admin Routes (with own AdminLayoutCorporate - no AppLayout!)
+  {
+    path: '/admin',
     element: (
       <Suspense fallback={<PageLoader />}>
         <AdminRoute>
           <AdminDashboardCorporate />
         </AdminRoute>
       </Suspense>
-    ) 
+    )
   },
-  { 
-    path: '/admin/users', 
+  {
+    path: '/admin/users',
     element: (
       <Suspense fallback={<PageLoader />}>
         <AdminRoute>
           <AdminUsers />
         </AdminRoute>
       </Suspense>
-    ) 
+    )
   },
-  { 
-    path: '/admin/issues', 
+  {
+    path: '/admin/issues',
     element: (
       <Suspense fallback={<PageLoader />}>
         <AdminRoute>
           <AdminIssues />
         </AdminRoute>
       </Suspense>
-    ) 
+    )
   },
-  { 
-    path: '/admin/settings', 
+  {
+    path: '/admin/settings',
     element: (
       <Suspense fallback={<PageLoader />}>
         <AdminRoute>
           <AdminSettings />
         </AdminRoute>
       </Suspense>
-    ) 
+    )
   },
-  { 
-    path: '/404', 
+  {
+    path: '/admin/settings/versions',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <AdminRoute>
+          <VersionsManagement />
+        </AdminRoute>
+      </Suspense>
+    )
+  },
+  // Auth Routes (no header)
+  {
+    path: '/auth/callback',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <AuthCallback />
+      </Suspense>
+    )
+  },
+  {
+    path: '/auth/resend-confirmation',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <ResendConfirmation />
+      </Suspense>
+    )
+  },
+  {
+    path: '/auth/email-confirmed',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <EmailConfirmed />
+      </Suspense>
+    )
+  },
+  {
+    path: '/auth/email-change-confirmed',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <EmailChangeConfirmation />
+      </Suspense>
+    )
+  },
+  {
+    path: '/auth/forgot-password',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <ForgotPassword />
+      </Suspense>
+    )
+  },
+  {
+    path: '/auth/set-password',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <SetPassword />
+      </Suspense>
+    )
+  },
+  {
+    path: '/auth/recovery',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <AccountRecovery />
+      </Suspense>
+    )
+  },
+  {
+    path: '/auth/recover',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <RecoverAccount />
+      </Suspense>
+    )
+  },
+  {
+    path: '/onboarding/username',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <UsernameOnboarding />
+      </Suspense>
+    )
+  },
+  {
+    path: '/404',
     element: (
       <Suspense fallback={<PageLoader />}>
         <NotFound />
       </Suspense>
-    ) 
+    )
   },
-  { 
-    path: '*', 
+  {
+    path: '*',
     element: (
       <Suspense fallback={<PageLoader />}>
         <NotFound />
       </Suspense>
-    ) 
+    )
   },
 ]);
 

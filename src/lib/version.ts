@@ -1,3 +1,8 @@
+// src/lib/version.ts
+// Version Management - Centralized Version Information
+
+import { APP_CONFIG } from './constants';
+
 export interface VersionInfo {
   version: string;
   date: string;
@@ -63,7 +68,7 @@ export const VERSION_HISTORY: VersionInfo[] = [
   }
 ];
 
-export const CURRENT_VERSION = VERSION_HISTORY[0].version;
+export const CURRENT_VERSION = APP_CONFIG.version;
 
 export const getVersionInfo = (version?: string): VersionInfo | undefined => {
   return VERSION_HISTORY.find(v => v.version === version);

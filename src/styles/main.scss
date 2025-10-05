@@ -8,6 +8,7 @@
 // 2. Layout
 @use 'layout/sidebar';
 @use 'layout/responsive';
+@use 'components/layout/app-layout';
 
 // 3. Components
 @use 'components/forms/forms-core';
@@ -26,6 +27,7 @@
 @use 'components/chat-window';
 @use 'components/message-bubble';
 @use 'components/message-input';
+@use 'components/chat-sidebar';
 
 // 4. Pages
 @use 'pages/auth/auth-landing/index' as auth-landing;

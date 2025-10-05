@@ -107,7 +107,7 @@ export default function IssueList({
           key={issue.id}
           issue={issue}
           isSelected={selectedIssueIds.includes(issue.id)}
-          onToggleSelect={onToggleSelect}
+          {...(onToggleSelect ? { onToggleSelect } : {})}
           onPriorityChange={onPriorityChange}
           onStatusProgress={onStatusProgress}
           onCopy={onCopy}

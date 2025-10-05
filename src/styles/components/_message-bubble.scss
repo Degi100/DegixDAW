@@ -11,8 +11,8 @@
 
   &--sent {
     align-self: flex-end;
-    background-color: var(--chat-bubble-sent);
-    color: var(--chat-text-sent);
+  background-color: var(--chat-bubble-sent);
+  color: var(--chat-text-sent);
     border-radius: 12px 12px 4px 12px;
   }
 
@@ -82,6 +82,8 @@
 
       &:hover {
         transform: scale(1.02);
+        background-color: var(--error-light) !important;
+        color: #fff !important;
       }
     }
   }

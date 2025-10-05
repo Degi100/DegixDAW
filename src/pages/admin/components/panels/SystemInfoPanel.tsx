@@ -1,6 +1,7 @@
 // src/pages/admin/components/panels/SystemInfoPanel.tsx
 // System Information Display Panel
 
+import { NavLink } from 'react-router-dom';
 import Button from '../../../../components/ui/Button';
 import type { SystemInfoPanelProps } from '../../types/admin.types';
 
@@ -31,13 +32,13 @@ export default function SystemInfoPanel({
       <p className="section-description">Read-only system status and information</p>
 
       <div className="info-grid">
-        <div className="info-card">
+        <NavLink to="/admin/settings/versions" className="info-card info-card--clickable">
           <div className="info-icon">📦</div>
           <div className="info-content">
             <div className="info-label">Application Version</div>
             <div className="info-value">{systemInfo.appVersion}</div>
           </div>
-        </div>
+        </NavLink>
 
         <div className="info-card">
           <div className="info-icon">🗄️</div>

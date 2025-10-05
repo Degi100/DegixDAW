@@ -2,16 +2,21 @@
 // Comprehensive Admin Settings Page - Refactored with Modular Panels
 
 import { useState, useCallback } from 'react';
+import { Routes, Route, NavLink } from 'react-router-dom';
 import AdminLayoutCorporate from '../../components/admin/AdminLayoutCorporate';
 import { useTheme } from '../../hooks/useTheme';
 import { useToast } from '../../hooks/useToast';
 import { MockDataBadge } from '../../components/admin/MockDataBadge';
+import { APP_CONFIG } from '../../lib/constants';
 
 // Panel Components
 import SystemInfoPanel from './components/panels/SystemInfoPanel';
 import SecuritySettingsPanel from './components/panels/SecuritySettingsPanel';
 import ApplicationSettingsPanel from './components/panels/ApplicationSettingsPanel';
 import NotificationSettingsPanel from './components/panels/NotificationSettingsPanel';
+
+// Version Management Component
+import VersionsManagement from './VersionsManagement';
 
 import type {
   SystemInfo,
@@ -26,7 +31,7 @@ export default function AdminSettings() {
 
   // System Info (read-only)
   const [systemInfo] = useState<SystemInfo>({
-    appVersion: '1.0.0',
+    appVersion: APP_CONFIG.version,
     dbStatus: 'connected',
     apiStatus: 'online',
     lastBackup: new Date().toISOString(),
@@ -123,92 +128,112 @@ export default function AdminSettings() {
 
   return (
     <AdminLayoutCorporate>
-      <div className={`admin-settings ${theme}`}>
-        <header className="admin-page-header">
-          <h1>⚙️ System Settings</h1>
-          <p>Configure system-wide settings and preferences</p>
-        </header>
+      <Routes>
+        {/* Default Settings Route */}
+        <Route path="/" element={
+          <div className={`admin-settings ${theme}`}>
+            <header className="admin-page-header">
+              <h1>⚙️ System Settings</h1>
+              <p>Configure system-wide settings and preferences</p>
+            </header>
 
-        {/* Mock Data Warning Banner */}
-        <MockDataBadge 
-          variant="banner"
-          message="⚠️ Diese Einstellungen können aktuell noch nicht gespeichert werden. Das Backend befindet sich in Entwicklung."
-          tooltip="Alle Änderungen hier sind nur temporär und werden beim Neuladen zurückgesetzt"
-        />
-
-        {/* Tabs Navigation */}
-        <div className="settings-tabs">
-          <button
-            className={`settings-tab ${activeTab === 'system' ? 'active' : ''}`}
-            onClick={() => setActiveTab('system')}
-          >
-            <span className="tab-icon">💻</span>
-            <span className="tab-label">System Info</span>
-          </button>
-          <button
-            className={`settings-tab ${activeTab === 'security' ? 'active' : ''}`}
-            onClick={() => setActiveTab('security')}
-          >
-            <span className="tab-icon">🔒</span>
-            <span className="tab-label">Security</span>
-          </button>
-          <button
-            className={`settings-tab ${activeTab === 'app' ? 'active' : ''}`}
-            onClick={() => setActiveTab('app')}
-          >
-            <span className="tab-icon">🎛️</span>
-            <span className="tab-label">Application</span>
-          </button>
-          <button
-            className={`settings-tab ${activeTab === 'notifications' ? 'active' : ''}`}
-            onClick={() => setActiveTab('notifications')}
-          >
-            <span className="tab-icon">🔔</span>
-            <span className="tab-label">Notifications</span>
-          </button>
-        </div>
-
-        {/* Tab Content - Now with Panel Components */}
-        <div className="settings-content">
-          {activeTab === 'system' && (
-            <SystemInfoPanel
-              systemInfo={systemInfo}
-              onRefresh={handleRefresh}
-              onTestEmail={handleTestEmail}
+            {/* Mock Data Warning Banner */}
+            <MockDataBadge
+              variant="banner"
+              message="⚠️ Diese Einstellungen können aktuell noch nicht gespeichert werden. Das Backend befindet sich in Entwicklung."
+              tooltip="Alle Änderungen hier sind nur temporär und werden beim Neuladen zurückgesetzt"
             />
-          )}
 
-          {activeTab === 'security' && (
-            <SecuritySettingsPanel
-              settings={securitySettings}
-              onChange={setSecuritySettings}
-              onSave={handleSaveSettings}
-              onReset={handleResetSecurity}
-              isSaving={isSaving}
-            />
-          )}
+            {/* Tabs Navigation */}
+            <div className="settings-tabs">
+              <NavLink
+                to="/admin/settings"
+                className={({ isActive }) =>
+                  `settings-tab ${isActive ? 'active' : ''}`
+                }
+                end
+              >
+                <span className="tab-icon">💻</span>
+                <span className="tab-label">System Info</span>
+              </NavLink>
+              <NavLink
+                to="/admin/settings"
+                className={({ isActive }) =>
+                  `settings-tab ${isActive ? 'active' : ''}`
+                }
+                onClick={() => setActiveTab('security')}
+              >
+                <span className="tab-icon">🔒</span>
+                <span className="tab-label">Security</span>
+              </NavLink>
+              <NavLink
+                to="/admin/settings"
+                className={({ isActive }) =>
+                  `settings-tab ${isActive ? 'active' : ''}`
+                }
+                onClick={() => setActiveTab('app')}
+              >
+                <span className="tab-icon">🎛️</span>
+                <span className="tab-label">Application</span>
+              </NavLink>
+              <NavLink
+                to="/admin/settings"
+                className={({ isActive }) =>
+                  `settings-tab ${isActive ? 'active' : ''}`
+                }
+                onClick={() => setActiveTab('notifications')}
+              >
+                <span className="tab-icon">🔔</span>
+                <span className="tab-label">Notifications</span>
+              </NavLink>
+            </div>
 
-          {activeTab === 'app' && (
-            <ApplicationSettingsPanel
-              settings={appSettings}
-              onChange={setAppSettings}
-              onSave={handleSaveSettings}
-              onReset={handleResetApp}
-              isSaving={isSaving}
-            />
-          )}
+            {/* Tab Content - Now with Panel Components */}
+            <div className="settings-content">
+              {activeTab === 'system' && (
+                <SystemInfoPanel
+                  systemInfo={systemInfo}
+                  onRefresh={handleRefresh}
+                  onTestEmail={handleTestEmail}
+                />
+              )}
 
-          {activeTab === 'notifications' && (
-            <NotificationSettingsPanel
-              settings={notificationSettings}
-              onChange={setNotificationSettings}
-              onSave={handleSaveSettings}
-              onReset={handleResetNotifications}
-              isSaving={isSaving}
-            />
-          )}
-        </div>
-      </div>
+              {activeTab === 'security' && (
+                <SecuritySettingsPanel
+                  settings={securitySettings}
+                  onChange={setSecuritySettings}
+                  onSave={handleSaveSettings}
+                  onReset={handleResetSecurity}
+                  isSaving={isSaving}
+                />
+              )}
+
+              {activeTab === 'app' && (
+                <ApplicationSettingsPanel
+                  settings={appSettings}
+                  onChange={setAppSettings}
+                  onSave={handleSaveSettings}
+                  onReset={handleResetApp}
+                  isSaving={isSaving}
+                />
+              )}
+
+              {activeTab === 'notifications' && (
+                <NotificationSettingsPanel
+                  settings={notificationSettings}
+                  onChange={setNotificationSettings}
+                  onSave={handleSaveSettings}
+                  onReset={handleResetNotifications}
+                  isSaving={isSaving}
+                />
+              )}
+            </div>
+          </div>
+        } />
+
+        {/* Versions Management Route */}
+        <Route path="/versions" element={<VersionsManagement />} />
+      </Routes>
     </AdminLayoutCorporate>
   );
 }

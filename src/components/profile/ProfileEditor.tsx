@@ -13,29 +13,28 @@ interface ProfileEditorProps {
   user: User;
   onSave: (data: {
     fullName: string;
+    username?: string;
   }) => Promise<void>;
-  isUpdating: boolean;
+  isUpdating?: boolean;
 }
 
-export default function ProfileEditor({ user, onSave, isUpdating }: ProfileEditorProps) {
+export default function ProfileEditor({ user, onSave, isUpdating = false }: ProfileEditorProps) {
   const form = useForm({
     schema: userSettingsSchema,
     initialValues: {
       fullName: user?.user_metadata?.full_name || '',
+      username: user?.user_metadata?.username || '',
     },
     onSubmit: async (data) => {
       await onSave({
         fullName: data.fullName,
+        username: data.username || user?.user_metadata?.username || '',
       });
-    }
+    },
   });
 
   // Initialize form values when user data loads
   // ...existing code...
-
-  // Show username suggestions when user starts editing
-
-
   // Username darf nur geändert werden, wenn:
   // - username_can_change === true
   // - username_changed !== true

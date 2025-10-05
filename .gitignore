@@ -29,6 +29,7 @@ dist-ssr
 
 # Generated markdown reports
 ISSUES_*.md
+!ISSUES.md
 
 # Environment files
 .env
