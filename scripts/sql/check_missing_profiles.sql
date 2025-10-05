@@ -1,1 +1,0 @@
-SELECT id, full_name, username FROM public.profiles WHERE id IN ('010b60b9-0ef1-4d4a-af3d-822792207dda','29018b5c-0491-4181-99ae-b959739560f1');
