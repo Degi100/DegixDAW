@@ -73,6 +73,7 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
   const [showAttachMenu, setShowAttachMenu] = useState<boolean>(false);
   const [chatMessages, setChatMessages] = useState<Record<string, Array<{id: string; content: string; sender_id: string; created_at: string; is_read: boolean}>>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const historyEndRef = useRef<HTMLDivElement>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [refreshTimeout, setRefreshTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isGradientEnabled, setIsGradientEnabled] = useState<boolean>(true);
@@ -291,12 +292,39 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
         console.error('Error:', error);
       }
     }
-    // Load messages
+    // Load messages only once
     if (chat.isExistingConversation && !chatMessages[chatId]) {
       const { data } = await supabase.from('messages').select('*').eq('conversation_id', chatId).order('created_at', { ascending: true }).limit(10);
-      if (data) setChatMessages(prev => ({ ...prev, [chatId]: data }));
+      if (data) {
+        setChatMessages(prev => ({ ...prev, [chatId]: data }));
+      }
     }
   }, [expandedChatId, allChats, playMessageReceived, createOrOpenDirectConversation, success, loadConversations, chatMessages]);
+
+  // Real-time message subscription
+  useEffect(() => {
+    if (!expandedChatId) return;
+    const channel = supabase
+      .channel(`messages:${expandedChatId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `conversation_id=eq.${expandedChatId}`
+      }, (payload) => {
+        setChatMessages(prev => ({
+          ...prev,
+          [expandedChatId]: [...(prev[expandedChatId] || []), payload.new as any]
+        }));
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [expandedChatId]);
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    historyEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages, expandedChatId]);
 
   const handleSendQuickMessage = useCallback(async (chatId: string) => {
     if (!messageText.trim() || isSendingMessage) return;
@@ -304,34 +332,14 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const newMsg = {
-        id: `temp-${Date.now()}`,
-        conversation_id: chatId,
-        sender_id: user.id,
-        content: messageText.trim(),
-        message_type: 'text',
-        created_at: new Date().toISOString(),
-        is_read: false
-      };
-      // Optimistic update
-      setChatMessages(prev => ({
-        ...prev,
-        [chatId]: [...(prev[chatId] || []), newMsg]
-      }));
+      const content = messageText.trim();
       setMessageText('');
-      const { data } = await supabase.from('messages').insert({
+      await supabase.from('messages').insert({
         conversation_id: chatId,
         sender_id: user.id,
-        content: messageText.trim(),
+        content: content,
         message_type: 'text'
-      }).select().single();
-      // Replace temp with real message
-      if (data) {
-        setChatMessages(prev => ({
-          ...prev,
-          [chatId]: prev[chatId].map(m => m.id === newMsg.id ? data : m)
-        }));
-      }
+      });
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -637,6 +645,7 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
                             </div>
                           );
                         })}
+                        <div ref={historyEndRef} />
                       </div>
                     )}
                     <div className="chat-quick-message">
