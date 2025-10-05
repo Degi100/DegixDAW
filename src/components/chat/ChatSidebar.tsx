@@ -130,93 +130,35 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
     setRefreshTimeout(timeout);
   }, [loadConversations, refreshTimeout]);
 
+  // Zentrale Subscription für alle Updates (vereinfacht)
   useEffect(() => {
     if (!isOpen || !currentUserId) return;
 
-    console.log('🔔 Setting up real-time subscriptions for ChatSidebar');
+    console.log('Setting up unified real-time subscription');
 
-    // Optimierte Subscription für neue Nachrichten (nur Preview aktualisieren)
-    const messagesChannel = supabase
-      .channel(`sidebar_messages:${currentUserId}`)
+    // Eine Subscription für alle Messages
+    const globalMessagesChannel = supabase
+      .channel(`sidebar_global:${currentUserId}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'messages',
-      }, async (payload) => {
-        const newMessage = payload.new as any;
-        console.log('💬 Sidebar new message:', newMessage.conversation_id);
-
-        // Prüfe ob diese Conversation bereits in unserer Liste ist
-        const conversationExists = conversations.some(conv => conv.id === newMessage.conversation_id);
-        if (!conversationExists) {
-          console.log('🔄 Loading conversations for new message');
-          refreshConversations();
-          return;
-        }
-
-        // Optimistisch: Conversation aktualisieren (ohne komplettes Reload)
-        setConversations(prev => prev.map(conv => {
-          if (conv.id === newMessage.conversation_id) {
-            const isFromMe = newMessage.sender_id === currentUserId;
-            const unreadIncrement = isFromMe ? 0 : 1;
-
-            return {
-              ...conv,
-              last_message_at: newMessage.created_at,
-              lastMessage: {
-                content: newMessage.content,
-                sender_id: newMessage.sender_id,
-                created_at: newMessage.created_at,
-                message_type: newMessage.message_type
-              },
-              last_message: {
-                content: newMessage.content,
-                sender_id: newMessage.sender_id,
-                created_at: newMessage.created_at,
-                message_type: newMessage.message_type
-              },
-              unread_count: (conv.unread_count || 0) + unreadIncrement,
-              unreadCount: (conv.unreadCount || 0) + unreadIncrement
-            };
-          }
-          return conv;
-        }));
-
-        // Sound abspielen für empfangene Nachrichten
-        if (newMessage.sender_id !== currentUserId) {
+      }, (payload) => {
+        console.log('New message received:', payload.new.conversation_id);
+        // Einfach: Conversations neu laden bei neuer Nachricht
+        refreshConversations();
+        // Sound für empfangene Nachrichten
+        if (payload.new.sender_id !== currentUserId) {
           playMessageReceived();
         }
       })
       .subscribe();
 
-    // Subscription für Conversation-Member-Änderungen (nur strukturelle)
-    const membersChannel = supabase
-      .channel('sidebar_members')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'conversation_members',
-        filter: `user_id=eq.${currentUserId}`,
-      }, (payload) => {
-        console.log('👥 Sidebar member changed:', payload.eventType);
-        if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
-          refreshConversations();
-        }
-      })
-      .subscribe();
-
     return () => {
-      console.log('🔕 Cleaning up real-time subscriptions');
-      supabase.removeChannel(conversationsChannel);
-      supabase.removeChannel(messagesChannel);
-      supabase.removeChannel(membersChannel);
-      
-      // Clear any pending refresh timeout
-      if (refreshTimeout) {
-        clearTimeout(refreshTimeout);
-      }
+      console.log('Cleaning up unified subscription');
+      supabase.removeChannel(globalMessagesChannel);
     };
-  }, [isOpen, currentUserId, refreshConversations, playMessageReceived, refreshTimeout]);
+  }, [isOpen, currentUserId, refreshConversations, playMessageReceived]);
 
   // Play sounds on open/close
   useEffect(() => {
@@ -319,7 +261,7 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
         schema: 'public',
         table: 'messages',
         filter: `conversation_id=eq.${expandedChatId}`
-      }, (payload) => {
+      }, (payload: any) => {
         setChatMessages(prev => ({
           ...prev,
           [expandedChatId]: [...(prev[expandedChatId] || []), payload.new as any]
@@ -362,7 +304,7 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const content = messageText.trim();
-      setMessageText('');
+      setMessageText(''); // Sofort Input leeren für besseres UX
       await supabase.from('messages').insert({
         conversation_id: chatId,
         sender_id: user.id,
