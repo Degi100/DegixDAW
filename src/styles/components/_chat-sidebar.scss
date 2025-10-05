@@ -70,16 +70,73 @@
   // Pinned mode - sidebar stays open
   &--pinned {
     right: 0;
+    position: fixed !important; // Allow custom positioning
     
     // Remove overlay in pinned mode
     & ~ .chat-sidebar-overlay {
       display: none;
     }
   }
+  
+  // Resizing state
+  &--resizing {
+    user-select: none;
+    transition: none !important;
+    
+    * {
+      user-select: none;
+      pointer-events: none;
+    }
+  }
+  
+  // Dragging state
+  &--dragging {
+    user-select: none;
+    transition: none !important;
+    cursor: move !important;
+    
+    * {
+      user-select: none;
+      pointer-events: none;
+    }
+  }
 
   @media (max-width: 768px) {
     width: 100%;
     right: -100%;
+  }
+}
+
+// Resize handle - only visible when pinned
+.chat-sidebar-resize-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: ew-resize;
+  z-index: 10;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 40px;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(147, 51, 234, 0.3));
+    border-radius: 2px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  
+  &:hover::before {
+    opacity: 1;
+  }
+  
+  &:active::before {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.6), rgba(147, 51, 234, 0.6));
   }
 }
 
@@ -97,6 +154,7 @@
     transparent 100%
   );
   position: relative;
+  user-select: none; // Prevent text selection while dragging
   
   &::after {
     content: '';

@@ -71,6 +71,11 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
   const [refreshTimeout, setRefreshTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isPinned, setIsPinned] = useState<boolean>(false);
   const [isBlurEnabled, setIsBlurEnabled] = useState<boolean>(false);
+  const [sidebarWidth, setSidebarWidth] = useState<number>(420);
+  const [sidebarPosition, setSidebarPosition] = useState<{ top: number; right: number }>({ top: 70, right: 0 });
+  const [isResizing, setIsResizing] = useState<boolean>(false);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
 
   // Get current user ID
   useEffect(() => {
@@ -296,6 +301,71 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
     setIsBlurEnabled(prev => !prev);
   }, []);
 
+  // Resize handler
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    if (!isPinned) return;
+    e.preventDefault();
+    setIsResizing(true);
+  }, [isPinned]);
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newWidth = window.innerWidth - e.clientX;
+      setSidebarWidth(Math.max(300, Math.min(800, newWidth)));
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
+
+  // Drag handler
+  const handleDragStart = useCallback((e: React.MouseEvent) => {
+    if (!isPinned) return;
+    e.preventDefault();
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+  }, [isPinned]);
+
+  useEffect(() => {
+    if (!isDragging || !dragStart) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaX = dragStart.x - e.clientX;
+      const deltaY = e.clientY - dragStart.y;
+      
+      setSidebarPosition(prev => ({
+        top: Math.max(0, prev.top + deltaY),
+        right: Math.max(0, prev.right + deltaX)
+      }));
+      
+      setDragStart({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      setDragStart(null);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragStart]);
+
   return (
     <>
       {/* Overlay - only show when not pinned */}
@@ -308,9 +378,28 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
       )}
 
       {/* Sidebar */}
-      <div className={`chat-sidebar ${isOpen ? 'chat-sidebar--open' : ''} ${isPinned ? 'chat-sidebar--pinned' : ''} ${className}`}>
+      <div 
+        className={`chat-sidebar ${isOpen ? 'chat-sidebar--open' : ''} ${isPinned ? 'chat-sidebar--pinned' : ''} ${isResizing ? 'chat-sidebar--resizing' : ''} ${isDragging ? 'chat-sidebar--dragging' : ''} ${className}`}
+        style={isPinned ? {
+          width: `${sidebarWidth}px`,
+          top: `${sidebarPosition.top}px`,
+          right: `${sidebarPosition.right}px`
+        } : undefined}
+      >
+        {/* Resize handle - only visible when pinned */}
+        {isPinned && (
+          <div 
+            className="chat-sidebar-resize-handle"
+            onMouseDown={handleResizeStart}
+          />
+        )}
+
         {/* Header */}
-        <div className="chat-sidebar-header">
+        <div 
+          className="chat-sidebar-header"
+          onMouseDown={isPinned ? handleDragStart : undefined}
+          style={{ cursor: isPinned ? 'move' : 'default' }}
+        >
           <div className="chat-sidebar-title">
             <span className="chat-icon">💬</span>
             <h3>Chats</h3>
