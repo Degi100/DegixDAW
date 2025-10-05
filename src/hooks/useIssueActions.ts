@@ -199,14 +199,14 @@ export function useIssueActions(
           },
           body: JSON.stringify({
             content: markdown,
-            filename: `ISSUES_${date}.md`,
+            filename: 'ISSUES.md', // Constant filename instead of dated
           }),
         });
 
         const result = await response.json();
 
         if (result.success) {
-          showSuccess(`📝 Markdown-Report im Projekt gespeichert: ISSUES_${date}.md`);
+          showSuccess(`📝 Markdown-Report im Projekt gespeichert: ISSUES.md`);
         } else {
           throw new Error(result.error || 'Failed to save file');
         }
@@ -220,12 +220,12 @@ export function useIssueActions(
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `ISSUES_${date}.md`;
+      a.download = 'ISSUES.md'; // Constant filename instead of dated
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showSuccess(`📥 Markdown-Report heruntergeladen: ISSUES_${date}.md`);
+      showSuccess(`📥 Markdown-Report heruntergeladen: ISSUES.md`);
     }
   };
 
