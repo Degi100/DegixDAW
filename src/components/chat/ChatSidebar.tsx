@@ -4,6 +4,9 @@
 // ============================================
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import ChatList from './ChatList';
+import ExpandedChat from './ExpandedChat';
+import type { Message } from '../../hooks/useMessages';
 import { useConversations } from '../../hooks/useConversations';
 import { useNavigate } from 'react-router-dom';
 import { useFriends } from '../../hooks/useFriends';
@@ -71,9 +74,9 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
   const [messageText, setMessageText] = useState<string>('');
   const [isSendingMessage, setIsSendingMessage] = useState<boolean>(false);
   const [showAttachMenu, setShowAttachMenu] = useState<boolean>(false);
-  const [chatMessages, setChatMessages] = useState<Record<string, Array<{id: string; content: string; sender_id: string; created_at: string; is_read: boolean}>>>({});
+  const [chatMessages, setChatMessages] = useState<Record<string, Message[]>>({});
   const [showScrollButton, setShowScrollButton] = useState<Record<string, boolean>>({});
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const historyEndRef = useRef<HTMLDivElement>(null);
   const historyContainerRef = useRef<HTMLDivElement>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -261,10 +264,11 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
         schema: 'public',
         table: 'messages',
         filter: `conversation_id=eq.${expandedChatId}`
-      }, (payload: any) => {
+      }, (payload: unknown) => {
+        const p = payload as { new: Message };
         setChatMessages(prev => ({
           ...prev,
-          [expandedChatId]: [...(prev[expandedChatId] || []), payload.new as any]
+          [expandedChatId]: [...(prev[expandedChatId] || []), p.new as Message]
         }));
       })
       .subscribe();
@@ -558,93 +562,42 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
           </div>
         </div>
 
-        {/* Chat List */}
-        <div className="chat-list">
-          {loading ? (
-            <div className="chat-empty">
-              <span>⏳</span>
-              <p>Lade Chats...</p>
-            </div>
-          ) : allChats.length === 0 ? (
-            <div className="chat-empty">
-              <span>💬</span>
-              <p>Noch keine Chats</p>
-              <p>Starte eine Unterhaltung!</p>
-            </div>
-          ) : (
-            allChats.map((chat) => (
-              <div key={chat.id} className="chat-item-wrapper">
-                <button
-                  className={`chat-item ${selectedChat === chat.id ? 'chat-item--active' : ''}`}
-                  onClick={() => handleChatSelect(chat.id)}
-                >
-                  <div className="chat-item-avatar">
-                    {chat.avatar ? <img src={chat.avatar} alt={chat.name} /> : chat.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="chat-item-content">
-                    <div className="chat-item-header">
-                      <span className="chat-item-name">{chat.name}</span>
-                    </div>
-                    <div className="chat-item-message">
-                      {chat.isLastMessageFromMe && <span className="chat-message-prefix">Du: </span>}
-                      {!chat.isExistingConversation && <span className="chat-new-conversation">💬 </span>}
-                      {chat.lastMessage}
-                    </div>
-                    <span className="chat-item-time">{chat.timestamp}</span>
-                  </div>
-                  {chat.unreadCount > 0 && <span className="chat-item-badge">{chat.unreadCount}</span>}
-                  {chat.isOnline && <div className="chat-item-online-indicator" />}
-                </button>
-                {expandedChatId === chat.id && chat.isExistingConversation && (
-                  <div className="chat-expanded">
-                    {chatMessages[chat.id] && chatMessages[chat.id].length > 0 && (
-                      <div className="chat-history-wrapper">
-                        <div className="chat-history" ref={historyContainerRef} onScroll={() => handleScroll(chat.id)}>
-                          {chatMessages[chat.id].map(msg => {
-                          const msgDate = new Date(msg.created_at);
-                          const timeStr = msgDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-                          return (
-                            <div key={msg.id} className={`chat-history-msg ${msg.sender_id === currentUserId ? 'sent' : 'received'}`}>
-                              <div className="chat-history-msg-bubble">
-                                <div className="chat-history-msg-content">{msg.content}</div>
-                                <div className="chat-history-msg-meta">
-                                  <span className="chat-history-msg-time">{timeStr}</span>
-                                  {msg.sender_id === currentUserId && (
-                                    <span className="chat-history-msg-status">{msg.is_read ? '✓✓' : '✓'}</span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                          })}
-                          <div ref={historyEndRef} />
-                        </div>
-                        {showScrollButton[chat.id] && (
-                          <button className="chat-scroll-to-bottom" onClick={() => scrollToBottom(chat.id)} title="Zur letzten Nachricht">
-                            ⬇️
-                          </button>
-                        )}
-                      </div>
-                    )}
-                    <div className="chat-quick-message">
-                      <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={(e) => e.target.files?.[0] && handleFileUpload(chat.id, e.target.files[0])} accept="audio/*,video/*,image/*,.mid,.midi,.pdf,.doc,.docx" />
-                      <div className="chat-quick-attach-menu" style={{ display: showAttachMenu ? 'flex' : 'none' }}>
-                        <button onClick={() => { fileInputRef.current?.setAttribute('accept', 'audio/*'); fileInputRef.current?.click(); }} title="Audio">🎧</button>
-                        <button onClick={() => { fileInputRef.current?.setAttribute('accept', '.mid,.midi'); fileInputRef.current?.click(); }} title="MIDI">🎹</button>
-                        <button onClick={() => { fileInputRef.current?.setAttribute('accept', 'image/*'); fileInputRef.current?.click(); }} title="Bild">🖼️</button>
-                        <button onClick={() => { fileInputRef.current?.setAttribute('accept', '.pdf,.doc,.docx'); fileInputRef.current?.click(); }} title="Dokument">📄</button>
-                      </div>
-                      <button onClick={() => setShowAttachMenu(!showAttachMenu)} className="chat-quick-attach">📎</button>
-                      <input type="text" value={messageText} onChange={(e) => setMessageText(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSendQuickMessage(chat.id)} placeholder="Nachricht..." className="chat-quick-input" />
-                      <button onClick={() => handleSendQuickMessage(chat.id)} className="chat-quick-send" disabled={isSendingMessage}>📤</button>
-                      <button onClick={() => navigate(`/chat/${chat.id}`)} className="chat-quick-open">🔗</button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))
+        <ChatList
+          loading={loading}
+          chats={allChats.map(c => ({
+            id: c.id,
+            name: c.name,
+            lastMessage: c.lastMessage,
+            timestamp: c.timestamp,
+            unreadCount: c.unreadCount,
+            isOnline: !!c.isOnline,
+            avatar: c.avatar,
+            isLastMessageFromMe: !!c.isLastMessageFromMe,
+            isExistingConversation: !!c.isExistingConversation,
+            ...(c.friendId ? { friendId: c.friendId } : {}),
+          }))}
+          selectedChatId={selectedChat}
+          onSelect={handleChatSelect}
+          expandedChatId={expandedChatId}
+        >
+          {expandedChatId && expandedChatId in chatMessages && (
+            <ExpandedChat
+              chatId={expandedChatId}
+              messages={chatMessages[expandedChatId] || []}
+              currentUserId={currentUserId}
+              showAttachMenu={showAttachMenu}
+              isSendingMessage={isSendingMessage}
+              onFileUpload={handleFileUpload}
+              onSendQuickMessage={handleSendQuickMessage}
+              historyContainerRef={historyContainerRef}
+              historyEndRef={historyEndRef}
+              onOpenChat={(id) => navigate(`/chat/${id}`)}
+              showScrollButton={!!showScrollButton[expandedChatId]}
+              onScroll={() => handleScroll(expandedChatId)}
+              scrollToBottom={() => scrollToBottom(expandedChatId)}
+            />
           )}
-        </div>
+        </ChatList>
 
         {/* Inline-Nachrichten-Panel entfernt; Chats öffnen die vollständige Chat-Ansicht */}
 
@@ -661,3 +614,5 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
     </>
   );
 }
+
+// realtime payloads are mapped to the canonical `Message` type from useMessages

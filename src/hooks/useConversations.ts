@@ -65,6 +65,7 @@ export interface Conversation {
 export function useConversations() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorState, setErrorState] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { success, error } = useToast();
 
@@ -201,6 +202,7 @@ export function useConversations() {
       setConversations(enrichedConversations);
     } catch (err) {
       console.error('Error loading conversations:', err);
+      setErrorState((err as Error)?.message || 'Fehler beim Laden der Chats');
       error('Fehler beim Laden der Chats');
     } finally {
       setLoading(false);
@@ -522,7 +524,7 @@ export function useConversations() {
   return {
     conversations,
     loading,
-    error: undefined, // TODO: Add error state to hook
+    error: errorState,
     loadConversations,
     createDirectConversation,
     createGroupConversation,

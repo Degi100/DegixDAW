@@ -24,7 +24,8 @@
     "db:create-profiles": "node scripts/db/show-sql.js scripts/sql/create_missing_profiles.sql",
     "db:fix-profile-ids": "node scripts/db/show-sql.js scripts/sql/fix_profile_ids.sql",
     "db:chat-setup": "node scripts/db/show-sql.js scripts/sql/chat_system_setup.sql",
-    "test:create-100-friends": "node scripts/db/show-sql.js scripts/sql/create_100_test_friends.sql"
+    "test:create-100-friends": "node scripts/db/show-sql.js scripts/sql/create_100_test_friends.sql",
+    "test": "jest --passWithNoTests"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
@@ -38,8 +39,13 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^30.0.0",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
+    "@types/testing-library__jest-dom": "^5.14.9",
     "@vitejs/plugin-react": "^5.0.3",
     "concurrently": "^9.2.1",
     "dotenv": "^17.2.3",
@@ -47,7 +53,11 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.4.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0",
     "sass-embedded": "^1.93.2",
+    "ts-jest": "^29.4.4",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.44.0",
     "vite": "^7.1.7"

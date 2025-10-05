@@ -26,6 +26,7 @@ export function useFriends(userId?: string) {
   const [pendingRequests, setPendingRequests] = useState<Friendship[]>([]);
   const [sentRequests, setSentRequests] = useState<Friendship[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorState, setErrorState] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(userId || null);
   const { success, error } = useToast();
 
@@ -101,6 +102,7 @@ export function useFriends(userId?: string) {
       setSentRequests(sentData?.map(f => ({ ...f, friend_profile: profilesMap.get(f.friend_id) })) || []);
     } catch (err) {
       console.error('Error loading friendships:', err);
+      setErrorState((err as Error)?.message || 'Fehler beim Laden der Freundschaften');
       error('Fehler beim Laden der Freundschaften');
     } finally {
       setLoading(false);
@@ -283,6 +285,7 @@ export function useFriends(userId?: string) {
     pendingRequests,
     sentRequests,
     loading,
+    error: errorState,
     sendFriendRequest,
     acceptFriendRequest,
     rejectFriendRequest,
