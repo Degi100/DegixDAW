@@ -72,8 +72,10 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
   const [isSendingMessage, setIsSendingMessage] = useState<boolean>(false);
   const [showAttachMenu, setShowAttachMenu] = useState<boolean>(false);
   const [chatMessages, setChatMessages] = useState<Record<string, Array<{id: string; content: string; sender_id: string; created_at: string; is_read: boolean}>>>({});
+  const [showScrollButton, setShowScrollButton] = useState<Record<string, boolean>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const historyEndRef = useRef<HTMLDivElement>(null);
+  const historyContainerRef = useRef<HTMLDivElement>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [refreshTimeout, setRefreshTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isGradientEnabled, setIsGradientEnabled] = useState<boolean>(true);
@@ -297,10 +299,11 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
       const { data } = await supabase.from('messages').select('*').eq('conversation_id', chatId).order('created_at', { ascending: true }).limit(20);
       if (data) {
         setChatMessages(prev => ({ ...prev, [chatId]: data }));
-        // Scroll after loading
+        setShowScrollButton(prev => ({ ...prev, [chatId]: false }));
+        // Instant scroll to bottom on load
         setTimeout(() => {
-          historyEndRef.current?.scrollIntoView({ behavior: 'auto' });
-        }, 150);
+          historyEndRef.current?.scrollIntoView({ behavior: 'instant' });
+        }, 50);
       }
     }
   }, [expandedChatId, allChats, playMessageReceived, createOrOpenDirectConversation, success, loadConversations]);
@@ -325,14 +328,28 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
     return () => { supabase.removeChannel(channel); };
   }, [expandedChatId]);
 
-  // Auto-scroll to bottom when messages change
+  // Auto-scroll to bottom when messages change (only if not manually scrolled)
   useEffect(() => {
-    if (expandedChatId && chatMessages[expandedChatId]) {
+    if (expandedChatId && chatMessages[expandedChatId] && !showScrollButton[expandedChatId]) {
       setTimeout(() => {
-        historyEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+        historyEndRef.current?.scrollIntoView({ behavior: 'instant' });
+      }, 50);
     }
-  }, [chatMessages, expandedChatId]);
+  }, [chatMessages, expandedChatId, showScrollButton]);
+
+  // Handle scroll detection
+  const handleScroll = useCallback((chatId: string) => {
+    const container = historyContainerRef.current;
+    if (!container) return;
+    const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
+    setShowScrollButton(prev => ({ ...prev, [chatId]: !isAtBottom }));
+  }, []);
+
+  // Scroll to bottom function
+  const scrollToBottom = useCallback((chatId: string) => {
+    historyEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setShowScrollButton(prev => ({ ...prev, [chatId]: false }));
+  }, []);
 
   const handleSendQuickMessage = useCallback(async (chatId: string) => {
     if (!messageText.trim() || isSendingMessage) return;
@@ -635,8 +652,9 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
                 {expandedChatId === chat.id && chat.isExistingConversation && (
                   <div className="chat-expanded">
                     {chatMessages[chat.id] && chatMessages[chat.id].length > 0 && (
-                      <div className="chat-history">
-                        {chatMessages[chat.id].map(msg => {
+                      <div className="chat-history-wrapper">
+                        <div className="chat-history" ref={historyContainerRef} onScroll={() => handleScroll(chat.id)}>
+                          {chatMessages[chat.id].map(msg => {
                           const msgDate = new Date(msg.created_at);
                           const timeStr = msgDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
                           return (
@@ -652,8 +670,14 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
                               </div>
                             </div>
                           );
-                        })}
-                        <div ref={historyEndRef} />
+                          })}
+                          <div ref={historyEndRef} />
+                        </div>
+                        {showScrollButton[chat.id] && (
+                          <button className="chat-scroll-to-bottom" onClick={() => scrollToBottom(chat.id)} title="Zur letzten Nachricht">
+                            ⬇️
+                          </button>
+                        )}
                       </div>
                     )}
                     <div className="chat-quick-message">
