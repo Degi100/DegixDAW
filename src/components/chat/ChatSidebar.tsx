@@ -70,11 +70,14 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [refreshTimeout, setRefreshTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isGradientEnabled, setIsGradientEnabled] = useState<boolean>(true);
+  const [isPinned, setIsPinned] = useState<boolean>(false);
   const [sidebarWidth, setSidebarWidth] = useState<number>(420);
   const [sidebarHeight, setSidebarHeight] = useState<number>(window.innerHeight - 70);
   const [sidebarPosition, setSidebarPosition] = useState<{ top: number; right: number }>({ top: 70, right: 0 });
-  const [isResizingWidth, setIsResizingWidth] = useState<boolean>(false);
-  const [isResizingHeight, setIsResizingHeight] = useState<boolean>(false);
+  const [isResizingLeft, setIsResizingLeft] = useState<boolean>(false);
+  const [isResizingRight, setIsResizingRight] = useState<boolean>(false);
+  const [isResizingTop, setIsResizingTop] = useState<boolean>(false);
+  const [isResizingBottom, setIsResizingBottom] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 768);
@@ -309,79 +312,116 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
     setIsGradientEnabled(prev => !prev);
   }, []);
 
+  const handleTogglePin = useCallback(() => {
+    setIsPinned(prev => !prev);
+  }, []);
+
   const handleResetPosition = useCallback(() => {
     setSidebarWidth(420);
     setSidebarHeight(window.innerHeight - 70);
     setSidebarPosition({ top: 70, right: 0 });
   }, []);
 
-  // Resize width handler
-  const handleResizeWidthStart = useCallback((e: React.MouseEvent) => {
-    if (isMobile) return; // Disable on mobile
+  // Resize handlers
+  const handleResizeLeftStart = useCallback((e: React.MouseEvent) => {
+    if (isMobile || !isPinned) return;
     e.preventDefault();
     e.stopPropagation();
-    setIsResizingWidth(true);
-  }, [isMobile]);
+    setIsResizingLeft(true);
+  }, [isMobile, isPinned]);
 
+  const handleResizeRightStart = useCallback((e: React.MouseEvent) => {
+    if (isMobile || !isPinned) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizingRight(true);
+  }, [isMobile, isPinned]);
+
+  const handleResizeTopStart = useCallback((e: React.MouseEvent) => {
+    if (isMobile || !isPinned) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizingTop(true);
+  }, [isMobile, isPinned]);
+
+  const handleResizeBottomStart = useCallback((e: React.MouseEvent) => {
+    if (isMobile || !isPinned) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizingBottom(true);
+  }, [isMobile, isPinned]);
+
+  // Resize effects
   useEffect(() => {
-    if (!isResizingWidth) return;
-
+    if (!isResizingLeft) return;
     const handleMouseMove = (e: MouseEvent) => {
       const newWidth = window.innerWidth - e.clientX - sidebarPosition.right;
       setSidebarWidth(Math.max(280, Math.min(window.innerWidth - 100, newWidth)));
     };
-
-    const handleMouseUp = () => {
-      setIsResizingWidth(false);
-    };
-
+    const handleMouseUp = () => setIsResizingLeft(false);
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isResizingWidth, sidebarPosition.right]);
-
-  // Resize height handler
-  const handleResizeHeightStart = useCallback((e: React.MouseEvent) => {
-    if (isMobile) return; // Disable on mobile
-    e.preventDefault();
-    e.stopPropagation();
-    setIsResizingHeight(true);
-  }, [isMobile]);
+  }, [isResizingLeft, sidebarPosition.right]);
 
   useEffect(() => {
-    if (!isResizingHeight) return;
-
+    if (!isResizingRight) return;
     const handleMouseMove = (e: MouseEvent) => {
-      const newHeight = window.innerHeight - e.clientY;
-      setSidebarHeight(Math.max(200, Math.min(window.innerHeight - sidebarPosition.top, newHeight)));
+      const newRight = window.innerWidth - e.clientX;
+      setSidebarPosition(prev => ({ ...prev, right: Math.max(0, newRight) }));
     };
-
-    const handleMouseUp = () => {
-      setIsResizingHeight(false);
-    };
-
+    const handleMouseUp = () => setIsResizingRight(false);
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isResizingHeight, sidebarPosition.top]);
+  }, [isResizingRight]);
+
+  useEffect(() => {
+    if (!isResizingTop) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      const newTop = e.clientY;
+      const newHeight = window.innerHeight - newTop;
+      setSidebarPosition(prev => ({ ...prev, top: Math.max(70, newTop) }));
+      setSidebarHeight(Math.max(200, newHeight));
+    };
+    const handleMouseUp = () => setIsResizingTop(false);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizingTop]);
+
+  useEffect(() => {
+    if (!isResizingBottom) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      const newHeight = window.innerHeight - e.clientY;
+      setSidebarHeight(Math.max(200, newHeight));
+    };
+    const handleMouseUp = () => setIsResizingBottom(false);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizingBottom]);
 
   // Drag handler
   const handleDragStart = useCallback((e: React.MouseEvent) => {
-    if (isMobile) return; // Disable on mobile
-    // Don't drag if clicking on buttons
+    if (isMobile || !isPinned) return;
     if ((e.target as HTMLElement).closest('button')) return;
     e.preventDefault();
     setIsDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
-  }, [isMobile]);
+  }, [isMobile, isPinned]);
 
   useEffect(() => {
     if (!isDragging || !dragStart) return;
@@ -414,8 +454,8 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
 
   return (
     <>
-      {/* Overlay */}
-      {isOpen && (
+      {/* Overlay - only when not pinned */}
+      {isOpen && !isPinned && (
         <div 
           className="chat-sidebar-overlay"
           onClick={onClose}
@@ -425,7 +465,7 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
 
       {/* Sidebar */}
       <div 
-        className={`chat-sidebar ${isOpen ? 'chat-sidebar--open' : ''} ${isResizingWidth || isResizingHeight ? 'chat-sidebar--resizing' : ''} ${isDragging ? 'chat-sidebar--dragging' : ''} ${isGradientEnabled ? 'chat-sidebar--gradient' : ''} ${className}`}
+        className={`chat-sidebar ${isOpen ? 'chat-sidebar--open' : ''} ${isPinned ? 'chat-sidebar--pinned' : ''} ${(isResizingLeft || isResizingRight || isResizingTop || isResizingBottom) ? 'chat-sidebar--resizing' : ''} ${isDragging ? 'chat-sidebar--dragging' : ''} ${isGradientEnabled ? 'chat-sidebar--gradient' : ''} ${className}`}
         style={{
           width: `${sidebarWidth}px`,
           height: `${sidebarHeight}px`,
@@ -433,27 +473,13 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
           right: `${sidebarPosition.right}px`
         }}
       >
-        {/* Resize handles - hidden on mobile */}
-        {!isMobile && (
+        {/* Resize handles - only when pinned */}
+        {!isMobile && isPinned && (
           <>
-            <div 
-              className="chat-sidebar-resize-handle chat-sidebar-resize-handle--left"
-              onMouseDown={handleResizeWidthStart}
-            />
-            <div 
-              className="chat-sidebar-resize-handle chat-sidebar-resize-handle--bottom"
-              onMouseDown={handleResizeHeightStart}
-            />
-            <div 
-              className="chat-sidebar-resize-handle chat-sidebar-resize-handle--corner"
-              onMouseDown={(e) => {
-                if (isMobile) return;
-                e.preventDefault();
-                e.stopPropagation();
-                setIsResizingWidth(true);
-                setIsResizingHeight(true);
-              }}
-            />
+            <div className="chat-sidebar-resize-handle chat-sidebar-resize-handle--left" onMouseDown={handleResizeLeftStart} />
+            <div className="chat-sidebar-resize-handle chat-sidebar-resize-handle--right" onMouseDown={handleResizeRightStart} />
+            <div className="chat-sidebar-resize-handle chat-sidebar-resize-handle--top" onMouseDown={handleResizeTopStart} />
+            <div className="chat-sidebar-resize-handle chat-sidebar-resize-handle--bottom" onMouseDown={handleResizeBottomStart} />
           </>
         )}
 
@@ -461,7 +487,7 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
         <div 
           className="chat-sidebar-header"
           onMouseDown={handleDragStart}
-          style={{ cursor: isMobile ? 'default' : 'move' }}
+          style={{ cursor: (isMobile || !isPinned) ? 'default' : 'move' }}
         >
           <div className="chat-sidebar-title">
             <span className="chat-icon">💬</span>
@@ -471,29 +497,14 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
             )}
           </div>
           <div className="chat-sidebar-actions">
-            <button
-              onClick={handleToggleGradient}
-              className={`chat-gradient-btn ${isGradientEnabled ? 'active' : ''}`}
-              aria-label="Gradient-Border umschalten"
-              title={isGradientEnabled ? 'Gradient deaktivieren' : 'Gradient aktivieren'}
-            >
+            <button onClick={handleToggleGradient} className={`chat-gradient-btn ${isGradientEnabled ? 'active' : ''}`} title={isGradientEnabled ? 'Gradient deaktivieren' : 'Gradient aktivieren'}>
               {isGradientEnabled ? '✨' : '⭐'}
             </button>
-            <button
-              onClick={handleResetPosition}
-              className="chat-reset-btn"
-              aria-label="Sidebar zurücksetzen"
-              title="Zurück zum Ursprung"
-            >
-              🔄
+            <button onClick={handleTogglePin} className={`chat-pin-btn ${isPinned ? 'pinned' : ''}`} title={isPinned ? 'Sidebar lösen' : 'Sidebar fixieren'}>
+              {isPinned ? '📌' : '📍'}
             </button>
-            <button
-              onClick={onClose}
-              className="chat-close-btn"
-              aria-label="Chat schließen"
-            >
-              ✕
-            </button>
+            <button onClick={handleResetPosition} className="chat-reset-btn" title="Zurück zum Ursprung">🔄</button>
+            <button onClick={onClose} className="chat-close-btn" title="Chat schließen">✕</button>
           </div>
         </div>
 
