@@ -267,9 +267,15 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       {/* Message Footer */}
       <div className="message-footer">
         <span className="message-time">{formatTime(message.created_at)}</span>
-        {isOwnMessage && (
+        {/* Gelesen-Status anzeigen */}
+        {isOwnMessage ? (
           <span className="message-status">
             {message.read_receipts && message.read_receipts.length > 1 ? '✓✓' : '✓'}
+          </span>
+        ) : (
+          <span className="message-status">
+            {/* Zeige ✓ wenn die Nachricht vom aktuellen User gelesen wurde */}
+            {message.read_receipts && message.read_receipts.some(r => r.user_id !== message.sender_id && r.read_at) ? '✓' : ''}
           </span>
         )}
       </div>

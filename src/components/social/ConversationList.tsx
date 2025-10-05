@@ -84,25 +84,40 @@ export const ConversationList: React.FC<ConversationListProps> = ({ activeConver
 
   const getLastMessagePreview = (conv: Conversation) => {
     if (!conv.lastMessage) return 'Keine Nachrichten';
-    
     const { content, message_type, sender_id } = conv.lastMessage;
     const isOwnMessage = sender_id === conv.currentUserId;
-    const prefix = isOwnMessage ? 'Du: ' : '';
+    // Empfänger bestimmen
+    let recipientName = '';
+    if (isOwnMessage) {
+      // Du hast geschrieben, zeige unter dem Namen des anderen
+      const otherMember = conv.members?.find(m => m.id !== conv.currentUserId);
+      recipientName = otherMember?.display_name || otherMember?.username || 'Unbekannter User';
+    } else {
+      // Der andere hat geschrieben, zeige unter deinem Namen
+      recipientName = 'Du';
+    }
 
+    let preview = '';
     switch (message_type) {
       case 'text':
-        return `${prefix}${content || ''}`;
+        preview = content || '';
+        break;
       case 'image':
-        return `${prefix}📷 Bild`;
+        preview = '📷 Bild';
+        break;
       case 'video':
-        return `${prefix}🎥 Video`;
+        preview = '🎥 Video';
+        break;
       case 'voice':
-        return `${prefix}🎤 Sprachnachricht`;
+        preview = '🎤 Sprachnachricht';
+        break;
       case 'file':
-        return `${prefix}📎 Datei`;
+        preview = '📎 Datei';
+        break;
       default:
-        return `${prefix}Nachricht`;
+        preview = 'Nachricht';
     }
+    return `${recipientName}: ${preview}`;
   };
 
   const getOnlineStatus = (conv: Conversation) => {

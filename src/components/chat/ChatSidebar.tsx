@@ -3,13 +3,13 @@
 // Corporate Theme - Slide-in Chat Interface
 // ============================================
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useConversations } from '../../hooks/useConversations';
+import { useNavigate } from 'react-router-dom';
 import { useFriends } from '../../hooks/useFriends';
 import { useChatSounds } from '../../lib/sounds/chatSounds';
 import { useToast } from '../../hooks/useToast';
 import { supabase } from '../../lib/supabase';
-import { useMessages } from '../../hooks/useMessages';
 
 interface ChatSidebarProps {
   isOpen: boolean;
@@ -65,7 +65,7 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
   const { friends } = useFriends();
   const { playMessageReceived, playChatOpen, playChatClose } = useChatSounds();
   const { success } = useToast();
-  const [quickMessage, setQuickMessage] = useState('');
+  const navigate = useNavigate();
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [refreshTimeout, setRefreshTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -184,7 +184,7 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
         clearTimeout(refreshTimeout);
       }
     };
-  }, [isOpen, currentUserId, refreshConversations, playMessageReceived]);
+  }, [isOpen, currentUserId, refreshConversations, playMessageReceived, refreshTimeout]);
 
   // Play sounds on open/close
   useEffect(() => {
@@ -238,37 +238,12 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
         friendId: friendship.friend_id,
       }));
 
-    // 2 Demo-Chats zum Testen
-    const demoChats: ChatItem[] = [
-      {
-        id: 'demo-1',
-        name: 'Demo User 1',
-        lastMessage: 'Das ist ein Demo-Chat! 🎯',
-        timestamp: '5min 30sec',
-        unreadCount: 1,
-        isOnline: true,
-        isLastMessageFromMe: false,
-        isExistingConversation: true,
-      },
-      {
-        id: 'demo-2', 
-        name: 'Demo User 2',
-        lastMessage: 'Teste die Chat-Sidebar! 💬',
-        timestamp: '1h 15min',
-        unreadCount: 0,
-        isOnline: false,
-        isLastMessageFromMe: true, // Demo: Letzte Nachricht von mir
-        isExistingConversation: true,
-      },
-    ];
-
-    // Kombiniere: Echte Conversations + Freunde + Demo-Chats
-    return [...realChats, ...friendsWithoutChats, ...demoChats];
+    // Kombiniere: Echte Conversations + Freunde ohne Chats
+    return [...realChats, ...friendsWithoutChats];
   }, [conversations, friends, currentUserId]);
 
   const handleChatSelect = useCallback(async (chatId: string) => {
     setSelectedChat(chatId);
-    
     const chat = allChats.find(c => c.id === chatId);
     if (!chat) return;
 
@@ -277,43 +252,32 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
       playMessageReceived();
     }
 
-    // Wenn es ein Freund ohne Conversation ist, erstelle eine neue Conversation
-    if (!chat.isExistingConversation && chat.friendId) {
+    // If existing conversation, navigate to full chat view
+    if (chat.isExistingConversation) {
+      navigate(`/chat/${chat.id}`);
+      return;
+    }
+
+    // Otherwise create conversation (friend without chat) and navigate
+    if (chat.friendId) {
       try {
         console.log('🚀 Creating new conversation with friend:', chat.friendId);
         const conversationId = await createOrOpenDirectConversation(chat.friendId);
         if (conversationId) {
           success(`Chat mit ${chat.name} gestartet! 💬`);
-          // Refresh conversations to show the new one
           await loadConversations();
+          navigate(`/chat/${conversationId}`);
         }
       } catch (error) {
         console.error('Error creating conversation:', error);
         success('Fehler beim Erstellen des Chats');
       }
     }
-  }, [allChats, playMessageReceived, createOrOpenDirectConversation, success, loadConversations]);
+  }, [allChats, playMessageReceived, createOrOpenDirectConversation, success, loadConversations, navigate]);
 
-  // Aktueller Chat
-  const activeChat = allChats.find(c => c.id === selectedChat);
-  const conversationId = activeChat?.isExistingConversation ? activeChat.id : null;
-  const { messages, sendMessage, loading: messagesLoading } = useMessages(conversationId);
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  // Aktueller Chat: sidebar zeigt nur die Chat-Liste; volle Chat-Ansicht öffnet beim Klick
 
-  // Automatisch nach unten scrollen bei neuen Nachrichten
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages, selectedChat]);
-
-  // Senden-Handler
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!quickMessage.trim() || !conversationId) return;
-    await sendMessage(quickMessage.trim());
-    setQuickMessage('');
-  };
+  // Inline message UI removed from sidebar. Navigation opens full chat view.
 
   const handleViewAllChats = useCallback(() => {
     // Navigate to full chat page
@@ -416,42 +380,7 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
           )}
         </div>
 
-        {/* Nachrichtenbereich */}
-        {activeChat?.isExistingConversation && (
-          <div className="chat-sidebar-messages">
-            <div className="chat-messages-list">
-              {messagesLoading ? (
-                <div className="chat-empty">Lade Nachrichten...</div>
-              ) : messages.length === 0 ? (
-                <div className="chat-empty">Noch keine Nachrichten</div>
-              ) : (
-                messages.map(msg => (
-                  <div
-                    key={msg.id}
-                    className={`chat-message-bubble ${msg.sender_id === currentUserId ? 'own' : ''}`}
-                  >
-                    <span className="chat-message-content">{msg.content}</span>
-                    <span className="chat-message-time">{formatTime(msg.created_at)}</span>
-                  </div>
-                ))
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-            <form className="chat-message-input-row" onSubmit={handleSend}>
-              <input
-                type="text"
-                value={quickMessage}
-                onChange={e => setQuickMessage(e.target.value)}
-                placeholder="Nachricht schreiben..."
-                className="chat-input"
-                autoFocus
-              />
-              <button type="submit" className="chat-send-btn" disabled={!quickMessage.trim()}>
-                ➤
-              </button>
-            </form>
-          </div>
-        )}
+        {/* Inline-Nachrichten-Panel entfernt; Chats öffnen die vollständige Chat-Ansicht */}
 
         {/* Footer */}
         <div className="chat-sidebar-footer">
