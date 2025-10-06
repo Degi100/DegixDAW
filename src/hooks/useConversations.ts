@@ -77,6 +77,7 @@ export function useConversations() {
 
   // Load all conversations
   const loadConversations = useCallback(async () => {
+    console.log('🔄 Loading conversations...');
     if (!currentUserId) return;
 
     try {
@@ -134,6 +135,7 @@ export function useConversations() {
         .from('messages')
         .select('conversation_id, content, sender_id, created_at, message_type')
         .in('conversation_id', conversationIds)
+        .eq('is_deleted', false)
         .order('created_at', { ascending: false });
 
       const lastMessageMap = new Map<string, {
@@ -149,10 +151,15 @@ export function useConversations() {
       });
 
       // 6. Get unread counts
+      console.log('🔢 Calculating unread counts for memberships:', memberships?.length);
+      
       const { data: unreadMessages } = await supabase
         .from('messages')
         .select('conversation_id, created_at, sender_id')
-        .in('conversation_id', conversationIds);
+        .in('conversation_id', conversationIds)
+        .eq('is_deleted', false);
+
+      console.log('📨 Found unread messages:', unreadMessages?.length);
 
       const unreadCountMap = new Map<string, number>();
       memberships?.forEach(membership => {
@@ -161,6 +168,8 @@ export function useConversations() {
           msg.sender_id !== currentUserId && // Nur eingehende Nachrichten zählen
           (!membership.last_read_at || new Date(msg.created_at) > new Date(membership.last_read_at))
         ).length || 0;
+        
+        console.log(`📊 Chat ${membership.conversation_id}: ${count} unread messages (last_read_at: ${membership.last_read_at})`);
         unreadCountMap.set(membership.conversation_id, count);
       });
 
@@ -197,6 +206,7 @@ export function useConversations() {
       }) || [];
 
       setConversations(enrichedConversations);
+      console.log('✅ Conversations loaded with unread counts:', enrichedConversations.map(c => ({ id: c.id, unreadCount: c.unreadCount })));
     } catch (err) {
       console.error('Error loading conversations:', err);
       setErrorState((err as Error)?.message || 'Fehler beim Laden der Chats');

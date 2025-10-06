@@ -183,7 +183,7 @@ function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
   // Chat coordination
   const {
     handleChatSelect,
-    totalUnreadCount,
+    clearChatHistory,
   } = useChatCoordination({
     allChats,
     expandedChatId,
@@ -198,6 +198,7 @@ function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
     expandedChatHandleSend: handleSendQuickMessage,
     setShowAttachMenu,
     expandedChatHandleUpload: handleFileUpload,
+    currentUserId,
   });
 
   return (
@@ -240,7 +241,6 @@ function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
 
         {/* Header */}
         <SidebarHeader
-          totalUnreadCount={totalUnreadCount}
           isGradientEnabled={isGradientEnabled}
           isPinned={isPinned}
           isMobile={isMobile}
@@ -280,6 +280,7 @@ function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
                 showScrollButton={false}
                 onScroll={() => {}}
                 scrollToBottom={() => {}}
+                onClearChatHistory={clearChatHistory}
               />
             )}
           </ChatList>

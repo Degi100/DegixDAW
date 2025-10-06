@@ -758,7 +758,7 @@
   }
 }
 
-.chat-quick-attach, .chat-quick-send, .chat-quick-open {
+.chat-quick-attach, .chat-quick-send, .chat-quick-open, .chat-clear-history {
   width: 32px;
   height: 32px;
   border: none;
@@ -784,6 +784,12 @@
   background: rgba(59, 130, 246, 0.1);
   color: $corporate-blue-600;
   &:hover { background: rgba(59, 130, 246, 0.2); transform: scale(1.1); }
+}
+
+.chat-clear-history {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  &:hover { background: rgba(239, 68, 68, 0.2); transform: scale(1.1); }
 }
 
 .chat-quick-attach-menu {

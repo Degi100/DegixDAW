@@ -13,7 +13,7 @@ export function useConversationMessages(conversationId: string | null) {
     const load = async () => {
       setLoading(true);
       try {
-        const { data } = await supabase.from('messages').select('*').eq('conversation_id', conversationId).order('created_at', { ascending: true }).limit(50);
+        const { data } = await supabase.from('messages').select('*').eq('conversation_id', conversationId).eq('is_deleted', false).order('created_at', { ascending: true }).limit(50);
         if (mounted) setMessages((data as Message[]) || []);
       } catch {
         if (mounted) setMessages([]);

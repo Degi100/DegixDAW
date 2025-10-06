@@ -19,6 +19,7 @@ interface ExpandedChatProps {
   showScrollButton?: boolean;
   onScroll?: () => void;
   scrollToBottom?: () => void;
+  onClearChatHistory?: (chatId: string) => void;
 }
 
 function ExpandedChat({
@@ -37,6 +38,7 @@ function ExpandedChat({
   showScrollButton,
   onScroll,
   scrollToBottom,
+  onClearChatHistory,
 }: ExpandedChatProps) {
   const internalHistoryRef = useRef<HTMLDivElement>(null);
   const historyRef = historyContainerRef ?? internalHistoryRef;
@@ -101,6 +103,15 @@ function ExpandedChat({
         }} />
         <button className="chat-quick-send" disabled={isSendingMessage} onClick={() => onSendQuickMessage?.(chatId)}>📤</button>
         <button className="chat-quick-open" onClick={() => onOpenChat?.(chatId)}>🔗</button>
+        {onClearChatHistory && (
+          <button 
+            className="chat-clear-history" 
+            onClick={() => onClearChatHistory(chatId)} 
+            title="Chatverlauf löschen"
+          >
+            🗑️
+          </button>
+        )}
       </div>
     </div>
   );

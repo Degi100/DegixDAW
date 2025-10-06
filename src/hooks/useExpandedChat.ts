@@ -43,6 +43,7 @@ export function useExpandedChat({
         .from('messages')
         .select('*')
         .eq('conversation_id', expandedChatId)
+        .eq('is_deleted', false)
         .order('created_at', { ascending: true })
         .limit(20);
       if (data) {

@@ -1,7 +1,6 @@
 import React from 'react';
 
 interface SidebarHeaderProps {
-  totalUnreadCount: number;
   isGradientEnabled: boolean;
   isPinned: boolean;
   isMobile: boolean;
@@ -13,7 +12,6 @@ interface SidebarHeaderProps {
 }
 
 export default function SidebarHeader({
-  totalUnreadCount,
   isGradientEnabled,
   isPinned,
   isMobile,
@@ -32,9 +30,6 @@ export default function SidebarHeader({
       <div className="chat-sidebar-title">
         <span className="chat-icon">💬</span>
         <h3>Chats</h3>
-        {totalUnreadCount > 0 && (
-          <span className="chat-badge">{totalUnreadCount}</span>
-        )}
       </div>
       <div className="chat-sidebar-actions">
         <button onClick={onToggleGradient} className={`chat-gradient-btn ${isGradientEnabled ? 'active' : ''}`} title={isGradientEnabled ? 'Gradient deaktivieren' : 'Gradient aktivieren'}>
