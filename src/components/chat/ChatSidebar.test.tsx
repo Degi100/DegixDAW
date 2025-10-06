@@ -3,14 +3,20 @@ import ChatSidebar from './ChatSidebar';
 import { MemoryRouter } from 'react-router-dom';
 
 // Mock hooks
+const loadConversationsMock = jest.fn();
+const createOrOpenDirectConversationMock = jest.fn().mockResolvedValue('c1');
+const playMessageReceivedMock = jest.fn();
+const playChatOpenMock = jest.fn();
+const playChatCloseMock = jest.fn();
+
 jest.mock('../../hooks/useConversations', () => ({
   useConversations: () => ({
     conversations: [
       { id: 'c1', type: 'direct', name: null, description: null, avatar_url: null, created_by: 'u1', created_at: '', updated_at: '', last_message_at: new Date().toISOString(), is_archived: false, unreadCount: 1, other_user: { id: 'u2', full_name: 'Bob', username: 'bob' } }
     ],
     loading: false,
-    loadConversations: jest.fn(),
-    createOrOpenDirectConversation: jest.fn().mockResolvedValue('c1')
+    loadConversations: loadConversationsMock,
+    createOrOpenDirectConversation: createOrOpenDirectConversationMock
   })
 }));
 
@@ -22,8 +28,15 @@ jest.mock('../../hooks/useFriends', () => ({
   })
 }));
 
-jest.mock('../../lib/sounds/chatSounds', () => ({ useChatSounds: () => ({ playMessageReceived: jest.fn(), playChatOpen: jest.fn(), playChatClose: jest.fn() }) }));
+jest.mock('../../lib/sounds/chatSounds', () => ({ useChatSounds: () => ({ playMessageReceived: playMessageReceivedMock, playChatOpen: playChatOpenMock, playChatClose: playChatCloseMock }) }));
 jest.mock('../../hooks/useToast', () => ({ useToast: () => ({ success: jest.fn(), error: jest.fn() }) }));
+
+// Mock useGlobalMessagesSubscription
+const useGlobalMessagesSubscriptionMock: jest.Mock = jest.fn();
+
+jest.mock('../../hooks/useGlobalMessagesSubscription', () => ({
+  useGlobalMessagesSubscription: (...args: unknown[]) => useGlobalMessagesSubscriptionMock(...args)
+}));
 
 // Mock supabase client to avoid import.meta usage and network calls
 jest.mock('../../lib/supabase', () => ({
@@ -45,6 +58,10 @@ jest.mock('../../lib/supabase', () => ({
 }));
 
 describe('ChatSidebar', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('renders chat list and opens expanded chat when item clicked', async () => {
     render(
       <MemoryRouter>
@@ -55,11 +72,21 @@ describe('ChatSidebar', () => {
     // Expect the other user name to be present
     expect(await screen.findByText('Bob')).toBeInTheDocument();
 
+    // Check that global messages subscription is called with correct params
+    expect(useGlobalMessagesSubscriptionMock).toHaveBeenCalledWith({
+      channelId: 'sidebar_global:null',
+      enabled: false,
+      onInsert: expect.any(Function)
+    });
+
     // Click the chat item (rendered as button or clickable element)
     const chatItem = screen.getByText('Bob');
     fireEvent.click(chatItem);
 
     // ExpandedChat should render message content loaded from supabase
     expect(await screen.findByText('Hello from Bob')).toBeInTheDocument();
+
+    // loadConversations should not be called on click (only on refresh)
+    expect(loadConversationsMock).not.toHaveBeenCalled();
   });
 });

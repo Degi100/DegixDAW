@@ -10,6 +10,8 @@ interface ExpandedChatProps {
   isSendingMessage: boolean;
   onFileUpload: (chatId: string, file: File) => void;
   onSendQuickMessage: (chatId: string) => void;
+  messageText?: string;
+  setMessageText?: (text: string) => void;
   historyContainerRef?: React.RefObject<HTMLDivElement | null>;
   historyEndRef?: React.RefObject<HTMLDivElement | null>;
   onOpenChat?: (chatId: string) => void;
@@ -26,6 +28,8 @@ export default function ExpandedChat({
   isSendingMessage,
   onFileUpload,
   onSendQuickMessage,
+  messageText,
+  setMessageText,
   historyContainerRef,
   historyEndRef,
   onOpenChat,
@@ -89,7 +93,7 @@ export default function ExpandedChat({
           <button title="Dokument">📄</button>
         </div>
         <button className="chat-quick-attach">📎</button>
-        <input type="text" placeholder="Nachricht..." className="chat-quick-input" />
+        <input type="text" placeholder="Nachricht..." className="chat-quick-input" value={messageText || ''} onChange={(e) => setMessageText?.(e.target.value)} />
         <button className="chat-quick-send" disabled={isSendingMessage} onClick={() => onSendQuickMessage?.(chatId)}>📤</button>
         <button className="chat-quick-open" onClick={() => onOpenChat?.(chatId)}>🔗</button>
       </div>
