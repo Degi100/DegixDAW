@@ -46,7 +46,7 @@ export default function ChatItem({
           </div>
           <span className="chat-item-time">{timestamp}</span>
         </div>
-        {unreadCount && unreadCount > 0 && (
+        {unreadCount && (
           <span className="chat-item-badge">{unreadCount}</span>
         )}
         {isOnline && <div className="chat-item-online-indicator" />}

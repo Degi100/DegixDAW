@@ -193,8 +193,14 @@ export function useConversations() {
           members,
           lastMessage: lastMessageMap.get(conv.id),
           last_message: lastMessageMap.get(conv.id),
-          unreadCount: unreadCountMap.get(conv.id) || 0,
-          unread_count: unreadCountMap.get(conv.id) || 0,
+          unreadCount: (() => {
+            const count = unreadCountMap.get(conv.id);
+            return count && count > 0 ? count : undefined;
+          })(),
+          unread_count: (() => {
+            const count = unreadCountMap.get(conv.id);
+            return count && count > 0 ? count : undefined;
+          })(),
           isPinned: currentMembership?.is_pinned || false,
           currentUserId: currentUserId,
           other_user: conv.type === 'direct' && otherMember ? {
