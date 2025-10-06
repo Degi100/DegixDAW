@@ -15,6 +15,13 @@ const ChatMessage = memo(({ message, currentUserId }: ChatMessageProps) => {
 
   const isSent = message.sender_id === currentUserId;
 
+  // Hide sent messages that have been read by others
+  const hasBeenReadByOthers = isSent && message.read_receipts && message.read_receipts.some(rr => rr.user_id !== currentUserId);
+  
+  if (hasBeenReadByOthers) {
+    return null; // Don't render read sent messages
+  }
+
   return (
     <div className={`chat-history-msg ${isSent ? 'sent' : 'received'}`}>
       <div className="chat-history-msg-bubble">

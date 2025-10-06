@@ -138,8 +138,7 @@ function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
     setSidebarPosition,
   });
 
-  // Chat data and state
-  const { allChats } = useChatData({ conversations, friends, currentUserId });
+  // Chat UI state
   const {
     selectedChat,
     setSelectedChat,
@@ -148,6 +147,9 @@ function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
     showAttachMenu,
     setShowAttachMenu,
   } = useChatUIState();
+
+  // Chat data and state
+  const { allChats } = useChatData({ conversations, friends, currentUserId, expandedChatId });
 
   // Messages for expanded chat
   const {

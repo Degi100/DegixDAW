@@ -526,6 +526,13 @@ export function useMessages(conversationId: string | null) {
     }
   }, [currentUserId, conversationId, markAsRead]);
 
+  // Auto-mark messages as read when conversation opens
+  useEffect(() => {
+    if (conversationId && currentUserId) {
+      markAllAsRead();
+    }
+  }, [conversationId, currentUserId, markAllAsRead]);
+
   // Stop typing indicator
   const stopTyping = useCallback(async () => {
     if (!conversationId || !currentUserId) return;

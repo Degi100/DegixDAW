@@ -151,13 +151,14 @@ export function useConversations() {
       // 6. Get unread counts
       const { data: unreadMessages } = await supabase
         .from('messages')
-        .select('conversation_id, created_at')
+        .select('conversation_id, created_at, sender_id')
         .in('conversation_id', conversationIds);
 
       const unreadCountMap = new Map<string, number>();
       memberships?.forEach(membership => {
-        const count = unreadMessages?.filter(msg => 
+        const count = unreadMessages?.filter(msg =>
           msg.conversation_id === membership.conversation_id &&
+          msg.sender_id !== currentUserId && // Nur eingehende Nachrichten zählen
           (!membership.last_read_at || new Date(msg.created_at) > new Date(membership.last_read_at))
         ).length || 0;
         unreadCountMap.set(membership.conversation_id, count);

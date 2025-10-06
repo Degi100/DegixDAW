@@ -10,6 +10,7 @@ interface UseChatDataProps {
   conversations: Conversation[];
   friends: Friendship[];
   currentUserId: string | null;
+  expandedChatId?: string | null;
 }
 
 /**
@@ -36,7 +37,7 @@ interface ChatItem {
  * @param props - Hook configuration
  * @returns Object containing the aggregated chat list
  */
-export function useChatData({ conversations, friends, currentUserId }: UseChatDataProps) {
+export function useChatData({ conversations, friends, currentUserId, expandedChatId }: UseChatDataProps) {
   const allChats = useMemo(() => {
     // Echte Conversations aus der Datenbank
     const realChats: ChatItem[] = conversations.map(conv => {
@@ -80,8 +81,35 @@ export function useChatData({ conversations, friends, currentUserId }: UseChatDa
       }));
 
     // Kombiniere: Echte Conversations + Freunde ohne Chats
-    return [...realChats, ...friendsWithoutChats];
-  }, [conversations, friends, currentUserId]);
+    const combinedChats = [...realChats, ...friendsWithoutChats];
+
+    // Sortiere: Aktueller Chat ganz oben, dann nach letzter Nachricht sortiert
+    return combinedChats.sort((a, b) => {
+      // Aktueller Chat immer ganz oben
+      if (expandedChatId) {
+        if (a.id === expandedChatId) return -1;
+        if (b.id === expandedChatId) return 1;
+      }
+
+      // Bei echten Conversations: Nach letzter Nachricht sortieren (neueste zuerst)
+      if (a.isExistingConversation && b.isExistingConversation) {
+        const aTime = conversations.find(c => c.id === a.id)?.last_message_at;
+        const bTime = conversations.find(c => c.id === b.id)?.last_message_at;
+
+        if (aTime && bTime) {
+          return new Date(bTime).getTime() - new Date(aTime).getTime();
+        }
+        if (aTime) return -1;
+        if (bTime) return 1;
+      }
+
+      // Freunde ohne Conversations ans Ende
+      if (!a.isExistingConversation && b.isExistingConversation) return 1;
+      if (a.isExistingConversation && !b.isExistingConversation) return -1;
+
+      return 0;
+    });
+  }, [conversations, friends, currentUserId, expandedChatId]);
 
   return { allChats };
 }
