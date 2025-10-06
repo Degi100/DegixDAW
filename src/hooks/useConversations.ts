@@ -476,11 +476,15 @@ export function useConversations() {
 
       // Update local state
       setConversations(prev =>
-        prev.map(conv =>
-          conv.id === conversationId
-            ? { ...conv, unread_count: 0 }
-            : conv
-        )
+        prev.map(conv => {
+          if (conv.id === conversationId) {
+            const newConv = { ...conv };
+            delete newConv.unreadCount;
+            delete newConv.unread_count;
+            return newConv;
+          }
+          return conv;
+        })
       );
     } catch (err) {
       console.error('Error marking as read:', err);

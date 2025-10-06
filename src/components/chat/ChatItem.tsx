@@ -46,9 +46,12 @@ export default function ChatItem({
           </div>
           <span className="chat-item-time">{timestamp}</span>
         </div>
-        {unreadCount && (
-          <span className="chat-item-badge">{unreadCount}</span>
-        )}
+        {(() => {
+          console.log('ChatItem:', id, 'unreadCount:', unreadCount, typeof unreadCount);
+          return unreadCount !== undefined && unreadCount > 0 && (
+            <span className="chat-item-badge">{unreadCount}</span>
+          );
+        })()}
         {isOnline && <div className="chat-item-online-indicator" />}
       </button>
     </div>
