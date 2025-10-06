@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAdmin } from '../../hooks/useAdmin';
 import { supabase } from '../../lib/supabase';
 import { useToast } from '../../hooks/useToast';
@@ -7,6 +7,7 @@ interface SidebarHeaderProps {
   isGradientEnabled: boolean;
   isPinned: boolean;
   isMobile: boolean;
+  totalUnreadCount: number;
   onToggleGradient: () => void;
   onTogglePin: () => void;
   onResetPosition: () => void;
@@ -18,6 +19,7 @@ export default function SidebarHeader({
   isGradientEnabled,
   isPinned,
   isMobile,
+  totalUnreadCount,
   onToggleGradient,
   onTogglePin,
   onResetPosition,
@@ -26,6 +28,7 @@ export default function SidebarHeader({
 }: SidebarHeaderProps) {
   const { isAdmin } = useAdmin();
   const { success, error } = useToast();
+  const [showMenu, setShowMenu] = useState(false);
 
   const handleDeleteAllMessages = async () => {
     if (!window.confirm('⚠️ ACHTUNG: Alle Nachrichten werden PERMANENT gelöscht! Fortfahren?')) {
@@ -75,38 +78,125 @@ export default function SidebarHeader({
           className="chat-sidebar-drag-handle"
           onMouseDown={onDragStart}
           title="Sidebar verschieben"
+          aria-label="Sidebar verschieben"
+          role="button"
+          tabIndex={0}
         >
           <div className="chat-sidebar-drag-indicator">⋮⋮</div>
         </div>
       )}
       
       <div className="chat-sidebar-title">
-        <span className="chat-icon">💬</span>
+        <span className="chat-icon" role="img" aria-label="Chat Icon">💬</span>
         <h3>Chats</h3>
-      </div>
-      <div className="chat-sidebar-actions">
-        {isAdmin && (
-          <button 
-            onClick={handleDeleteAllMessages} 
-            className="chat-admin-delete-btn" 
-            title="🔴 ADMIN: Alle Nachrichten löschen"
-            style={{ 
-              background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-              color: 'white',
-              marginRight: '8px'
-            }}
-          >
-            🗑️
-          </button>
+        {/* Unread Badge - only show if > 0 */}
+        {totalUnreadCount > 0 && (
+          <span className="chat-badge chat-badge--header" aria-live="polite" aria-label={`${totalUnreadCount} ungelesene Nachrichten`}>
+            {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
+          </span>
         )}
-        <button onClick={onToggleGradient} className={`chat-gradient-btn ${isGradientEnabled ? 'active' : ''}`} title={isGradientEnabled ? 'Gradient deaktivieren' : 'Gradient aktivieren'}>
-          {isGradientEnabled ? '✨' : '⭐'}
+      </div>
+      
+      <div className="chat-sidebar-actions">
+        {/* Primary Actions - Always visible */}
+        <button 
+          onClick={onClose} 
+          className="chat-close-btn" 
+          title="Chat schließen"
+          aria-label="Chat schließen"
+        >
+          ✕
         </button>
-        <button onClick={onTogglePin} className={`chat-pin-btn ${isPinned ? 'pinned' : ''}`} title={isPinned ? 'Sidebar lösen' : 'Sidebar fixieren'}>
-          {isPinned ? '📌' : '📍'}
-        </button>
-        <button onClick={onResetPosition} className="chat-reset-btn" title="Zurück zum Ursprung">🔄</button>
-        <button onClick={onClose} className="chat-close-btn" title="Chat schließen">✕</button>
+
+        {/* Secondary Actions - Desktop only or in menu */}
+        {!isMobile ? (
+          <>
+            {isAdmin && (
+              <button 
+                onClick={handleDeleteAllMessages} 
+                className="chat-admin-delete-btn" 
+                title="🔴 ADMIN: Alle Nachrichten löschen"
+                aria-label="Admin: Alle Nachrichten löschen"
+              >
+                🗑️
+              </button>
+            )}
+            <button 
+              onClick={onToggleGradient} 
+              className={`chat-gradient-btn ${isGradientEnabled ? 'active' : ''}`} 
+              title={isGradientEnabled ? 'Gradient deaktivieren' : 'Gradient aktivieren'}
+              aria-label={isGradientEnabled ? 'Gradient deaktivieren' : 'Gradient aktivieren'}
+              aria-pressed={isGradientEnabled}
+            >
+              {isGradientEnabled ? '✨' : '⭐'}
+            </button>
+            <button 
+              onClick={onTogglePin} 
+              className={`chat-pin-btn ${isPinned ? 'pinned' : ''}`} 
+              title={isPinned ? 'Sidebar lösen' : 'Sidebar fixieren'}
+              aria-label={isPinned ? 'Sidebar lösen' : 'Sidebar fixieren'}
+              aria-pressed={isPinned}
+            >
+              {isPinned ? '📌' : '📍'}
+            </button>
+            <button 
+              onClick={onResetPosition} 
+              className="chat-reset-btn" 
+              title="Position zurücksetzen"
+              aria-label="Position zurücksetzen"
+            >
+              🔄
+            </button>
+          </>
+        ) : (
+          /* Mobile: Overflow Menu */
+          <div className="chat-sidebar-menu">
+            <button 
+              onClick={() => setShowMenu(!showMenu)}
+              className="chat-menu-btn"
+              title="Mehr Optionen"
+              aria-label="Mehr Optionen"
+              aria-expanded={showMenu}
+              aria-haspopup="true"
+            >
+              ⋯
+            </button>
+            {showMenu && (
+              <div className="chat-sidebar-menu__dropdown" role="menu">
+                {isAdmin && (
+                  <button 
+                    onClick={() => { handleDeleteAllMessages(); setShowMenu(false); }} 
+                    className="chat-menu-item chat-menu-item--danger"
+                    role="menuitem"
+                  >
+                    �️ Alle löschen
+                  </button>
+                )}
+                <button 
+                  onClick={() => { onToggleGradient(); setShowMenu(false); }}
+                  className="chat-menu-item"
+                  role="menuitem"
+                >
+                  {isGradientEnabled ? '✨ Gradient aus' : '⭐ Gradient an'}
+                </button>
+                <button 
+                  onClick={() => { onTogglePin(); setShowMenu(false); }}
+                  className="chat-menu-item"
+                  role="menuitem"
+                >
+                  {isPinned ? '📍 Lösen' : '📌 Fixieren'}
+                </button>
+                <button 
+                  onClick={() => { onResetPosition(); setShowMenu(false); }}
+                  className="chat-menu-item"
+                  role="menuitem"
+                >
+                  🔄 Zurücksetzen
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -185,6 +185,9 @@ function ChatSidebar({
     };
   });
 
+  // Calculate total unread count
+  const totalUnreadCount = allChats.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0);
+
   // Messages for expanded chat
   const {
     messages: expandedMessages,
@@ -285,6 +288,7 @@ function ChatSidebar({
           isGradientEnabled={isGradientEnabled}
           isPinned={isPinned}
           isMobile={isMobile}
+          totalUnreadCount={totalUnreadCount}
           onToggleGradient={handleToggleGradient}
           onTogglePin={handleTogglePin}
           onResetPosition={handleResetPosition}
