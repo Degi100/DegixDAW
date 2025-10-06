@@ -38,22 +38,18 @@ export function useChatCoordination({
   const markConversationAsRead = useCallback(async (chatId: string) => {
     console.log('🔍 markConversationAsRead called for chatId:', chatId);
     
-    // Finde den aktuellen Chat, um unnötige DB-Aufrufe zu vermeiden
-    const chat = allChats.find(c => c.id === chatId);
-    console.log('📊 Found chat:', chat);
-    
-    if (!chat || chat.unreadCount === 0) {
-      console.log('⚠️ Skipping: chat not found or no unread messages');
+    if (!currentUserId) {
+      console.log('⚠️ Skipping: no currentUserId');
       return;
     }
 
-    console.log('💾 Updating DB for chat:', chatId, 'unreadCount:', chat.unreadCount);
+    console.log('💾 Updating DB for chat:', chatId);
     
-    // 1. Datenbank-Update: Setze den ungelesenen Zähler auf 0.
-    // **Annahme:** Es existiert eine Tabelle 'conversation_members' mit 'conversation_id' und 'user_id'.
+    // 1. Datenbank-Update: Setze last_read_at auf jetzt
+    // conversation_members hat nur: conversation_id, user_id, role, joined_at, last_read_at, is_muted, is_pinned
     const { error } = await supabase
       .from('conversation_members') 
-      .update({ unread_count: 0, last_read_at: new Date().toISOString() })
+      .update({ last_read_at: new Date().toISOString() })
       .eq('conversation_id', chatId)
       .eq('user_id', currentUserId);
 
@@ -69,7 +65,7 @@ export function useChatCoordination({
     await loadConversations();
     
     console.log('🎉 Conversations reloaded');
-  }, [allChats, currentUserId, loadConversations]);
+  }, [currentUserId, loadConversations]);
 
   const handleChatSelect = useCallback(async (chatId: string) => {
     if (expandedChatId === chatId) {

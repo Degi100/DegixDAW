@@ -184,7 +184,6 @@ function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
   const {
     handleChatSelect,
     clearChatHistory,
-    markConversationAsRead,
   } = useChatCoordination({
     allChats,
     expandedChatId,
@@ -282,7 +281,6 @@ function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
                 onScroll={() => {}}
                 scrollToBottom={() => {}}
                 onClearChatHistory={clearChatHistory}
-                onMarkAsRead={markConversationAsRead}
               />
             )}
           </ChatList>

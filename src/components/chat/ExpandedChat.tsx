@@ -20,7 +20,6 @@ interface ExpandedChatProps {
   onScroll?: () => void;
   scrollToBottom?: () => void;
   onClearChatHistory?: (chatId: string) => void;
-  onMarkAsRead?: (chatId: string) => void;
 }
 
 function ExpandedChat({
@@ -40,7 +39,6 @@ function ExpandedChat({
   onScroll,
   scrollToBottom,
   onClearChatHistory,
-  onMarkAsRead,
 }: ExpandedChatProps) {
   const internalHistoryRef = useRef<HTMLDivElement>(null);
   const historyRef = historyContainerRef ?? internalHistoryRef;
@@ -49,17 +47,7 @@ function ExpandedChat({
   const { messages: loadedMessages } = useConversationMessages(chatId ?? null);
   const effectiveMessages = React.useMemo(() => messages ?? loadedMessages ?? [], [messages, loadedMessages]);
 
-  // Track which chats have been marked as read to avoid duplicate calls
-  const markedAsReadRef = useRef<Set<string>>(new Set());
-
-  // Mark conversation as read when chat becomes visible
-  useEffect(() => {
-    if (effectiveMessages && effectiveMessages.length > 0 && onMarkAsRead && !markedAsReadRef.current.has(chatId)) {
-      console.log('👁️ Chat visible, marking as read:', chatId);
-      markedAsReadRef.current.add(chatId);
-      onMarkAsRead(chatId);
-    }
-  }, [effectiveMessages, chatId, onMarkAsRead]);
+  // Mark as read is now handled in handleChatSelect - no need for duplicate call here
 
   // Track previous message count to only scroll on new messages
   const prevMessageCountRef = useRef(0);

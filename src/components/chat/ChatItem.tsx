@@ -3,7 +3,7 @@ export interface ChatItemProps {
   name: string;
   lastMessage: string;
   timestamp: string;
-  unreadCount: number;
+  unreadCount?: number; // Optional - wird neu berechnet
   isOnline?: boolean;
   avatar?: string | undefined;
   isLastMessageFromMe?: boolean;
@@ -46,7 +46,9 @@ export default function ChatItem({
           </div>
           <span className="chat-item-time">{timestamp}</span>
         </div>
-        {unreadCount > 0 && <span className="chat-item-badge">{unreadCount}</span>}
+        {unreadCount && unreadCount > 0 && (
+          <span className="chat-item-badge">{unreadCount}</span>
+        )}
         {isOnline && <div className="chat-item-online-indicator" />}
       </button>
     </div>
