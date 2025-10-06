@@ -3,38 +3,44 @@
 // corporate Theme - Global Layout with Header
 // ============================================
 
-import { useState, useCallback } from 'react';
+import { useMemo } from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import ChatSidebar from '../chat/ChatSidebar';
+import { ChatProvider, useChat } from '../../contexts/ChatContext';
+import { useConversations } from '../../hooks/useConversations';
 
-export default function AppLayout() {
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [unreadChatCount] = useState(8); // Mock unread count
+function AppLayoutContent() {
+  const { conversations } = useConversations();
+  const { isChatOpen, closeChat, toggleChat } = useChat();
 
-  const handleChatToggle = useCallback(() => {
-    setIsChatOpen(prev => !prev);
-  }, []);
-
-  const handleChatClose = useCallback(() => {
-    setIsChatOpen(false);
-  }, []);
+  const unreadChatCount = useMemo(() => {
+    return conversations.reduce((total, conv) => total + (conv.unreadCount || 0), 0);
+  }, [conversations]);
 
   return (
     <div className="app-layout">
-      <Header 
-        onChatToggle={handleChatToggle}
+      <Header
+        onChatToggle={toggleChat}
         unreadChatCount={unreadChatCount}
       />
       <main className="app-main">
         <Outlet />
       </main>
-      
+
       {/* Chat Sidebar */}
-      <ChatSidebar 
+      <ChatSidebar
         isOpen={isChatOpen}
-        onClose={handleChatClose}
+        onClose={closeChat}
       />
     </div>
+  );
+}
+
+export default function AppLayout() {
+  return (
+    <ChatProvider>
+      <AppLayoutContent />
+    </ChatProvider>
   );
 }

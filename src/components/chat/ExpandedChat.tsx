@@ -93,7 +93,12 @@ export default function ExpandedChat({
           <button title="Dokument">📄</button>
         </div>
         <button className="chat-quick-attach">📎</button>
-        <input type="text" placeholder="Nachricht..." className="chat-quick-input" value={messageText || ''} onChange={(e) => setMessageText?.(e.target.value)} />
+        <input type="text" placeholder="Nachricht..." className="chat-quick-input" value={messageText || ''} onChange={(e) => setMessageText?.(e.target.value)} onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            onSendQuickMessage?.(chatId);
+          }
+        }} />
         <button className="chat-quick-send" disabled={isSendingMessage} onClick={() => onSendQuickMessage?.(chatId)}>📤</button>
         <button className="chat-quick-open" onClick={() => onOpenChat?.(chatId)}>🔗</button>
       </div>

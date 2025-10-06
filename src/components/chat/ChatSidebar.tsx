@@ -3,7 +3,7 @@
 // Corporate Theme - Slide-in Chat Interface
 // ============================================
 
-import { useRef } from 'react';
+import { useRef, useState, useCallback } from 'react';
 
 // Components
 import ChatList from './ChatList';
@@ -21,7 +21,7 @@ import { useSidebarState } from '../../hooks/useSidebarState';
 import { useResizeHandlers } from '../../hooks/useResizeHandlers';
 import { useDragHandlers } from '../../hooks/useDragHandlers';
 import { useChatData } from '../../hooks/useChatData';
-import { useExpandedChat } from '../../hooks/useExpandedChat';
+import { useMessages } from '../../hooks/useMessages';
 import { useChatSynchronizer } from '../../hooks/useChatSynchronizer';
 import { useChatUIState } from '../../hooks/useChatUIState';
 import { useChatCoordination } from '../../hooks/useChatCoordination';
@@ -147,24 +147,29 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
     showAttachMenu,
     setShowAttachMenu,
   } = useChatUIState();
+
+  // Messages for expanded chat
   const {
-    messageText,
-    setMessageText,
-    isSendingMessage,
-    chatMessages,
-    showScrollButton,
-    handleSendQuickMessage: expandedChatHandleSend,
-    handleFileUpload: expandedChatHandleUpload,
-    handleScroll,
-    scrollToBottom,
-  } = useExpandedChat({
-    expandedChatId,
-    currentUserId,
-    historyContainerRef,
-    historyEndRef,
-    playMessageReceived,
-    success,
-  });
+    messages: expandedMessages,
+    sending: isSendingMessage,
+    sendMessage: handleSendMessage,
+  } = useMessages(expandedChatId);
+
+  // Local state for message input
+  const [messageText, setMessageText] = useState('');
+
+  // Message handlers
+  const handleSendQuickMessage = useCallback(async () => {
+    if (!messageText.trim()) return;
+    const textToSend = messageText;
+    setMessageText(''); // Clear input immediately
+    await handleSendMessage(textToSend);
+  }, [messageText, setMessageText, handleSendMessage]);
+
+  const handleFileUpload = useCallback(async () => {
+    // TODO: Implement file upload with useMessages
+    success('Datei-Upload noch nicht implementiert');
+  }, [success]);
   useChatSynchronizer({
     currentUserId,
     isOpen,
@@ -175,8 +180,6 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
   // Chat coordination
   const {
     handleChatSelect,
-    handleSendQuickMessage,
-    handleFileUpload,
     totalUnreadCount,
   } = useChatCoordination({
     allChats,
@@ -189,31 +192,38 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
     loadConversations,
     messageText,
     setMessageText,
-    expandedChatHandleSend,
+    expandedChatHandleSend: handleSendQuickMessage,
     setShowAttachMenu,
-    expandedChatHandleUpload,
+    expandedChatHandleUpload: handleFileUpload,
   });
 
   return (
     <>
       {/* Overlay - only when not pinned */}
       {isOpen && !isPinned && (
-        <div 
+        <div
           className="chat-sidebar-overlay"
           onClick={onClose}
-          aria-hidden="true"
+          onKeyDown={(e) => e.key === 'Escape' && onClose()}
+          role="button"
+          tabIndex={0}
+          aria-label="Chat schließen"
         />
       )}
 
       {/* Sidebar */}
-      <div 
+      <div
         className={`chat-sidebar ${isOpen ? 'chat-sidebar--open' : ''} ${isPinned ? 'chat-sidebar--pinned' : ''} ${(isResizingLeft || isResizingRight || isResizingTop || isResizingBottom) ? 'chat-sidebar--resizing' : ''} ${isDragging ? 'chat-sidebar--dragging' : ''} ${isGradientEnabled ? 'chat-sidebar--gradient' : ''} ${className}`}
         style={{
           width: `${sidebarWidth}px`,
           height: `${sidebarHeight}px`,
           top: `${sidebarPosition.top}px`,
-          right: `${sidebarPosition.right}px`
+          right: `${sidebarPosition.right}px`,
+          // Performance optimization: avoid layout thrashing
+          transform: isDragging ? `translate(${sidebarPosition.right - (window.innerWidth - sidebarWidth)}px, ${sidebarPosition.top}px)` : undefined,
         }}
+        role="complementary"
+        aria-label="Chat Sidebar"
       >
         {/* Resize handles - only when pinned */}
         <ResizeHandles
@@ -238,39 +248,40 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
           onDragStart={handleDragStart}
         />
 
-        <ChatList
-          loading={loading}
-          chats={allChats.map(c => ({
-            ...c,
-            isOnline: !!c.isOnline, // Behalte dieses minimale Mapping, um die Kompatibilität zu gewährleisten
-            isExistingConversation: !!c.isExistingConversation,
-          }))}
-          selectedChatId={selectedChat}
-          onSelect={handleChatSelect}
-          expandedChatId={expandedChatId}
-        >
-          {expandedChatId && expandedChatId in chatMessages && (
-            <ExpandedChat
-              chatId={expandedChatId!}
-              messages={chatMessages[expandedChatId!] || []}
-              currentUserId={currentUserId}
-              showAttachMenu={showAttachMenu}
-              isSendingMessage={isSendingMessage}
-              onFileUpload={handleFileUpload} // Wrapper Funktion
-              onSendQuickMessage={handleSendQuickMessage} // Wrapper Funktion
-              messageText={messageText} // Zustand
-              setMessageText={setMessageText} // Set-Funktion
-              historyContainerRef={historyContainerRef}
-              historyEndRef={historyEndRef}
-              onOpenChat={navigateToChat}
-              showScrollButton={!!showScrollButton[expandedChatId!]}
-              onScroll={() => handleScroll(expandedChatId!)}
-              scrollToBottom={() => scrollToBottom(expandedChatId!)}
-            />
-          )}
-        </ChatList>
-
-        {/* Inline-Nachrichten-Panel entfernt; Chats öffnen die vollständige Chat-Ansicht */}
+        {/* Main Content */}
+        <div className="chat-sidebar__content" style={{ flex: 1, overflow: 'hidden' }}>
+          <ChatList
+            loading={loading}
+            chats={allChats.map(c => ({
+              ...c,
+              isOnline: !!c.isOnline,
+              isExistingConversation: !!c.isExistingConversation,
+            }))}
+            selectedChatId={selectedChat}
+            onSelect={handleChatSelect}
+            expandedChatId={expandedChatId}
+          >
+            {expandedChatId && (
+              <ExpandedChat
+                chatId={expandedChatId!}
+                messages={expandedMessages}
+                currentUserId={currentUserId}
+                showAttachMenu={showAttachMenu}
+                isSendingMessage={isSendingMessage}
+                onFileUpload={handleFileUpload}
+                onSendQuickMessage={handleSendQuickMessage}
+                messageText={messageText}
+                setMessageText={setMessageText}
+                historyContainerRef={historyContainerRef}
+                historyEndRef={historyEndRef}
+                onOpenChat={navigateToChat}
+                showScrollButton={false}
+                onScroll={() => {}}
+                scrollToBottom={() => {}}
+              />
+            )}
+          </ChatList>
+        </div>
 
         {/* Footer */}
         <ChatFooter onViewAllChats={handleViewAllChats} />

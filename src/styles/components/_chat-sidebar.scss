@@ -33,6 +33,20 @@
   transition: none; // Disable transition for smooth resize/drag
   overflow: hidden;
 
+  // Performance optimizations
+  will-change: transform, width, height;
+  transform: translateZ(0); // Force hardware acceleration
+  backface-visibility: hidden;
+
+  // Content wrapper for better layout
+  &__content {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; // Allow flex children to shrink
+  }
+
   // Animated gradient border effect - controlled by user
   &--gradient::before {
     content: '';
@@ -112,6 +126,36 @@
     height: calc(100vh - var(--header-height, 70px)) !important;
     top: var(--header-height, 70px) !important;
     right: 0 !important;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  // Tablet optimization (769px - 1024px)
+  @media (min-width: 769px) and (max-width: 1024px) {
+    max-width: 90vw;
+    min-width: 400px;
+  }
+
+  // Large screens - limit max width for better UX
+  @media (min-width: 1200px) {
+    max-width: 500px;
+  }
+
+  // Touch device optimizations
+  @media (hover: none) and (pointer: coarse) {
+    // Increase touch targets on mobile
+    .chat-sidebar-resize-handle {
+      width: 20px; // Larger touch area
+    }
+
+    // Better spacing for touch
+    padding: 1rem;
+
+    // Larger buttons for touch
+    button {
+      min-height: 44px;
+      min-width: 44px;
+    }
   }
 }
 
@@ -120,6 +164,7 @@
   position: absolute;
   z-index: 100;
   transition: all 0.3s;
+  user-select: none; // Prevent text selection during resize
   
   &--left {
     left: 0;
@@ -145,6 +190,16 @@
       opacity: 1;
       height: 80px;
       background: linear-gradient(135deg, rgba(59, 130, 246, 0.7), rgba(147, 51, 234, 0.7));
+    }
+
+    // Touch device support
+    @media (hover: none) and (pointer: coarse) {
+      width: 20px;
+      &::before {
+        left: 7px;
+        width: 6px;
+        opacity: 0.6; // Always visible on touch
+      }
     }
   }
   
