@@ -178,5 +178,6 @@ export function useChatCoordination({
     handleSendQuickMessage,
     handleFileUpload,
     clearChatHistory,
+    markConversationAsRead,
   };
 }
