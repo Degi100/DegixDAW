@@ -63,8 +63,7 @@ jest.mock('../lib/supabase', () => ({
 
 // Helper component to expose hook values
 function TestComponent() {
-  const { conversations, loading } = useConversations();
-  if (loading) return <div>loading</div>;
+  const { conversations } = useConversations();
   return (
     <div>
       {conversations.map(c => (

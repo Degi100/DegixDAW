@@ -64,7 +64,6 @@ export interface Conversation {
 
 export function useConversations() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
   const [errorState, setErrorState] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { success, error } = useToast();
@@ -81,8 +80,6 @@ export function useConversations() {
     if (!currentUserId) return;
 
     try {
-      setLoading(true);
-
       // 1. Get conversation memberships
       const { data: memberships, error: membershipsError } = await supabase
         .from('conversation_members')
@@ -94,7 +91,6 @@ export function useConversations() {
       const conversationIds = memberships?.map(m => m.conversation_id) || [];
       if (conversationIds.length === 0) {
         setConversations([]);
-        setLoading(false);
         return;
       }
 
@@ -204,8 +200,6 @@ export function useConversations() {
       console.error('Error loading conversations:', err);
       setErrorState((err as Error)?.message || 'Fehler beim Laden der Chats');
       error('Fehler beim Laden der Chats');
-    } finally {
-      setLoading(false);
     }
   }, [currentUserId, error]);
 
@@ -523,7 +517,6 @@ export function useConversations() {
 
   return {
     conversations,
-    loading,
     error: errorState,
     loadConversations,
     createDirectConversation,

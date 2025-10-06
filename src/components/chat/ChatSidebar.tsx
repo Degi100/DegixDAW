@@ -4,6 +4,7 @@
 // ============================================
 
 import { useRef, useState, useCallback } from 'react';
+import { memo } from 'react';
 
 // Components
 import ChatList from './ChatList';
@@ -56,9 +57,9 @@ interface ChatSidebarProps {
  * @param props - Component props
  * @returns JSX.Element
  */
-export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
+function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
   // Core dependencies
-  const { conversations, loading, loadConversations, createOrOpenDirectConversation } = useConversations();
+  const { conversations, loadConversations, createOrOpenDirectConversation } = useConversations();
   const { friends } = useFriends();
   const { playMessageReceived, playChatOpen, playChatClose } = useChatSounds();
   const { success } = useToast();
@@ -251,7 +252,6 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
         {/* Main Content */}
         <div className="chat-sidebar__content" style={{ flex: 1, overflow: 'hidden' }}>
           <ChatList
-            loading={loading}
             chats={allChats.map(c => ({
               ...c,
               isOnline: !!c.isOnline,
@@ -281,13 +281,15 @@ export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSid
               />
             )}
           </ChatList>
-        </div>
 
-        {/* Footer */}
-        <ChatFooter onViewAllChats={handleViewAllChats} />
+          {/* Footer - now inside content for absolute positioning */}
+          <ChatFooter onViewAllChats={handleViewAllChats} />
+        </div>
       </div>
     </>
   );
 }
 
 // realtime payloads are mapped to the canonical `Message` type from useMessages
+
+export default memo(ChatSidebar);

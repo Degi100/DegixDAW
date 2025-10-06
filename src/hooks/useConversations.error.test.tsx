@@ -23,8 +23,7 @@ jest.mock('../lib/supabase', () => ({
 }), { virtual: true });
 
 function TestComponent() {
-  const { conversations, loading } = useConversations();
-  if (loading) return <div>loading</div>;
+  const { conversations } = useConversations();
   return (
     <div>
       {conversations.map(c => (

@@ -3,7 +3,6 @@ import ChatItem from './ChatItem';
 import type { ChatItemProps } from './ChatItem';
 
 interface ChatListProps {
-  loading: boolean;
   chats: ChatItemProps[];
   selectedChatId: string | null;
   onSelect: (chatId: string) => void;
@@ -11,18 +10,7 @@ interface ChatListProps {
   children?: React.ReactNode;
 }
 
-export default function ChatList({ loading, chats, selectedChatId, onSelect, expandedChatId, children }: ChatListProps) {
-  if (loading) {
-    return (
-      <div className="chat-list">
-        <div className="chat-empty">
-          <span>⏳</span>
-          <p>Lade Chats...</p>
-        </div>
-        {children}
-      </div>
-    );
-  }
+export default function ChatList({ chats, selectedChatId, onSelect, expandedChatId, children }: ChatListProps) {
 
   if (chats.length === 0) {
     return (

@@ -39,7 +39,6 @@ jest.mock('../../hooks/useConversations', () => ({
     conversations: [
       { id: 'c1', type: 'direct', name: null, description: null, avatar_url: null, created_by: 'u1', created_at: '', updated_at: '', last_message_at: new Date().toISOString(), is_archived: false, unreadCount: 1, other_user: { id: 'u2', full_name: 'Bob', username: 'bob' } }
     ],
-    loading: false,
     loadConversations: jest.fn(),
     createOrOpenDirectConversation: jest.fn().mockResolvedValue('c1')
   })

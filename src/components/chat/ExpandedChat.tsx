@@ -1,6 +1,7 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, memo } from 'react';
 import type { Message } from '../../hooks/useMessages';
 import { useConversationMessages } from '../../hooks/useConversationMessages';
+import ChatMessage from './ChatMessage';
 
 interface ExpandedChatProps {
   chatId: string;
@@ -20,7 +21,7 @@ interface ExpandedChatProps {
   scrollToBottom?: () => void;
 }
 
-export default function ExpandedChat({
+function ExpandedChat({
   chatId,
   messages,
   currentUserId,
@@ -44,13 +45,22 @@ export default function ExpandedChat({
   const { messages: loadedMessages } = useConversationMessages(chatId ?? null);
   const effectiveMessages = React.useMemo(() => messages ?? loadedMessages ?? [], [messages, loadedMessages]);
 
+  // Track previous message count to only scroll on new messages
+  const prevMessageCountRef = useRef(0);
+
   useEffect(() => {
-    // Scroll to bottom on mount if messages exist
-    if (effectiveMessages && effectiveMessages.length > 0) {
-      setTimeout(() => {
+    const currentCount = effectiveMessages?.length || 0;
+    const prevCount = prevMessageCountRef.current;
+    
+    // Only scroll if we have new messages (count increased)
+    if (effectiveMessages && currentCount > prevCount && currentCount > 0) {
+      // Use requestAnimationFrame for better timing
+      requestAnimationFrame(() => {
         historyEndRef?.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior });
-      }, 50);
+      });
     }
+    
+    prevMessageCountRef.current = currentCount;
   }, [effectiveMessages, historyEndRef]);
 
   return (
@@ -58,23 +68,13 @@ export default function ExpandedChat({
       {effectiveMessages && effectiveMessages.length > 0 && (
         <div className="chat-history-wrapper">
           <div className="chat-history" ref={historyRef} onScroll={onScroll}>
-            {effectiveMessages.map(msg => {
-              const msgDate = new Date(msg.created_at);
-              const timeStr = msgDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-              return (
-                <div key={msg.id} className={`chat-history-msg ${msg.sender_id === currentUserId ? 'sent' : 'received'}`}>
-                  <div className="chat-history-msg-bubble">
-                        <div className="chat-history-msg-content">{msg.content}</div>
-                        <div className="chat-history-msg-meta">
-                          <span className="chat-history-msg-time">{timeStr}</span>
-                          {msg.sender_id === currentUserId && (
-                            <span className="chat-history-msg-status">{(msg.read_receipts && msg.read_receipts.length > 0) ? '✓✓' : '✓'}</span>
-                          )}
-                        </div>
-                      </div>
-                </div>
-              );
-            })}
+            {effectiveMessages.map(msg => (
+              <ChatMessage
+                key={msg.id}
+                message={msg}
+                currentUserId={currentUserId}
+              />
+            ))}
             <div ref={historyEndRef} />
           </div>
           {showScrollButton && (
@@ -105,3 +105,5 @@ export default function ExpandedChat({
     </div>
   );
 }
+
+export default memo(ExpandedChat);

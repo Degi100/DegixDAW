@@ -9,7 +9,7 @@ interface ConversationListProps {
 
 export const ConversationList: React.FC<ConversationListProps> = ({ activeConversationId }) => {
   const navigate = useNavigate();
-  const { conversations, loading, error, loadConversations } = useConversations();
+  const { conversations, error, loadConversations } = useConversations();
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -122,20 +122,6 @@ export const ConversationList: React.FC<ConversationListProps> = ({ activeConver
   const otherMember = conv.members?.find(m => m.user_id !== conv.currentUserId);
   return otherMember?.is_online || false;
   };
-
-  if (loading) {
-    return (
-      <div className="conversation-list">
-        <div className="conversation-list__header">
-          <h2>Chats</h2>
-        </div>
-        <div className="conversation-list__loading">
-          <div className="spinner"></div>
-          <p>Lade Chats...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     return (

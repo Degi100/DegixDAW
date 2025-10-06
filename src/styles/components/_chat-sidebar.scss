@@ -12,7 +12,6 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.4);
   z-index: 1000;
-  animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 // Sidebar with glassmorphism
@@ -38,13 +37,16 @@
   transform: translateZ(0); // Force hardware acceleration
   backface-visibility: hidden;
 
-  // Content wrapper for better layout
+  // Content wrapper for better layout - fixed height to prevent jumping
   &__content {
     flex: 1;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     min-height: 0; // Allow flex children to shrink
+    // Fixed height calculation: total height minus header and footer
+    height: calc(100% - 80px - 100px); // 80px header + 100px footer approx
+    position: relative;
   }
 
   // Animated gradient border effect - controlled by user
@@ -63,7 +65,6 @@
       rgba(59, 130, 246, 0.6) 80%,
       transparent 100%
     );
-    animation: gradientMove 3s ease-in-out infinite;
     z-index: 1;
   }
 
@@ -74,7 +75,6 @@
   
   &--open {
     transform: translateX(0);
-    animation: slideInBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   
   
@@ -163,7 +163,6 @@
 .chat-sidebar-resize-handle {
   position: absolute;
   z-index: 100;
-  transition: all 0.3s;
   user-select: none; // Prevent text selection during resize
   
   &--left {
@@ -183,7 +182,6 @@
       background: linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(147, 51, 234, 0.4));
       border-radius: 3px;
       opacity: 0;
-      transition: all 0.3s;
       box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
     }
     &:hover::before {
@@ -220,7 +218,6 @@
       background: linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(147, 51, 234, 0.4));
       border-radius: 3px;
       opacity: 0;
-      transition: all 0.3s;
       box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
     }
     &:hover::before {
@@ -247,7 +244,6 @@
       background: linear-gradient(90deg, rgba(59, 130, 246, 0.4), rgba(147, 51, 234, 0.4));
       border-radius: 3px;
       opacity: 0;
-      transition: all 0.3s;
       box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
     }
     &:hover::before {
@@ -274,7 +270,6 @@
       background: linear-gradient(90deg, rgba(59, 130, 246, 0.4), rgba(147, 51, 234, 0.4));
       border-radius: 3px;
       opacity: 0;
-      transition: all 0.3s;
       box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
     }
     &:hover::before {
@@ -337,7 +332,6 @@
 .chat-icon {
   font-size: 1.75rem;
   filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3));
-  animation: pulse 2s ease-in-out infinite;
 }
 
 .chat-badge {
@@ -355,7 +349,6 @@
   box-shadow: 
     0 4px 12px rgba(239, 68, 68, 0.4),
     0 0 0 3px rgba(239, 68, 68, 0.1);
-  animation: badgePulse 2s ease-in-out infinite;
 }
 
 .chat-sidebar-actions {
@@ -373,7 +366,6 @@
   font-size: 1.25rem;
   color: #9333ea;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   &:hover {
     background: rgba(147, 51, 234, 0.2);
     transform: scale(1.1);
@@ -394,7 +386,6 @@
   font-size: 1.125rem;
   color: $corporate-blue-600;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   &:hover {
     background: rgba(59, 130, 246, 0.2);
     transform: scale(1.1);
@@ -415,7 +406,6 @@
   font-size: 1.125rem;
   color: $corporate-blue-600;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   
   &:hover {
     background: rgba(59, 130, 246, 0.2);
@@ -436,7 +426,6 @@
   font-size: 1.25rem;
   color: #ef4444;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   &:hover {
     background: rgba(239, 68, 68, 0.2);
     transform: scale(1.1) rotate(90deg);
@@ -463,7 +452,6 @@
   &::-webkit-scrollbar-thumb {
     background: linear-gradient(180deg, rgba(59, 130, 246, 0.4), rgba(147, 51, 234, 0.4));
     border-radius: 4px;
-    transition: background 0.3s;
     
     &:hover {
       background: linear-gradient(180deg, rgba(59, 130, 246, 0.6), rgba(147, 51, 234, 0.6));
@@ -478,14 +466,12 @@
   justify-content: center;
   height: 100%;
   color: $text-muted;
-  animation: fadeIn 0.5s ease-out;
 
   span {
     font-size: 4rem;
     opacity: 0.2;
     margin-bottom: 1rem;
     filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.2));
-    animation: float 3s ease-in-out infinite;
   }
   
   p {
@@ -510,7 +496,6 @@
   width: 100%;
   text-align: left;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
   border: 1px solid transparent;
 
@@ -526,15 +511,10 @@
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask-composite: exclude;
     opacity: 0;
-    transition: opacity 0.3s;
   }
 
   &:hover {
     background: rgba(59, 130, 246, 0.08);
-    transform: translateX(-4px);
-    box-shadow: 
-      0 4px 12px rgba(59, 130, 246, 0.15),
-      0 0 0 1px rgba(59, 130, 246, 0.1);
     
     &::before {
       opacity: 1;
@@ -543,10 +523,7 @@
 
   &--active {
     background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(147, 51, 234, 0.08));
-    transform: translateX(-4px);
-    box-shadow: 
-      0 4px 16px rgba(59, 130, 246, 0.2),
-      0 0 0 2px rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.3);
     
     &::before {
       opacity: 1;
@@ -642,14 +619,14 @@
 }
 
 .chat-history {
-  max-height: 250px;
+  max-height: 400px; // Increased from 250px for better chat experience
   overflow-y: auto;
   overflow-x: hidden;
   padding: 0.75rem;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  scroll-behavior: smooth;
+  scroll-behavior: auto; // Changed from smooth to prevent jumping animation
   &::-webkit-scrollbar { width: 6px; }
   &::-webkit-scrollbar-track { background: rgba(59, 130, 246, 0.05); border-radius: 3px; }
   &::-webkit-scrollbar-thumb { 
@@ -672,7 +649,6 @@
   font-size: 1.25rem;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   z-index: 10;
   display: flex;
   align-items: center;
@@ -772,7 +748,6 @@
   color: $text-primary;
   background: rgba(255, 255, 255, 0.5);
   outline: none;
-  transition: all 0.2s;
   &:focus {
     border-color: rgba(59, 130, 246, 0.5);
     background: $white;
@@ -790,7 +765,6 @@
   border-radius: 8px;
   font-size: 1rem;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .chat-quick-attach {
@@ -830,7 +804,6 @@
     font-size: 1.25rem;
     background: rgba(59, 130, 246, 0.1);
     cursor: pointer;
-    transition: all 0.2s;
     &:hover { background: rgba(59, 130, 246, 0.2); transform: scale(1.1); }
   }
 }
@@ -853,7 +826,6 @@
   box-shadow: 
     0 3px 8px rgba(239, 68, 68, 0.4),
     0 0 0 3px rgba(239, 68, 68, 0.1);
-  animation: badgePulse 2s ease-in-out infinite;
 }
 
 .chat-item-online-indicator {
@@ -888,7 +860,6 @@
   border-radius: 8px;
   font-size: 0.875rem;
   outline: none;
-  transition: all 0.2s;
 
   &:focus {
     border-color: $corporate-blue-500;
@@ -905,7 +876,6 @@
   border-radius: 8px;
   font-size: 1.25rem;
   cursor: pointer;
-  transition: all 0.2s;
 
   &:hover {
     background: linear-gradient(135deg, $corporate-blue-600, $corporate-blue-700);
@@ -915,6 +885,10 @@
 
 // Footer with premium button
 .chat-sidebar-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   padding: 1.25rem;
   border-top: 1px solid rgba(59, 130, 246, 0.1);
   background: linear-gradient(
@@ -922,6 +896,7 @@
     rgba(59, 130, 246, 0.03) 0%,
     transparent 100%
   );
+  z-index: 10;
 }
 
 .chat-view-all-btn {
@@ -934,7 +909,6 @@
   font-weight: 700;
   font-size: 0.9375rem;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   box-shadow: 
     0 4px 12px rgba(59, 130, 246, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
@@ -947,7 +921,6 @@
     inset: 0;
     background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.2) 100%);
     opacity: 0;
-    transition: opacity 0.3s;
   }
 
   &:hover {
@@ -963,80 +936,6 @@
   
   &:active {
     transform: translateY(0);
-  }
-}
-
-// ============================================
-// ANIMATIONS
-// ============================================
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideInBounce {
-  0% {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  60% {
-    transform: translateX(-10px);
-    opacity: 1;
-  }
-  80% {
-    transform: translateX(5px);
-  }
-  100% {
-    transform: translateX(0);
-  }
-}
-
-@keyframes gradientMove {
-  0%, 100% {
-    transform: translateY(-50%);
-  }
-  50% {
-    transform: translateY(50%);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(0.95);
-  }
-}
-
-@keyframes badgePulse {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 
-      0 4px 12px rgba(239, 68, 68, 0.4),
-      0 0 0 3px rgba(239, 68, 68, 0.1);
-  }
-  50% {
-    transform: scale(1.05);
-    box-shadow: 
-      0 6px 16px rgba(239, 68, 68, 0.5),
-      0 0 0 5px rgba(239, 68, 68, 0.15);
-  }
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
   }
 }
 
