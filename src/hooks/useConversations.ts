@@ -188,27 +188,30 @@ export function useConversations() {
 
         const otherMember = members.find(m => m.user_id !== currentUserId);
 
-        return {
+        const result: any = {
           ...conv,
           members,
           lastMessage: lastMessageMap.get(conv.id),
           last_message: lastMessageMap.get(conv.id),
-          unreadCount: (() => {
-            const count = unreadCountMap.get(conv.id);
-            return count && count > 0 ? count : undefined;
-          })(),
-          unread_count: (() => {
-            const count = unreadCountMap.get(conv.id);
-            return count && count > 0 ? count : undefined;
-          })(),
           isPinned: currentMembership?.is_pinned || false,
           currentUserId: currentUserId,
-          other_user: conv.type === 'direct' && otherMember ? {
+        };
+
+        const unread = unreadCountMap.get(conv.id);
+        if (unread && unread > 0) {
+          result.unreadCount = unread;
+          result.unread_count = unread;
+        }
+
+        if (conv.type === 'direct' && otherMember) {
+          result.other_user = {
             id: otherMember.user_id,
             full_name: otherMember.display_name || 'Unknown',
             username: otherMember.username || 'unknown'
-          } : undefined
-        };
+          };
+        }
+
+        return result;
       }) || [];
 
       setConversations(enrichedConversations);
