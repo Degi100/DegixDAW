@@ -149,10 +149,10 @@ describe('useChatCoordination', () => {
       const { result } = renderHook(() => useChatCoordination(propsWithText));
 
       await act(async () => {
-        await result.current.handleSendQuickMessage('c1');
+        await result.current.handleSendQuickMessage();
       });
 
-      expect(mockProps.expandedChatHandleSend).toHaveBeenCalledWith('c1', 'Hello');
+      expect(mockProps.expandedChatHandleSend).toHaveBeenCalledWith('Hello');
       expect(mockProps.setMessageText).toHaveBeenCalledWith('');
     });
   });

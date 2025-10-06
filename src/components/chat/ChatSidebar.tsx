@@ -15,13 +15,11 @@ import { ChatFooter } from './ChatFooter';
 
 // Hooks
 import { useConversations } from '../../hooks/useConversations';
-import { useFriends } from '../../hooks/useFriends';
 import { useChatSounds } from '../../lib/sounds/chatSounds';
 import { useToast } from '../../hooks/useToast';
 import { useSidebarState } from '../../hooks/useSidebarState';
 import { useResizeHandlers } from '../../hooks/useResizeHandlers';
 import { useDragHandlers } from '../../hooks/useDragHandlers';
-import { useChatData } from '../../hooks/useChatData';
 import { useMessages } from '../../hooks/useMessages';
 import { useChatSynchronizer } from '../../hooks/useChatSynchronizer';
 import { useChatUIState } from '../../hooks/useChatUIState';
@@ -31,6 +29,7 @@ import { useNavigation } from '../../hooks/useNavigation';
 
 // Utils
 import { supabase } from '../../lib/supabase';
+import { formatTime } from '../../lib/timeUtils';
 
 /**
  * Props for the ChatSidebar component
@@ -60,7 +59,6 @@ interface ChatSidebarProps {
 function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
   // Core dependencies
   const { conversations, loadConversations, createOrOpenDirectConversation } = useConversations();
-  const { friends } = useFriends();
   const { playMessageReceived, playChatOpen, playChatClose } = useChatSounds();
   const { success } = useToast();
   const { navigateToChat } = useNavigation();
@@ -149,7 +147,17 @@ function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
   } = useChatUIState();
 
   // Chat data and state
-  const { allChats } = useChatData({ conversations, friends, currentUserId, expandedChatId });
+  const allChats = conversations.map(conv => ({
+    id: conv.id,
+    name: conv.other_user?.full_name || conv.name || 'Unbekannt',
+    lastMessage: conv.lastMessage?.content || 'Keine Nachrichten',
+    timestamp: formatTime(conv.last_message_at),
+    unreadCount: conv.unreadCount || 0,
+    isOnline: false, // TODO: Online-Status
+    avatar: conv.avatar_url || undefined,
+    isLastMessageFromMe: !!(currentUserId && conv.lastMessage?.sender_id === currentUserId),
+    isExistingConversation: true,
+  }));
 
   // Messages for expanded chat
   const {
@@ -160,14 +168,6 @@ function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
 
   // Local state for message input
   const [messageText, setMessageText] = useState('');
-
-  // Message handlers
-  const handleSendQuickMessage = useCallback(async () => {
-    if (!messageText.trim()) return;
-    const textToSend = messageText;
-    setMessageText(''); // Clear input immediately
-    await handleSendMessage(textToSend);
-  }, [messageText, setMessageText, handleSendMessage]);
 
   const handleFileUpload = useCallback(async () => {
     // TODO: Implement file upload with useMessages
@@ -183,6 +183,7 @@ function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
   // Chat coordination
   const {
     handleChatSelect,
+    markConversationAsRead,
     clearChatHistory,
   } = useChatCoordination({
     allChats,
@@ -195,11 +196,23 @@ function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
     loadConversations,
     messageText,
     setMessageText,
-    expandedChatHandleSend: handleSendQuickMessage,
+    expandedChatHandleSend: handleSendMessage,
     setShowAttachMenu,
     expandedChatHandleUpload: handleFileUpload,
     currentUserId,
   });
+
+  // Message handlers
+  const handleSendQuickMessage = useCallback(async () => {
+    if (!messageText.trim()) return;
+    const textToSend = messageText;
+    setMessageText(''); // Clear input immediately
+    await handleSendMessage(textToSend);
+    // Mark conversation as read after sending
+    if (expandedChatId) {
+      await markConversationAsRead(expandedChatId);
+    }
+  }, [messageText, setMessageText, handleSendMessage, expandedChatId, markConversationAsRead]);
 
   return (
     <>
@@ -254,11 +267,7 @@ function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
         {/* Main Content */}
         <div className="chat-sidebar__content" style={{ flex: 1, overflow: 'hidden' }}>
           <ChatList
-            chats={allChats.map(c => ({
-              ...c,
-              isOnline: !!c.isOnline,
-              isExistingConversation: !!c.isExistingConversation,
-            }))}
+            chats={allChats}
             selectedChatId={selectedChat}
             onSelect={handleChatSelect}
             expandedChatId={expandedChatId}

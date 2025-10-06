@@ -133,11 +133,11 @@ export function useConversations() {
       // 4.5 Get friends
       const { data: friendsData } = await supabase
         .from('friendships')
-        .select('friend_id')
-        .eq('user_id', currentUserId)
+        .select('user_id, friend_id')
+        .or(`user_id.eq.${currentUserId},friend_id.eq.${currentUserId}`)
         .eq('status', 'accepted');
 
-      const friendIds = friendsData?.map(f => f.friend_id) || [];
+      const friendIds = friendsData?.map(f => f.user_id === currentUserId ? f.friend_id : f.user_id) || [];
 
       // 5. Get last message for each conversation
       const { data: lastMessages } = await supabase
@@ -225,8 +225,8 @@ export function useConversations() {
 
       // 8. Filter conversations to only show with friends
       const filteredConversations = enrichedConversations.filter(conv => {
-        if (conv.type === 'group') return true; // Keep groups for now
-        if (conv.other_user && friendIds.includes(conv.other_user.id)) return true;
+        // Only direct chats with friends
+        if (conv.type === 'direct' && conv.other_user && friendIds.includes(conv.other_user.id)) return true;
         return false;
       });
 
@@ -249,6 +249,8 @@ export function useConversations() {
   useEffect(() => {
     if (!currentUserId) return;
 
+    console.log('🎧 Setting up realtime subscriptions for user:', currentUserId);
+
     const conversationsChannel = supabase
       .channel('conversations_changes')
       .on(
@@ -258,11 +260,14 @@ export function useConversations() {
           schema: 'public',
           table: 'conversations',
         },
-        () => {
+        (payload) => {
+          console.log('🔔 Conversation changed:', payload);
           loadConversations();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Conversations channel status:', status);
+      });
 
     const membersChannel = supabase
       .channel('conversation_members_changes')
@@ -274,11 +279,14 @@ export function useConversations() {
           table: 'conversation_members',
           filter: `user_id=eq.${currentUserId}`,
         },
-        () => {
+        (payload) => {
+          console.log('🔔 Member changed:', payload);
           loadConversations();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Members channel status:', status);
+      });
 
     const messagesChannel = supabase
       .channel('messages_changes_for_list')
@@ -289,13 +297,17 @@ export function useConversations() {
           schema: 'public',
           table: 'messages',
         },
-        () => {
+        (payload) => {
+          console.log('🔔 New message received, reloading conversations:', payload);
           loadConversations();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Messages channel status:', status);
+      });
 
     return () => {
+      console.log('🔌 Removing realtime subscriptions');
       supabase.removeChannel(conversationsChannel);
       supabase.removeChannel(membersChannel);
       supabase.removeChannel(messagesChannel);

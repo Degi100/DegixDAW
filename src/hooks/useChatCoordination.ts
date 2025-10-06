@@ -30,7 +30,7 @@ export function useChatCoordination({
   loadConversations: () => Promise<void>;
   messageText: string;
   setMessageText: (text: string) => void;
-  expandedChatHandleSend: (chatId: string, text: string) => Promise<void>;
+  expandedChatHandleSend: (text: string) => Promise<void>;
   setShowAttachMenu: (show: boolean) => void;
   expandedChatHandleUpload: (chatId: string, file: File) => Promise<void>;
   currentUserId: string | null;
@@ -95,6 +95,9 @@ export function useChatCoordination({
         const conversationId = await createOrOpenDirectConversation(chat.friendId);
         if (conversationId) {
           success(`Chat mit ${chat.name} gestartet!`);
+          // Update UI state to use the real conversation ID
+          setExpandedChatId(conversationId);
+          setSelectedChat(conversationId);
           await loadConversations();
         }
       } catch (error) {
@@ -103,10 +106,10 @@ export function useChatCoordination({
     }
   }, [expandedChatId, allChats, playMessageReceived, setExpandedChatId, setSelectedChat, markConversationAsRead, createOrOpenDirectConversation, success, loadConversations]);
 
-  const handleSendQuickMessage = useCallback(async (chatId: string) => {
+  const handleSendQuickMessage = useCallback(async () => {
     const textToSend = messageText;
     setMessageText(''); // Sofort Input leeren für besseres UX
-    await expandedChatHandleSend(chatId, textToSend);
+    await expandedChatHandleSend(textToSend);
   }, [messageText, setMessageText, expandedChatHandleSend]);
 
   const handleFileUpload = useCallback(async (chatId: string, file: File) => {
