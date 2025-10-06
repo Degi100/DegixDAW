@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, memo } from 'react';
+import React, { useRef, useEffect, memo, useState, useCallback } from 'react';
 import type { Message } from '../../hooks/useMessages';
 import { useConversationMessages } from '../../hooks/useConversationMessages';
 import { useMessageVisibility } from '../../hooks/useMessageVisibility';
@@ -17,9 +17,6 @@ interface ExpandedChatProps {
   historyContainerRef?: React.RefObject<HTMLDivElement | null>;
   historyEndRef?: React.RefObject<HTMLDivElement | null>;
   onOpenChat?: (chatId: string) => void;
-  showScrollButton?: boolean;
-  onScroll?: () => void;
-  scrollToBottom?: () => void;
   onClearChatHistory?: (chatId: string) => void;
   markConversationAsRead?: (chatId: string) => Promise<void>; // Für scroll-basiertes Markieren
   isOpen?: boolean; // Ob die Sidebar/Chat geöffnet ist
@@ -38,9 +35,6 @@ function ExpandedChat({
   historyContainerRef,
   historyEndRef,
   onOpenChat,
-  showScrollButton,
-  onScroll,
-  scrollToBottom,
   onClearChatHistory,
   markConversationAsRead,
   isOpen = true,
@@ -64,13 +58,35 @@ function ExpandedChat({
 
   // Track previous message count to only scroll on new messages
   const prevMessageCountRef = useRef(0);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const [isNearBottom, setIsNearBottom] = useState(true);
+
+  // Scroll to bottom function
+  const scrollToBottom = useCallback(() => {
+    historyEndRef?.current?.scrollIntoView({ behavior: 'smooth' as ScrollBehavior });
+    setShowScrollButton(false);
+  }, [historyEndRef]);
+
+  // Handle scroll event to show/hide scroll button
+  const handleScroll = useCallback(() => {
+    const container = historyRef.current;
+    if (!container) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    
+    // Show button if user scrolled up more than 200px from bottom
+    const shouldShow = distanceFromBottom > 200;
+    setShowScrollButton(shouldShow);
+    setIsNearBottom(distanceFromBottom < 50);
+  }, [historyRef]);
 
   useEffect(() => {
     const currentCount = effectiveMessages?.length || 0;
     const prevCount = prevMessageCountRef.current;
     
-    // Only scroll if we have new messages (count increased)
-    if (effectiveMessages && currentCount > prevCount && currentCount > 0) {
+    // Only scroll if we have new messages (count increased) AND user is near bottom
+    if (effectiveMessages && currentCount > prevCount && currentCount > 0 && isNearBottom) {
       // Use requestAnimationFrame for better timing
       requestAnimationFrame(() => {
         historyEndRef?.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior });
@@ -78,13 +94,13 @@ function ExpandedChat({
     }
     
     prevMessageCountRef.current = currentCount;
-  }, [effectiveMessages, historyEndRef]);
+  }, [effectiveMessages, historyEndRef, isNearBottom]);
 
   return (
     <div className="chat-expanded">
       {effectiveMessages && effectiveMessages.length > 0 && (
         <div className="chat-history-wrapper">
-          <div className="chat-history" ref={historyRef} onScroll={onScroll}>
+          <div className="chat-history" ref={historyRef} onScroll={handleScroll}>
             {effectiveMessages.map((msg, index) => {
               const isLastMessage = index === effectiveMessages.length - 1;
               return (
@@ -99,7 +115,12 @@ function ExpandedChat({
             <div ref={historyEndRef} />
           </div>
           {showScrollButton && (
-            <button className="chat-scroll-to-bottom" onClick={scrollToBottom} title="Zur letzten Nachricht">
+            <button 
+              className="chat-scroll-to-bottom" 
+              onClick={scrollToBottom} 
+              title="Zur letzten Nachricht"
+              aria-label="Zur letzten Nachricht scrollen"
+            >
               ⬇️
             </button>
           )}

@@ -616,6 +616,8 @@
 
 .chat-history-wrapper {
   position: relative;
+  flex: 1;
+  overflow: hidden;
 }
 
 .chat-history {
@@ -640,27 +642,47 @@
   position: absolute;
   bottom: 0.75rem;
   right: 1rem;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border: none;
   border-radius: 50%;
   background: linear-gradient(135deg, #3b82f6, #9333ea);
-  color: $white;
-  font-size: 1.25rem;
+  color: white;
+  font-size: 1.5rem;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
-  
+  z-index: 100;
+  transition: all 0.3s ease;
+  animation: slideInUp 0.3s ease-out;
+
   &:hover {
     transform: scale(1.1);
-    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.6);
   }
-  
+
   &:active {
     transform: scale(0.95);
+  }
+
+  @media (max-width: 768px) {
+    width: 44px;
+    height: 44px; // Larger touch target on mobile
+    bottom: 1rem;
+    right: 1rem;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -726,7 +748,17 @@
 
 .chat-history-msg-status {
   font-size: 0.75rem;
-  color: $corporate-blue-600;
+  transition: color 0.3s ease;
+  
+  // Grau für gesendet (✓)
+  &.sent {
+    color: #9ca3af; // gray-400
+  }
+  
+  // Blau für gelesen (✓✓)
+  &.read {
+    color: #3b82f6; // blue-500
+  }
 }
 
 // Quick message input

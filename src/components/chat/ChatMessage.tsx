@@ -23,7 +23,7 @@ const ChatMessage = memo(forwardRef<HTMLDivElement, ChatMessageProps>(({ message
         <div className="chat-history-msg-meta">
           <span className="chat-history-msg-time">{timeStr}</span>
           {isSent && (
-            <span className="chat-history-msg-status">
+            <span className={`chat-history-msg-status ${message.read_receipts && message.read_receipts.length > 0 ? 'read' : 'sent'}`}>
               {(message.read_receipts && message.read_receipts.length > 0) ? '✓✓' : '✓'}
             </span>
           )}

@@ -101,9 +101,6 @@ describe('ExpandedChat', () => {
         onOpenChat={onOpenChat}
         historyContainerRef={{ current: null }}
         historyEndRef={{ current: null }}
-        showScrollButton={false}
-        onScroll={() => {}}
-        scrollToBottom={() => {}}
         showAttachMenu={false}
         isSendingMessage={false}
         messageText=""
@@ -131,8 +128,6 @@ describe('ExpandedChat', () => {
     const onOpenChat = jest.fn();
     const historyEndRef = { current: null };
     const historyContainerRef = { current: null };
-    const onScroll = jest.fn();
-    const scrollToBottom = jest.fn();
 
     render(
       <ExpandedChat
@@ -144,9 +139,6 @@ describe('ExpandedChat', () => {
         onOpenChat={onOpenChat}
         historyContainerRef={historyContainerRef}
         historyEndRef={historyEndRef}
-        showScrollButton={false}
-        onScroll={onScroll}
-        scrollToBottom={scrollToBottom}
         showAttachMenu={false}
         isSendingMessage={false}
         messageText=""
@@ -161,11 +153,8 @@ describe('ExpandedChat', () => {
     // Check that historyEndRef is set (div with ref)
     expect(historyEndRef.current).toBeTruthy();
 
-    // Simulate scroll event
+    // Scroll functionality is now internal to ExpandedChat
     const historyDiv = document.querySelector('.chat-history');
-    if (historyDiv) {
-      fireEvent.scroll(historyDiv);
-      expect(onScroll).toHaveBeenCalled();
-    }
+    expect(historyDiv).toBeInTheDocument();
   });
 });

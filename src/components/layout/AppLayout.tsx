@@ -9,10 +9,12 @@ import Header from './Header';
 import ChatSidebar from '../chat/ChatSidebar';
 import { ChatProvider, useChat } from '../../contexts/ChatContext';
 import { useConversations } from '../../hooks/useConversations';
+import { useOnlineStatus } from '../../hooks/useOnlineStatus';
 
 function AppLayoutContent() {
   const { conversations, loadConversations, createOrOpenDirectConversation } = useConversations();
   const { isChatOpen, closeChat, toggleChat } = useChat();
+  const { isUserOnline } = useOnlineStatus();
 
   const unreadChatCount = useMemo(() => {
     console.log('🔢 Calculating unreadChatCount, conversations:', conversations.length);
@@ -44,6 +46,7 @@ function AppLayoutContent() {
         conversations={conversations}
         loadConversations={loadConversations}
         createOrOpenDirectConversation={createOrOpenDirectConversation}
+        isUserOnline={isUserOnline}
       />
     </div>
   );

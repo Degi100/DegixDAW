@@ -47,6 +47,8 @@ interface ChatSidebarProps {
   loadConversations?: () => Promise<void>;
   /** Create conversation callback from parent (optional) */
   createOrOpenDirectConversation?: (friendId: string) => Promise<string | null>;
+  /** Function to check if a user is online */
+  isUserOnline?: (userId: string) => boolean;
 }
 
 /**
@@ -69,6 +71,7 @@ function ChatSidebar({
   conversations: conversationsProp,
   loadConversations: loadConversationsProp,
   createOrOpenDirectConversation: createOrOpenDirectConversationProp,
+  isUserOnline,
 }: ChatSidebarProps) {
   // Core dependencies - use props if provided, otherwise load locally
   const localConversations = useConversations();
@@ -164,17 +167,23 @@ function ChatSidebar({
   } = useChatUIState();
 
   // Chat data and state
-  const allChats = conversations.map(conv => ({
-    id: conv.id,
-    name: conv.other_user?.full_name || conv.name || 'Unbekannt',
-    lastMessage: conv.lastMessage?.content || 'Keine Nachrichten',
-    timestamp: formatTime(conv.last_message_at),
-    unreadCount: conv.unreadCount || 0,
-    isOnline: false, // TODO: Online-Status
-    avatar: conv.avatar_url || undefined,
-    isLastMessageFromMe: !!(currentUserId && conv.lastMessage?.sender_id === currentUserId),
-    isExistingConversation: true,
-  }));
+  const allChats = conversations.map(conv => {
+    // Get other user's ID from conversation
+    const otherUserId = conv.other_user?.id;
+    const isOtherUserOnline = otherUserId && isUserOnline ? isUserOnline(otherUserId) : false;
+
+    return {
+      id: conv.id,
+      name: conv.other_user?.full_name || conv.name || 'Unbekannt',
+      lastMessage: conv.lastMessage?.content || 'Keine Nachrichten',
+      timestamp: formatTime(conv.last_message_at),
+      unreadCount: conv.unreadCount || 0,
+      isOnline: isOtherUserOnline,
+      avatar: conv.avatar_url || undefined,
+      isLastMessageFromMe: !!(currentUserId && conv.lastMessage?.sender_id === currentUserId),
+      isExistingConversation: true,
+    };
+  });
 
   // Messages for expanded chat
   const {
@@ -307,9 +316,6 @@ function ChatSidebar({
                 historyContainerRef={historyContainerRef}
                 historyEndRef={historyEndRef}
                 onOpenChat={navigateToChat}
-                showScrollButton={false}
-                onScroll={() => {}}
-                scrollToBottom={() => {}}
                 onClearChatHistory={clearChatHistory}
                 markConversationAsRead={markConversationAsRead}
                 isOpen={isOpen}
