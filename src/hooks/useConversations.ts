@@ -130,6 +130,15 @@ export function useConversations() {
 
   const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
+      // 4.5 Get friends
+      const { data: friendsData } = await supabase
+        .from('friendships')
+        .select('friend_id')
+        .eq('user_id', currentUserId)
+        .eq('status', 'accepted');
+
+      const friendIds = friendsData?.map(f => f.friend_id) || [];
+
       // 5. Get last message for each conversation
       const { data: lastMessages } = await supabase
         .from('messages')
@@ -214,8 +223,15 @@ export function useConversations() {
         return result;
       }) || [];
 
-      setConversations(enrichedConversations);
-      console.log('✅ Conversations loaded with unread counts:', enrichedConversations.map(c => ({ id: c.id, unreadCount: c.unreadCount })));
+      // 8. Filter conversations to only show with friends
+      const filteredConversations = enrichedConversations.filter(conv => {
+        if (conv.type === 'group') return true; // Keep groups for now
+        if (conv.other_user && friendIds.includes(conv.other_user.id)) return true;
+        return false;
+      });
+
+      setConversations(filteredConversations);
+      console.log('✅ Conversations loaded with unread counts:', filteredConversations.map(c => ({ id: c.id, unreadCount: c.unreadCount })));
     } catch (err) {
       console.error('Error loading conversations:', err);
       setErrorState((err as Error)?.message || 'Fehler beim Laden der Chats');
