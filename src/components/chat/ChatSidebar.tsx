@@ -14,7 +14,7 @@ import { ResizeHandles } from './ResizeHandles';
 import { ChatFooter } from './ChatFooter';
 
 // Hooks
-import { useConversations } from '../../hooks/useConversations';
+import { useConversations, type Conversation } from '../../hooks/useConversations';
 import { useChatSounds } from '../../lib/sounds/chatSounds';
 import { useToast } from '../../hooks/useToast';
 import { useSidebarState } from '../../hooks/useSidebarState';
@@ -41,6 +41,12 @@ interface ChatSidebarProps {
   onClose: () => void;
   /** Additional CSS class names */
   className?: string;
+  /** Conversations from parent (optional - will load if not provided) */
+  conversations?: Conversation[];
+  /** Load conversations callback from parent (optional) */
+  loadConversations?: () => Promise<void>;
+  /** Create conversation callback from parent (optional) */
+  createOrOpenDirectConversation?: (friendId: string) => Promise<string | null>;
 }
 
 /**
@@ -56,9 +62,20 @@ interface ChatSidebarProps {
  * @param props - Component props
  * @returns JSX.Element
  */
-function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
-  // Core dependencies
-  const { conversations, loadConversations, createOrOpenDirectConversation } = useConversations();
+function ChatSidebar({ 
+  isOpen, 
+  onClose, 
+  className = '',
+  conversations: conversationsProp,
+  loadConversations: loadConversationsProp,
+  createOrOpenDirectConversation: createOrOpenDirectConversationProp,
+}: ChatSidebarProps) {
+  // Core dependencies - use props if provided, otherwise load locally
+  const localConversations = useConversations();
+  
+  const conversations = conversationsProp || localConversations.conversations;
+  const loadConversations = loadConversationsProp || localConversations.loadConversations;
+  const createOrOpenDirectConversation = createOrOpenDirectConversationProp || localConversations.createOrOpenDirectConversation;
   const { playMessageReceived, playChatOpen, playChatClose } = useChatSounds();
   const { success } = useToast();
   const { navigateToChat } = useNavigation();

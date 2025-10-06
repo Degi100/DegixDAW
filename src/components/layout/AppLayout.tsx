@@ -11,11 +11,20 @@ import { ChatProvider, useChat } from '../../contexts/ChatContext';
 import { useConversations } from '../../hooks/useConversations';
 
 function AppLayoutContent() {
-  const { conversations } = useConversations();
+  const { conversations, loadConversations, createOrOpenDirectConversation } = useConversations();
   const { isChatOpen, closeChat, toggleChat } = useChat();
 
   const unreadChatCount = useMemo(() => {
-    return conversations.reduce((total, conv) => total + (conv.unreadCount || 0), 0);
+    console.log('🔢 Calculating unreadChatCount, conversations:', conversations.length);
+    const count = conversations.reduce((total, conv) => {
+      const unread = conv.unreadCount || 0;
+      if (unread > 0) {
+        console.log(`  📩 Conv ${conv.id}: ${unread} unread`);
+      }
+      return total + unread;
+    }, 0);
+    console.log('🎯 Total unreadChatCount:', count);
+    return count;
   }, [conversations]);
 
   return (
@@ -28,10 +37,13 @@ function AppLayoutContent() {
         <Outlet />
       </main>
 
-      {/* Chat Sidebar */}
+      {/* Chat Sidebar - pass conversations to avoid duplicate subscriptions */}
       <ChatSidebar
         isOpen={isChatOpen}
         onClose={closeChat}
+        conversations={conversations}
+        loadConversations={loadConversations}
+        createOrOpenDirectConversation={createOrOpenDirectConversation}
       />
     </div>
   );
