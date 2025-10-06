@@ -68,11 +68,18 @@ export default function SidebarHeader({
   };
 
   return (
-    <div
-      className="chat-sidebar-header"
-      onMouseDown={onDragStart}
-      style={{ cursor: (isMobile || !isPinned) ? 'default' : 'move' }}
-    >
+    <div className="chat-sidebar-header">
+      {/* Dedicated drag handle area - only visible when pinned */}
+      {!isMobile && isPinned && (
+        <div 
+          className="chat-sidebar-drag-handle"
+          onMouseDown={onDragStart}
+          title="Sidebar verschieben"
+        >
+          <div className="chat-sidebar-drag-indicator">⋮⋮</div>
+        </div>
+      )}
+      
       <div className="chat-sidebar-title">
         <span className="chat-icon">💬</span>
         <h3>Chats</h3>

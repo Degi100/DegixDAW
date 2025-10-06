@@ -266,8 +266,6 @@ function ChatSidebar({
           height: `${sidebarHeight}px`,
           top: `${sidebarPosition.top}px`,
           right: `${sidebarPosition.right}px`,
-          // Performance optimization: avoid layout thrashing
-          transform: isDragging ? `translate(${sidebarPosition.right - (window.innerWidth - sidebarWidth)}px, ${sidebarPosition.top}px)` : undefined,
         }}
         role="complementary"
         aria-label="Chat Sidebar"

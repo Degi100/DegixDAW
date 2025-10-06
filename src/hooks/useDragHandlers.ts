@@ -33,7 +33,12 @@ export function useDragHandlers({
 }: DragHandlersProps) {
   const handleDragStart = useCallback((e: React.MouseEvent) => {
     if (isMobile || !isPinned) return;
-    if ((e.target as HTMLElement).closest('button')) return;
+    // Ignore clicks on interactive elements
+    const target = e.target as HTMLElement;
+    if (target.closest('button')) return;
+    if (target.closest('.chat-sidebar-resize-handle')) return; // Don't drag when resizing!
+    if (target.closest('input')) return;
+    if (target.closest('textarea')) return;
     e.preventDefault();
     setIsDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
