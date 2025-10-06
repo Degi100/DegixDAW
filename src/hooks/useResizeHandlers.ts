@@ -131,7 +131,8 @@ export function useResizeHandlers({
   useEffect(() => {
     if (!isResizingBottom) return;
     const handleMouseMove = (e: MouseEvent) => {
-      const newHeight = window.innerHeight - e.clientY;
+      // Calculate height relative to sidebar's top position
+      const newHeight = e.clientY - sidebarPosition.top;
       setSidebarHeight(Math.max(MIN_SIDEBAR_HEIGHT, newHeight));
     };
     const handleMouseUp = () => setIsResizingBottom(false);
@@ -141,7 +142,7 @@ export function useResizeHandlers({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isResizingBottom, setIsResizingBottom, setSidebarHeight]);
+  }, [isResizingBottom, setIsResizingBottom, setSidebarHeight, sidebarPosition.top]);
 
   return {
     handleResizeLeftStart,
