@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, forwardRef } from 'react';
 import type { Message } from '../../hooks/useMessages';
 
 interface ChatMessageProps {
@@ -6,7 +6,7 @@ interface ChatMessageProps {
   currentUserId: string | null;
 }
 
-const ChatMessage = memo(({ message, currentUserId }: ChatMessageProps) => {
+const ChatMessage = memo(forwardRef<HTMLDivElement, ChatMessageProps>(({ message, currentUserId }, ref) => {
   // Memoize the time formatting to avoid recalculating on every render
   const timeStr = React.useMemo(() => {
     const msgDate = new Date(message.created_at);
@@ -17,7 +17,7 @@ const ChatMessage = memo(({ message, currentUserId }: ChatMessageProps) => {
 
 
   return (
-    <div className={`chat-history-msg ${isSent ? 'sent' : 'received'}`}>
+    <div className={`chat-history-msg ${isSent ? 'sent' : 'received'}`} ref={ref}>
       <div className="chat-history-msg-bubble">
         <div className="chat-history-msg-content">{message.content}</div>
         <div className="chat-history-msg-meta">
@@ -31,7 +31,7 @@ const ChatMessage = memo(({ message, currentUserId }: ChatMessageProps) => {
       </div>
     </div>
   );
-});
+}));
 
 ChatMessage.displayName = 'ChatMessage';
 

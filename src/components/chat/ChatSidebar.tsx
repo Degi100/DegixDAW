@@ -173,14 +173,8 @@ function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
     // TODO: Implement file upload with useMessages
     success('Datei-Upload noch nicht implementiert');
   }, [success]);
-  useChatSynchronizer({
-    currentUserId,
-    isOpen,
-    loadConversations,
-    playMessageReceived,
-  });
 
-  // Chat coordination
+  // Chat coordination (must be before useChatSynchronizer)
   const {
     handleChatSelect,
     markConversationAsRead,
@@ -202,17 +196,27 @@ function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
     currentUserId,
   });
 
+  // Chat synchronization with auto-read (must be after useChatCoordination)
+  useChatSynchronizer({
+    currentUserId,
+    isOpen,
+    loadConversations,
+    playMessageReceived,
+    expandedChatId,
+    markConversationAsRead,
+  });
+
   // Message handlers
   const handleSendQuickMessage = useCallback(async () => {
     if (!messageText.trim()) return;
     const textToSend = messageText;
     setMessageText(''); // Clear input immediately
     await handleSendMessage(textToSend);
-    // Mark conversation as read after sending
-    if (expandedChatId) {
-      await markConversationAsRead(expandedChatId);
-    }
-  }, [messageText, setMessageText, handleSendMessage, expandedChatId, markConversationAsRead]);
+    // NOTE: Wir markieren NICHT als gelesen nach dem Senden, da:
+    // 1. Der Chat bereits beim Öffnen als gelesen markiert wurde
+    // 2. Eigene Nachrichten keine ungelesenen Badges erzeugen sollten
+    // 3. Die Realtime-Subscription die UI automatisch aktualisiert
+  }, [messageText, setMessageText, handleSendMessage]);
 
   return (
     <>
@@ -290,6 +294,8 @@ function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
                 onScroll={() => {}}
                 scrollToBottom={() => {}}
                 onClearChatHistory={clearChatHistory}
+                markConversationAsRead={markConversationAsRead}
+                isOpen={isOpen}
               />
             )}
           </ChatList>

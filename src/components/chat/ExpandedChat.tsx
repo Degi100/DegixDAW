@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, memo } from 'react';
 import type { Message } from '../../hooks/useMessages';
 import { useConversationMessages } from '../../hooks/useConversationMessages';
+import { useMessageVisibility } from '../../hooks/useMessageVisibility';
 import ChatMessage from './ChatMessage';
 
 interface ExpandedChatProps {
@@ -20,6 +21,8 @@ interface ExpandedChatProps {
   onScroll?: () => void;
   scrollToBottom?: () => void;
   onClearChatHistory?: (chatId: string) => void;
+  markConversationAsRead?: (chatId: string) => Promise<void>; // Für scroll-basiertes Markieren
+  isOpen?: boolean; // Ob die Sidebar/Chat geöffnet ist
 }
 
 function ExpandedChat({
@@ -39,9 +42,19 @@ function ExpandedChat({
   onScroll,
   scrollToBottom,
   onClearChatHistory,
+  markConversationAsRead,
+  isOpen = true,
 }: ExpandedChatProps) {
   const internalHistoryRef = useRef<HTMLDivElement>(null);
   const historyRef = historyContainerRef ?? internalHistoryRef;
+
+  // Scroll-basiertes Markieren als gelesen
+  const { setLastMessageRef } = useMessageVisibility({
+    chatId,
+    markConversationAsRead: markConversationAsRead || (async () => {}),
+    isOpen,
+    containerRef: historyRef,
+  });
 
   // If messages not provided via props, use the conversation hook to load them
   const { messages: loadedMessages } = useConversationMessages(chatId ?? null);
@@ -72,13 +85,17 @@ function ExpandedChat({
       {effectiveMessages && effectiveMessages.length > 0 && (
         <div className="chat-history-wrapper">
           <div className="chat-history" ref={historyRef} onScroll={onScroll}>
-            {effectiveMessages.map(msg => (
-              <ChatMessage
-                key={msg.id}
-                message={msg}
-                currentUserId={currentUserId}
-              />
-            ))}
+            {effectiveMessages.map((msg, index) => {
+              const isLastMessage = index === effectiveMessages.length - 1;
+              return (
+                <ChatMessage
+                  key={msg.id}
+                  message={msg}
+                  currentUserId={currentUserId}
+                  ref={isLastMessage ? setLastMessageRef : undefined}
+                />
+              );
+            })}
             <div ref={historyEndRef} />
           </div>
           {showScrollButton && (

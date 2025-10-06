@@ -9,6 +9,8 @@ interface UseChatSynchronizerProps {
   isOpen: boolean;
   loadConversations: () => Promise<void>;
   playMessageReceived: () => void;
+  expandedChatId?: string | null; // ID des aktuell geöffneten Chats
+  markConversationAsRead?: (chatId: string) => Promise<void>; // Funktion zum Markieren als gelesen
 }
 
 // Definiere einen Typ für den erwarteten Supabase-Einfüge-Payload
@@ -32,6 +34,8 @@ export function useChatSynchronizer({
   isOpen,
   loadConversations,
   playMessageReceived,
+  expandedChatId,
+  markConversationAsRead,
 }: UseChatSynchronizerProps) {
   const [refreshTimeout, setRefreshTimeout] = useState<NodeJS.Timeout | null>(null);
 
@@ -64,13 +68,29 @@ export function useChatSynchronizer({
         event: 'INSERT',
         schema: 'public',
         table: 'messages',
-      }, (payload) => {
+      }, async (payload) => {
         try {
-          const typedPayload = payload as unknown as SupabaseMessageInsertPayload; // Typisierung korrigiert
-          console.log('New global message received:', typedPayload.new?.conversation_id);
-          refreshConversations();
+          const typedPayload = payload as unknown as SupabaseMessageInsertPayload;
+          const messageConversationId = typedPayload.new?.conversation_id;
+          const messageSenderId = typedPayload.new?.sender_id;
           
-          if (typedPayload.new?.sender_id !== currentUserId) {
+          console.log('📩 New global message received:', messageConversationId);
+          
+          // AUTO-READ: Wenn die Nachricht im aktuell geöffneten Chat ankommt
+          // und nicht von mir selbst ist, markiere als gelesen
+          if (expandedChatId && 
+              messageConversationId === expandedChatId && 
+              messageSenderId !== currentUserId &&
+              markConversationAsRead) {
+            console.log('✅ Auto-marking as read (chat is open):', expandedChatId);
+            await markConversationAsRead(expandedChatId);
+          } else {
+            // Sonst normale Aktualisierung
+            refreshConversations();
+          }
+          
+          // Sound nur für Nachrichten von anderen abspielen
+          if (messageSenderId !== currentUserId) {
             playMessageReceived();
           }
         } catch (error) {
@@ -80,7 +100,7 @@ export function useChatSynchronizer({
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [isOpen, currentUserId, refreshConversations, playMessageReceived]);
+  }, [isOpen, currentUserId, expandedChatId, markConversationAsRead, refreshConversations, playMessageReceived]);
 
   return {
     refreshConversations,
