@@ -1,9 +1,10 @@
 import React, { useRef, useEffect } from 'react';
 import type { Message } from '../../hooks/useMessages';
+import { useConversationMessages } from '../../hooks/useConversationMessages';
 
 interface ExpandedChatProps {
   chatId: string;
-  messages: Message[];
+  messages?: Message[];
   currentUserId: string | null;
   showAttachMenu: boolean;
   isSendingMessage: boolean;
@@ -35,21 +36,25 @@ export default function ExpandedChat({
   const internalHistoryRef = useRef<HTMLDivElement>(null);
   const historyRef = historyContainerRef ?? internalHistoryRef;
 
+  // If messages not provided via props, use the conversation hook to load them
+  const { messages: loadedMessages } = useConversationMessages(chatId ?? null);
+  const effectiveMessages = React.useMemo(() => messages ?? loadedMessages ?? [], [messages, loadedMessages]);
+
   useEffect(() => {
     // Scroll to bottom on mount if messages exist
-    if (messages && messages.length > 0) {
+    if (effectiveMessages && effectiveMessages.length > 0) {
       setTimeout(() => {
         historyEndRef?.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior });
       }, 50);
     }
-  }, [messages, historyEndRef]);
+  }, [effectiveMessages, historyEndRef]);
 
   return (
     <div className="chat-expanded">
-      {messages && messages.length > 0 && (
+      {effectiveMessages && effectiveMessages.length > 0 && (
         <div className="chat-history-wrapper">
           <div className="chat-history" ref={historyRef} onScroll={onScroll}>
-            {messages.map(msg => {
+            {effectiveMessages.map(msg => {
               const msgDate = new Date(msg.created_at);
               const timeStr = msgDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
               return (

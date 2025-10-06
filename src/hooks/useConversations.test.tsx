@@ -85,4 +85,20 @@ describe('useConversations hook', () => {
     // Bob (other_user) should be displayed
     expect(screen.getByText('Bob')).toBeInTheDocument();
   });
+
+  it('handles empty memberships (no conversations)', async () => {
+    // mutate the module-scoped responses to simulate empty memberships
+    supResponses.conversation_members = [];
+    supResponses.conversations = [];
+    supResponses.conversation_members_all = [];
+    supResponses.profiles = [];
+    supResponses.messages = [];
+
+    render(<TestComponent />);
+
+    await waitFor(() => expect(screen.queryByText('loading')).not.toBeInTheDocument());
+
+    // No conversation elements should be rendered
+    expect(screen.queryByTestId('conv')).toBeNull();
+  });
 });

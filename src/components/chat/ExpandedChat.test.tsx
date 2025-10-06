@@ -1,5 +1,17 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import ExpandedChat from './ExpandedChat';
+
+// Mock supabase to prevent import.meta usage in test environment and to provide messages
+jest.mock('../../lib/supabase', () => ({
+  supabase: {
+  from: () => ({
+      select: () => ({ eq: () => ({ order: () => ({ limit: () => ({ then: (cb: (res: { data: unknown[] }) => unknown) => Promise.resolve(cb({ data: [] })) }) }) }) }),
+    }),
+    channel: () => ({ on: () => ({ subscribe: jest.fn() }) }),
+    removeChannel: jest.fn(),
+    auth: { getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'u1' } } }) }
+  }
+}), { virtual: true });
 import type { Message } from '../../hooks/useMessages';
 
 describe('ExpandedChat', () => {

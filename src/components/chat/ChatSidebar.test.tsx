@@ -29,7 +29,16 @@ jest.mock('../../hooks/useToast', () => ({ useToast: () => ({ success: jest.fn()
 jest.mock('../../lib/supabase', () => ({
   supabase: {
     auth: { getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'u1' } } }) },
-    from: () => ({ select: () => ({ eq: () => ({ order: () => ({ limit: () => ({ data: [] }) }) }) }) }),
+    from: (table: string) => {
+      if (table === 'messages') {
+        return {
+          // return an async chain that resolves to { data }
+          select: () => ({ eq: () => ({ order: () => ({ limit: async () => ({ data: [{ id: 'm1', conversation_id: 'c1', sender_id: 'u2', content: 'Hello from Bob', created_at: new Date().toISOString(), message_type: 'text', read_receipts: [] }] }) }) }) })
+        };
+      }
+      // default: empty data
+      return ({ select: () => ({ eq: () => ({ order: () => ({ limit: async () => ({ data: [] }) }) }) }) });
+    },
     channel: () => ({ on: () => ({ subscribe: jest.fn() }) }),
     removeChannel: jest.fn()
   }
@@ -50,7 +59,7 @@ describe('ChatSidebar', () => {
     const chatItem = screen.getByText('Bob');
     fireEvent.click(chatItem);
 
-    // ExpandedChat should render content (messages placeholder or quick message input)
-    expect(await screen.findByPlaceholderText(/nachricht/i)).toBeInTheDocument();
+    // ExpandedChat should render message content loaded from supabase
+    expect(await screen.findByText('Hello from Bob')).toBeInTheDocument();
   });
 });
