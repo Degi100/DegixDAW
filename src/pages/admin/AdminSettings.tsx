@@ -14,6 +14,7 @@ import SystemInfoPanel from './components/panels/SystemInfoPanel';
 import SecuritySettingsPanel from './components/panels/SecuritySettingsPanel';
 import ApplicationSettingsPanel from './components/panels/ApplicationSettingsPanel';
 import NotificationSettingsPanel from './components/panels/NotificationSettingsPanel';
+import AdminFeatureFlags from '../../components/admin/AdminFeatureFlags';
 
 // Version Management Component
 import VersionsManagement from './VersionsManagement';
@@ -64,7 +65,7 @@ export default function AdminSettings() {
     weeklyReports: false
   });
 
-  const [activeTab, setActiveTab] = useState<'system' | 'security' | 'app' | 'notifications'>('system');
+  const [activeTab, setActiveTab] = useState<'system' | 'security' | 'app' | 'notifications' | 'features'>('system');
   const [isSaving, setIsSaving] = useState(false);
 
   // ============================================
@@ -186,6 +187,16 @@ export default function AdminSettings() {
                 <span className="tab-icon">🔔</span>
                 <span className="tab-label">Notifications</span>
               </NavLink>
+              <NavLink
+                to="/admin/settings"
+                className={({ isActive }) =>
+                  `settings-tab ${isActive ? 'active' : ''}`
+                }
+                onClick={() => setActiveTab('features')}
+              >
+                <span className="tab-icon">🎛️</span>
+                <span className="tab-label">Feature-Flags</span>
+              </NavLink>
             </div>
 
             {/* Tab Content - Now with Panel Components */}
@@ -226,6 +237,10 @@ export default function AdminSettings() {
                   onReset={handleResetNotifications}
                   isSaving={isSaving}
                 />
+              )}
+
+              {activeTab === 'features' && (
+                <AdminFeatureFlags />
               )}
             </div>
           </div>
