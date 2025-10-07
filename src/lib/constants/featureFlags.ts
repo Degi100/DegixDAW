@@ -3,14 +3,21 @@
 // Admin-controlled feature toggles
 // ============================================
 
+export type UserRole = 'public' | 'user' | 'moderator' | 'admin';
+
 export interface FeatureFlag {
   id: string;
   name: string;
   description: string;
   enabled: boolean;
-  adminOnly: boolean;  // Wenn true: nur für Admins sichtbar
-  betaAccess: boolean; // Wenn true: für Beta-Tester sichtbar
-  version: string;     // Seit welcher Version verfügbar
+  allowedRoles: UserRole[];  // Multi-Select: Welche Rollen haben Zugriff
+  version: string;           // Seit welcher Version verfügbar
+}
+
+// Legacy support
+export interface LegacyFeatureFlag extends FeatureFlag {
+  adminOnly?: boolean;   // Deprecated: use allowedRoles
+  betaAccess?: boolean;  // Deprecated: use allowedRoles
 }
 
 export const FEATURE_FLAGS: Record<string, FeatureFlag> = {
@@ -18,9 +25,8 @@ export const FEATURE_FLAGS: Record<string, FeatureFlag> = {
     id: 'chat_sidebar_polish',
     name: 'Chat-Sidebar Verbesserungen',
     description: 'Badge-Animationen, Glow-Effekte, optimistisches UI',
-    enabled: true,        // ✅ Live für alle
-    adminOnly: false,
-    betaAccess: false,
+    enabled: true,
+    allowedRoles: ['public', 'user', 'moderator', 'admin'],  // ✅ Alle
     version: '2.1.0',
   },
   
@@ -28,9 +34,8 @@ export const FEATURE_FLAGS: Record<string, FeatureFlag> = {
     id: 'file_upload_system',
     name: 'Datei-Upload System',
     description: 'Upload von Bildern, Videos, Audio in Chats (5MB)',
-    enabled: true,        // ✅ Live für alle
-    adminOnly: false,
-    betaAccess: false,
+    enabled: true,
+    allowedRoles: ['user', 'moderator', 'admin'],  // ✅ Authentifizierte User
     version: '2.1.0',
   },
   
@@ -38,9 +43,8 @@ export const FEATURE_FLAGS: Record<string, FeatureFlag> = {
     id: 'file_browser',
     name: 'Datei-Browser',
     description: 'Übersicht aller hochgeladenen Dateien mit Filter & Sortierung',
-    enabled: true,        // ⚠️ Enabled, aber...
-    adminOnly: true,      // 🔒 Nur für Admins sichtbar!
-    betaAccess: false,
+    enabled: true,
+    allowedRoles: ['admin'],  // 🔒 Nur Admins (Testing)
     version: '2.2.0',
   },
   
@@ -48,9 +52,8 @@ export const FEATURE_FLAGS: Record<string, FeatureFlag> = {
     id: 'cloud_integration',
     name: 'Cloud-Integration',
     description: 'Dropbox, Google Drive, OneDrive Integration',
-    enabled: false,       // ❌ Noch nicht ready
-    adminOnly: true,      // 🔒 Nur für Admins (zum Testen)
-    betaAccess: false,
+    enabled: false,
+    allowedRoles: ['admin'],  // 🔒 Disabled & Admin-only
     version: '2.3.0',
   },
 };
@@ -58,8 +61,8 @@ export const FEATURE_FLAGS: Record<string, FeatureFlag> = {
 // Helper: Check if user can access feature
 export function canAccessFeature(
   featureId: string,
-  isAdmin: boolean = false,
-  isBetaTester: boolean = false
+  userRole: UserRole = 'public',
+  isAdmin: boolean = false
 ): boolean {
   const feature = FEATURE_FLAGS[featureId];
   if (!feature) return false;
@@ -67,13 +70,11 @@ export function canAccessFeature(
   // Feature disabled? → Niemand kann zugreifen
   if (!feature.enabled) return false;
   
-  // Admin-only feature? → Nur Admins
-  if (feature.adminOnly && !isAdmin) return false;
+  // Admin override: Admins see everything
+  if (isAdmin) return true;
   
-  // Beta feature? → Nur Beta-Tester oder Admins
-  if (feature.betaAccess && !isBetaTester && !isAdmin) return false;
-  
-  return true;
+  // Check if user's role is in allowed roles
+  return feature.allowedRoles.includes(userRole);
 }
 
 // Helper: Get all features for admin panel
@@ -87,4 +88,19 @@ export function toggleFeature(featureId: string, enabled: boolean): void {
     FEATURE_FLAGS[featureId].enabled = enabled;
     // TODO: Persist to database (supabase: feature_flags table)
   }
+}
+
+// Helper: Update allowed roles (admin action)
+export function updateAllowedRoles(featureId: string, roles: UserRole[]): void {
+  if (FEATURE_FLAGS[featureId]) {
+    FEATURE_FLAGS[featureId].allowedRoles = roles;
+    // TODO: Persist to database
+  }
+}
+
+// Helper: Get user role (to be implemented with proper auth)
+export function getUserRole(isAdmin: boolean, isModerator: boolean): UserRole {
+  if (isAdmin) return 'admin';
+  if (isModerator) return 'moderator';
+  return 'user';  // authenticated user
 }

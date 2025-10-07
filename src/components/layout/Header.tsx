@@ -13,7 +13,7 @@ import Button from '../ui/Button';
 import UserDropdown from './UserDropdown';
 import HeaderNav from './HeaderNav';
 import { APP_CONFIG } from '../../lib/constants';
-import { canAccessFeature } from '../../lib/constants/featureFlags';
+import { canAccessFeature, getUserRole } from '../../lib/constants/featureFlags';
 
 interface NavigationItem {
   path: string;
@@ -91,19 +91,23 @@ export default function Header(props: HeaderProps) {
     }
   }, [signOut, success]);
 
-  const filteredNavItems = useMemo(() => 
-    (customNavItems || navigationItems).filter(item => {
+  const filteredNavItems = useMemo(() => {
+    // TODO: Get isModerator from user profile
+    const isModerator = false;  // Will be implemented with proper auth
+    const userRole = user ? getUserRole(isAdmin, isModerator) : 'public';
+    
+    return (customNavItems || navigationItems).filter(item => {
       // Auth check
       if (item.requiresAuth && !user) return false;
       
       // Feature-Flag check
       if (item.featureFlag) {
-        return canAccessFeature(item.featureFlag, isAdmin);
+        return canAccessFeature(item.featureFlag, userRole, isAdmin);
       }
       
       return true;
-    }), [customNavItems, user, isAdmin]
-  );
+    });
+  }, [customNavItems, user, isAdmin]);
 
   const currentBrand = useMemo(() => 
     customBrand || { icon: '🎛️', name: APP_CONFIG.name }, 

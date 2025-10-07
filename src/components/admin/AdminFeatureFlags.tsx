@@ -4,7 +4,13 @@
 // ============================================
 
 import { useState, useEffect } from 'react';
-import { getAllFeatures, toggleFeature, type FeatureFlag } from '../../lib/constants/featureFlags';
+import { 
+  getAllFeatures, 
+  toggleFeature, 
+  updateAllowedRoles,
+  type FeatureFlag, 
+  type UserRole 
+} from '../../lib/constants/featureFlags';
 import { useToast } from '../../hooks/useToast';
 
 export default function AdminFeatureFlags() {
@@ -44,25 +50,47 @@ export default function AdminFeatureFlags() {
     }
   };
 
+  const handleRoleToggle = async (featureId: string, role: UserRole, currentRoles: UserRole[]) => {
+    try {
+      setLoading(true);
+      
+      const newRoles = currentRoles.includes(role)
+        ? currentRoles.filter(r => r !== role)  // Remove role
+        : [...currentRoles, role];               // Add role
+      
+      updateAllowedRoles(featureId, newRoles);
+      loadFeatures();
+      success(`Rolle ${role} ${newRoles.includes(role) ? 'hinzugefügt' : 'entfernt'}`);
+    } catch (err) {
+      console.error('Role toggle error:', err);
+      showError('Fehler beim Ändern der Rollen');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getStatusIcon = (feature: FeatureFlag) => {
     if (!feature.enabled) return '❌';
-    if (feature.adminOnly) return '🔒';
-    if (feature.betaAccess) return '🧪';
+    if (feature.allowedRoles.includes('public')) return '🌍';
+    if (feature.allowedRoles.includes('admin') && feature.allowedRoles.length === 1) return '🔒';
+    if (feature.allowedRoles.includes('moderator')) return '🧪';
     return '✅';
   };
 
   const getStatusText = (feature: FeatureFlag) => {
     if (!feature.enabled) return 'Deaktiviert';
-    if (feature.adminOnly) return 'Nur Admins';
-    if (feature.betaAccess) return 'Beta-Tester';
-    return 'Öffentlich';
+    if (feature.allowedRoles.includes('public')) return 'Öffentlich';
+    if (feature.allowedRoles.includes('admin') && feature.allowedRoles.length === 1) return 'Nur Admins';
+    if (feature.allowedRoles.includes('moderator')) return 'Moderatoren';
+    return `${feature.allowedRoles.length} Rollen`;
   };
 
   const getStatusColor = (feature: FeatureFlag) => {
-    if (!feature.enabled) return 'red';
-    if (feature.adminOnly) return 'orange';
-    if (feature.betaAccess) return 'blue';
-    return 'green';
+    if (!feature.enabled) return '#ef4444'; // red
+    if (feature.allowedRoles.includes('public')) return '#22c55e'; // green
+    if (feature.allowedRoles.includes('admin') && feature.allowedRoles.length === 1) return '#f97316'; // orange
+    if (feature.allowedRoles.includes('moderator')) return '#3b82f6'; // blue
+    return '#8b5cf6'; // purple
   };
 
   return (
@@ -95,12 +123,9 @@ export default function AdminFeatureFlags() {
 
             <div className="feature-meta">
               <span className="feature-version">v{feature.version}</span>
-              {feature.adminOnly && (
-                <span className="feature-badge admin">Admin-Only</span>
-              )}
-              {feature.betaAccess && (
-                <span className="feature-badge beta">Beta</span>
-              )}
+              <span className="feature-roles">
+                {feature.allowedRoles.length} {feature.allowedRoles.length === 1 ? 'Rolle' : 'Rollen'}
+              </span>
             </div>
 
             <div className="feature-controls">
@@ -113,38 +138,52 @@ export default function AdminFeatureFlags() {
                 />
                 <span className="toggle-slider"></span>
                 <span className="toggle-label">
-                  {feature.enabled ? 'Aktiviert' : 'Deaktiviert'}
+                  {feature.enabled ? '✅ Aktiviert' : '❌ Deaktiviert'}
                 </span>
               </label>
 
               {feature.enabled && (
-                <div className="visibility-controls">
-                  <label>
+                <div className="role-checkboxes">
+                  <h4>Zugriff für:</h4>
+                  <label className="role-checkbox">
                     <input
-                      type="radio"
-                      name={`${feature.id}-visibility`}
-                      checked={!feature.adminOnly && !feature.betaAccess}
-                      readOnly
+                      type="checkbox"
+                      checked={feature.allowedRoles.includes('public')}
+                      onChange={() => handleRoleToggle(feature.id, 'public', feature.allowedRoles)}
+                      disabled={loading}
                     />
-                    Öffentlich
+                    <span className="role-icon">🌍</span>
+                    <span>Öffentlich (alle Besucher)</span>
                   </label>
-                  <label>
+                  <label className="role-checkbox">
                     <input
-                      type="radio"
-                      name={`${feature.id}-visibility`}
-                      checked={feature.betaAccess}
-                      readOnly
+                      type="checkbox"
+                      checked={feature.allowedRoles.includes('user')}
+                      onChange={() => handleRoleToggle(feature.id, 'user', feature.allowedRoles)}
+                      disabled={loading}
                     />
-                    Beta-Tester
+                    <span className="role-icon">👤</span>
+                    <span>User (angemeldet)</span>
                   </label>
-                  <label>
+                  <label className="role-checkbox">
                     <input
-                      type="radio"
-                      name={`${feature.id}-visibility`}
-                      checked={feature.adminOnly}
-                      readOnly
+                      type="checkbox"
+                      checked={feature.allowedRoles.includes('moderator')}
+                      onChange={() => handleRoleToggle(feature.id, 'moderator', feature.allowedRoles)}
+                      disabled={loading}
                     />
-                    Nur Admins
+                    <span className="role-icon">🧪</span>
+                    <span>Moderatoren (Beta-Tester)</span>
+                  </label>
+                  <label className="role-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={feature.allowedRoles.includes('admin')}
+                      onChange={() => handleRoleToggle(feature.id, 'admin', feature.allowedRoles)}
+                      disabled={loading}
+                    />
+                    <span className="role-icon">🔒</span>
+                    <span>Admins (nur du)</span>
                   </label>
                 </div>
               )}
@@ -156,11 +195,15 @@ export default function AdminFeatureFlags() {
       <div className="admin-info-box">
         <h4>ℹ️ Info</h4>
         <ul>
-          <li><strong>✅ Öffentlich:</strong> Feature ist für alle User sichtbar</li>
-          <li><strong>🧪 Beta-Tester:</strong> Nur ausgewählte User (beta_access flag)</li>
-          <li><strong>🔒 Nur Admins:</strong> Nur du siehst das Feature (zum Testen)</li>
-          <li><strong>❌ Deaktiviert:</strong> Feature ist komplett versteckt</li>
+          <li><strong>🌍 Öffentlich:</strong> Alle Besucher sehen das Feature (auch ohne Login)</li>
+          <li><strong>👤 User:</strong> Nur angemeldete User</li>
+          <li><strong>🧪 Moderatoren:</strong> Beta-Tester & Moderatoren (für Pre-Release Testing)</li>
+          <li><strong>🔒 Admins:</strong> Nur du (zum sicheren Testen in Production)</li>
+          <li><strong>❌ Deaktiviert:</strong> Feature ist komplett versteckt für alle</li>
         </ul>
+        <p className="info-note">
+          💡 <strong>Tipp:</strong> Aktiviere Features zuerst nur für Admins, teste sie, und erweitere dann schrittweise auf Moderatoren → User → Öffentlich
+        </p>
       </div>
     </div>
   );
