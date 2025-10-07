@@ -1,4 +1,6 @@
 import { useCallback } from 'react';
+import { useConversations } from './useConversations';
+import { useDebouncedAsync } from './useDebouncedAsync';
 import { supabase } from '../lib/supabase';
 
 /**
@@ -20,7 +22,7 @@ export function useChatCoordination({
   expandedChatHandleUpload,
   currentUserId,
 }: {
-  allChats: any[];
+  allChats: Array<{ id: string; name: string; unreadCount: number; isExistingConversation: boolean; friendId?: string }>;
   expandedChatId: string | null;
   setExpandedChatId: (id: string | null) => void;
   setSelectedChat: (id: string | null) => void;
@@ -35,37 +37,33 @@ export function useChatCoordination({
   expandedChatHandleUpload: (chatId: string, file: File) => Promise<void>;
   currentUserId: string | null;
 }) {
-  const markConversationAsRead = useCallback(async (chatId: string) => {
-    console.log('🔍 markConversationAsRead called for chatId:', chatId);
-    
-    if (!currentUserId) {
-      console.log('⚠️ Skipping: no currentUserId');
-      return;
-    }
+  // Conversations-Hook für optimistisches UI-Update
+  const { optimisticallyMarkAsRead } = useConversations();
 
-    console.log('💾 Updating DB for chat:', chatId);
-    
-    // 1. Datenbank-Update: Setze last_read_at auf jetzt
-    // conversation_members hat nur: conversation_id, user_id, role, joined_at, last_read_at, is_muted, is_pinned
-    const { error } = await supabase
-      .from('conversation_members') 
-      .update({ last_read_at: new Date().toISOString() })
-      .eq('conversation_id', chatId)
-      .eq('user_id', currentUserId);
-
-    if (error) {
-      console.error('❌ Fehler beim Markieren als gelesen:', error);
-      return;
-    }
-
-    console.log('✅ DB update successful, reloading conversations...');
-    
-    // 2. UI-Synchronisation: Lade die Konversationsliste neu, um die Badges zu aktualisieren (Schritt 3 & 4 der Logik).
-    console.log('🔄 Calling loadConversations...');
-    await loadConversations();
-    
-    console.log('🎉 Conversations reloaded');
-  }, [currentUserId, loadConversations]);
+  // Debounced markConversationAsRead (pro ChatId)
+  const markConversationAsRead = useDebouncedAsync(
+    async (chatId: string) => {
+      console.log('🔍 markConversationAsRead called for chatId:', chatId);
+      if (!currentUserId) {
+        console.log('⚠️ Skipping: no currentUserId');
+        return;
+      }
+      console.log('💾 Updating DB for chat:', chatId);
+      const { error } = await supabase
+        .from('conversation_members') 
+        .update({ last_read_at: new Date().toISOString() })
+        .eq('conversation_id', chatId)
+        .eq('user_id', currentUserId);
+      if (error) {
+        console.error('❌ Fehler beim Markieren als gelesen:', error);
+        return;
+      }
+      console.log('✅ DB update successful, reloading conversations...');
+      await loadConversations();
+      console.log('🎉 Conversations reloaded');
+    },
+    300
+  );
 
   const handleChatSelect = useCallback(async (chatId: string) => {
     if (expandedChatId === chatId) {
@@ -74,12 +72,14 @@ export function useChatCoordination({
     }
     
     // UI-State setzen, damit der Chat sofort im Frontend erscheint
-    setExpandedChatId(chatId);
-    setSelectedChat(chatId);
-    
-    // NEUE LOGIK: Asynchronen Aufruf starten, um Badges zurückzusetzen
-    // Wir rufen dies sofort auf, auch wenn der Rest der Logik noch läuft
-    await markConversationAsRead(chatId); 
+  setExpandedChatId(chatId);
+  setSelectedChat(chatId);
+
+  // Optimistisches UI-Update: Badge sofort ausblenden
+  optimisticallyMarkAsRead(chatId);
+
+  // Asynchron: Backend-Update (key = chatId für Debounce pro Chat)
+  await markConversationAsRead(chatId, chatId);
 
     // --- Bestehende Logik (zurückgezogen von der MarkAsRead-Logik) ---
     const chat = allChats.find(c => c.id === chatId);
@@ -104,7 +104,7 @@ export function useChatCoordination({
         console.error('Error:', error);
       }
     }
-  }, [expandedChatId, allChats, playMessageReceived, setExpandedChatId, setSelectedChat, markConversationAsRead, createOrOpenDirectConversation, success, loadConversations]);
+  }, [expandedChatId, allChats, playMessageReceived, setExpandedChatId, setSelectedChat, markConversationAsRead, createOrOpenDirectConversation, success, loadConversations, optimisticallyMarkAsRead]);
 
   const handleSendQuickMessage = useCallback(async () => {
     const textToSend = messageText;
@@ -172,11 +172,16 @@ export function useChatCoordination({
     }
   }, [success, loadConversations]);
 
+  // Wrapper für markConversationAsRead, damit die Signatur stimmt (nur chatId)
+  const markAsRead = useCallback(async (chatId: string) => {
+    return markConversationAsRead(chatId, chatId);
+  }, [markConversationAsRead]);
+
   return {
     handleChatSelect,
     handleSendQuickMessage,
     handleFileUpload,
     clearChatHistory,
-    markConversationAsRead,
+    markConversationAsRead: markAsRead,
   };
 }

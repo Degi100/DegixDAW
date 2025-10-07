@@ -12,7 +12,7 @@ export function useSidebarLifecycle({
   isOpen: boolean;
   playChatOpen: () => void;
   playChatClose: () => void;
-  supabase: any;
+  supabase: { auth: { getUser: () => Promise<{ data: { user: { id: string } | null } }> } };
 }) {
   const [currentUserId, setCurrentUserIdState] = useState<string | null>(null);
   const [isMobile, setIsMobileState] = useState<boolean>(window.innerWidth <= 768);

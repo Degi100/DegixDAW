@@ -41,6 +41,7 @@ function ExpandedChat({
 }: ExpandedChatProps) {
   const internalHistoryRef = useRef<HTMLDivElement>(null);
   const historyRef = historyContainerRef ?? internalHistoryRef;
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Scroll-basiertes Markieren als gelesen
   const { setLastMessageRef } = useMessageVisibility({
@@ -127,14 +128,27 @@ function ExpandedChat({
         </div>
       )}
       <div className="chat-quick-message">
-  <input type="file" style={{ display: 'none' }} onChange={(e) => e.target.files?.[0] && onFileUpload(chatId, e.target.files[0])} accept="audio/*,video/*,image/*,.mid,.midi,.pdf,.doc,.docx" />
+  <input 
+    ref={fileInputRef}
+    type="file" 
+    style={{ display: 'none' }} 
+    onChange={(e) => e.target.files?.[0] && onFileUpload(chatId, e.target.files[0])} 
+    accept="audio/*,video/*,image/*,.mid,.midi,.pdf,.doc,.docx,.txt,.csv,.xls,.xlsx"
+    title="📎 Max 5 MB pro Datei"
+  />
   <div className="chat-quick-attach-menu" style={{ display: showAttachMenu ? 'flex' : 'none' }}>
           <button title="Audio">🎧</button>
           <button title="MIDI">🎹</button>
           <button title="Bild">🖼️</button>
           <button title="Dokument">📄</button>
         </div>
-        <button className="chat-quick-attach">📎</button>
+        <button 
+          className="chat-quick-attach"
+          onClick={() => fileInputRef.current?.click()}
+          title="Datei hochladen"
+        >
+          📎
+        </button>
         <input type="text" placeholder="Nachricht..." className="chat-quick-input" value={messageText || ''} onChange={(e) => setMessageText?.(e.target.value)} onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();

@@ -3,7 +3,7 @@
 // corporate Theme - Consistent Navigation
 // ============================================
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
@@ -31,26 +31,44 @@ interface HeaderProps {
   adminLevel?: string;
   onChatToggle?: () => void;
   unreadChatCount?: number;
+  expandedChatId?: string | null;
 }
-
 const navigationItems: NavigationItem[] = [
   { path: '/dashboard', label: 'Dashboard', icon: '🏠', requiresAuth: true },
   { path: '/social', label: 'Social', icon: '👥', requiresAuth: true },
+  { path: '/files', label: 'Dateien', icon: '📂', requiresAuth: true },
 ];
 
-export default function Header({
-  customBrand,
-  customNavItems,
-  showAdminBadge = false,
-  adminLevel,
-  onChatToggle,
-  unreadChatCount = 0
-}: HeaderProps) {
-  const { user, signOut } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
+export default function Header(props: HeaderProps) {
+    const {
+      customBrand,
+      customNavItems,
+      showAdminBadge = false,
+      adminLevel,
+      onChatToggle,
+      unreadChatCount = 0,
+      expandedChatId = null,
+    } = props;
   const { success } = useToast();
   const { isAdmin } = useAdmin();
+  const { user, signOut } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // Animation-Flag für neue ungelesene Nachrichten im Header
+  const [isBadgeNew, setIsBadgeNew] = useState(false);
+  const prevUnread = useRef(0);
+
+  // Trigger Animation nur bei echter neuer Nachricht und wenn Chat nicht offen
+  useEffect(() => {
+    if (unreadChatCount > prevUnread.current && !expandedChatId) {
+      setIsBadgeNew(true);
+      const timeout = setTimeout(() => setIsBadgeNew(false), 2000);
+      return () => clearTimeout(timeout);
+    }
+    prevUnread.current = unreadChatCount;
+    // Wenn alles gelesen, Animation zurücksetzen
+    if (unreadChatCount === 0) setIsBadgeNew(false);
+  }, [unreadChatCount, expandedChatId]);
 
   const handleThemeToggle = useCallback(() => {
     toggleTheme();
@@ -105,8 +123,8 @@ export default function Header({
               aria-label="Chat öffnen"
             >
               <span className="chat-icon">💬</span>
-              {unreadChatCount > 0 && (
-                <span className="chat-badge">{unreadChatCount}</span>
+              {unreadChatCount > 0 && !expandedChatId && (
+                <span className={`chat-badge${isBadgeNew ? ' chat-badge--new' : ''}`}>{unreadChatCount}</span>
               )}
             </button>
           )}

@@ -7,7 +7,6 @@ interface SidebarHeaderProps {
   isGradientEnabled: boolean;
   isPinned: boolean;
   isMobile: boolean;
-  totalUnreadCount: number;
   onToggleGradient: () => void;
   onTogglePin: () => void;
   onResetPosition: () => void;
@@ -19,7 +18,6 @@ export default function SidebarHeader({
   isGradientEnabled,
   isPinned,
   isMobile,
-  totalUnreadCount,
   onToggleGradient,
   onTogglePin,
   onResetPosition,
@@ -89,12 +87,7 @@ export default function SidebarHeader({
       <div className="chat-sidebar-title">
         <span className="chat-icon" role="img" aria-label="Chat Icon">💬</span>
         <h3>Chats</h3>
-        {/* Unread Badge - only show if > 0 */}
-        {totalUnreadCount > 0 && (
-          <span className="chat-badge chat-badge--header" aria-live="polite" aria-label={`${totalUnreadCount} ungelesene Nachrichten`}>
-            {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
-          </span>
-        )}
+        {/* Badge entfernt - wird jetzt nur noch im globalen Header + per-ChatItem angezeigt */}
       </div>
       
       <div className="chat-sidebar-actions">

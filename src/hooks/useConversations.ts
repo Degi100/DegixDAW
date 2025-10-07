@@ -14,6 +14,7 @@ import { useToast } from './useToast';
 export interface ConversationMember {
   id: string;
   user_id: string;
+  conversation_id?: string; // für DB-Objekte
   role: 'admin' | 'member';
   joined_at: string;
   last_read_at: string | null;
@@ -21,7 +22,7 @@ export interface ConversationMember {
   is_pinned: boolean;
   // Profile enrichment
   username?: string;
-  display_name?: string;
+  display_name?: string; // optional, da Mapping undefined liefern kann
   avatar_url?: string;
   is_online?: boolean;
 }
@@ -62,11 +63,24 @@ export interface Conversation {
   };
 }
 
+
+
 export function useConversations() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [errorState, setErrorState] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { success, error } = useToast();
+
+  // Optimistisches Markieren als gelesen (nur UI, kein Server)
+  const optimisticallyMarkAsRead = useCallback((conversationId: string) => {
+    setConversations(prev =>
+      prev.map(conv =>
+        conv.id === conversationId
+          ? { ...conv, unreadCount: 0, unread_count: 0 }
+          : conv
+      )
+    );
+  }, []);
 
   // Get current user ID
   useEffect(() => {
@@ -114,8 +128,8 @@ export function useConversations() {
 
       // 4. Get profiles for all member user_ids
       const allUserIds = Array.from(new Set(allMembers?.map(m => m.user_id) || []));
-  console.debug('User-IDs für Profile-Abfrage:', allUserIds);
-  let profiles: Profile[] = [];
+      console.debug('User-IDs für Profile-Abfrage:', allUserIds);
+      let profiles: Profile[] = [];
       if (allUserIds.length > 0) {
         const { data, error } = await supabase
           .from('profiles')
@@ -128,7 +142,7 @@ export function useConversations() {
         console.debug('Geladene Profile:', profiles);
       }
 
-  const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
       // 4.5 Get friends
       const { data: friendsData } = await supabase
@@ -171,8 +185,8 @@ export function useConversations() {
       console.log('📨 Found unread messages:', unreadMessages?.length);
 
       const unreadCountMap = new Map<string, number>();
-      memberships?.forEach(membership => {
-        const count = unreadMessages?.filter(msg =>
+      memberships?.forEach((membership: { conversation_id: string; last_read_at: string | null; is_pinned: boolean }) => {
+        const count = unreadMessages?.filter((msg: { conversation_id: string; created_at: string; sender_id: string }) =>
           msg.conversation_id === membership.conversation_id &&
           msg.sender_id !== currentUserId && // Nur eingehende Nachrichten zählen
           (!membership.last_read_at || new Date(msg.created_at) > new Date(membership.last_read_at))
@@ -184,20 +198,20 @@ export function useConversations() {
 
       // 7. Enrich conversations with all data
       const enrichedConversations: Conversation[] = conversationsData?.map(conv => {
-        const convMembers = allMembers?.filter(m => m.conversation_id === conv.id) || [];
-        const currentMembership = memberships?.find(m => m.conversation_id === conv.id);
+        const convMembers = allMembers?.filter((m: ConversationMember) => m.conversation_id === conv.id) || [];
+        const currentMembership = memberships?.find((m: { conversation_id: string }) => m.conversation_id === conv.id);
         
-        const members: ConversationMember[] = convMembers.map(m => {
+        const members: ConversationMember[] = convMembers.map((m: ConversationMember) => {
           const profile = profilesMap.get(m.user_id);
           return {
             ...m,
-            display_name: profile?.full_name || profile?.username
+            display_name: profile?.full_name || profile?.username || ''
           };
         });
 
         const otherMember = members.find(m => m.user_id !== currentUserId);
 
-        const result: any = {
+        const result: Conversation & { other_user?: { id: string; full_name: string; username: string } } = {
           ...conv,
           members,
           lastMessage: lastMessageMap.get(conv.id),
@@ -577,6 +591,7 @@ export function useConversations() {
     updateConversation,
     leaveConversation,
     markAsRead,
+    optimisticallyMarkAsRead,
     refresh: loadConversations,
   };
 }

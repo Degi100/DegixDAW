@@ -552,7 +552,11 @@
 // Unread Badge in Header
 .chat-badge--header {
   margin-left: 0.5rem;
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+// Animation nur bei neuer Nachricht
+.chat-badge--new {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 1;
 }
 
 @keyframes pulse {
@@ -563,6 +567,43 @@
   50% {
     opacity: 0.8;
     transform: scale(1.05);
+  }
+}
+
+// ✨ NEUE Animations für eingehende Nachrichten
+@keyframes chatGlow {
+  0% {
+    box-shadow: 0 0 0 rgba(59, 130, 246, 0);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(59, 130, 246, 0.6),
+                0 0 48px rgba(147, 51, 234, 0.4),
+                inset 0 0 12px rgba(59, 130, 246, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+@keyframes badgePulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 
+      0 3px 8px rgba(239, 68, 68, 0.4),
+      0 0 0 3px rgba(239, 68, 68, 0.1);
+  }
+  25%, 75% {
+    transform: scale(1.15);
+    box-shadow: 
+      0 4px 12px rgba(239, 68, 68, 0.6),
+      0 0 0 5px rgba(239, 68, 68, 0.2),
+      0 0 20px rgba(239, 68, 68, 0.3);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 
+      0 4px 10px rgba(239, 68, 68, 0.5),
+      0 0 0 4px rgba(239, 68, 68, 0.15);
   }
 }
 
@@ -755,6 +796,11 @@
     &::before {
       opacity: 1;
     }
+  }
+
+  // ✨ NEUE Glow-Animation bei eingehenden Nachrichten
+  &--newly-received {
+    animation: chatGlow 0.5s ease-out;
   }
 }
 
@@ -988,6 +1034,158 @@
   }
 }
 
+// ============================================
+// ATTACHMENTS IN MESSAGES
+// ============================================
+
+.chat-attachments {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.chat-attachment {
+  border-radius: 8px;
+  overflow: hidden;
+  
+  // Image Attachment
+  &--image {
+    .chat-attachment-preview {
+      max-width: 300px;
+      max-height: 300px;
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      
+      &:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      }
+    }
+  }
+  
+  // Video Attachment
+  &--video {
+    .chat-attachment-preview {
+      max-width: 400px;
+      width: 100%;
+      border-radius: 8px;
+      background: #000;
+    }
+  }
+  
+  // Audio Attachment
+  &--audio {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    background: rgba(59, 130, 246, 0.08);
+    border-radius: 8px;
+    
+    .chat-attachment-audio {
+      width: 100%;
+      height: 32px;
+    }
+    
+    .chat-attachment-name {
+      font-size: 0.8rem;
+      color: $text-secondary;
+    }
+  }
+  
+  // File Download
+  &--file {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: rgba(59, 130, 246, 0.08);
+    border-radius: 8px;
+    text-decoration: none;
+    color: $text-primary;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background: rgba(59, 130, 246, 0.15);
+      transform: translateX(4px);
+    }
+    
+    .chat-attachment-icon {
+      font-size: 1.5rem;
+    }
+    
+    .chat-attachment-name {
+      flex: 1;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    .chat-attachment-size {
+      font-size: 0.8rem;
+      color: $text-muted;
+    }
+  }
+}
+
+// Image Lightbox
+.chat-image-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  cursor: pointer;
+  animation: fadeIn 0.2s ease;
+  
+  img {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  }
+  
+  .chat-lightbox-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.1);
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 // Quick message input
 .chat-quick-message {
   display: flex;
@@ -1091,6 +1289,11 @@
   box-shadow: 
     0 3px 8px rgba(239, 68, 68, 0.4),
     0 0 0 3px rgba(239, 68, 68, 0.1);
+
+  // ✨ Badge-Pulse bei neuer Nachricht
+  &--new {
+    animation: badgePulse 2s ease-in-out;
+  }
 }
 
 .chat-item-online-indicator {

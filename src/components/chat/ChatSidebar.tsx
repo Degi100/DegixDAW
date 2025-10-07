@@ -21,6 +21,7 @@ import { useSidebarState } from '../../hooks/useSidebarState';
 import { useResizeHandlers } from '../../hooks/useResizeHandlers';
 import { useDragHandlers } from '../../hooks/useDragHandlers';
 import { useMessages } from '../../hooks/useMessages';
+import { useMessageAttachments } from '../../hooks/useMessageAttachments';
 import { useChatSynchronizer } from '../../hooks/useChatSynchronizer';
 import { useChatUIState } from '../../hooks/useChatUIState';
 import { useChatCoordination } from '../../hooks/useChatCoordination';
@@ -80,7 +81,7 @@ function ChatSidebar({
   const loadConversations = loadConversationsProp || localConversations.loadConversations;
   const createOrOpenDirectConversation = createOrOpenDirectConversationProp || localConversations.createOrOpenDirectConversation;
   const { playMessageReceived, playChatOpen, playChatClose } = useChatSounds();
-  const { success } = useToast();
+  const { success, error: showError } = useToast();
   const { navigateToChat } = useNavigation();
 
   // Refs
@@ -185,8 +186,7 @@ function ChatSidebar({
     };
   });
 
-  // Calculate total unread count
-  const totalUnreadCount = allChats.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0);
+  // totalUnreadCount wird nicht mehr hier berechnet - nur noch im globalen Header (AppLayout)
 
   // Messages for expanded chat
   const {
@@ -195,17 +195,46 @@ function ChatSidebar({
     sendMessage: handleSendMessage,
   } = useMessages(expandedChatId);
 
+  // File upload functionality
+  const { uploadAndAttach } = useMessageAttachments();
+
   // Local state for message input
   const [messageText, setMessageText] = useState('');
 
-  const handleFileUpload = useCallback(async () => {
-    // TODO: Implement file upload with useMessages
-    success('Datei-Upload noch nicht implementiert');
-  }, [success]);
+  // File upload handler (will be passed to useChatCoordination)
+  const handleFileUploadLocal = useCallback(async (chatId: string, file: File) => {
+    if (!chatId || !file) {
+      showError('Keine Datei oder Chat ausgewählt');
+      return;
+    }
+
+    try {
+      // 1. Create a message for the attachment
+      const messageId = await handleSendMessage(`📎 ${file.name}`, 'file');
+      
+      if (!messageId) {
+        showError('Fehler beim Erstellen der Nachricht');
+        return;
+      }
+
+      // 2. Upload and attach the file
+      const uploadSuccess = await uploadAndAttach(file, messageId, chatId);
+      
+      if (uploadSuccess) {
+        success(`${file.name} erfolgreich hochgeladen! 📎`);
+      } else {
+        showError('Upload fehlgeschlagen');
+      }
+    } catch (err) {
+      console.error('File upload error:', err);
+      showError('Fehler beim Hochladen der Datei');
+    }
+  }, [handleSendMessage, uploadAndAttach, success, showError]);
 
   // Chat coordination (must be before useChatSynchronizer)
   const {
     handleChatSelect,
+    handleFileUpload: handleFileUploadCoordinated,
     markConversationAsRead,
     clearChatHistory,
   } = useChatCoordination({
@@ -221,7 +250,7 @@ function ChatSidebar({
     setMessageText,
     expandedChatHandleSend: handleSendMessage,
     setShowAttachMenu,
-    expandedChatHandleUpload: handleFileUpload,
+    expandedChatHandleUpload: handleFileUploadLocal,
     currentUserId,
   });
 
@@ -288,7 +317,6 @@ function ChatSidebar({
           isGradientEnabled={isGradientEnabled}
           isPinned={isPinned}
           isMobile={isMobile}
-          totalUnreadCount={totalUnreadCount}
           onToggleGradient={handleToggleGradient}
           onTogglePin={handleTogglePin}
           onResetPosition={handleResetPosition}
@@ -311,7 +339,7 @@ function ChatSidebar({
                 currentUserId={currentUserId}
                 showAttachMenu={showAttachMenu}
                 isSendingMessage={isSendingMessage}
-                onFileUpload={handleFileUpload}
+                onFileUpload={handleFileUploadCoordinated}
                 onSendQuickMessage={handleSendQuickMessage}
                 messageText={messageText}
                 setMessageText={setMessageText}

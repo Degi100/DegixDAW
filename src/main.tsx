@@ -37,6 +37,9 @@ const UsernameOnboarding = lazy(() => import('./pages/onboarding/UsernameOnboard
 // Other Pages
 const NotFound = lazy(() => import('./pages/NotFound'));
 
+// File Browser Pages
+const FileBrowserPage = lazy(() => import('./pages/files/FileBrowserPage'));
+
 // Admin Components
 import AdminRoute from './components/admin/AdminRoute';
 
@@ -94,6 +97,20 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<PageLoader />}>
             <UserSettings />
+          </Suspense>
+        )
+      }
+    ]
+  },
+  {
+    path: '/files',
+    element: <AppLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <FileBrowserPage />
           </Suspense>
         )
       }
