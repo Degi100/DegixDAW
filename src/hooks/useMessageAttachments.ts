@@ -4,6 +4,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useToast } from './useToast';
+import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB, STORAGE_BUCKET } from '../lib/constants/storage';
 
 export interface UploadProgress {
   file: File;
@@ -147,6 +148,19 @@ export function useMessageAttachments() {
     const category = getFileCategory(file.type);
 
     try {
+      // Validate file size (must match Supabase bucket limit)
+      if (file.size > MAX_FILE_SIZE) {
+        const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+        showError(`❌ Datei zu groß! ${sizeMB} MB (Max: ${MAX_FILE_SIZE_MB} MB)`);
+        setUploads(prev => new Map(prev).set(fileId, {
+          file,
+          progress: 0,
+          status: 'error',
+          error: `File too large: ${sizeMB} MB`
+        }));
+        return null;
+      }
+
       // Update progress: uploading
       setUploads(prev => new Map(prev).set(fileId, {
         file,
@@ -160,7 +174,7 @@ export function useMessageAttachments() {
 
       // Upload main file
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('chat-attachments')
+        .from(STORAGE_BUCKET)
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: false
@@ -170,7 +184,7 @@ export function useMessageAttachments() {
 
       // Get public URL
       const { data: urlData } = supabase.storage
-        .from('chat-attachments')
+        .from(STORAGE_BUCKET)
         .getPublicUrl(uploadData.path);
 
       setUploads(prev => new Map(prev).set(fileId, {
@@ -194,12 +208,12 @@ export function useMessageAttachments() {
           const thumbFileName = `${conversationId}/${messageId}/thumb_${Date.now()}.jpg`;
           
           const { data: thumbData, error: thumbError } = await supabase.storage
-            .from('chat-attachments')
+            .from(STORAGE_BUCKET)
             .upload(thumbFileName, blob);
 
           if (!thumbError && thumbData) {
             const { data: thumbUrlData } = supabase.storage
-              .from('chat-attachments')
+              .from(STORAGE_BUCKET)
               .getPublicUrl(thumbData.path);
             
             result.thumbnailUrl = thumbUrlData.publicUrl;
@@ -219,12 +233,12 @@ export function useMessageAttachments() {
           const thumbFileName = `${conversationId}/${messageId}/thumb_${Date.now()}.jpg`;
           
           const { data: thumbData, error: thumbError } = await supabase.storage
-            .from('chat-attachments')
+            .from(STORAGE_BUCKET)
             .upload(thumbFileName, blob);
 
           if (!thumbError && thumbData) {
             const { data: thumbUrlData } = supabase.storage
-              .from('chat-attachments')
+              .from(STORAGE_BUCKET)
               .getPublicUrl(thumbData.path);
             
             result.thumbnailUrl = thumbUrlData.publicUrl;

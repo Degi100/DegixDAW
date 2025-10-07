@@ -1,7 +1,7 @@
 // src/hooks/useUserSearch.ts
 // User Search Hook
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
 export interface SearchUser {
@@ -54,17 +54,17 @@ export function useUserSearch() {
     setSearchTerm('');
   }, []);
 
-  // Debounced search (optional)
-  const debouncedSearch = useCallback(
-    (() => {
-      let timeout: NodeJS.Timeout;
-      return (query: string, delay = 300) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => searchUsers(query), delay);
-      };
-    })(),
-    [searchUsers]
-  );
+  // Debounced search (optional) - useRef based timeout to satisfy linting
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const debouncedSearch = useCallback((query: string, delay = 300) => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    debounceTimeoutRef.current = setTimeout(() => {
+      searchUsers(query);
+    }, delay);
+  }, [searchUsers]);
 
   return {
     results,

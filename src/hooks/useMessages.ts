@@ -102,6 +102,7 @@ export function useMessages(conversationId: string | null) {
         .from('messages')
         .select('*')
         .eq('conversation_id', conversationId)
+        .eq('is_deleted', false)
         .order('created_at', { ascending: true });
 
       if (messagesError) throw messagesError;
@@ -525,6 +526,13 @@ export function useMessages(conversationId: string | null) {
       console.error('Error marking all as read:', err);
     }
   }, [currentUserId, conversationId, markAsRead]);
+
+  // Auto-mark messages as read when conversation opens
+  useEffect(() => {
+    if (conversationId && currentUserId) {
+      markAllAsRead();
+    }
+  }, [conversationId, currentUserId, markAllAsRead]);
 
   // Stop typing indicator
   const stopTyping = useCallback(async () => {

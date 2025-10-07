@@ -3,661 +3,364 @@
 // Corporate Theme - Slide-in Chat Interface
 // ============================================
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useConversations } from '../../hooks/useConversations';
-import { useNavigate } from 'react-router-dom';
-import { useFriends } from '../../hooks/useFriends';
+import { useRef, useState, useCallback } from 'react';
+import { memo } from 'react';
+
+// Components
+import ChatList from './ChatList';
+import ExpandedChat from './ExpandedChat';
+import SidebarHeader from './SidebarHeader';
+import { ResizeHandles } from './ResizeHandles';
+import { ChatFooter } from './ChatFooter';
+
+// Hooks
+import { useConversations, type Conversation } from '../../hooks/useConversations';
 import { useChatSounds } from '../../lib/sounds/chatSounds';
 import { useToast } from '../../hooks/useToast';
+import { useSidebarState } from '../../hooks/useSidebarState';
+import { useResizeHandlers } from '../../hooks/useResizeHandlers';
+import { useDragHandlers } from '../../hooks/useDragHandlers';
+import { useMessages } from '../../hooks/useMessages';
+import { useMessageAttachments } from '../../hooks/useMessageAttachments';
+import { useChatSynchronizer } from '../../hooks/useChatSynchronizer';
+import { useChatUIState } from '../../hooks/useChatUIState';
+import { useChatCoordination } from '../../hooks/useChatCoordination';
+import { useSidebarLifecycle } from '../../hooks/useSidebarLifecycle';
+import { useNavigation } from '../../hooks/useNavigation';
+
+// Utils
 import { supabase } from '../../lib/supabase';
+import { formatTime } from '../../lib/timeUtils';
 
+/**
+ * Props for the ChatSidebar component
+ */
 interface ChatSidebarProps {
+  /** Whether the sidebar is currently open */
   isOpen: boolean;
+  /** Callback function to close the sidebar */
   onClose: () => void;
+  /** Additional CSS class names */
   className?: string;
+  /** Conversations from parent (optional - will load if not provided) */
+  conversations?: Conversation[];
+  /** Load conversations callback from parent (optional) */
+  loadConversations?: () => Promise<void>;
+  /** Create conversation callback from parent (optional) */
+  createOrOpenDirectConversation?: (friendId: string) => Promise<string | null>;
+  /** Function to check if a user is online */
+  isUserOnline?: (userId: string) => boolean;
 }
 
-interface ChatItem {
-  id: string;
-  name: string;
-  lastMessage: string;
-  timestamp: string;
-  unreadCount: number;
-  isOnline: boolean;
-  avatar?: string | undefined;
-  isLastMessageFromMe?: boolean;
-  isExistingConversation?: boolean;
-  friendId?: string;
-}
-
-// Zeitformatierungs-Funktion
-const formatTime = (timestamp: string | null): string => {
-  if (!timestamp) return 'Nie';
+/**
+ * ChatSidebar component - Main chat interface with slide-in functionality
+ *
+ * Features:
+ * - Resizable and draggable sidebar (when pinned)
+ * - Chat list with unread counts
+ * - Expanded chat view for active conversations
+ * - Real-time message updates
+ * - Sound notifications
+ *
+ * @param props - Component props
+ * @returns JSX.Element
+ */
+function ChatSidebar({ 
+  isOpen, 
+  onClose, 
+  className = '',
+  conversations: conversationsProp,
+  loadConversations: loadConversationsProp,
+  createOrOpenDirectConversation: createOrOpenDirectConversationProp,
+  isUserOnline,
+}: ChatSidebarProps) {
+  // Core dependencies - use props if provided, otherwise load locally
+  const localConversations = useConversations();
   
-  const now = new Date();
-  const time = new Date(timestamp);
-  const diffMs = now.getTime() - time.getTime();
-  const diffSeconds = Math.floor(diffMs / 1000);
-  const diffMinutes = Math.floor(diffSeconds / 60);
-  const diffHours = Math.floor(diffMinutes / 60);
-  const diffDays = Math.floor(diffHours / 24);
-  
-  if (diffDays > 0) {
-    return `${diffDays}d`;
-  } else if (diffHours > 0) {
-    const remainingMinutes = diffMinutes % 60;
-    const remainingSeconds = diffSeconds % 60;
-    if (remainingMinutes > 0) {
-      return `${diffHours}h ${remainingMinutes}min`;
-    } else {
-      return `${diffHours}h ${remainingSeconds}sec`;
-    }
-  } else if (diffMinutes > 0) {
-    const remainingSeconds = diffSeconds % 60;
-    return `${diffMinutes}min ${remainingSeconds}sec`;
-  } else {
-    return `${diffSeconds}sec`;
-  }
-};
-
-export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
-  const { conversations, loading, loadConversations, createOrOpenDirectConversation } = useConversations();
-  const { friends } = useFriends();
+  const conversations = conversationsProp || localConversations.conversations;
+  const loadConversations = loadConversationsProp || localConversations.loadConversations;
+  const createOrOpenDirectConversation = createOrOpenDirectConversationProp || localConversations.createOrOpenDirectConversation;
   const { playMessageReceived, playChatOpen, playChatClose } = useChatSounds();
-  const { success } = useToast();
-  const navigate = useNavigate();
-  const [selectedChat, setSelectedChat] = useState<string | null>(null);
-  const [expandedChatId, setExpandedChatId] = useState<string | null>(null);
-  const [messageText, setMessageText] = useState<string>('');
-  const [isSendingMessage, setIsSendingMessage] = useState<boolean>(false);
-  const [showAttachMenu, setShowAttachMenu] = useState<boolean>(false);
-  const [chatMessages, setChatMessages] = useState<Record<string, Array<{id: string; content: string; sender_id: string; created_at: string; is_read: boolean}>>>({});
-  const [showScrollButton, setShowScrollButton] = useState<Record<string, boolean>>({});
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { success, error: showError } = useToast();
+  const { navigateToChat } = useNavigation();
+
+  // Refs
   const historyEndRef = useRef<HTMLDivElement>(null);
   const historyContainerRef = useRef<HTMLDivElement>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [refreshTimeout, setRefreshTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [isGradientEnabled, setIsGradientEnabled] = useState<boolean>(true);
-  const [isPinned, setIsPinned] = useState<boolean>(false);
-  const [sidebarWidth, setSidebarWidth] = useState<number>(420);
-  const [sidebarHeight, setSidebarHeight] = useState<number>(window.innerHeight - 70);
-  const [sidebarPosition, setSidebarPosition] = useState<{ top: number; right: number }>({ top: 70, right: 0 });
-  const [isResizingLeft, setIsResizingLeft] = useState<boolean>(false);
-  const [isResizingRight, setIsResizingRight] = useState<boolean>(false);
-  const [isResizingTop, setIsResizingTop] = useState<boolean>(false);
-  const [isResizingBottom, setIsResizingBottom] = useState<boolean>(false);
-  const [isDragging, setIsDragging] = useState<boolean>(false);
-  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
-  const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 768);
 
-  // Get current user ID
-  useEffect(() => {
-    const getUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setCurrentUserId(data.user?.id || null);
+  // Sidebar UI State (inkl. Steuerung)
+  const {
+    sidebarWidth,
+    sidebarHeight,
+    sidebarPosition,
+    isResizingLeft,
+    isResizingRight,
+    isResizingTop,
+    isResizingBottom,
+    isDragging,
+    dragStart,
+    isGradientEnabled,
+    isPinned,
+    setSidebarWidth,
+    setSidebarHeight,
+    setSidebarPosition,
+    setIsResizingLeft,
+    setIsResizingRight,
+    setIsResizingTop,
+    setIsResizingBottom,
+    setIsDragging,
+    setDragStart,
+    handleViewAllChats,
+    handleToggleGradient,
+    handleTogglePin,
+    handleResetPosition,
+  } = useSidebarState();
+
+  // Lifecycle and side effects
+  const { currentUserId, isMobile } = useSidebarLifecycle({
+    isOpen,
+    playChatOpen,
+    playChatClose,
+    supabase,
+  });
+
+  // Resize and drag handlers (dependent on isMobile)
+  const {
+    handleResizeLeftStart,
+    handleResizeRightStart,
+    handleResizeTopStart,
+    handleResizeBottomStart,
+  } = useResizeHandlers({
+    isMobile,
+    isPinned,
+    sidebarPosition,
+    isResizingLeft,
+    isResizingRight,
+    isResizingTop,
+    isResizingBottom,
+    setSidebarWidth,
+    setSidebarHeight,
+    setSidebarPosition,
+    setIsResizingLeft,
+    setIsResizingRight,
+    setIsResizingTop,
+    setIsResizingBottom,
+  });
+
+  const { handleDragStart } = useDragHandlers({
+    isMobile,
+    isPinned,
+    isDragging,
+    dragStart,
+    setIsDragging,
+    setDragStart,
+    setSidebarPosition,
+  });
+
+  // Chat UI state
+  const {
+    selectedChat,
+    setSelectedChat,
+    expandedChatId,
+    setExpandedChatId,
+    showAttachMenu,
+    setShowAttachMenu,
+  } = useChatUIState();
+
+  // Chat data and state
+  const allChats = conversations.map(conv => {
+    // Get other user's ID from conversation
+    const otherUserId = conv.other_user?.id;
+    const isOtherUserOnline = otherUserId && isUserOnline ? isUserOnline(otherUserId) : false;
+
+    return {
+      id: conv.id,
+      name: conv.other_user?.full_name || conv.name || 'Unbekannt',
+      lastMessage: conv.lastMessage?.content || 'Keine Nachrichten',
+      timestamp: formatTime(conv.last_message_at),
+      unreadCount: conv.unreadCount || 0,
+      isOnline: isOtherUserOnline,
+      avatar: conv.avatar_url || undefined,
+      isLastMessageFromMe: !!(currentUserId && conv.lastMessage?.sender_id === currentUserId),
+      isExistingConversation: true,
     };
-    getUser();
-  }, []);
+  });
 
-  // Handle window resize for mobile detection
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // totalUnreadCount wird nicht mehr hier berechnet - nur noch im globalen Header (AppLayout)
 
-  // Debounced refresh function to prevent too many updates
-  const refreshConversations = useCallback(async () => {
-    // Clear existing timeout
-    if (refreshTimeout) {
-      clearTimeout(refreshTimeout);
-    }
+  // Messages for expanded chat
+  const {
+    messages: expandedMessages,
+    sending: isSendingMessage,
+    sendMessage: handleSendMessage,
+  } = useMessages(expandedChatId);
 
-    // Set new timeout for debounced refresh
-    const timeout = setTimeout(async () => {
-      try {
-        console.log('🔄 Refreshing conversations...');
-        await loadConversations();
-      } catch (error) {
-        console.error('Error refreshing conversations:', error);
-      }
-    }, 300); // 300ms debounce
+  // File upload functionality
+  const { uploadAndAttach } = useMessageAttachments();
 
-    setRefreshTimeout(timeout);
-  }, [loadConversations, refreshTimeout]);
+  // Local state for message input
+  const [messageText, setMessageText] = useState('');
 
-  // Zentrale Subscription für alle Updates (vereinfacht)
-  useEffect(() => {
-    if (!isOpen || !currentUserId) return;
-
-    console.log('Setting up unified real-time subscription');
-
-    // Eine Subscription für alle Messages
-    const globalMessagesChannel = supabase
-      .channel(`sidebar_global:${currentUserId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-      }, (payload) => {
-        console.log('New message received:', payload.new.conversation_id);
-        // Einfach: Conversations neu laden bei neuer Nachricht
-        refreshConversations();
-        // Sound für empfangene Nachrichten
-        if (payload.new.sender_id !== currentUserId) {
-          playMessageReceived();
-        }
-      })
-      .subscribe();
-
-    return () => {
-      console.log('Cleaning up unified subscription');
-      supabase.removeChannel(globalMessagesChannel);
-    };
-  }, [isOpen, currentUserId, refreshConversations, playMessageReceived]);
-
-  // Play sounds on open/close
-  useEffect(() => {
-    if (isOpen) {
-      playChatOpen();
-    } else {
-      playChatClose();
-    }
-  }, [isOpen, playChatOpen, playChatClose]);
-
-  // Echte Conversations + Freunde ohne Conversations + Demo-Chats
-  const allChats = useMemo(() => {
-    // Echte Conversations aus der Datenbank
-    const realChats: ChatItem[] = conversations.map(conv => {
-      const lastMessage = conv.lastMessage || conv.last_message;
-      const isLastMessageFromMe = currentUserId && lastMessage?.sender_id === currentUserId;
-      
-      return {
-        id: conv.id,
-        name: conv.other_user?.full_name || conv.name || 'Unbekannt',
-        lastMessage: lastMessage?.content || 'Keine Nachrichten',
-        timestamp: formatTime(conv.last_message_at),
-        unreadCount: conv.unreadCount || conv.unread_count || 0,
-        isOnline: false, // TODO: Online-Status aus User-Daten laden
-        avatar: conv.avatar_url || undefined,
-        isLastMessageFromMe: isLastMessageFromMe || false,
-        isExistingConversation: true,
-      };
-    });
-
-    // Freunde ohne Conversations (für neue Chats)
-    const friendsWithoutChats: ChatItem[] = friends
-      .filter(friendship => {
-        // Prüfe ob bereits eine Conversation mit diesem Freund existiert
-        const hasConversation = conversations.some(conv => 
-          conv.other_user?.id === friendship.friend_id || 
-          conv.members?.some(member => member.user_id === friendship.friend_id)
-        );
-        return !hasConversation && friendship.status === 'accepted';
-      })
-      .map(friendship => ({
-        id: `friend-${friendship.friend_id}`,
-        name: friendship.friend_profile?.full_name || friendship.friend_profile?.username || 'Unbekannt',
-        lastMessage: 'Chat starten...',
-        timestamp: 'Nie',
-        unreadCount: 0,
-        isOnline: false, // TODO: Online-Status aus User-Daten laden
-        avatar: undefined, // TODO: Avatar aus friend_profile laden
-        isLastMessageFromMe: false,
-        isExistingConversation: false,
-        friendId: friendship.friend_id,
-      }));
-
-    // Kombiniere: Echte Conversations + Freunde ohne Chats
-    return [...realChats, ...friendsWithoutChats];
-  }, [conversations, friends, currentUserId]);
-
-  const handleChatSelect = useCallback(async (chatId: string) => {
-    if (expandedChatId === chatId) {
-      setExpandedChatId(null);
+  // File upload handler (will be passed to useChatCoordination)
+  const handleFileUploadLocal = useCallback(async (chatId: string, file: File) => {
+    if (!chatId || !file) {
+      showError('Keine Datei oder Chat ausgewählt');
       return;
     }
-    setExpandedChatId(chatId);
-    setSelectedChat(chatId);
-    const chat = allChats.find(c => c.id === chatId);
-    if (!chat) return;
-    if (chat.unreadCount > 0) playMessageReceived();
-    if (!chat.isExistingConversation && chat.friendId) {
-      try {
-        const conversationId = await createOrOpenDirectConversation(chat.friendId);
-        if (conversationId) {
-          success(`Chat mit ${chat.name} gestartet!`);
-          await loadConversations();
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    }
-    // Load messages ONLY if not already loaded
-    if (chat.isExistingConversation && !chatMessages[chatId]) {
-      const { data } = await supabase.from('messages').select('*').eq('conversation_id', chatId).order('created_at', { ascending: true }).limit(20);
-      if (data) {
-        setChatMessages(prev => ({ ...prev, [chatId]: data }));
-        setShowScrollButton(prev => ({ ...prev, [chatId]: false }));
-        // Instant scroll to bottom ONLY on first load
-        setTimeout(() => {
-          historyEndRef.current?.scrollIntoView({ behavior: 'instant' });
-        }, 50);
-      }
-    }
-  }, [expandedChatId, allChats, playMessageReceived, createOrOpenDirectConversation, success, loadConversations, chatMessages]);
 
-  // Real-time message subscription
-  useEffect(() => {
-    if (!expandedChatId) return;
-    const channel = supabase
-      .channel(`messages:${expandedChatId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: `conversation_id=eq.${expandedChatId}`
-      }, (payload: any) => {
-        setChatMessages(prev => ({
-          ...prev,
-          [expandedChatId]: [...(prev[expandedChatId] || []), payload.new as any]
-        }));
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [expandedChatId]);
-
-  // Auto-scroll to bottom when NEW messages arrive (only if user is at bottom)
-  useEffect(() => {
-    if (expandedChatId && chatMessages[expandedChatId]) {
-      const isAtBottom = !showScrollButton[expandedChatId];
-      if (isAtBottom) {
-        setTimeout(() => {
-          historyEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 50);
-      }
-    }
-  }, [chatMessages, expandedChatId, showScrollButton]);
-
-  // Handle scroll detection
-  const handleScroll = useCallback((chatId: string) => {
-    const container = historyContainerRef.current;
-    if (!container) return;
-    const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
-    setShowScrollButton(prev => ({ ...prev, [chatId]: !isAtBottom }));
-  }, []);
-
-  // Scroll to bottom function
-  const scrollToBottom = useCallback((chatId: string) => {
-    historyEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    setShowScrollButton(prev => ({ ...prev, [chatId]: false }));
-  }, []);
-
-  const handleSendQuickMessage = useCallback(async (chatId: string) => {
-    if (!messageText.trim() || isSendingMessage) return;
-    setIsSendingMessage(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const content = messageText.trim();
-      setMessageText(''); // Sofort Input leeren für besseres UX
-      await supabase.from('messages').insert({
-        conversation_id: chatId,
-        sender_id: user.id,
-        content: content,
-        message_type: 'text'
-      });
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setIsSendingMessage(false);
-    }
-  }, [messageText, isSendingMessage]);
-
-  const handleFileUpload = useCallback(async (chatId: string, file: File) => {
-    setIsSendingMessage(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('message-attachments')
-        .upload(`${user.id}/${fileName}`, file);
-      if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage.from('message-attachments').getPublicUrl(uploadData.path);
-      const messageType = file.type.startsWith('audio/') ? 'voice' : file.type.startsWith('video/') ? 'video' : file.type.startsWith('image/') ? 'image' : 'file';
-      await supabase.from('messages').insert({
-        conversation_id: chatId,
-        sender_id: user.id,
-        content: publicUrl,
-        message_type: messageType,
-        metadata: { fileName: file.name, fileSize: file.size, fileType: file.type }
-      });
-      success(`${file.name} gesendet!`);
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setIsSendingMessage(false);
-      setShowAttachMenu(false);
-    }
-  }, [success]);
-
-  // Aktueller Chat: sidebar zeigt nur die Chat-Liste; volle Chat-Ansicht öffnet beim Klick
-
-  // Inline message UI removed from sidebar. Navigation opens full chat view.
-
-  const handleViewAllChats = useCallback(() => {
-    // Navigate to full chat page
-    window.location.href = '/chat';
-  }, []);
-
-  const totalUnreadCount = allChats.reduce((sum, chat) => sum + chat.unreadCount, 0);
-
-  const handleToggleGradient = useCallback(() => {
-    setIsGradientEnabled(prev => !prev);
-  }, []);
-
-  const handleTogglePin = useCallback(() => {
-    setIsPinned(prev => !prev);
-  }, []);
-
-  const handleResetPosition = useCallback(() => {
-    setSidebarWidth(420);
-    setSidebarHeight(window.innerHeight - 70);
-    setSidebarPosition({ top: 70, right: 0 });
-  }, []);
-
-  // Resize handlers
-  const handleResizeLeftStart = useCallback((e: React.MouseEvent) => {
-    if (isMobile || !isPinned) return;
-    e.preventDefault();
-    e.stopPropagation();
-    setIsResizingLeft(true);
-  }, [isMobile, isPinned]);
-
-  const handleResizeRightStart = useCallback((e: React.MouseEvent) => {
-    if (isMobile || !isPinned) return;
-    e.preventDefault();
-    e.stopPropagation();
-    setIsResizingRight(true);
-  }, [isMobile, isPinned]);
-
-  const handleResizeTopStart = useCallback((e: React.MouseEvent) => {
-    if (isMobile || !isPinned) return;
-    e.preventDefault();
-    e.stopPropagation();
-    setIsResizingTop(true);
-  }, [isMobile, isPinned]);
-
-  const handleResizeBottomStart = useCallback((e: React.MouseEvent) => {
-    if (isMobile || !isPinned) return;
-    e.preventDefault();
-    e.stopPropagation();
-    setIsResizingBottom(true);
-  }, [isMobile, isPinned]);
-
-  // Resize effects
-  useEffect(() => {
-    if (!isResizingLeft) return;
-    const handleMouseMove = (e: MouseEvent) => {
-      const newWidth = window.innerWidth - e.clientX - sidebarPosition.right;
-      setSidebarWidth(Math.max(280, Math.min(window.innerWidth - 100, newWidth)));
-    };
-    const handleMouseUp = () => setIsResizingLeft(false);
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isResizingLeft, sidebarPosition.right]);
-
-  useEffect(() => {
-    if (!isResizingRight) return;
-    const handleMouseMove = (e: MouseEvent) => {
-      const newRight = window.innerWidth - e.clientX;
-      setSidebarPosition(prev => ({ ...prev, right: Math.max(0, newRight) }));
-    };
-    const handleMouseUp = () => setIsResizingRight(false);
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isResizingRight]);
-
-  useEffect(() => {
-    if (!isResizingTop) return;
-    const handleMouseMove = (e: MouseEvent) => {
-      const newTop = e.clientY;
-      const newHeight = window.innerHeight - newTop;
-      setSidebarPosition(prev => ({ ...prev, top: Math.max(70, newTop) }));
-      setSidebarHeight(Math.max(200, newHeight));
-    };
-    const handleMouseUp = () => setIsResizingTop(false);
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isResizingTop]);
-
-  useEffect(() => {
-    if (!isResizingBottom) return;
-    const handleMouseMove = (e: MouseEvent) => {
-      const newHeight = window.innerHeight - e.clientY;
-      setSidebarHeight(Math.max(200, newHeight));
-    };
-    const handleMouseUp = () => setIsResizingBottom(false);
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isResizingBottom]);
-
-  // Drag handler
-  const handleDragStart = useCallback((e: React.MouseEvent) => {
-    if (isMobile || !isPinned) return;
-    if ((e.target as HTMLElement).closest('button')) return;
-    e.preventDefault();
-    setIsDragging(true);
-    setDragStart({ x: e.clientX, y: e.clientY });
-  }, [isMobile, isPinned]);
-
-  useEffect(() => {
-    if (!isDragging || !dragStart) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const deltaX = dragStart.x - e.clientX;
-      const deltaY = e.clientY - dragStart.y;
+      // 1. Create a message for the attachment
+      const messageId = await handleSendMessage(`📎 ${file.name}`, 'file');
       
-      setSidebarPosition(prev => ({
-        top: Math.max(0, prev.top + deltaY),
-        right: Math.max(0, prev.right + deltaX)
-      }));
+      if (!messageId) {
+        showError('Fehler beim Erstellen der Nachricht');
+        return;
+      }
+
+      // 2. Upload and attach the file
+      const uploadSuccess = await uploadAndAttach(file, messageId, chatId);
       
-      setDragStart({ x: e.clientX, y: e.clientY });
-    };
+      if (uploadSuccess) {
+        success(`${file.name} erfolgreich hochgeladen! 📎`);
+      } else {
+        showError('Upload fehlgeschlagen');
+      }
+    } catch (err) {
+      console.error('File upload error:', err);
+      showError('Fehler beim Hochladen der Datei');
+    }
+  }, [handleSendMessage, uploadAndAttach, success, showError]);
 
-    const handleMouseUp = () => {
-      setIsDragging(false);
-      setDragStart(null);
-    };
+  // Chat coordination (must be before useChatSynchronizer)
+  const {
+    handleChatSelect,
+    handleFileUpload: handleFileUploadCoordinated,
+    markConversationAsRead,
+    clearChatHistory,
+  } = useChatCoordination({
+    allChats,
+    expandedChatId,
+    setExpandedChatId,
+    setSelectedChat,
+    playMessageReceived,
+    createOrOpenDirectConversation,
+    success,
+    loadConversations,
+    messageText,
+    setMessageText,
+    expandedChatHandleSend: handleSendMessage,
+    setShowAttachMenu,
+    expandedChatHandleUpload: handleFileUploadLocal,
+    currentUserId,
+  });
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+  // Chat synchronization with auto-read (must be after useChatCoordination)
+  useChatSynchronizer({
+    currentUserId,
+    isOpen,
+    loadConversations,
+    playMessageReceived,
+    expandedChatId,
+    markConversationAsRead,
+  });
 
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging, dragStart]);
+  // Message handlers
+  const handleSendQuickMessage = useCallback(async () => {
+    if (!messageText.trim()) return;
+    const textToSend = messageText;
+    setMessageText(''); // Clear input immediately
+    await handleSendMessage(textToSend);
+    // NOTE: Wir markieren NICHT als gelesen nach dem Senden, da:
+    // 1. Der Chat bereits beim Öffnen als gelesen markiert wurde
+    // 2. Eigene Nachrichten keine ungelesenen Badges erzeugen sollten
+    // 3. Die Realtime-Subscription die UI automatisch aktualisiert
+  }, [messageText, setMessageText, handleSendMessage]);
 
   return (
     <>
       {/* Overlay - only when not pinned */}
       {isOpen && !isPinned && (
-        <div 
+        <div
           className="chat-sidebar-overlay"
           onClick={onClose}
-          aria-hidden="true"
+          onKeyDown={(e) => e.key === 'Escape' && onClose()}
+          role="button"
+          tabIndex={0}
+          aria-label="Chat schließen"
         />
       )}
 
       {/* Sidebar */}
-      <div 
+      <div
         className={`chat-sidebar ${isOpen ? 'chat-sidebar--open' : ''} ${isPinned ? 'chat-sidebar--pinned' : ''} ${(isResizingLeft || isResizingRight || isResizingTop || isResizingBottom) ? 'chat-sidebar--resizing' : ''} ${isDragging ? 'chat-sidebar--dragging' : ''} ${isGradientEnabled ? 'chat-sidebar--gradient' : ''} ${className}`}
         style={{
           width: `${sidebarWidth}px`,
           height: `${sidebarHeight}px`,
           top: `${sidebarPosition.top}px`,
-          right: `${sidebarPosition.right}px`
+          right: `${sidebarPosition.right}px`,
         }}
+        role="complementary"
+        aria-label="Chat Sidebar"
       >
         {/* Resize handles - only when pinned */}
-        {!isMobile && isPinned && (
-          <>
-            <div className="chat-sidebar-resize-handle chat-sidebar-resize-handle--left" onMouseDown={handleResizeLeftStart} />
-            <div className="chat-sidebar-resize-handle chat-sidebar-resize-handle--right" onMouseDown={handleResizeRightStart} />
-            <div className="chat-sidebar-resize-handle chat-sidebar-resize-handle--top" onMouseDown={handleResizeTopStart} />
-            <div className="chat-sidebar-resize-handle chat-sidebar-resize-handle--bottom" onMouseDown={handleResizeBottomStart} />
-          </>
-        )}
+        <ResizeHandles
+          isMobile={isMobile}
+          isPinned={isPinned}
+          onResizeLeftStart={handleResizeLeftStart}
+          onResizeRightStart={handleResizeRightStart}
+          onResizeTopStart={handleResizeTopStart}
+          onResizeBottomStart={handleResizeBottomStart}
+        />
 
         {/* Header */}
-        <div 
-          className="chat-sidebar-header"
-          onMouseDown={handleDragStart}
-          style={{ cursor: (isMobile || !isPinned) ? 'default' : 'move' }}
-        >
-          <div className="chat-sidebar-title">
-            <span className="chat-icon">💬</span>
-            <h3>Chats</h3>
-            {totalUnreadCount > 0 && (
-              <span className="chat-badge">{totalUnreadCount}</span>
-            )}
-          </div>
-          <div className="chat-sidebar-actions">
-            <button onClick={handleToggleGradient} className={`chat-gradient-btn ${isGradientEnabled ? 'active' : ''}`} title={isGradientEnabled ? 'Gradient deaktivieren' : 'Gradient aktivieren'}>
-              {isGradientEnabled ? '✨' : '⭐'}
-            </button>
-            <button onClick={handleTogglePin} className={`chat-pin-btn ${isPinned ? 'pinned' : ''}`} title={isPinned ? 'Sidebar lösen' : 'Sidebar fixieren'}>
-              {isPinned ? '📌' : '📍'}
-            </button>
-            <button onClick={handleResetPosition} className="chat-reset-btn" title="Zurück zum Ursprung">🔄</button>
-            <button onClick={onClose} className="chat-close-btn" title="Chat schließen">✕</button>
-          </div>
-        </div>
+        <SidebarHeader
+          isGradientEnabled={isGradientEnabled}
+          isPinned={isPinned}
+          isMobile={isMobile}
+          onToggleGradient={handleToggleGradient}
+          onTogglePin={handleTogglePin}
+          onResetPosition={handleResetPosition}
+          onClose={onClose}
+          onDragStart={handleDragStart}
+        />
 
-        {/* Chat List */}
-        <div className="chat-list">
-          {loading ? (
-            <div className="chat-empty">
-              <span>⏳</span>
-              <p>Lade Chats...</p>
-            </div>
-          ) : allChats.length === 0 ? (
-            <div className="chat-empty">
-              <span>💬</span>
-              <p>Noch keine Chats</p>
-              <p>Starte eine Unterhaltung!</p>
-            </div>
-          ) : (
-            allChats.map((chat) => (
-              <div key={chat.id} className="chat-item-wrapper">
-                <button
-                  className={`chat-item ${selectedChat === chat.id ? 'chat-item--active' : ''}`}
-                  onClick={() => handleChatSelect(chat.id)}
-                >
-                  <div className="chat-item-avatar">
-                    {chat.avatar ? <img src={chat.avatar} alt={chat.name} /> : chat.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="chat-item-content">
-                    <div className="chat-item-header">
-                      <span className="chat-item-name">{chat.name}</span>
-                    </div>
-                    <div className="chat-item-message">
-                      {chat.isLastMessageFromMe && <span className="chat-message-prefix">Du: </span>}
-                      {!chat.isExistingConversation && <span className="chat-new-conversation">💬 </span>}
-                      {chat.lastMessage}
-                    </div>
-                    <span className="chat-item-time">{chat.timestamp}</span>
-                  </div>
-                  {chat.unreadCount > 0 && <span className="chat-item-badge">{chat.unreadCount}</span>}
-                  {chat.isOnline && <div className="chat-item-online-indicator" />}
-                </button>
-                {expandedChatId === chat.id && chat.isExistingConversation && (
-                  <div className="chat-expanded">
-                    {chatMessages[chat.id] && chatMessages[chat.id].length > 0 && (
-                      <div className="chat-history-wrapper">
-                        <div className="chat-history" ref={historyContainerRef} onScroll={() => handleScroll(chat.id)}>
-                          {chatMessages[chat.id].map(msg => {
-                          const msgDate = new Date(msg.created_at);
-                          const timeStr = msgDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-                          return (
-                            <div key={msg.id} className={`chat-history-msg ${msg.sender_id === currentUserId ? 'sent' : 'received'}`}>
-                              <div className="chat-history-msg-bubble">
-                                <div className="chat-history-msg-content">{msg.content}</div>
-                                <div className="chat-history-msg-meta">
-                                  <span className="chat-history-msg-time">{timeStr}</span>
-                                  {msg.sender_id === currentUserId && (
-                                    <span className="chat-history-msg-status">{msg.is_read ? '✓✓' : '✓'}</span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                          })}
-                          <div ref={historyEndRef} />
-                        </div>
-                        {showScrollButton[chat.id] && (
-                          <button className="chat-scroll-to-bottom" onClick={() => scrollToBottom(chat.id)} title="Zur letzten Nachricht">
-                            ⬇️
-                          </button>
-                        )}
-                      </div>
-                    )}
-                    <div className="chat-quick-message">
-                      <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={(e) => e.target.files?.[0] && handleFileUpload(chat.id, e.target.files[0])} accept="audio/*,video/*,image/*,.mid,.midi,.pdf,.doc,.docx" />
-                      <div className="chat-quick-attach-menu" style={{ display: showAttachMenu ? 'flex' : 'none' }}>
-                        <button onClick={() => { fileInputRef.current?.setAttribute('accept', 'audio/*'); fileInputRef.current?.click(); }} title="Audio">🎧</button>
-                        <button onClick={() => { fileInputRef.current?.setAttribute('accept', '.mid,.midi'); fileInputRef.current?.click(); }} title="MIDI">🎹</button>
-                        <button onClick={() => { fileInputRef.current?.setAttribute('accept', 'image/*'); fileInputRef.current?.click(); }} title="Bild">🖼️</button>
-                        <button onClick={() => { fileInputRef.current?.setAttribute('accept', '.pdf,.doc,.docx'); fileInputRef.current?.click(); }} title="Dokument">📄</button>
-                      </div>
-                      <button onClick={() => setShowAttachMenu(!showAttachMenu)} className="chat-quick-attach">📎</button>
-                      <input type="text" value={messageText} onChange={(e) => setMessageText(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSendQuickMessage(chat.id)} placeholder="Nachricht..." className="chat-quick-input" />
-                      <button onClick={() => handleSendQuickMessage(chat.id)} className="chat-quick-send" disabled={isSendingMessage}>📤</button>
-                      <button onClick={() => navigate(`/chat/${chat.id}`)} className="chat-quick-open">🔗</button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Inline-Nachrichten-Panel entfernt; Chats öffnen die vollständige Chat-Ansicht */}
-
-        {/* Footer */}
-        <div className="chat-sidebar-footer">
-          <button
-            onClick={handleViewAllChats}
-            className="chat-view-all-btn"
+        {/* Main Content */}
+        <div className="chat-sidebar__content" style={{ flex: 1, overflow: 'hidden' }}>
+          <ChatList
+            chats={allChats}
+            selectedChatId={selectedChat}
+            onSelect={handleChatSelect}
+            expandedChatId={expandedChatId}
           >
-            Alle Chats anzeigen
-          </button>
+            {expandedChatId && (
+              <ExpandedChat
+                chatId={expandedChatId!}
+                messages={expandedMessages}
+                currentUserId={currentUserId}
+                showAttachMenu={showAttachMenu}
+                isSendingMessage={isSendingMessage}
+                onFileUpload={handleFileUploadCoordinated}
+                onSendQuickMessage={handleSendQuickMessage}
+                messageText={messageText}
+                setMessageText={setMessageText}
+                historyContainerRef={historyContainerRef}
+                historyEndRef={historyEndRef}
+                onOpenChat={navigateToChat}
+                onClearChatHistory={clearChatHistory}
+                markConversationAsRead={markConversationAsRead}
+                isOpen={isOpen}
+              />
+            )}
+          </ChatList>
+
+          {/* Footer - now inside content for absolute positioning */}
+          <ChatFooter onViewAllChats={handleViewAllChats} />
         </div>
       </div>
     </>
   );
 }
+
+// realtime payloads are mapped to the canonical `Message` type from useMessages
+
+export default memo(ChatSidebar);

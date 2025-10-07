@@ -15,7 +15,8 @@ class ChatSoundManager {
   private initAudioContext() {
     if (typeof window !== 'undefined' && !this.audioContext) {
       try {
-        this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const win = window as unknown as { webkitAudioContext?: typeof AudioContext };
+        this.audioContext = new (window.AudioContext || win.webkitAudioContext)();
       } catch (error) {
         console.warn('Web Audio API not supported:', error);
       }
