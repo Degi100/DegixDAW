@@ -13,12 +13,14 @@ import Button from '../ui/Button';
 import UserDropdown from './UserDropdown';
 import HeaderNav from './HeaderNav';
 import { APP_CONFIG } from '../../lib/constants';
+import { canAccessFeature } from '../../lib/constants/featureFlags';
 
 interface NavigationItem {
   path: string;
   label: string;
   icon: string;
   requiresAuth?: boolean;
+  featureFlag?: string; // Optional: Feature-Flag ID
 }
 
 interface HeaderProps {
@@ -36,7 +38,13 @@ interface HeaderProps {
 const navigationItems: NavigationItem[] = [
   { path: '/dashboard', label: 'Dashboard', icon: '🏠', requiresAuth: true },
   { path: '/social', label: 'Social', icon: '👥', requiresAuth: true },
-  { path: '/files', label: 'Dateien', icon: '📂', requiresAuth: true },
+  { 
+    path: '/files', 
+    label: 'Dateien', 
+    icon: '📂', 
+    requiresAuth: true,
+    featureFlag: 'FILE_BROWSER' // 🔒 Admin-only Feature
+  },
 ];
 
 export default function Header(props: HeaderProps) {
@@ -84,9 +92,17 @@ export default function Header(props: HeaderProps) {
   }, [signOut, success]);
 
   const filteredNavItems = useMemo(() => 
-    (customNavItems || navigationItems).filter(item =>
-      !item.requiresAuth || user
-    ), [customNavItems, user]
+    (customNavItems || navigationItems).filter(item => {
+      // Auth check
+      if (item.requiresAuth && !user) return false;
+      
+      // Feature-Flag check
+      if (item.featureFlag) {
+        return canAccessFeature(item.featureFlag, isAdmin);
+      }
+      
+      return true;
+    }), [customNavItems, user, isAdmin]
   );
 
   const currentBrand = useMemo(() => 
