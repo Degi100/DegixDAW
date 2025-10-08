@@ -14,7 +14,7 @@ export interface UserProfile {
   email_confirmed_at: string | null;
   phone?: string;
   avatar_url?: string;
-  role?: 'admin' | 'user' | 'moderator';
+  role?: 'admin' | 'user' | 'moderator' | 'beta_user';
   is_active?: boolean;
   metadata?: Record<string, unknown>;
 }
@@ -160,7 +160,12 @@ export function useUserData() {
 
   const deleteUser = useCallback(async (userId: string) => {
     try {
-      const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
+      // Delete profile (auth.users will be cascaded via trigger or RLS)
+      const { error: deleteError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
       if (deleteError) throw deleteError;
 
       success('Benutzer erfolgreich gelöscht!');

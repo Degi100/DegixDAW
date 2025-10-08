@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Button from '../../../../components/ui/Button';
+import { useAuth } from '../../../../hooks/useAuth';
 import type { UserEditModalProps } from '../../types/admin.types';
 import type { UserProfile } from '../../../../hooks/useUserData';
 
@@ -13,12 +14,31 @@ export default function UserEditModal({
   onUpdateUser
 }: UserEditModalProps) {
   const [editedUser, setEditedUser] = useState<UserProfile>(user);
+  const { user: currentUser } = useAuth();
 
   // Check if this user is the super admin (protected)
   const isSuperAdmin = useMemo(() => {
     const superAdminEmail = import.meta.env.VITE_SUPER_ADMIN_EMAIL;
     return user.email === superAdminEmail;
   }, [user.email]);
+
+  // Check if editing self (prevent self-demotion)
+  const isEditingSelf = useMemo(() => {
+    return currentUser?.id === user.id;
+  }, [currentUser?.id, user.id]);
+
+  // Check if trying to demote self
+  const isSelfDemotion = useMemo(() => {
+    if (!isEditingSelf) return false;
+    const currentRole = user.role;
+    const newRole = editedUser.role;
+
+    const roleHierarchy = { admin: 3, moderator: 2, user: 1 };
+    const currentLevel = roleHierarchy[currentRole as keyof typeof roleHierarchy] || 0;
+    const newLevel = roleHierarchy[newRole as keyof typeof roleHierarchy] || 0;
+
+    return newLevel < currentLevel;
+  }, [isEditingSelf, user.role, editedUser.role]);
 
   // Update local state when user prop changes
   useEffect(() => {
@@ -28,6 +48,12 @@ export default function UserEditModal({
   if (!isOpen) return null;
 
   const handleSubmit = async () => {
+    // Prevent self-demotion
+    if (isSelfDemotion) {
+      alert('⚠️ You cannot demote yourself. Ask another admin to change your role.');
+      return;
+    }
+
     await onUpdateUser(editedUser);
     onClose();
   };
@@ -71,16 +97,22 @@ export default function UserEditModal({
               <label>Role</label>
               <select
                 value={editedUser.role || 'user'}
-                onChange={(e) => setEditedUser({ ...editedUser, role: e.target.value as 'admin' | 'user' | 'moderator' })}
+                onChange={(e) => setEditedUser({ ...editedUser, role: e.target.value as 'admin' | 'user' | 'moderator' | 'beta_user' })}
                 disabled={isSuperAdmin}
               >
                 <option value="user">User</option>
+                <option value="beta_user">🧪 Beta Tester</option>
                 <option value="moderator">Moderator</option>
                 <option value="admin">Admin</option>
               </select>
               {isSuperAdmin && (
                 <small style={{ color: '#6c757d', marginTop: '0.25rem', display: 'block' }}>
                   🛡️ Super Admin role cannot be changed
+                </small>
+              )}
+              {isSelfDemotion && (
+                <small style={{ color: '#dc3545', marginTop: '0.25rem', display: 'block' }}>
+                  ⚠️ You cannot demote yourself
                 </small>
               )}
             </div>

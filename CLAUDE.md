@@ -47,10 +47,16 @@ Siehe `scripts/db/README.md` und `scripts/sql/README.md` für detaillierte Daten
 
 **Autorisierungs-Ebenen:**
 1. **Role-Based Admin-System** ([src/hooks/useAdmin.ts](src/hooks/useAdmin.ts)):
-   - **Super Admin**: Via `VITE_SUPER_ADMIN_EMAIL` (🛡️ geschützt, kann nicht gelöscht/geändert werden)
-   - **Admin**: Via `profiles.role = 'admin'` (volle Rechte, kann User/Roles verwalten)
-   - **Moderator**: Via `profiles.role = 'moderator'` (erweiterte Rechte)
+   - **Super Admin**: Via `VITE_SUPER_ADMIN_EMAIL` (🛡️ komplett geschützt, kann von NIEMANDEM editiert/gelöscht werden)
+   - **Admin**: Via `profiles.role = 'admin'` (volle Rechte, kann alle Roles verwalten, kann sich nicht selbst degradieren)
+   - **Moderator**: Via `profiles.role = 'moderator'` (kann User ↔ Beta-User ↔ Moderator ändern, NICHT zu Admin)
+   - **Beta-User**: Via `profiles.role = 'beta_user'` (🧪 Premium Tester, früher Zugriff, Feedback geben)
    - **User**: Standard-Role für alle neuen User
+   - **User-Management**: `/admin/users` - Edit, Delete, Bulk Role-Change ([src/hooks/useBulkOperations.ts](src/hooks/useBulkOperations.ts))
+   - **Protections**:
+     - Self-Demotion verhindert (Admin/Mod kann sich nicht selbst runterstufen)
+     - Super-Admin Edit/Delete Buttons disabled im Frontend
+     - DB-Trigger verhindert unerlaubte Role-Changes
    - Geschützt via `AdminRoute`-Komponente ([src/components/admin/AdminRoute.tsx](src/components/admin/AdminRoute.tsx))
    - SQL Setup: [scripts/sql/admin_role_system_setup.sql](scripts/sql/admin_role_system_setup.sql) + [ADMIN_ROLE_SYSTEM.md](scripts/sql/ADMIN_ROLE_SYSTEM.md)
 
@@ -258,6 +264,35 @@ Nutze `verifyCurrentPassword()` aus [src/lib/supabase.ts](src/lib/supabase.ts) v
 **Profil-Aktionen:**
 Siehe [src/lib/profile/profileActions.ts](src/lib/profile/profileActions.ts) für zentralisierte Profil-Update-Logik.
 
+### Admin User-Management
+
+**User-Verwaltung unter `/admin/users`:**
+
+Das Admin-Panel bietet umfassende User-Management-Funktionen:
+
+**Single-User-Operations:**
+- **Edit User** ([UserEditModal.tsx](src/pages/admin/components/modals/UserEditModal.tsx)):
+  - Role-Änderung: User ↔ Beta-User ↔ Moderator ↔ Admin
+  - Full Name, Username, Email-Anpassung
+  - Self-Demotion Prevention: Admin/Moderator kann sich nicht selbst degradieren
+  - Super-Admin Protection: Edit-Button disabled für `VITE_SUPER_ADMIN_EMAIL`
+
+- **Delete User** ([UserDeleteModal.tsx](src/pages/admin/components/modals/UserDeleteModal.tsx)):
+  - Löscht Profile aus `profiles`-Tabelle (NICHT `auth.users`, da Service Role Key im Frontend nicht verfügbar)
+  - Super-Admin Protection: Delete-Button disabled + Warnung
+
+**Bulk-Operations** ([useBulkOperations.ts](src/hooks/useBulkOperations.ts)):
+- **Bulk Activate/Deactivate**: Setzt `is_active` für mehrere User gleichzeitig
+- **Bulk Role Change**: Ändert Roles für mehrere User (mit Dropdown-Auswahl: User, Beta-User, Moderator, Admin)
+- **Bulk Delete**: Löscht mehrere User gleichzeitig (mit Confirmation)
+- UI: Checkbox-Selection in [UserTableRow.tsx](src/components/admin/UserTableRow.tsx) + [BulkActionsModal.tsx](src/pages/admin/components/modals/BulkActionsModal.tsx)
+
+**Wichtige Regeln:**
+- User-Daten werden via RPC-Function `get_all_users_with_metadata()` geladen (JOIN `auth.users` + `profiles`)
+- RLS Policies erlauben nur Admin-Zugriff (JWT-basiert: `auth.jwt() -> 'user_metadata' ->> 'is_admin'`)
+- Self-Demotion wird via Frontend-Check UND DB-Trigger verhindert ([prevent_self_demotion](scripts/sql/admin_role_system_setup.sql))
+- Super-Admin ist via `VITE_SUPER_ADMIN_EMAIL` definiert und kann von NIEMANDEM geändert/gelöscht werden
+
 ## Testing
 
 Jest konfiguriert mit:
@@ -298,6 +333,24 @@ npm run build            # TypeScript-Check + Production-Build
 - Environment Variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 
 ## Häufige Probleme
+
+**User-Tabelle in Admin-Panel ist leer:**
+Das häufigste Problem bei neuen Projekten! Die RPC-Function `get_all_users_with_metadata()` fehlt in Supabase.
+
+**3-Schritte-Lösung:**
+```bash
+# 1. Script-Inhalt anzeigen
+npm run db:show scripts/sql/admin_role_system_setup.sql
+
+# 2. Öffne Supabase SQL-Editor
+# https://supabase.com/dashboard/project/YOUR_PROJECT/sql
+
+# 3. Kopiere Script-Inhalt, klicke "Run" ✅
+```
+
+**Danach:** User-Tabelle zeigt alle angemeldeten User + Role-System ist aktiv!
+
+Siehe [scripts/sql/README.md](scripts/sql/README.md) für Details zum Admin-Role-System-Setup.
 
 **Port bereits in Verwendung:**
 Vite läuft auf Port 5173 mit `strictPort: true`. Standard-Start: `npm run dev`. Wenn Port belegt, Prozess beenden oder Port in [vite.config.ts](vite.config.ts) ändern (nur für andere Entwickler).
