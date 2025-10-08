@@ -9,11 +9,12 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { useToast } from '../../hooks/useToast';
 import { useAdmin } from '../../hooks/useAdmin';
+import { useFeatureFlags } from '../../hooks/useFeatureFlags';
 import Button from '../ui/Button';
 import UserDropdown from './UserDropdown';
 import HeaderNav from './HeaderNav';
 import { APP_CONFIG } from '../../lib/constants';
-import { canAccessFeature } from '../../lib/constants/featureFlags';
+import { canAccessFeature, getUserRole } from '../../lib/services/featureFlags';
 
 interface NavigationItem {
   path: string;
@@ -31,19 +32,19 @@ interface HeaderProps {
   customNavItems?: NavigationItem[];
   showAdminBadge?: boolean;
   adminLevel?: string;
-  onChatToggle?: () => void;
+  onChatToggle?: (() => void) | undefined;
   unreadChatCount?: number;
   expandedChatId?: string | null;
 }
 const navigationItems: NavigationItem[] = [
-  { path: '/dashboard', label: 'Dashboard', icon: '🏠', requiresAuth: true },
-  { path: '/social', label: 'Social', icon: '👥', requiresAuth: true },
+  { path: '/', label: 'Dashboard', icon: '🏠', requiresAuth: true, featureFlag: 'dashboard' },
+  { path: '/social', label: 'Social', icon: '👥', requiresAuth: true, featureFlag: 'social_features' },
   { 
     path: '/files', 
     label: 'Dateien', 
     icon: '📂', 
     requiresAuth: true,
-    featureFlag: 'FILE_BROWSER' // 🔒 Admin-only Feature
+    featureFlag: 'file_browser' // 🔒 Admin-only Feature
   },
 ];
 
@@ -61,6 +62,7 @@ export default function Header(props: HeaderProps) {
   const { isAdmin } = useAdmin();
   const { user, signOut } = useAuth();
   const { isDark, toggleTheme } = useTheme();
+  const { features } = useFeatureFlags(); // Load features for navigation
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   // Animation-Flag für neue ungelesene Nachrichten im Header
   const [isBadgeNew, setIsBadgeNew] = useState(false);
@@ -91,19 +93,34 @@ export default function Header(props: HeaderProps) {
     }
   }, [signOut, success]);
 
-  const filteredNavItems = useMemo(() => 
-    (customNavItems || navigationItems).filter(item => {
+  const filteredNavItems = useMemo(() => {
+    // TODO: Get isModerator from user profile
+    const isModerator = false;  // Will be implemented with proper auth
+    const userRole = user ? getUserRole(!!user, isAdmin, isModerator) : 'public';
+
+    // Wait for features to load before filtering
+    if (features.length === 0) {
+      // Return items without feature flags while loading
+      return (customNavItems || navigationItems).filter(item => {
+        if (item.requiresAuth && !user) return false;
+        if (item.featureFlag) return false; // Hide feature-flagged items while loading
+        return true;
+      });
+    }
+
+    return (customNavItems || navigationItems).filter(item => {
       // Auth check
       if (item.requiresAuth && !user) return false;
-      
+
       // Feature-Flag check
       if (item.featureFlag) {
-        return canAccessFeature(item.featureFlag, isAdmin);
+        const feature = features.find(f => f.id === item.featureFlag);
+        return canAccessFeature(feature, userRole, isAdmin);
       }
-      
+
       return true;
-    }), [customNavItems, user, isAdmin]
-  );
+    });
+  }, [customNavItems, user, isAdmin, features]);
 
   const currentBrand = useMemo(() => 
     customBrand || { icon: '🎛️', name: APP_CONFIG.name }, 
@@ -116,7 +133,7 @@ export default function Header(props: HeaderProps) {
         {/* Alles in einer Reihe: Branding (Icon), Navigation, User, Theme */}
         <div className="brand-container">
           <Link
-            to="/dashboard"
+            to="/"
             className="brand-link compact"
             aria-label="Go to Dashboard"
           >

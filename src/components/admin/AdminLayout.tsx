@@ -20,11 +20,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const handleLogout = async () => {
   await signOut();
-  navigate('/dashboard');
+  navigate('/welcome');
   };
 
   const handleBackToDashboard = () => {
-    navigate('/dashboard');
+    navigate('/');
   };
 
   return (

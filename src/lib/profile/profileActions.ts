@@ -204,7 +204,7 @@ export async function deleteAccount(
     
     // 3. Abmelden und weiterleiten
     await supabase.auth.signOut();
-    navigate('/dashboard');
+    navigate('/welcome');
     
     return { success: true };
   } catch (error) {
