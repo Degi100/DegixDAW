@@ -3,7 +3,7 @@
 // corporate Theme - Global Layout with Header
 // ============================================
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import ChatSidebar from '../chat/ChatSidebar';
@@ -12,7 +12,8 @@ import { useConversations } from '../../hooks/useConversations';
 import { useOnlineStatus } from '../../hooks/useOnlineStatus';
 import { useAuth } from '../../hooks/useAuth';
 import { useAdmin } from '../../hooks/useAdmin';
-import { canAccessFeature, getUserRole } from '../../lib/constants/featureFlags';
+import { useFeatureFlags } from '../../hooks/useFeatureFlags';
+import { canAccessFeature, getUserRole } from '../../lib/services/featureFlags';
 
 function AppLayoutContent() {
   const { conversations, loadConversations, createOrOpenDirectConversation } = useConversations();
@@ -20,21 +21,19 @@ function AppLayoutContent() {
   const { isUserOnline } = useOnlineStatus();
   const { user } = useAuth();
   const { isAdmin, isModerator } = useAdmin();
-  const [featureFlagVersion, setFeatureFlagVersion] = useState(0);
+  const { features } = useFeatureFlags(); // Load features with Realtime
 
-  useEffect(() => {
-    const handleFlagsChanged = () => {
-      setFeatureFlagVersion(prev => prev + 1);
-    };
+  // Get chat_sidebar feature
+  const chatSidebarFeature = useMemo(
+    () => features.find(f => f.id === 'chat_sidebar'),
+    [features]
+  );
 
-    window.addEventListener('featureFlagsChanged', handleFlagsChanged);
-    return () => {
-      window.removeEventListener('featureFlagsChanged', handleFlagsChanged);
-    };
-  }, []);
-
-  const userRole = user ? getUserRole(isAdmin, isModerator) : 'public';
-  const canAccessChat = useMemo(() => canAccessFeature('chat_sidebar', userRole, isAdmin), [userRole, isAdmin, featureFlagVersion]);
+  const userRole = user ? getUserRole(!!user, isAdmin, isModerator) : 'public';
+  const canAccessChat = useMemo(
+    () => canAccessFeature(chatSidebarFeature, userRole, isAdmin),
+    [chatSidebarFeature, userRole, isAdmin]
+  );
 
   const unreadChatCount = useMemo(() => {
     if (!canAccessChat) return 0;
@@ -55,8 +54,6 @@ function AppLayoutContent() {
       <Header
         onChatToggle={canAccessChat ? toggleChat : undefined}
         unreadChatCount={unreadChatCount}
-        // Pass the version to force Header to re-render
-        key={featureFlagVersion}
       />
       <main className="app-main">
         <Outlet />
