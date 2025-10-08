@@ -1,7 +1,7 @@
 // src/pages/admin/components/modals/UserEditModal.tsx
 // Edit Existing User Modal
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Button from '../../../../components/ui/Button';
 import type { UserEditModalProps } from '../../types/admin.types';
 import type { UserProfile } from '../../../../hooks/useUserData';
@@ -13,6 +13,12 @@ export default function UserEditModal({
   onUpdateUser
 }: UserEditModalProps) {
   const [editedUser, setEditedUser] = useState<UserProfile>(user);
+
+  // Check if this user is the super admin (protected)
+  const isSuperAdmin = useMemo(() => {
+    const superAdminEmail = import.meta.env.VITE_SUPER_ADMIN_EMAIL;
+    return user.email === superAdminEmail;
+  }, [user.email]);
 
   // Update local state when user prop changes
   useEffect(() => {
@@ -66,11 +72,17 @@ export default function UserEditModal({
               <select
                 value={editedUser.role || 'user'}
                 onChange={(e) => setEditedUser({ ...editedUser, role: e.target.value as 'admin' | 'user' | 'moderator' })}
+                disabled={isSuperAdmin}
               >
                 <option value="user">User</option>
                 <option value="moderator">Moderator</option>
                 <option value="admin">Admin</option>
               </select>
+              {isSuperAdmin && (
+                <small style={{ color: '#6c757d', marginTop: '0.25rem', display: 'block' }}>
+                  🛡️ Super Admin role cannot be changed
+                </small>
+              )}
             </div>
             
             <div className="form-group">

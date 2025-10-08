@@ -1,4 +1,5 @@
 // src/components/admin/UserTableRow.tsx
+import { useMemo } from 'react';
 import type { UserProfile } from '../../hooks/useUserData';
 import UserAvatar from './UserAvatar';
 import StatusBadge from './StatusBadge';
@@ -21,6 +22,11 @@ export default function UserTableRow({
   onDelete,
   formatDate
 }: UserTableRowProps) {
+  // Check if this user is the super admin (protected)
+  const isSuperAdmin = useMemo(() => {
+    const superAdminEmail = import.meta.env.VITE_SUPER_ADMIN_EMAIL;
+    return user.email === superAdminEmail;
+  }, [user.email]);
 
   return (
     <tr className={isSelected ? 'selected' : ''}>
@@ -72,18 +78,31 @@ export default function UserTableRow({
       </td>
       <td className="user-actions">
         <div className="action-buttons">
-          <Button size="small" variant="outline" onClick={onEdit}>
+          <Button
+            size="small"
+            variant="outline"
+            onClick={onEdit}
+            disabled={isSuperAdmin}
+            title={isSuperAdmin ? 'Super Admin role cannot be changed' : 'Edit user'}
+          >
             ✏️ Edit
           </Button>
           <Button
             size="small"
             variant="outline"
             onClick={onDelete}
+            disabled={isSuperAdmin}
             style={{ color: '#dc3545', borderColor: '#dc3545' }}
+            title={isSuperAdmin ? 'Super Admin cannot be deleted' : 'Delete user'}
           >
             🗑️ Delete
           </Button>
         </div>
+        {isSuperAdmin && (
+          <small style={{ color: '#ffc107', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
+            🛡️ Protected
+          </small>
+        )}
       </td>
     </tr>
   );

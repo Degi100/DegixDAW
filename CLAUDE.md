@@ -46,11 +46,13 @@ Siehe `scripts/db/README.md` und `scripts/sql/README.md` für detaillierte Daten
 - Auth-State wird vom `useAuth`-Hook verwaltet ([src/hooks/useAuth.ts](src/hooks/useAuth.ts))
 
 **Autorisierungs-Ebenen:**
-1. **Admin-System** ([src/hooks/useAdmin.ts](src/hooks/useAdmin.ts)):
-   - Super Admin: Via `VITE_SUPER_ADMIN_EMAIL` Umgebungsvariable
-   - Regulärer Admin: Via `user_metadata.is_admin` Flag
-   - Moderator: Via `user_metadata.is_moderator` Flag
+1. **Role-Based Admin-System** ([src/hooks/useAdmin.ts](src/hooks/useAdmin.ts)):
+   - **Super Admin**: Via `VITE_SUPER_ADMIN_EMAIL` (🛡️ geschützt, kann nicht gelöscht/geändert werden)
+   - **Admin**: Via `profiles.role = 'admin'` (volle Rechte, kann User/Roles verwalten)
+   - **Moderator**: Via `profiles.role = 'moderator'` (erweiterte Rechte)
+   - **User**: Standard-Role für alle neuen User
    - Geschützt via `AdminRoute`-Komponente ([src/components/admin/AdminRoute.tsx](src/components/admin/AdminRoute.tsx))
+   - SQL Setup: [scripts/sql/admin_role_system_setup.sql](scripts/sql/admin_role_system_setup.sql) + [ADMIN_ROLE_SYSTEM.md](scripts/sql/ADMIN_ROLE_SYSTEM.md)
 
 2. **Feature Flags** ([src/lib/services/featureFlags/](src/lib/services/featureFlags/)):
    - **Supabase Backend** mit Realtime-Updates (seit v1.0.0)
@@ -67,6 +69,8 @@ Siehe `scripts/db/README.md` und `scripts/sql/README.md` für detaillierte Daten
 - Auth-State-Checks erfolgen bei Initialisierung via `useAuth.initialized` Flag
 - Admin-Routen leiten zu `/404` weiter (nicht `/welcome`), um Existenz vor Nicht-Admins zu verbergen
 - Feature Flags unterstützen Multi-Rollen-Zugriff und können via Admin-Panel getoggelt werden
+- **Super Admin Protection**: Super Admin kann weder gelöscht noch role-degraded werden (UI + DB-Level)
+- **Role-Sync**: Roles werden automatisch in `user_metadata` (is_admin, is_moderator) gespiegelt
 
 ### Echtzeit-Chat-System
 
