@@ -67,7 +67,7 @@ export default function AuthLanding() {
             navigate('/onboarding/username');
           } else {
             // Profile exists - user is already onboarded
-            navigate('/dashboard');
+            navigate('/');
           }
         } catch (error) {
           console.warn('Error checking profile for onboarding:', error);
@@ -103,7 +103,7 @@ export default function AuthLanding() {
 
       if (result.success) {
         // Welcome message wird von useWelcomeMessage Hook angezeigt
-        navigate('/dashboard');
+        navigate('/');
       } else {
         showError(result.error?.message || 'Login failed');
       }

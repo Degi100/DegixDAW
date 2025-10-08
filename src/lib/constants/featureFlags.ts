@@ -20,7 +20,7 @@ export interface LegacyFeatureFlag extends FeatureFlag {
   betaAccess?: boolean;  // Deprecated: use allowedRoles
 }
 
-export const FEATURE_FLAGS: Record<string, FeatureFlag> = {
+const DEFAULTS: Record<string, FeatureFlag> = {
   CHAT_SIDEBAR_POLISH: {
     id: 'chat_sidebar_polish',
     name: 'Chat-Sidebar Verbesserungen',
@@ -56,7 +56,106 @@ export const FEATURE_FLAGS: Record<string, FeatureFlag> = {
     allowedRoles: ['admin'],  // 🔒 Disabled & Admin-only
     version: '2.3.0',
   },
+
+  DASHBOARD: {
+    id: 'dashboard',
+    name: 'Dashboard',
+    description: 'Haupt-Dashboard mit Statistiken und schnellem Zugriff.',
+    enabled: true,
+    allowedRoles: ['user', 'moderator', 'admin'],
+    version: '2.3.0',
+  },
+
+  SOCIAL_FEATURES: {
+    id: 'social_features',
+    name: 'Social-Funktionen',
+    description: 'Freundesliste, Benutzer-Suche und Interaktionen.',
+    enabled: true,
+    allowedRoles: ['user', 'moderator', 'admin'],
+    version: '2.3.0',
+  },
+
+  CHAT_SIDEBAR: {
+    id: 'chat_sidebar',
+    name: 'Chat-Seitenleiste',
+    description: 'Komplette Seitenleiste für Konversationen und Kontakte.',
+    enabled: true,
+    allowedRoles: ['user', 'moderator', 'admin'],
+    version: '2.3.0',
+  },
 };
+
+const STORAGE_KEY = 'app_feature_flags';
+
+// In-memory state of the feature flags, ALWAYS keyed by feature.id
+let featureFlagsState: Record<string, FeatureFlag> = {};
+
+// Load flags from localStorage or use defaults, ensuring keys are normalized to feature.id
+function loadFeatureFlags() {
+  try {
+    const storedFlags = localStorage.getItem(STORAGE_KEY);
+    console.log(`%c[FeatureFlags] loadFeatureFlags - STORAGE_KEY: "${STORAGE_KEY}"`, 'color: #06b6d4');
+    console.log('%c[FeatureFlags] loadFeatureFlags - storedFlags from localStorage:', 'color: #06b6d4', storedFlags);
+    
+    // Start with a clean, ID-keyed version of DEFAULTS
+    const normalizedDefaults: Record<string, FeatureFlag> = {};
+    Object.values(DEFAULTS).forEach(flag => {
+      normalizedDefaults[flag.id] = JSON.parse(JSON.stringify(flag));
+    });
+
+    if (storedFlags) {
+      console.log('%c[FeatureFlags] Loading from localStorage', 'color: #3b82f6');
+      const parsedStoredFlags = JSON.parse(storedFlags) as Record<string, FeatureFlag>;
+      console.log('%c[FeatureFlags] Parsed stored flags:', 'color: #3b82f6', parsedStoredFlags);
+      
+      // Normalize stored flags as well, in case they have old keys
+      const normalizedStored: Record<string, FeatureFlag> = {};
+      Object.values(parsedStoredFlags).forEach(flag => {
+        if (flag && flag.id) { // Ensure flag is valid
+          normalizedStored[flag.id] = flag;
+        }
+      });
+
+      // Merge defaults with stored values. Stored values overwrite defaults.
+      featureFlagsState = { ...normalizedDefaults, ...normalizedStored };
+
+    } else {
+      console.log('%c[FeatureFlags] No stored flags found. Initializing with normalized DEFAULTS', 'color: #3b82f6');
+      featureFlagsState = normalizedDefaults;
+    }
+  } catch (error) {
+    console.error('Failed to load feature flags', error);
+    // Fallback to normalized defaults
+    const normalizedDefaults: Record<string, FeatureFlag> = {};
+    Object.values(DEFAULTS).forEach(flag => {
+      normalizedDefaults[flag.id] = JSON.parse(JSON.stringify(flag));
+    });
+    featureFlagsState = normalizedDefaults;
+  }
+  console.log('%c[FeatureFlags] Initial state (normalized):', 'color: #3b82f6', JSON.parse(JSON.stringify(featureFlagsState)));
+}
+
+// Save flags to localStorage and notify the app
+function saveFeatureFlags() {
+  try {
+    const dataToSave = JSON.parse(JSON.stringify(featureFlagsState));
+    console.log(`%c[FeatureFlags] saveFeatureFlags - STORAGE_KEY: "${STORAGE_KEY}"`, 'color: #f97316');
+    console.log('%c[FeatureFlags] saveFeatureFlags - Data to save:', 'color: #f97316', dataToSave);
+    
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(featureFlagsState));
+    
+    // Verify it was saved
+    const verification = localStorage.getItem(STORAGE_KEY);
+    console.log('%c[FeatureFlags] saveFeatureFlags - Verification read:', 'color: #f97316', verification);
+    
+    window.dispatchEvent(new Event('featureFlagsChanged'));
+    console.log('%c[FeatureFlags] Save complete and event dispatched.', 'color: #22c55e');
+  } catch (error) {
+    console.error('Failed to save feature flags', error);
+  }
+}
+
+// --- Public API ---
 
 // Helper: Check if user can access feature
 export function canAccessFeature(
@@ -64,43 +163,61 @@ export function canAccessFeature(
   userRole: UserRole = 'public',
   isAdmin: boolean = false
 ): boolean {
-  const feature = FEATURE_FLAGS[featureId];
+  const feature = featureFlagsState[featureId];
+  console.log(`%c[canAccessFeature] Checking feature "${featureId}"`, 'color: #a855f7', {
+    featureId,
+    userRole,
+    isAdmin,
+    featureExists: !!feature,
+    featureEnabled: feature?.enabled,
+    allowedRoles: feature?.allowedRoles,
+    hasAccess: feature ? (feature.enabled && (isAdmin || feature.allowedRoles.includes(userRole))) : false
+  });
+  
   if (!feature) return false;
   
-  // Feature disabled? → Niemand kann zugreifen
   if (!feature.enabled) return false;
-  
-  // Admin override: Admins see everything
   if (isAdmin) return true;
-  
-  // Check if user's role is in allowed roles
   return feature.allowedRoles.includes(userRole);
 }
 
 // Helper: Get all features for admin panel
 export function getAllFeatures(): FeatureFlag[] {
-  return Object.values(FEATURE_FLAGS);
+  // Return a deep copy to prevent direct mutation
+  const features = JSON.parse(JSON.stringify(Object.values(featureFlagsState)));
+  console.log('%c[FeatureFlags] getAllFeatures called. Returning:', 'color: #8b5cf6', features);
+  return features;
 }
 
 // Helper: Toggle feature (admin action)
 export function toggleFeature(featureId: string, enabled: boolean): void {
-  if (FEATURE_FLAGS[featureId]) {
-    FEATURE_FLAGS[featureId].enabled = enabled;
-    // TODO: Persist to database (supabase: feature_flags table)
+  console.log(`%c[FeatureFlags] toggleFeature called with id: ${featureId}, enabled: ${enabled}`, 'color: #ef4444');
+  if (featureFlagsState[featureId]) {
+    featureFlagsState[featureId].enabled = enabled;
+    saveFeatureFlags();
+  } else {
+    console.error(`[FeatureFlags] toggleFeature: Feature with id "${featureId}" not found!`);
   }
 }
 
 // Helper: Update allowed roles (admin action)
 export function updateAllowedRoles(featureId: string, roles: UserRole[]): void {
-  if (FEATURE_FLAGS[featureId]) {
-    FEATURE_FLAGS[featureId].allowedRoles = roles;
-    // TODO: Persist to database
+  console.log(`%c[FeatureFlags] updateAllowedRoles called with id: ${featureId}, roles:`, 'color: #ef4444', roles);
+  if (featureFlagsState[featureId]) {
+    featureFlagsState[featureId].allowedRoles = roles;
+    saveFeatureFlags();
+  } else {
+    console.error(`[FeatureFlags] updateAllowedRoles: Feature with id "${featureId}" not found!`);
   }
 }
 
-// Helper: Get user role (to be implemented with proper auth)
+// Helper: Get user role
 export function getUserRole(isAdmin: boolean, isModerator: boolean): UserRole {
   if (isAdmin) return 'admin';
   if (isModerator) return 'moderator';
-  return 'user';  // authenticated user
+  return 'user';
 }
+
+// --- Initialization ---
+// Load flags when the module is first imported
+loadFeatureFlags();

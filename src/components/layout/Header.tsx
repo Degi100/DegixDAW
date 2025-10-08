@@ -31,19 +31,19 @@ interface HeaderProps {
   customNavItems?: NavigationItem[];
   showAdminBadge?: boolean;
   adminLevel?: string;
-  onChatToggle?: () => void;
+  onChatToggle?: (() => void) | undefined;
   unreadChatCount?: number;
   expandedChatId?: string | null;
 }
 const navigationItems: NavigationItem[] = [
-  { path: '/dashboard', label: 'Dashboard', icon: '🏠', requiresAuth: true },
-  { path: '/social', label: 'Social', icon: '👥', requiresAuth: true },
+  { path: '/', label: 'Dashboard', icon: '🏠', requiresAuth: true, featureFlag: 'dashboard' },
+  { path: '/social', label: 'Social', icon: '👥', requiresAuth: true, featureFlag: 'social_features' },
   { 
     path: '/files', 
     label: 'Dateien', 
     icon: '📂', 
     requiresAuth: true,
-    featureFlag: 'FILE_BROWSER' // 🔒 Admin-only Feature
+    featureFlag: 'file_browser' // 🔒 Admin-only Feature
   },
 ];
 
@@ -120,7 +120,7 @@ export default function Header(props: HeaderProps) {
         {/* Alles in einer Reihe: Branding (Icon), Navigation, User, Theme */}
         <div className="brand-container">
           <Link
-            to="/dashboard"
+            to="/"
             className="brand-link compact"
             aria-label="Go to Dashboard"
           >

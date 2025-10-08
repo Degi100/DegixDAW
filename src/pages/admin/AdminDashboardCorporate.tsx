@@ -17,9 +17,10 @@ export default function AdminDashboardCorporate() {
   const { stats, loading: statsLoading } = useSystemStats();
 
   const quickActions = [
-    { icon: '���', title: 'Users', description: 'Manage users', action: () => navigate('/admin/users') },
+    { icon: '👥', title: 'Users', description: 'Manage users', action: () => navigate('/admin/users') },
     { icon: '⚙️', title: 'Settings', description: 'System settings', action: () => navigate('/admin/settings') },
-    { icon: '���', title: 'Reports', description: 'Generate reports', action: () => navigate('/admin/reports') }
+    { icon: '🚩', title: 'Feature Flags', description: 'Enable/disable features', action: () => navigate('/admin/features') },
+    { icon: '📊', title: 'Reports', description: 'Generate reports', action: () => navigate('/admin/reports') }
   ];
 
   return (

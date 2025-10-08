@@ -50,7 +50,7 @@ export default function UsernameOnboarding() {
   // Redirect if user already has username (in useEffect to avoid render issues)
   useEffect(() => {
     if (hasExistingUsername) {
-      navigate('/dashboard');
+      navigate('/');
     }
   }, [hasExistingUsername, navigate]);
 
@@ -142,7 +142,7 @@ export default function UsernameOnboarding() {
 
       success(`${EMOJIS.success} Willkommen bei ${APP_FULL_NAME}! Ihr Benutzername wurde erfolgreich festgelegt.`);
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/');
       }, 1500);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
@@ -190,7 +190,7 @@ export default function UsernameOnboarding() {
       
       success(`${EMOJIS.success} Willkommen bei ${APP_FULL_NAME}! Sie können Ihren Benutzernamen später einmalig ändern.`);
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/');
       }, 1500);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
@@ -202,7 +202,7 @@ export default function UsernameOnboarding() {
 
   // Skip onboarding (emergency fallback)
   const handleSkip = () => {
-    navigate('/dashboard');
+    navigate('/');
   };
 
   // ============================================
