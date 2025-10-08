@@ -296,29 +296,23 @@ npm run build            # TypeScript-Check + Production-Build
 ## Häufige Probleme
 
 **Port bereits in Verwendung:**
-Vite läuft auf Port 5173 mit `strictPort: true`. Falls Port belegt ist, beende den Prozess oder ändere den Port in [vite.config.ts](vite.config.ts).
+Vite läuft auf Port 5173 mit `strictPort: true`. Standard-Start: `npm run dev`. Wenn Port belegt, Prozess beenden oder Port in [vite.config.ts](vite.config.ts) ändern (nur für andere Entwickler).
 
 **Admin-Zugriff funktioniert nicht:**
 Überprüfe, ob `VITE_SUPER_ADMIN_EMAIL` exakt mit der E-Mail deines Users übereinstimmt. Reguläre Admins benötigen `is_admin: true` in ihren User-Metadaten.
 
-**Feature-Flag wird nicht angewendet:**
-Feature-Flags werden in **Supabase** gespeichert (nicht localStorage). Prüfe:
-1. Supabase RLS Policies erlauben Zugriff (`feature_flags` Tabelle)
-2. `useFeatureFlags()` Hook lädt Daten korrekt (check `loading` State)
-3. Admin-Panel unter `/admin/features` zeigt aktuelle Werte
-4. Realtime Subscription ist aktiv (check Browser Console für `[FeatureFlagsService]` Logs)
+**Supabase Realtime-Verbindung trennt:**
+Falls Feature-Flags oder Chat-Updates nicht ankommen:
+1. Browser Console prüfen auf `[FeatureFlagsService]` oder `[Realtime]` Fehler
+2. Supabase Dashboard → Settings → API → Realtime aktiviert?
+3. RLS Policies in `feature_flags` und `messages` Tabellen korrekt?
+4. Network Tab prüfen: WebSocket-Verbindung zu Supabase aktiv?
 
-**Onboarding-Schleife:**
-Falls in Onboarding-Schleife gefangen, prüfe:
-1. Profil existiert in `profiles`-Tabelle mit gültigem Benutzernamen
-2. `user_metadata.needs_username_onboarding` ist `false`
-3. Browser-Cache/localStorage löschen
-
-**Ungelesen-Count wird nicht aktualisiert:**
-Ungelesen-Counts hängen ab von:
-1. `conversation_members.last_read_at` Zeitstempel
-2. Nachrichten mit `created_at > last_read_at` UND `sender_id != current_user`
-3. Rufe `markAsRead()` auf, um Zeitstempel zu aktualisieren
+**TypeScript Build-Fehler:**
+`npm run build` schlägt fehl? Prüfe:
+1. `npm run lint` für ESLint-Errors
+2. IDE zeigt TypeScript-Fehler inline
+3. `tsconfig.json` Strict-Mode-Einstellungen
 
 ## Dokumentation
 
