@@ -45,7 +45,7 @@ export function useAuthCallback() {
                 navigate('/onboarding/username');
               } else {
                 // Profile exists - user is already onboarded
-                navigate('/dashboard');
+                navigate('/');
               }
             } catch (error) {
               console.warn('Error checking profile for onboarding:', error);
@@ -127,7 +127,7 @@ export function useAuthCallback() {
             if (isNewUser) {
               navigate('/onboarding/username');
             } else {
-              navigate('/dashboard');
+              navigate('/');
             }
           } else {
             navigate('/login');

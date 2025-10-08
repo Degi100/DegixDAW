@@ -6,6 +6,8 @@ import './styles/utilities/index.css';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import PageLoader from './components/ui/PageLoader';
 import { ToastContainer } from './components/ui/Toast';
+import FeatureFlagRoute from './components/auth/FeatureFlagRoute';
+import PrivateRoute from './components/auth/PrivateRoute';
 
 // Layout Components
 import AppLayout from './components/layout/AppLayout';
@@ -22,9 +24,6 @@ const SetPassword = lazy(() => import('./pages/auth/SetPassword'));
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard.corporate'));
 const Social = lazy(() => import('./pages/dashboard/Social'));
 
-// Chat Pages
-const ChatPage = lazy(() => import('./pages/chat/ChatPage'));
-
 // Settings Pages
 const UserSettings = lazy(() => import('./pages/settings/UserSettings.corporate'));
 
@@ -40,91 +39,84 @@ const UsernameOnboarding = lazy(() => import('./pages/onboarding/UsernameOnboard
 // Other Pages
 const NotFound = lazy(() => import('./pages/NotFound'));
 
+// File Browser Pages
+const FileBrowserPage = lazy(() => import('./pages/files/FileBrowserPage'));
+
 // Admin Components
 import AdminRoute from './components/admin/AdminRoute';
+import AdminLayoutCorporate from './components/admin/AdminLayoutCorporate';
 
 const AdminDashboardCorporate = lazy(() => import('./pages/admin/AdminDashboardCorporate'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 const AdminIssues = lazy(() => import('./pages/admin/AdminIssues'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 const VersionsManagement = lazy(() => import('./pages/admin/VersionsManagement'));
+const AdminFeatureFlags = lazy(() => import('./components/admin/AdminFeatureFlags'));
 
 const router = createBrowserRouter([
-  // Auth Landing (no header)
+  // Public welcome/login page
   {
-    path: '/',
+    path: '/welcome',
     element: (
       <Suspense fallback={<PageLoader />}>
         <AuthLanding />
       </Suspense>
-    )
+    ),
   },
-  // Main App Routes (with AppLayout + Header)
+
+  // All main application routes are protected and use the AppLayout.
+  // The root path '/' now defaults to the dashboard.
   {
-    path: '/dashboard',
-    element: <AppLayout />,
+    path: '/',
+    element: (
+      <PrivateRoute>
+        <AppLayout />
+      </PrivateRoute>
+    ),
     children: [
       {
-        index: true,
+        index: true, // Renders at the parent's path ('/')
         element: (
           <Suspense fallback={<PageLoader />}>
-            <Dashboard />
+            <FeatureFlagRoute featureFlag="dashboard">
+              <Dashboard />
+            </FeatureFlagRoute>
           </Suspense>
-        )
-      }
-    ]
-  },
-  {
-    path: '/social',
-    element: <AppLayout />,
-    children: [
-      {
-        index: true,
-        element: (
-          <Suspense fallback={<PageLoader />}>
-            <Social />
-          </Suspense>
-        )
-      }
-    ]
-  },
-  {
-    path: '/chat',
-    element: <AppLayout />,
-    children: [
-      {
-        index: true,
-        element: (
-          <Suspense fallback={<PageLoader />}>
-            <ChatPage />
-          </Suspense>
-        )
+        ),
       },
       {
-        path: ':conversationId',
+        path: 'social',
         element: (
           <Suspense fallback={<PageLoader />}>
-            <ChatPage />
+            <FeatureFlagRoute featureFlag="social_features">
+              <Social />
+            </FeatureFlagRoute>
           </Suspense>
-        )
-      }
-    ]
-  },
-  {
-    path: '/settings',
-    element: <AppLayout />,
-    children: [
+        ),
+      },
       {
-        index: true,
+        path: 'settings',
         element: (
           <Suspense fallback={<PageLoader />}>
             <UserSettings />
           </Suspense>
-        )
-      }
-    ]
+        ),
+      },
+      {
+        path: 'files',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <FeatureFlagRoute featureFlag="file_browser">
+              <FileBrowserPage />
+            </FeatureFlagRoute>
+          </Suspense>
+        ),
+      },
+    ],
   },
+
   // Admin Routes (with own AdminLayoutCorporate - no AppLayout!)
+  // These are protected by the AdminRoute component internally.
   {
     path: '/admin',
     element: (
@@ -171,6 +163,18 @@ const router = createBrowserRouter([
       <Suspense fallback={<PageLoader />}>
         <AdminRoute>
           <VersionsManagement />
+        </AdminRoute>
+      </Suspense>
+    )
+  },
+  {
+    path: '/admin/features',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <AdminRoute>
+          <AdminLayoutCorporate>
+            <AdminFeatureFlags />
+          </AdminLayoutCorporate>
         </AdminRoute>
       </Suspense>
     )

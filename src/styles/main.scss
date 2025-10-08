@@ -23,10 +23,12 @@
 @use 'components/mock-data-badge';
 @use 'components/admin/index' as admin-components;
 @use 'components/social/index' as social-components;
+@use 'components/chat-sidebar';
 @use 'components/conversation-list';
 @use 'components/chat-window';
 @use 'components/message-bubble';
 @use 'components/message-input';
+@use 'file-browser';
 
 // 4. Pages
 @use 'pages/auth/auth-landing/index' as auth-landing;

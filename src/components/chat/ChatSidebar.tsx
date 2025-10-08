@@ -3,395 +3,364 @@
 // Corporate Theme - Slide-in Chat Interface
 // ============================================
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useConversations } from '../../hooks/useConversations';
-import { useNavigate } from 'react-router-dom';
-import { useFriends } from '../../hooks/useFriends';
+import { useRef, useState, useCallback } from 'react';
+import { memo } from 'react';
+
+// Components
+import ChatList from './ChatList';
+import ExpandedChat from './ExpandedChat';
+import SidebarHeader from './SidebarHeader';
+import { ResizeHandles } from './ResizeHandles';
+import { ChatFooter } from './ChatFooter';
+
+// Hooks
+import { useConversations, type Conversation } from '../../hooks/useConversations';
 import { useChatSounds } from '../../lib/sounds/chatSounds';
 import { useToast } from '../../hooks/useToast';
+import { useSidebarState } from '../../hooks/useSidebarState';
+import { useResizeHandlers } from '../../hooks/useResizeHandlers';
+import { useDragHandlers } from '../../hooks/useDragHandlers';
+import { useMessages } from '../../hooks/useMessages';
+import { useMessageAttachments } from '../../hooks/useMessageAttachments';
+import { useChatSynchronizer } from '../../hooks/useChatSynchronizer';
+import { useChatUIState } from '../../hooks/useChatUIState';
+import { useChatCoordination } from '../../hooks/useChatCoordination';
+import { useSidebarLifecycle } from '../../hooks/useSidebarLifecycle';
+import { useNavigation } from '../../hooks/useNavigation';
+
+// Utils
 import { supabase } from '../../lib/supabase';
+import { formatTime } from '../../lib/timeUtils';
 
+/**
+ * Props for the ChatSidebar component
+ */
 interface ChatSidebarProps {
+  /** Whether the sidebar is currently open */
   isOpen: boolean;
+  /** Callback function to close the sidebar */
   onClose: () => void;
+  /** Additional CSS class names */
   className?: string;
+  /** Conversations from parent (optional - will load if not provided) */
+  conversations?: Conversation[];
+  /** Load conversations callback from parent (optional) */
+  loadConversations?: () => Promise<void>;
+  /** Create conversation callback from parent (optional) */
+  createOrOpenDirectConversation?: (friendId: string) => Promise<string | null>;
+  /** Function to check if a user is online */
+  isUserOnline?: (userId: string) => boolean;
 }
 
-interface ChatItem {
-  id: string;
-  name: string;
-  lastMessage: string;
-  timestamp: string;
-  unreadCount: number;
-  isOnline: boolean;
-  avatar?: string | undefined;
-  isLastMessageFromMe?: boolean;
-  isExistingConversation?: boolean;
-  friendId?: string;
-}
-
-// Zeitformatierungs-Funktion
-const formatTime = (timestamp: string | null): string => {
-  if (!timestamp) return 'Nie';
+/**
+ * ChatSidebar component - Main chat interface with slide-in functionality
+ *
+ * Features:
+ * - Resizable and draggable sidebar (when pinned)
+ * - Chat list with unread counts
+ * - Expanded chat view for active conversations
+ * - Real-time message updates
+ * - Sound notifications
+ *
+ * @param props - Component props
+ * @returns JSX.Element
+ */
+function ChatSidebar({ 
+  isOpen, 
+  onClose, 
+  className = '',
+  conversations: conversationsProp,
+  loadConversations: loadConversationsProp,
+  createOrOpenDirectConversation: createOrOpenDirectConversationProp,
+  isUserOnline,
+}: ChatSidebarProps) {
+  // Core dependencies - use props if provided, otherwise load locally
+  const localConversations = useConversations();
   
-  const now = new Date();
-  const time = new Date(timestamp);
-  const diffMs = now.getTime() - time.getTime();
-  const diffSeconds = Math.floor(diffMs / 1000);
-  const diffMinutes = Math.floor(diffSeconds / 60);
-  const diffHours = Math.floor(diffMinutes / 60);
-  const diffDays = Math.floor(diffHours / 24);
-  
-  if (diffDays > 0) {
-    return `${diffDays}d`;
-  } else if (diffHours > 0) {
-    const remainingMinutes = diffMinutes % 60;
-    const remainingSeconds = diffSeconds % 60;
-    if (remainingMinutes > 0) {
-      return `${diffHours}h ${remainingMinutes}min`;
-    } else {
-      return `${diffHours}h ${remainingSeconds}sec`;
-    }
-  } else if (diffMinutes > 0) {
-    const remainingSeconds = diffSeconds % 60;
-    return `${diffMinutes}min ${remainingSeconds}sec`;
-  } else {
-    return `${diffSeconds}sec`;
-  }
-};
-
-export default function ChatSidebar({ isOpen, onClose, className = '' }: ChatSidebarProps) {
-  const { conversations, loading, loadConversations, createOrOpenDirectConversation } = useConversations();
-  const { friends } = useFriends();
+  const conversations = conversationsProp || localConversations.conversations;
+  const loadConversations = loadConversationsProp || localConversations.loadConversations;
+  const createOrOpenDirectConversation = createOrOpenDirectConversationProp || localConversations.createOrOpenDirectConversation;
   const { playMessageReceived, playChatOpen, playChatClose } = useChatSounds();
-  const { success } = useToast();
-  const navigate = useNavigate();
-  const [selectedChat, setSelectedChat] = useState<string | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [refreshTimeout, setRefreshTimeout] = useState<NodeJS.Timeout | null>(null);
+  const { success, error: showError } = useToast();
+  const { navigateToChat } = useNavigation();
 
-  // Get current user ID
-  useEffect(() => {
-    const getUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setCurrentUserId(data.user?.id || null);
+  // Refs
+  const historyEndRef = useRef<HTMLDivElement>(null);
+  const historyContainerRef = useRef<HTMLDivElement>(null);
+
+  // Sidebar UI State (inkl. Steuerung)
+  const {
+    sidebarWidth,
+    sidebarHeight,
+    sidebarPosition,
+    isResizingLeft,
+    isResizingRight,
+    isResizingTop,
+    isResizingBottom,
+    isDragging,
+    dragStart,
+    isGradientEnabled,
+    isPinned,
+    setSidebarWidth,
+    setSidebarHeight,
+    setSidebarPosition,
+    setIsResizingLeft,
+    setIsResizingRight,
+    setIsResizingTop,
+    setIsResizingBottom,
+    setIsDragging,
+    setDragStart,
+    handleViewAllChats,
+    handleToggleGradient,
+    handleTogglePin,
+    handleResetPosition,
+  } = useSidebarState();
+
+  // Lifecycle and side effects
+  const { currentUserId, isMobile } = useSidebarLifecycle({
+    isOpen,
+    playChatOpen,
+    playChatClose,
+    supabase,
+  });
+
+  // Resize and drag handlers (dependent on isMobile)
+  const {
+    handleResizeLeftStart,
+    handleResizeRightStart,
+    handleResizeTopStart,
+    handleResizeBottomStart,
+  } = useResizeHandlers({
+    isMobile,
+    isPinned,
+    sidebarPosition,
+    isResizingLeft,
+    isResizingRight,
+    isResizingTop,
+    isResizingBottom,
+    setSidebarWidth,
+    setSidebarHeight,
+    setSidebarPosition,
+    setIsResizingLeft,
+    setIsResizingRight,
+    setIsResizingTop,
+    setIsResizingBottom,
+  });
+
+  const { handleDragStart } = useDragHandlers({
+    isMobile,
+    isPinned,
+    isDragging,
+    dragStart,
+    setIsDragging,
+    setDragStart,
+    setSidebarPosition,
+  });
+
+  // Chat UI state
+  const {
+    selectedChat,
+    setSelectedChat,
+    expandedChatId,
+    setExpandedChatId,
+    showAttachMenu,
+    setShowAttachMenu,
+  } = useChatUIState();
+
+  // Chat data and state
+  const allChats = conversations.map(conv => {
+    // Get other user's ID from conversation
+    const otherUserId = conv.other_user?.id;
+    const isOtherUserOnline = otherUserId && isUserOnline ? isUserOnline(otherUserId) : false;
+
+    return {
+      id: conv.id,
+      name: conv.other_user?.full_name || conv.name || 'Unbekannt',
+      lastMessage: conv.lastMessage?.content || 'Keine Nachrichten',
+      timestamp: formatTime(conv.last_message_at),
+      unreadCount: conv.unreadCount || 0,
+      isOnline: isOtherUserOnline,
+      avatar: conv.avatar_url || undefined,
+      isLastMessageFromMe: !!(currentUserId && conv.lastMessage?.sender_id === currentUserId),
+      isExistingConversation: true,
     };
-    getUser();
-  }, []);
+  });
 
-  // Debounced refresh function to prevent too many updates
-  const refreshConversations = useCallback(async () => {
-    // Clear existing timeout
-    if (refreshTimeout) {
-      clearTimeout(refreshTimeout);
-    }
+  // totalUnreadCount wird nicht mehr hier berechnet - nur noch im globalen Header (AppLayout)
 
-    // Set new timeout for debounced refresh
-    const timeout = setTimeout(async () => {
-      try {
-        console.log('🔄 Refreshing conversations...');
-        await loadConversations();
-      } catch (error) {
-        console.error('Error refreshing conversations:', error);
-      }
-    }, 300); // 300ms debounce
+  // Messages for expanded chat
+  const {
+    messages: expandedMessages,
+    sending: isSendingMessage,
+    sendMessage: handleSendMessage,
+  } = useMessages(expandedChatId);
 
-    setRefreshTimeout(timeout);
-  }, [loadConversations, refreshTimeout]);
+  // File upload functionality
+  const { uploadAndAttach } = useMessageAttachments();
 
-  // Real-time subscriptions for live updates
-  useEffect(() => {
-    if (!isOpen || !currentUserId) return;
+  // Local state for message input
+  const [messageText, setMessageText] = useState('');
 
-    console.log('🔔 Setting up real-time subscriptions for ChatSidebar');
-
-    // Subscribe to conversation changes
-    const conversationsChannel = supabase
-      .channel('chat_sidebar_conversations')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'conversations',
-        },
-        (payload) => {
-          console.log('📢 Conversation changed:', payload);
-          refreshConversations();
-        }
-      )
-      .subscribe();
-
-    // Subscribe to message changes - only for conversations user is part of
-    const messagesChannel = supabase
-      .channel('chat_sidebar_messages')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-        },
-        async (payload) => {
-          console.log('💬 New message:', payload);
-          
-          // Check if this message is for a conversation the user is part of
-          const { data: membership } = await supabase
-            .from('conversation_members')
-            .select('conversation_id')
-            .eq('user_id', currentUserId)
-            .eq('conversation_id', payload.new.conversation_id)
-            .single();
-
-          if (membership) {
-            console.log('✅ Message is for user, updating sidebar');
-            refreshConversations();
-            // Play sound for new messages (only if not from current user)
-            if (payload.new.sender_id !== currentUserId) {
-              playMessageReceived();
-            }
-          }
-        }
-      )
-      .subscribe();
-
-    // Subscribe to conversation members changes
-    const membersChannel = supabase
-      .channel('chat_sidebar_members')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'conversation_members',
-          filter: `user_id=eq.${currentUserId}`,
-        },
-        (payload) => {
-          console.log('👥 Membership changed:', payload);
-          refreshConversations();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log('🔕 Cleaning up real-time subscriptions');
-      supabase.removeChannel(conversationsChannel);
-      supabase.removeChannel(messagesChannel);
-      supabase.removeChannel(membersChannel);
-      
-      // Clear any pending refresh timeout
-      if (refreshTimeout) {
-        clearTimeout(refreshTimeout);
-      }
-    };
-  }, [isOpen, currentUserId, refreshConversations, playMessageReceived, refreshTimeout]);
-
-  // Play sounds on open/close
-  useEffect(() => {
-    if (isOpen) {
-      playChatOpen();
-    } else {
-      playChatClose();
-    }
-  }, [isOpen, playChatOpen, playChatClose]);
-
-  // Echte Conversations + Freunde ohne Conversations + Demo-Chats
-  const allChats = useMemo(() => {
-    // Echte Conversations aus der Datenbank
-    const realChats: ChatItem[] = conversations.map(conv => {
-      const lastMessage = conv.lastMessage || conv.last_message;
-      const isLastMessageFromMe = currentUserId && lastMessage?.sender_id === currentUserId;
-      
-      return {
-        id: conv.id,
-        name: conv.other_user?.full_name || conv.name || 'Unbekannt',
-        lastMessage: lastMessage?.content || 'Keine Nachrichten',
-        timestamp: formatTime(conv.last_message_at),
-        unreadCount: conv.unreadCount || conv.unread_count || 0,
-        isOnline: false, // TODO: Online-Status aus User-Daten laden
-        avatar: conv.avatar_url || undefined,
-        isLastMessageFromMe: isLastMessageFromMe || false,
-        isExistingConversation: true,
-      };
-    });
-
-    // Freunde ohne Conversations (für neue Chats)
-    const friendsWithoutChats: ChatItem[] = friends
-      .filter(friendship => {
-        // Prüfe ob bereits eine Conversation mit diesem Freund existiert
-        const hasConversation = conversations.some(conv => 
-          conv.other_user?.id === friendship.friend_id || 
-          conv.members?.some(member => member.user_id === friendship.friend_id)
-        );
-        return !hasConversation && friendship.status === 'accepted';
-      })
-      .map(friendship => ({
-        id: `friend-${friendship.friend_id}`,
-        name: friendship.friend_profile?.full_name || friendship.friend_profile?.username || 'Unbekannt',
-        lastMessage: 'Chat starten...',
-        timestamp: 'Nie',
-        unreadCount: 0,
-        isOnline: false, // TODO: Online-Status aus User-Daten laden
-        avatar: undefined, // TODO: Avatar aus friend_profile laden
-        isLastMessageFromMe: false,
-        isExistingConversation: false,
-        friendId: friendship.friend_id,
-      }));
-
-    // Kombiniere: Echte Conversations + Freunde ohne Chats
-    return [...realChats, ...friendsWithoutChats];
-  }, [conversations, friends, currentUserId]);
-
-  const handleChatSelect = useCallback(async (chatId: string) => {
-    setSelectedChat(chatId);
-    const chat = allChats.find(c => c.id === chatId);
-    if (!chat) return;
-
-    // Play message received sound when selecting a chat with unread messages
-    if (chat.unreadCount > 0) {
-      playMessageReceived();
-    }
-
-    // If existing conversation, navigate to full chat view
-    if (chat.isExistingConversation) {
-      navigate(`/chat/${chat.id}`);
+  // File upload handler (will be passed to useChatCoordination)
+  const handleFileUploadLocal = useCallback(async (chatId: string, file: File) => {
+    if (!chatId || !file) {
+      showError('Keine Datei oder Chat ausgewählt');
       return;
     }
 
-    // Otherwise create conversation (friend without chat) and navigate
-    if (chat.friendId) {
-      try {
-        console.log('🚀 Creating new conversation with friend:', chat.friendId);
-        const conversationId = await createOrOpenDirectConversation(chat.friendId);
-        if (conversationId) {
-          success(`Chat mit ${chat.name} gestartet! 💬`);
-          await loadConversations();
-          navigate(`/chat/${conversationId}`);
-        }
-      } catch (error) {
-        console.error('Error creating conversation:', error);
-        success('Fehler beim Erstellen des Chats');
+    try {
+      // 1. Create a message for the attachment
+      const messageId = await handleSendMessage(`📎 ${file.name}`, 'file');
+      
+      if (!messageId) {
+        showError('Fehler beim Erstellen der Nachricht');
+        return;
       }
+
+      // 2. Upload and attach the file
+      const uploadSuccess = await uploadAndAttach(file, messageId, chatId);
+      
+      if (uploadSuccess) {
+        success(`${file.name} erfolgreich hochgeladen! 📎`);
+      } else {
+        showError('Upload fehlgeschlagen');
+      }
+    } catch (err) {
+      console.error('File upload error:', err);
+      showError('Fehler beim Hochladen der Datei');
     }
-  }, [allChats, playMessageReceived, createOrOpenDirectConversation, success, loadConversations, navigate]);
+  }, [handleSendMessage, uploadAndAttach, success, showError]);
 
-  // Aktueller Chat: sidebar zeigt nur die Chat-Liste; volle Chat-Ansicht öffnet beim Klick
+  // Chat coordination (must be before useChatSynchronizer)
+  const {
+    handleChatSelect,
+    handleFileUpload: handleFileUploadCoordinated,
+    markConversationAsRead,
+    clearChatHistory,
+  } = useChatCoordination({
+    allChats,
+    expandedChatId,
+    setExpandedChatId,
+    setSelectedChat,
+    playMessageReceived,
+    createOrOpenDirectConversation,
+    success,
+    loadConversations,
+    messageText,
+    setMessageText,
+    expandedChatHandleSend: handleSendMessage,
+    setShowAttachMenu,
+    expandedChatHandleUpload: handleFileUploadLocal,
+    currentUserId,
+  });
 
-  // Inline message UI removed from sidebar. Navigation opens full chat view.
+  // Chat synchronization with auto-read (must be after useChatCoordination)
+  useChatSynchronizer({
+    currentUserId,
+    isOpen,
+    loadConversations,
+    playMessageReceived,
+    expandedChatId,
+    markConversationAsRead,
+  });
 
-  const handleViewAllChats = useCallback(() => {
-    // Navigate to full chat page
-    window.location.href = '/chat';
-  }, []);
-
-  const totalUnreadCount = allChats.reduce((sum, chat) => sum + chat.unreadCount, 0);
+  // Message handlers
+  const handleSendQuickMessage = useCallback(async () => {
+    if (!messageText.trim()) return;
+    const textToSend = messageText;
+    setMessageText(''); // Clear input immediately
+    await handleSendMessage(textToSend);
+    // NOTE: Wir markieren NICHT als gelesen nach dem Senden, da:
+    // 1. Der Chat bereits beim Öffnen als gelesen markiert wurde
+    // 2. Eigene Nachrichten keine ungelesenen Badges erzeugen sollten
+    // 3. Die Realtime-Subscription die UI automatisch aktualisiert
+  }, [messageText, setMessageText, handleSendMessage]);
 
   return (
     <>
-      {/* Overlay */}
-      {isOpen && (
-        <div 
+      {/* Overlay - only when not pinned */}
+      {isOpen && !isPinned && (
+        <div
           className="chat-sidebar-overlay"
           onClick={onClose}
-          aria-hidden="true"
+          onKeyDown={(e) => e.key === 'Escape' && onClose()}
+          role="button"
+          tabIndex={0}
+          aria-label="Chat schließen"
         />
       )}
 
       {/* Sidebar */}
-      <div className={`chat-sidebar ${isOpen ? 'chat-sidebar--open' : ''} ${className}`}>
+      <div
+        className={`chat-sidebar ${isOpen ? 'chat-sidebar--open' : ''} ${isPinned ? 'chat-sidebar--pinned' : ''} ${(isResizingLeft || isResizingRight || isResizingTop || isResizingBottom) ? 'chat-sidebar--resizing' : ''} ${isDragging ? 'chat-sidebar--dragging' : ''} ${isGradientEnabled ? 'chat-sidebar--gradient' : ''} ${className}`}
+        style={{
+          width: `${sidebarWidth}px`,
+          height: `${sidebarHeight}px`,
+          top: `${sidebarPosition.top}px`,
+          right: `${sidebarPosition.right}px`,
+        }}
+        role="complementary"
+        aria-label="Chat Sidebar"
+      >
+        {/* Resize handles - only when pinned */}
+        <ResizeHandles
+          isMobile={isMobile}
+          isPinned={isPinned}
+          onResizeLeftStart={handleResizeLeftStart}
+          onResizeRightStart={handleResizeRightStart}
+          onResizeTopStart={handleResizeTopStart}
+          onResizeBottomStart={handleResizeBottomStart}
+        />
+
         {/* Header */}
-        <div className="chat-sidebar-header">
-          <div className="chat-sidebar-title">
-            <span className="chat-icon">💬</span>
-            <h3>Chats</h3>
-            {totalUnreadCount > 0 && (
-              <span className="chat-badge">{totalUnreadCount}</span>
-            )}
-          </div>
-          <div className="chat-sidebar-actions">
-            <button
-              onClick={refreshConversations}
-              className="chat-refresh-btn"
-              aria-label="Chats aktualisieren"
-              title="Chats aktualisieren"
-            >
-              🔄
-            </button>
-            <button
-              onClick={onClose}
-              className="chat-close-btn"
-              aria-label="Chat schließen"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
+        <SidebarHeader
+          isGradientEnabled={isGradientEnabled}
+          isPinned={isPinned}
+          isMobile={isMobile}
+          onToggleGradient={handleToggleGradient}
+          onTogglePin={handleTogglePin}
+          onResetPosition={handleResetPosition}
+          onClose={onClose}
+          onDragStart={handleDragStart}
+        />
 
-        {/* Chat List */}
-        <div className="chat-list">
-          {loading ? (
-            <div className="chat-empty">
-              <span>⏳</span>
-              <p>Lade Chats...</p>
-            </div>
-          ) : allChats.length === 0 ? (
-            <div className="chat-empty">
-              <span>💬</span>
-              <p>Noch keine Chats</p>
-              <p>Starte eine Unterhaltung!</p>
-            </div>
-          ) : (
-            allChats.map((chat) => (
-              <button
-                key={chat.id}
-                className={`chat-item ${selectedChat === chat.id ? 'chat-item--active' : ''}`}
-                onClick={() => handleChatSelect(chat.id)}
-              >
-                <div className="chat-item-avatar">
-                  {chat.avatar ? (
-                    <img src={chat.avatar} alt={chat.name} />
-                  ) : (
-                    chat.name.charAt(0).toUpperCase()
-                  )}
-                </div>
-                <div className="chat-item-content">
-                  <div className="chat-item-header">
-                    <span className="chat-item-name">{chat.name}</span>
-                  </div>
-                  <div className="chat-item-message">
-                    {chat.isLastMessageFromMe && (
-                      <span className="chat-message-prefix">Du: </span>
-                    )}
-                    {!chat.isExistingConversation && (
-                      <span className="chat-new-conversation">💬 </span>
-                    )}
-                    {chat.lastMessage}
-                  </div>
-                  <span className="chat-item-time">{chat.timestamp}</span>
-                </div>
-                {chat.unreadCount > 0 && (
-                  <span className="chat-item-badge">{chat.unreadCount}</span>
-                )}
-                {chat.isOnline && (
-                  <div className="chat-item-online-indicator" />
-                )}
-              </button>
-            ))
-          )}
-        </div>
-
-        {/* Inline-Nachrichten-Panel entfernt; Chats öffnen die vollständige Chat-Ansicht */}
-
-        {/* Footer */}
-        <div className="chat-sidebar-footer">
-          <button
-            onClick={handleViewAllChats}
-            className="chat-view-all-btn"
+        {/* Main Content */}
+        <div className="chat-sidebar__content" style={{ flex: 1, overflow: 'hidden' }}>
+          <ChatList
+            chats={allChats}
+            selectedChatId={selectedChat}
+            onSelect={handleChatSelect}
+            expandedChatId={expandedChatId}
           >
-            Alle Chats anzeigen
-          </button>
+            {expandedChatId && (
+              <ExpandedChat
+                chatId={expandedChatId!}
+                messages={expandedMessages}
+                currentUserId={currentUserId}
+                showAttachMenu={showAttachMenu}
+                isSendingMessage={isSendingMessage}
+                onFileUpload={handleFileUploadCoordinated}
+                onSendQuickMessage={handleSendQuickMessage}
+                messageText={messageText}
+                setMessageText={setMessageText}
+                historyContainerRef={historyContainerRef}
+                historyEndRef={historyEndRef}
+                onOpenChat={navigateToChat}
+                onClearChatHistory={clearChatHistory}
+                markConversationAsRead={markConversationAsRead}
+                isOpen={isOpen}
+              />
+            )}
+          </ChatList>
+
+          {/* Footer - now inside content for absolute positioning */}
+          <ChatFooter onViewAllChats={handleViewAllChats} />
         </div>
       </div>
     </>
   );
 }
+
+// realtime payloads are mapped to the canonical `Message` type from useMessages
+
+export default memo(ChatSidebar);

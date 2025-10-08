@@ -2,16 +2,16 @@
 // Preview component for Friends/Followers - Scroll + Load More
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useFriends, type Friendship } from '../../hooks/useFriends';
 import { useFollowers, type Follower } from '../../hooks/useFollowers';
+import { useChat } from '../../contexts/ChatContext';
 
 interface SocialPreviewProps {
   type: 'friends' | 'followers' | 'following' | 'requests';
 }
 
 export default function SocialPreview({ type }: SocialPreviewProps) {
-  const navigate = useNavigate();
+  const { openChat } = useChat();
   const { friends, pendingRequests, acceptFriendRequest, rejectFriendRequest, removeFriend } = useFriends();
   const { followers, following, removeFollower, unfollowUser } = useFollowers();
   const [showCount, setShowCount] = useState(5);
@@ -115,12 +115,10 @@ export default function SocialPreview({ type }: SocialPreviewProps) {
     }
 
     if (chatUserId) {
-      // Navigate to chat with this user
-      navigate(`/chat?user=${chatUserId}`);
+      // Open chat sidebar and start conversation
+      openChat(chatUserId);
     }
-  };
-
-  return (
+  };  return (
     <div className="social-preview">
       <div className={`social-preview-scroll ${showAll ? 'social-preview-scroll--expanded' : ''}`}>
         {data.map((item) => {

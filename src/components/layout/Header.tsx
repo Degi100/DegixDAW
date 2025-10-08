@@ -3,22 +3,25 @@
 // corporate Theme - Consistent Navigation
 // ============================================
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { useToast } from '../../hooks/useToast';
 import { useAdmin } from '../../hooks/useAdmin';
+import { useFeatureFlags } from '../../hooks/useFeatureFlags';
 import Button from '../ui/Button';
 import UserDropdown from './UserDropdown';
 import HeaderNav from './HeaderNav';
 import { APP_CONFIG } from '../../lib/constants';
+import { canAccessFeature, getUserRole } from '../../lib/services/featureFlags';
 
 interface NavigationItem {
   path: string;
   label: string;
   icon: string;
   requiresAuth?: boolean;
+  featureFlag?: string; // Optional: Feature-Flag ID
 }
 
 interface HeaderProps {
@@ -29,28 +32,53 @@ interface HeaderProps {
   customNavItems?: NavigationItem[];
   showAdminBadge?: boolean;
   adminLevel?: string;
-  onChatToggle?: () => void;
+  onChatToggle?: (() => void) | undefined;
   unreadChatCount?: number;
+  expandedChatId?: string | null;
 }
-
 const navigationItems: NavigationItem[] = [
-  { path: '/dashboard', label: 'Dashboard', icon: '🏠', requiresAuth: true },
-  { path: '/social', label: 'Social', icon: '👥', requiresAuth: true },
+  { path: '/', label: 'Dashboard', icon: '🏠', requiresAuth: true, featureFlag: 'dashboard' },
+  { path: '/social', label: 'Social', icon: '👥', requiresAuth: true, featureFlag: 'social_features' },
+  { 
+    path: '/files', 
+    label: 'Dateien', 
+    icon: '📂', 
+    requiresAuth: true,
+    featureFlag: 'file_browser' // 🔒 Admin-only Feature
+  },
 ];
 
-export default function Header({
-  customBrand,
-  customNavItems,
-  showAdminBadge = false,
-  adminLevel,
-  onChatToggle,
-  unreadChatCount = 0
-}: HeaderProps) {
-  const { user, signOut } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
+export default function Header(props: HeaderProps) {
+    const {
+      customBrand,
+      customNavItems,
+      showAdminBadge = false,
+      adminLevel,
+      onChatToggle,
+      unreadChatCount = 0,
+      expandedChatId = null,
+    } = props;
   const { success } = useToast();
   const { isAdmin } = useAdmin();
+  const { user, signOut } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
+  const { features } = useFeatureFlags(); // Load features for navigation
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // Animation-Flag für neue ungelesene Nachrichten im Header
+  const [isBadgeNew, setIsBadgeNew] = useState(false);
+  const prevUnread = useRef(0);
+
+  // Trigger Animation nur bei echter neuer Nachricht und wenn Chat nicht offen
+  useEffect(() => {
+    if (unreadChatCount > prevUnread.current && !expandedChatId) {
+      setIsBadgeNew(true);
+      const timeout = setTimeout(() => setIsBadgeNew(false), 2000);
+      return () => clearTimeout(timeout);
+    }
+    prevUnread.current = unreadChatCount;
+    // Wenn alles gelesen, Animation zurücksetzen
+    if (unreadChatCount === 0) setIsBadgeNew(false);
+  }, [unreadChatCount, expandedChatId]);
 
   const handleThemeToggle = useCallback(() => {
     toggleTheme();
@@ -65,11 +93,34 @@ export default function Header({
     }
   }, [signOut, success]);
 
-  const filteredNavItems = useMemo(() => 
-    (customNavItems || navigationItems).filter(item =>
-      !item.requiresAuth || user
-    ), [customNavItems, user]
-  );
+  const filteredNavItems = useMemo(() => {
+    // TODO: Get isModerator from user profile
+    const isModerator = false;  // Will be implemented with proper auth
+    const userRole = user ? getUserRole(!!user, isAdmin, isModerator) : 'public';
+
+    // Wait for features to load before filtering
+    if (features.length === 0) {
+      // Return items without feature flags while loading
+      return (customNavItems || navigationItems).filter(item => {
+        if (item.requiresAuth && !user) return false;
+        if (item.featureFlag) return false; // Hide feature-flagged items while loading
+        return true;
+      });
+    }
+
+    return (customNavItems || navigationItems).filter(item => {
+      // Auth check
+      if (item.requiresAuth && !user) return false;
+
+      // Feature-Flag check
+      if (item.featureFlag) {
+        const feature = features.find(f => f.id === item.featureFlag);
+        return canAccessFeature(feature, userRole, isAdmin);
+      }
+
+      return true;
+    });
+  }, [customNavItems, user, isAdmin, features]);
 
   const currentBrand = useMemo(() => 
     customBrand || { icon: '🎛️', name: APP_CONFIG.name }, 
@@ -82,7 +133,7 @@ export default function Header({
         {/* Alles in einer Reihe: Branding (Icon), Navigation, User, Theme */}
         <div className="brand-container">
           <Link
-            to="/dashboard"
+            to="/"
             className="brand-link compact"
             aria-label="Go to Dashboard"
           >
@@ -105,8 +156,8 @@ export default function Header({
               aria-label="Chat öffnen"
             >
               <span className="chat-icon">💬</span>
-              {unreadChatCount > 0 && (
-                <span className="chat-badge">{unreadChatCount}</span>
+              {unreadChatCount > 0 && !expandedChatId && (
+                <span className={`chat-badge${isBadgeNew ? ' chat-badge--new' : ''}`}>{unreadChatCount}</span>
               )}
             </button>
           )}

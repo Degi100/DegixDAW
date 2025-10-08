@@ -35,7 +35,7 @@ export default function VersionsManagement() {
         const updatedVersions = versions.filter(v => v.version !== version.version);
         setVersions([...updatedVersions]);
         success(`Version ${version.version} erfolgreich gelöscht`);
-      } catch (_err) {
+      } catch {
         error('Fehler beim Löschen der Version');
       }
     }
@@ -67,7 +67,7 @@ export default function VersionsManagement() {
 
       setShowFormModal(false);
       setSelectedVersion(null);
-    } catch (_err) {
+    } catch {
       error('Fehler beim Speichern der Version');
     }
   };

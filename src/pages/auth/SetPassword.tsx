@@ -82,7 +82,7 @@ export default function SetPassword() {
         if (!profile) {
           navigate('/onboarding/username');
         } else {
-          navigate('/dashboard');
+          navigate('/');
         }
       }
     } catch (err) {

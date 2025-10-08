@@ -14,6 +14,7 @@ import { useToast } from './useToast';
 export interface ConversationMember {
   id: string;
   user_id: string;
+  conversation_id?: string; // für DB-Objekte
   role: 'admin' | 'member';
   joined_at: string;
   last_read_at: string | null;
@@ -21,7 +22,7 @@ export interface ConversationMember {
   is_pinned: boolean;
   // Profile enrichment
   username?: string;
-  display_name?: string;
+  display_name?: string; // optional, da Mapping undefined liefern kann
   avatar_url?: string;
   is_online?: boolean;
 }
@@ -62,11 +63,24 @@ export interface Conversation {
   };
 }
 
+
+
 export function useConversations() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [errorState, setErrorState] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { success, error } = useToast();
+
+  // Optimistisches Markieren als gelesen (nur UI, kein Server)
+  const optimisticallyMarkAsRead = useCallback((conversationId: string) => {
+    setConversations(prev =>
+      prev.map(conv =>
+        conv.id === conversationId
+          ? { ...conv, unreadCount: 0, unread_count: 0 }
+          : conv
+      )
+    );
+  }, []);
 
   // Get current user ID
   useEffect(() => {
@@ -77,11 +91,10 @@ export function useConversations() {
 
   // Load all conversations
   const loadConversations = useCallback(async () => {
+    console.log('🔄 Loading conversations...');
     if (!currentUserId) return;
 
     try {
-      setLoading(true);
-
       // 1. Get conversation memberships
       const { data: memberships, error: membershipsError } = await supabase
         .from('conversation_members')
@@ -93,7 +106,6 @@ export function useConversations() {
       const conversationIds = memberships?.map(m => m.conversation_id) || [];
       if (conversationIds.length === 0) {
         setConversations([]);
-        setLoading(false);
         return;
       }
 
@@ -116,8 +128,8 @@ export function useConversations() {
 
       // 4. Get profiles for all member user_ids
       const allUserIds = Array.from(new Set(allMembers?.map(m => m.user_id) || []));
-  console.debug('User-IDs für Profile-Abfrage:', allUserIds);
-  let profiles: Profile[] = [];
+      console.debug('User-IDs für Profile-Abfrage:', allUserIds);
+      let profiles: Profile[] = [];
       if (allUserIds.length > 0) {
         const { data, error } = await supabase
           .from('profiles')
@@ -130,13 +142,23 @@ export function useConversations() {
         console.debug('Geladene Profile:', profiles);
       }
 
-  const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
+      // 4.5 Get friends
+      const { data: friendsData } = await supabase
+        .from('friendships')
+        .select('user_id, friend_id')
+        .or(`user_id.eq.${currentUserId},friend_id.eq.${currentUserId}`)
+        .eq('status', 'accepted');
+
+      const friendIds = friendsData?.map(f => f.user_id === currentUserId ? f.friend_id : f.user_id) || [];
 
       // 5. Get last message for each conversation
       const { data: lastMessages } = await supabase
         .from('messages')
         .select('conversation_id, content, sender_id, created_at, message_type')
         .in('conversation_id', conversationIds)
+        .eq('is_deleted', false)
         .order('created_at', { ascending: false });
 
       const lastMessageMap = new Map<string, {
@@ -152,58 +174,82 @@ export function useConversations() {
       });
 
       // 6. Get unread counts
+      console.log('🔢 Calculating unread counts for memberships:', memberships?.length);
+      
       const { data: unreadMessages } = await supabase
         .from('messages')
-        .select('conversation_id, created_at')
-        .in('conversation_id', conversationIds);
+        .select('conversation_id, created_at, sender_id')
+        .in('conversation_id', conversationIds)
+        .eq('is_deleted', false);
+
+      console.log('📨 Found unread messages:', unreadMessages?.length);
 
       const unreadCountMap = new Map<string, number>();
-      memberships?.forEach(membership => {
-        const count = unreadMessages?.filter(msg => 
+      memberships?.forEach((membership: { conversation_id: string; last_read_at: string | null; is_pinned: boolean }) => {
+        const count = unreadMessages?.filter((msg: { conversation_id: string; created_at: string; sender_id: string }) =>
           msg.conversation_id === membership.conversation_id &&
+          msg.sender_id !== currentUserId && // Nur eingehende Nachrichten zählen
           (!membership.last_read_at || new Date(msg.created_at) > new Date(membership.last_read_at))
         ).length || 0;
+        
+        console.log(`📊 Chat ${membership.conversation_id}: ${count} unread messages (last_read_at: ${membership.last_read_at})`);
         unreadCountMap.set(membership.conversation_id, count);
       });
 
       // 7. Enrich conversations with all data
       const enrichedConversations: Conversation[] = conversationsData?.map(conv => {
-        const convMembers = allMembers?.filter(m => m.conversation_id === conv.id) || [];
-        const currentMembership = memberships?.find(m => m.conversation_id === conv.id);
+        const convMembers = allMembers?.filter((m: ConversationMember) => m.conversation_id === conv.id) || [];
+        const currentMembership = memberships?.find((m: { conversation_id: string }) => m.conversation_id === conv.id);
         
-        const members: ConversationMember[] = convMembers.map(m => {
+        const members: ConversationMember[] = convMembers.map((m: ConversationMember) => {
           const profile = profilesMap.get(m.user_id);
           return {
             ...m,
-            display_name: profile?.full_name || profile?.username
+            display_name: profile?.full_name || profile?.username || ''
           };
         });
 
         const otherMember = members.find(m => m.user_id !== currentUserId);
 
-        return {
+        const result: Conversation & { other_user?: { id: string; full_name: string; username: string } } = {
           ...conv,
           members,
           lastMessage: lastMessageMap.get(conv.id),
           last_message: lastMessageMap.get(conv.id),
-          unreadCount: unreadCountMap.get(conv.id) || 0,
-          unread_count: unreadCountMap.get(conv.id) || 0,
           isPinned: currentMembership?.is_pinned || false,
           currentUserId: currentUserId,
-          other_user: conv.type === 'direct' && otherMember ? {
+        };
+
+        const unread = unreadCountMap.get(conv.id);
+        if (unread && unread > 0) {
+          result.unreadCount = unread;
+          result.unread_count = unread;
+        }
+
+        if (conv.type === 'direct' && otherMember) {
+          result.other_user = {
             id: otherMember.user_id,
             full_name: otherMember.display_name || 'Unknown',
             username: otherMember.username || 'unknown'
-          } : undefined
-        };
+          };
+        }
+
+        return result;
       }) || [];
 
-      setConversations(enrichedConversations);
+      // 8. Filter conversations to only show with friends
+      const filteredConversations = enrichedConversations.filter(conv => {
+        // Only direct chats with friends
+        if (conv.type === 'direct' && conv.other_user && friendIds.includes(conv.other_user.id)) return true;
+        return false;
+      });
+
+      setConversations(filteredConversations);
+      console.log('✅ Conversations loaded with unread counts:', filteredConversations.map(c => ({ id: c.id, unreadCount: c.unreadCount })));
     } catch (err) {
       console.error('Error loading conversations:', err);
+      setErrorState((err as Error)?.message || 'Fehler beim Laden der Chats');
       error('Fehler beim Laden der Chats');
-    } finally {
-      setLoading(false);
     }
   }, [currentUserId, error]);
 
@@ -217,6 +263,8 @@ export function useConversations() {
   useEffect(() => {
     if (!currentUserId) return;
 
+    console.log('🎧 Setting up realtime subscriptions for user:', currentUserId);
+
     const conversationsChannel = supabase
       .channel('conversations_changes')
       .on(
@@ -226,11 +274,14 @@ export function useConversations() {
           schema: 'public',
           table: 'conversations',
         },
-        () => {
+        (payload) => {
+          console.log('🔔 Conversation changed:', payload);
           loadConversations();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Conversations channel status:', status);
+      });
 
     const membersChannel = supabase
       .channel('conversation_members_changes')
@@ -242,11 +293,14 @@ export function useConversations() {
           table: 'conversation_members',
           filter: `user_id=eq.${currentUserId}`,
         },
-        () => {
+        (payload) => {
+          console.log('🔔 Member changed:', payload);
           loadConversations();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Members channel status:', status);
+      });
 
     const messagesChannel = supabase
       .channel('messages_changes_for_list')
@@ -257,13 +311,17 @@ export function useConversations() {
           schema: 'public',
           table: 'messages',
         },
-        () => {
+        (payload) => {
+          console.log('🔔 New message received, reloading conversations:', payload);
           loadConversations();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Messages channel status:', status);
+      });
 
     return () => {
+      console.log('🔌 Removing realtime subscriptions');
       supabase.removeChannel(conversationsChannel);
       supabase.removeChannel(membersChannel);
       supabase.removeChannel(messagesChannel);
@@ -460,11 +518,15 @@ export function useConversations() {
 
       // Update local state
       setConversations(prev =>
-        prev.map(conv =>
-          conv.id === conversationId
-            ? { ...conv, unread_count: 0 }
-            : conv
-        )
+        prev.map(conv => {
+          if (conv.id === conversationId) {
+            const newConv = { ...conv };
+            delete newConv.unreadCount;
+            delete newConv.unread_count;
+            return newConv;
+          }
+          return conv;
+        })
       );
     } catch (err) {
       console.error('Error marking as read:', err);
@@ -521,8 +583,7 @@ export function useConversations() {
 
   return {
     conversations,
-    loading,
-    error: undefined, // TODO: Add error state to hook
+    error: errorState,
     loadConversations,
     createDirectConversation,
     createGroupConversation,
@@ -530,6 +591,7 @@ export function useConversations() {
     updateConversation,
     leaveConversation,
     markAsRead,
+    optimisticallyMarkAsRead,
     refresh: loadConversations,
   };
 }
