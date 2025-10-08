@@ -30,6 +30,7 @@ dist-ssr
 # Generated markdown reports
 ISSUES_*.md
 !ISSUES.md
+!scripts/sql/ISSUES_SYSTEM.md
 
 # Project documentation (internal use only)
 CLAUDE.md
