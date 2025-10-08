@@ -31,6 +31,9 @@ dist-ssr
 ISSUES_*.md
 !ISSUES.md
 
+# Project documentation (internal use only)
+CLAUDE.md
+
 # Environment files
 .env
 .env.local
