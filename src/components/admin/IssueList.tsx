@@ -1,22 +1,25 @@
-// src/components/admin/IssueList.tsx
-// List container for issues with empty state
+// ============================================================================
+// ISSUE LIST COMPONENT - Enhanced with Assignment & Comments
+// ============================================================================
 
-import type { Issue } from '../../hooks/useIssues';
+import type { IssueWithDetails } from '../../lib/services/issues';
 import IssueCard from './IssueCard';
 
 interface IssueListProps {
-  issues: Issue[];
+  issues: IssueWithDetails[];
   searchTerm: string;
   statusFilter: string;
   priorityFilter: string;
   selectedIssueIds?: string[];
   onToggleSelect?: (issueId: string) => void;
   onSelectAll?: () => void;
-  onPriorityChange: (issueId: string, priority: Issue['priority']) => void;
-  onStatusProgress: (issueId: string, newStatus: Issue['status']) => void;
-  onCopy: (issue: Issue) => void;
-  onEdit: (issue: Issue) => void;
-  onDelete: (issue: Issue) => void;
+  onPriorityChange: (issueId: string, priority: string) => void;
+  onStatusProgress: (issueId: string, newStatus: string) => void;
+  onCopy: (issue: IssueWithDetails) => void;
+  onEdit: (issue: IssueWithDetails) => void;
+  onDelete: (issue: IssueWithDetails) => void;
+  onAssign?: (issue: IssueWithDetails) => void;
+  onViewComments?: (issue: IssueWithDetails) => void;
   formatDate: (dateString: string) => string;
   onExport?: () => void;
   onSaveMarkdown?: () => void;
@@ -37,6 +40,8 @@ export default function IssueList({
   onCopy,
   onEdit,
   onDelete,
+  onAssign,
+  onViewComments,
   formatDate,
   onExport,
   onSaveMarkdown,
@@ -52,7 +57,7 @@ export default function IssueList({
           {hasFilters ? '🔍' : '📦'}
         </div>
         <p className="issue-list__empty-text">
-          {hasFilters 
+          {hasFilters
             ? 'Keine Issues gefunden mit diesen Filtern.'
             : 'Keine Issues vorhanden.'}
         </p>
@@ -108,6 +113,8 @@ export default function IssueList({
           issue={issue}
           isSelected={selectedIssueIds.includes(issue.id)}
           {...(onToggleSelect ? { onToggleSelect } : {})}
+          {...(onAssign ? { onAssign } : {})}
+          {...(onViewComments ? { onViewComments } : {})}
           onPriorityChange={onPriorityChange}
           onStatusProgress={onStatusProgress}
           onCopy={onCopy}

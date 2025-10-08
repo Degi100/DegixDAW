@@ -1,18 +1,27 @@
-// src/pages/admin/AdminIssues.tsx
-// Issue Management Page - Refactored
+// ============================================================================
+// ADMIN ISSUES PAGE - Enhanced with Assignment, Labels, Comments, PR
+// ============================================================================
 
 import { useState } from 'react';
 import AdminLayoutCorporate from '../../components/admin/AdminLayoutCorporate';
-import { useIssues } from '../../hooks/useIssues';
+import { useIssues, type IssueWithDetails, type CreateIssueRequest, type UpdateIssueRequest } from '../../hooks/useIssues';
+import { useAuth } from '../../hooks/useAuth';
 import { Spinner } from '../../components/ui/Loading';
-import IssueModal from '../../components/admin/IssueModal';
+import IssueModalEnhanced from '../../components/admin/IssueModalEnhanced';
+import IssueCommentPanel from '../../components/admin/IssueCommentPanel';
 import IssueStatsCards from '../../components/admin/IssueStatsCards';
 import IssueFilters from '../../components/admin/IssueFilters';
 import IssueList from '../../components/admin/IssueList';
-import { useIssueActions } from '../../hooks/useIssueActions';
+import { bulkUpdateStatus, bulkUpdatePriority, bulkDeleteIssues } from '../../lib/services/issues';
+import { formatRelativeTime } from '../../lib/services/issues';
+import { useToast } from '../../hooks/useToast';
 
 export default function AdminIssues() {
-  const { loading, filterIssues, getStats, refresh, createIssue, updateIssue, deleteIssue } = useIssues();
+  const { user } = useAuth();
+  const { success, error: showError } = useToast();
+  const { issues, loading, createIssue, updateIssue, deleteIssue, assignIssue, getStats, refresh } = useIssues();
+
+  // UI State
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -20,68 +29,60 @@ export default function AdminIssues() {
   const [selectedIssueIds, setSelectedIssueIds] = useState<string[]>([]);
   const [showCompleted, setShowCompleted] = useState(false);
 
-  const {
-    modalOpen,
-    modalMode,
-    selectedIssue,
-    setModalOpen,
-    handleCreateClick,
-    handleEditClick,
-    handleDeleteClick,
-    handleModalSubmit,
-    handleCopyClick,
-    handlePriorityChange,
-    handleStatusProgress,
-    handleExportClick,
-    handleSaveMarkdown,
-  } = useIssueActions(createIssue, updateIssue, deleteIssue, getStats);
+  // Modal State
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [selectedIssue, setSelectedIssue] = useState<IssueWithDetails | null>(null);
 
-  const filteredIssues = filterIssues({
-    ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
-    ...(priorityFilter !== 'all' ? { priority: priorityFilter } : {}),
-    ...(searchTerm ? { search: searchTerm } : {}),
+  // Comment Panel State
+  const [commentPanelOpen, setCommentPanelOpen] = useState(false);
+  const [commentIssue, setCommentIssue] = useState<IssueWithDetails | null>(null);
+
+  // ============================================================================
+  // FILTERING & SORTING
+  // ============================================================================
+
+  const filteredIssues = issues.filter((issue) => {
+    if (statusFilter !== 'all' && issue.status !== statusFilter) return false;
+    if (priorityFilter !== 'all' && issue.priority !== priorityFilter) return false;
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      if (
+        !issue.title.toLowerCase().includes(search) &&
+        !issue.description?.toLowerCase().includes(search)
+      ) {
+        return false;
+      }
+    }
+    return true;
   });
 
-  // Filter completed issues if toggle is off
-  const visibleIssues = showCompleted 
-    ? filteredIssues 
-    : filteredIssues.filter(issue => issue.status !== 'done' && issue.status !== 'closed');
+  const visibleIssues = showCompleted
+    ? filteredIssues
+    : filteredIssues.filter((i) => i.status !== 'done' && i.status !== 'closed');
 
-  // Count completed issues
-  const completedCount = filteredIssues.filter(issue => issue.status === 'done' || issue.status === 'closed').length;
+  const completedCount = filteredIssues.filter((i) => i.status === 'done' || i.status === 'closed').length;
 
-  // Sort issues: DONE/CLOSED always at the bottom, then by selected sort option
+  // Sort issues
   const sortedIssues = [...visibleIssues].sort((a, b) => {
-    // First: Separate completed from active issues
     const aCompleted = a.status === 'done' || a.status === 'closed';
     const bCompleted = b.status === 'done' || b.status === 'closed';
-    
-    if (aCompleted !== bCompleted) {
-      return aCompleted ? 1 : -1; // Completed issues go to bottom
-    }
 
-    // Then: Apply selected sort option
+    if (aCompleted !== bCompleted) return aCompleted ? 1 : -1;
+
     switch (sortBy) {
       case 'date-desc':
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       case 'date-asc':
         return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       case 'priority-desc': {
-        const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
-        return priorityOrder[b.priority] - priorityOrder[a.priority];
+        const order = { critical: 4, high: 3, medium: 2, low: 1 };
+        return order[b.priority] - order[a.priority];
       }
       case 'priority-asc': {
-        const priorityOrderAsc = { critical: 4, high: 3, medium: 2, low: 1 };
-        return priorityOrderAsc[a.priority] - priorityOrderAsc[b.priority];
+        const order = { critical: 4, high: 3, medium: 2, low: 1 };
+        return order[a.priority] - order[b.priority];
       }
-      case 'status': {
-        const statusOrder = { open: 1, 'in-progress': 2, done: 3, closed: 4 };
-        return statusOrder[a.status] - statusOrder[b.status];
-      }
-      case 'title-asc':
-        return a.title.localeCompare(b.title);
-      case 'title-desc':
-        return b.title.localeCompare(a.title);
       default:
         return 0;
     }
@@ -89,26 +90,81 @@ export default function AdminIssues() {
 
   const stats = getStats();
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
+  // ============================================================================
+  // HANDLERS
+  // ============================================================================
 
-    if (diffMins < 60) return `vor ${diffMins}min`;
-    if (diffHours < 24) return `vor ${diffHours}h`;
-    if (diffDays < 7) return `vor ${diffDays}d`;
-    return date.toLocaleDateString('de-DE', { day: '2-digit', month: 'short' });
+  const handleCreateClick = () => {
+    setSelectedIssue(null);
+    setModalMode('create');
+    setModalOpen(true);
   };
 
-  // Bulk Selection Handlers
+  const handleEditClick = (issue: IssueWithDetails) => {
+    setSelectedIssue(issue);
+    setModalMode('edit');
+    setModalOpen(true);
+  };
+
+  const handleDeleteClick = async (issue: IssueWithDetails) => {
+    if (!confirm(`Issue "${issue.title}" wirklich löschen?`)) return;
+    await deleteIssue(issue.id);
+  };
+
+  const handleModalSubmit = async (data: CreateIssueRequest | UpdateIssueRequest) => {
+    if (modalMode === 'create') {
+      await createIssue(data as CreateIssueRequest);
+    } else if (selectedIssue) {
+      await updateIssue(selectedIssue.id, data);
+    }
+  };
+
+  const handlePriorityChange = async (issueId: string, priority: string) => {
+    await updateIssue(issueId, { priority: priority as any });
+  };
+
+  const handleStatusProgress = async (issueId: string, newStatus: string) => {
+    await updateIssue(issueId, { status: newStatus as any });
+  };
+
+  const handleCopyClick = (issue: IssueWithDetails) => {
+    setSelectedIssue({
+      ...issue,
+      title: `${issue.title} (Copy)`,
+      id: '',
+    } as IssueWithDetails);
+    setModalMode('create');
+    setModalOpen(true);
+  };
+
+  const handleAssignClick = async (issue: IssueWithDetails) => {
+    if (!user) return;
+
+    // If assigned to current user, unassign
+    if (issue.assigned_to_id === user.id) {
+      await assignIssue(issue.id, null);
+      success('Zuweisung aufgehoben! 🔓');
+    } else {
+      // Try to assign to current user
+      const result = await assignIssue(issue.id, user.id);
+      if (!result.success) {
+        showError(result.error || 'Fehler beim Zuweisen');
+      }
+    }
+  };
+
+  const handleViewComments = (issue: IssueWithDetails) => {
+    setCommentIssue(issue);
+    setCommentPanelOpen(true);
+  };
+
+  // ============================================================================
+  // BULK OPERATIONS
+  // ============================================================================
+
   const handleToggleSelect = (issueId: string) => {
-    setSelectedIssueIds(prev => 
-      prev.includes(issueId) 
-        ? prev.filter(id => id !== issueId)
-        : [...prev, issueId]
+    setSelectedIssueIds((prev) =>
+      prev.includes(issueId) ? prev.filter((id) => id !== issueId) : [...prev, issueId]
     );
   };
 
@@ -116,38 +172,32 @@ export default function AdminIssues() {
     if (selectedIssueIds.length === sortedIssues.length) {
       setSelectedIssueIds([]);
     } else {
-      setSelectedIssueIds(sortedIssues.map(issue => issue.id));
+      setSelectedIssueIds(sortedIssues.map((i) => i.id));
     }
   };
 
   const handleBulkDelete = async () => {
     if (!confirm(`${selectedIssueIds.length} Issues wirklich löschen?`)) return;
-    
-    for (const id of selectedIssueIds) {
-      await deleteIssue(id);
-    }
+    await bulkDeleteIssues(selectedIssueIds);
     setSelectedIssueIds([]);
+    refresh();
   };
 
   const handleBulkStatusChange = async (newStatus: string) => {
-    const validStatuses = ['open', 'in-progress', 'done', 'closed'];
-    if (!validStatuses.includes(newStatus)) return;
-
-    for (const id of selectedIssueIds) {
-      await updateIssue(id, { status: newStatus as 'open' | 'in-progress' | 'done' | 'closed' });
-    }
+    await bulkUpdateStatus(selectedIssueIds, newStatus as any);
     setSelectedIssueIds([]);
+    refresh();
   };
 
   const handleBulkPriorityChange = async (newPriority: string) => {
-    const validPriorities = ['low', 'medium', 'high', 'critical'];
-    if (!validPriorities.includes(newPriority)) return;
-
-    for (const id of selectedIssueIds) {
-      await updateIssue(id, { priority: newPriority as 'low' | 'medium' | 'high' | 'critical' });
-    }
+    await bulkUpdatePriority(selectedIssueIds, newPriority as any);
     setSelectedIssueIds([]);
+    refresh();
   };
+
+  // ============================================================================
+  // RENDER
+  // ============================================================================
 
   if (loading) {
     return (
@@ -188,14 +238,18 @@ export default function AdminIssues() {
             </div>
             <div className="bulk-actions-bar__actions">
               <select onChange={(e) => handleBulkStatusChange(e.target.value)} defaultValue="">
-                <option value="" disabled>Status ändern</option>
+                <option value="" disabled>
+                  Status ändern
+                </option>
                 <option value="open">🔵 Open</option>
-                <option value="in-progress">🟡 In Progress</option>
+                <option value="in_progress">🟡 In Progress</option>
                 <option value="done">✅ Done</option>
                 <option value="closed">⚪ Closed</option>
               </select>
               <select onChange={(e) => handleBulkPriorityChange(e.target.value)} defaultValue="">
-                <option value="" disabled>Priorität ändern</option>
+                <option value="" disabled>
+                  Priorität ändern
+                </option>
                 <option value="low">🟢 Low</option>
                 <option value="medium">🟡 Medium</option>
                 <option value="high">🔴 High</option>
@@ -221,21 +275,31 @@ export default function AdminIssues() {
           onCopy={handleCopyClick}
           onEdit={handleEditClick}
           onDelete={handleDeleteClick}
-          formatDate={formatDate}
-          onExport={() => handleExportClick(sortedIssues.filter(i => selectedIssueIds.includes(i.id)))}
-          onSaveMarkdown={() => handleSaveMarkdown(sortedIssues.filter(i => selectedIssueIds.includes(i.id)))}
+          onAssign={handleAssignClick}
+          onViewComments={handleViewComments}
+          formatDate={formatRelativeTime}
           onRefresh={refresh}
           onCreateNew={handleCreateClick}
         />
       </div>
 
-      <IssueModal
+      {/* Modal */}
+      <IssueModalEnhanced
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         onSubmit={handleModalSubmit}
         issue={selectedIssue}
         mode={modalMode}
       />
+
+      {/* Comment Panel */}
+      {commentPanelOpen && commentIssue && (
+        <IssueCommentPanel
+          issueId={commentIssue.id}
+          issueTitle={commentIssue.title}
+          onClose={() => setCommentPanelOpen(false)}
+        />
+      )}
     </AdminLayoutCorporate>
   );
 }
