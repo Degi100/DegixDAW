@@ -3,7 +3,8 @@ import { type ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useAdmin } from '../../hooks/useAdmin';
-import { canAccessFeature, getUserRole } from '../../lib/constants/featureFlags';
+import { useFeatureFlags } from '../../hooks/useFeatureFlags';
+import { canAccessFeature, getUserRole } from '../../lib/services/featureFlags';
 import PageLoader from '../ui/PageLoader';
 
 interface FeatureFlagRouteProps {
@@ -14,8 +15,9 @@ interface FeatureFlagRouteProps {
 export default function FeatureFlagRoute({ children, featureFlag }: FeatureFlagRouteProps) {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, isModerator, loading: adminLoading } = useAdmin();
+  const { features, loading: featuresLoading } = useFeatureFlags();
 
-  const isLoading = authLoading || adminLoading;
+  const isLoading = authLoading || adminLoading || featuresLoading;
 
   console.log(`%c[FeatureFlagRoute] Rendering for feature "${featureFlag}"`, 'color: #06b6d4', {
     featureFlag,
@@ -24,6 +26,7 @@ export default function FeatureFlagRoute({ children, featureFlag }: FeatureFlagR
     isModerator,
     authLoading,
     adminLoading,
+    featuresLoading,
     isLoading
   });
 
@@ -31,9 +34,12 @@ export default function FeatureFlagRoute({ children, featureFlag }: FeatureFlagR
     return <PageLoader />;
   }
 
+  // Find the feature object by ID
+  const feature = features.find(f => f.id === featureFlag);
+
   // Determine role only if user is logged in
-  const userRole = user ? getUserRole(isAdmin, isModerator) : 'public';
-  const hasAccess = canAccessFeature(featureFlag, userRole, isAdmin);
+  const userRole = user ? getUserRole(!!user, isAdmin, isModerator) : 'public';
+  const hasAccess = canAccessFeature(feature, userRole, isAdmin);
 
   console.log(`%c[FeatureFlagRoute] Access decision for "${featureFlag}"`, hasAccess ? 'color: #22c55e' : 'color: #ef4444', {
     featureFlag,
@@ -42,16 +48,18 @@ export default function FeatureFlagRoute({ children, featureFlag }: FeatureFlagR
   });
 
   if (!hasAccess) {
-    // For critical app features (dashboard, social), redirect to settings as fallback
-    // For optional features (file browser, etc.), show 404
-    const criticalFeatures = ['dashboard', 'social_features'];
-    
-    if (criticalFeatures.includes(featureFlag)) {
-      console.log(`%c[FeatureFlagRoute] Critical feature "${featureFlag}" not accessible. Redirecting to /settings`, 'color: #f97316');
-      return <Navigate to="/settings" replace />;
+    // Special handling for dashboard route (homepage)
+    if (featureFlag === 'dashboard') {
+      // If dashboard is disabled, redirect to social if available, otherwise settings
+      const socialFeature = features.find(f => f.id === 'social_features');
+      const hasSocialAccess = canAccessFeature(socialFeature, userRole, isAdmin);
+      const redirectTo = hasSocialAccess ? '/social' : '/settings';
+      console.log(`%c[FeatureFlagRoute] Dashboard not accessible. Redirecting to ${redirectTo}`, 'color: #f97316');
+      return <Navigate to={redirectTo} replace />;
     }
-    
-    // For optional features, redirect to 404 to not reveal the route exists
+
+    // For other features, redirect to 404 to not reveal the route exists
+    console.log(`%c[FeatureFlagRoute] Feature "${featureFlag}" not accessible. Redirecting to /404`, 'color: #ef4444');
     return <Navigate to="/404" replace />;
   }
 

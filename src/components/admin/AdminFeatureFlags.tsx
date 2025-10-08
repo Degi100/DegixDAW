@@ -1,119 +1,307 @@
 // ============================================
-// ADMIN FEATURE FLAGS PANEL
-// Toggle features on/off in production
+// ADMIN FEATURE FLAGS PANEL - PREMIUM EDITION
+// Enterprise-grade feature management interface
 // ============================================
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import {
-  getAllFeatures,
   toggleFeature,
   updateAllowedRoles,
-  type FeatureFlag,
-  type UserRole
+  type UserRole,
+  type FeatureFlag
 } from '../../lib/constants/featureFlags';
 import { useToast } from '../../hooks/useToast';
-import AdminLayoutCorporate from './AdminLayoutCorporate';
+import { useFeatureFlags } from '../../hooks/useFeatureFlags';
 
-export default function AdminFeatureFlags() {
-  const [features, setFeatures] = useState<FeatureFlag[]>([]);
+export default function AdminFeatureFlagsPremium() {
+  const { features, loading: isLoading } = useFeatureFlags();
   const { success } = useToast();
 
-  // Load features on initial component mount
-  useEffect(() => {
-    console.log('%c[AdminFeatureFlags] Component mounted. Getting initial features...', 'color: #8b5cf6');
-    const initialFeatures = getAllFeatures();
-    console.log('%c[AdminFeatureFlags] Received initial features:', 'color: #8b5cf6', initialFeatures);
-    setFeatures(initialFeatures);
-  }, []);
+  // UI State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'enabled' | 'disabled'>('all');
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
 
+  // Get unique categories
+  const categories = useMemo(() => {
+    const cats = new Set(features.map(f => f.category || 'general'));
+    return ['all', ...Array.from(cats).sort()];
+  }, [features]);
+
+  // Filtered features
+  const filteredFeatures = useMemo(() => {
+    return features.filter(feature => {
+      // Search filter
+      const matchesSearch = !searchQuery ||
+        feature.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        feature.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        feature.id.toLowerCase().includes(searchQuery.toLowerCase());
+
+      // Category filter
+      const matchesCategory = categoryFilter === 'all' || feature.category === categoryFilter;
+
+      // Status filter
+      const matchesStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'enabled' && feature.enabled) ||
+        (statusFilter === 'disabled' && !feature.enabled);
+
+      return matchesSearch && matchesCategory && matchesStatus;
+    });
+  }, [features, searchQuery, categoryFilter, statusFilter]);
+
+  // Statistics
+  const stats = useMemo(() => {
+    const total = features.length;
+    const enabled = features.filter(f => f.enabled).length;
+    const publicFeatures = features.filter(f => f.enabled && f.allowedRoles.includes('public')).length;
+    const adminOnly = features.filter(f => f.enabled && f.allowedRoles.length === 1 && f.allowedRoles[0] === 'admin').length;
+
+    return { total, enabled, disabled: total - enabled, publicFeatures, adminOnly };
+  }, [features]);
+
+  // Handlers
   const handleToggle = (featureId: string, currentState: boolean) => {
-    console.log(`%c[AdminFeatureFlags] handleToggle called for id: ${featureId}, current state: ${currentState}`, 'color: #ef4444');
-    // 1. Call the central function to update storage and dispatch event
     toggleFeature(featureId, !currentState);
-    // 2. Directly reload the state for this component from the source of truth
-    const updatedFeatures = getAllFeatures();
-    console.log('%c[AdminFeatureFlags] Reloaded features after toggle:', 'color: #22c55e', updatedFeatures);
-    setFeatures(updatedFeatures);
     success(`Feature ${!currentState ? 'aktiviert' : 'deaktiviert'}`);
   };
 
   const handleRoleToggle = (featureId: string, role: UserRole, currentRoles: UserRole[]) => {
-    console.log(`%c[AdminFeatureFlags] handleRoleToggle called for id: ${featureId}, role: ${role}`, 'color: #ef4444');
     const newRoles = currentRoles.includes(role)
       ? currentRoles.filter(r => r !== role)
       : [...currentRoles, role];
 
-    // 1. Call the central function
     updateAllowedRoles(featureId, newRoles);
-    // 2. Directly reload the state for this component
-    const updatedFeatures = getAllFeatures();
-    console.log('%c[AdminFeatureFlags] Reloaded features after role change:', 'color: #22c55e', updatedFeatures);
-    setFeatures(updatedFeatures);
     success(`Rolle ${role} ${newRoles.includes(role) ? 'hinzugefügt' : 'entfernt'}`);
   };
 
-  const getStatusIcon = (feature: FeatureFlag) => {
-    if (!feature.enabled) return '❌';
-    if (feature.allowedRoles.includes('public')) return '🌍';
-    if (feature.allowedRoles.includes('admin') && feature.allowedRoles.length === 1) return '🔒';
-    if (feature.allowedRoles.includes('moderator')) return '🧪';
-    return '✅';
+  // Helper functions
+  const getStatusColor = (feature: FeatureFlag): string => {
+    if (!feature.enabled) return 'red';
+    if (feature.allowedRoles.includes('public')) return 'green';
+    if (feature.allowedRoles.length === 1 && feature.allowedRoles[0] === 'admin') return 'orange';
+    return 'blue';
   };
 
-  const getStatusText = (feature: FeatureFlag) => {
-    if (!feature.enabled) return 'Deaktiviert';
-    if (feature.allowedRoles.includes('public')) return 'Öffentlich';
-    if (feature.allowedRoles.includes('admin') && feature.allowedRoles.length === 1) return 'Nur Admins';
-    if (feature.allowedRoles.includes('moderator')) return 'Moderatoren';
-    return `${feature.allowedRoles.length} Rollen`;
+  const getCategoryIcon = (category: string): string => {
+    const icons: Record<string, string> = {
+      core: '🏠',
+      chat: '💬',
+      social: '👥',
+      files: '📂',
+      cloud: '☁️',
+      admin: '⚙️',
+      general: '📦',
+    };
+    return icons[category] || '📦';
   };
 
-  const getStatusColor = (feature: FeatureFlag) => {
-    if (!feature.enabled) return '#ef4444'; // red
-    if (feature.allowedRoles.includes('public')) return '#22c55e'; // green
-    if (feature.allowedRoles.includes('admin') && feature.allowedRoles.length === 1) return '#f97316'; // orange
-    if (feature.allowedRoles.includes('moderator')) return '#3b82f6'; // blue
-    return '#8b5cf6'; // purple
-  };
+  if (isLoading) {
+    return (
+      <div className="admin-feature-flags-premium">
+        <div className="feature-flags-header">
+          <h2>🎛️ Feature Management</h2>
+          <p>Lade Features von Supabase...</p>
+        </div>
+        <div className="loading-state">
+          <div className="spinner"></div>
+          <p>Features werden geladen...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <AdminLayoutCorporate>
-      <div className="admin-feature-flags">
-        <div className="admin-section-header">
-          <h2>🎛️ Feature-Flags</h2>
-          <p>Steuere, welche Features live sind und wer sie sieht</p>
+    <div className="admin-feature-flags-premium">
+      {/* Header with Stats */}
+      <div className="feature-flags-header">
+        <div className="header-content">
+          <h2>🎛️ Feature Management</h2>
+          <p>Zentrale Verwaltung aller Feature-Flags</p>
         </div>
 
-        <div className="feature-flags-grid">
-          {features.map((feature) => (
-            <div key={feature.id} className="feature-flag-card">
-              <div className="feature-flag-header">
-                <div className="feature-flag-title">
-                  <span className="feature-icon">{getStatusIcon(feature)}</span>
-                  <h3>{feature.name}</h3>
-                </div>
-                <span
-                  className="feature-status"
-                  style={{
-                    color: `var(--color-${getStatusColor(feature)})`,
-                    background: `rgba(var(--color-${getStatusColor(feature)}-rgb), 0.1)`,
-                  }}
-                >
-                  {getStatusText(feature)}
-                </span>
+        <div className="stats-bar">
+          <div className="stat-card">
+            <span className="stat-value">{stats.total}</span>
+            <span className="stat-label">Gesamt</span>
+          </div>
+          <div className="stat-card stat-success">
+            <span className="stat-value">{stats.enabled}</span>
+            <span className="stat-label">Aktiv</span>
+          </div>
+          <div className="stat-card stat-muted">
+            <span className="stat-value">{stats.disabled}</span>
+            <span className="stat-label">Inaktiv</span>
+          </div>
+          <div className="stat-card stat-info">
+            <span className="stat-value">{stats.publicFeatures}</span>
+            <span className="stat-label">Öffentlich</span>
+          </div>
+          <div className="stat-card stat-warning">
+            <span className="stat-value">{stats.adminOnly}</span>
+            <span className="stat-label">Admin-Only</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters & Search */}
+      <div className="filters-section">
+        <div className="search-box">
+          <span className="search-icon">🔍</span>
+          <input
+            type="text"
+            placeholder="Feature suchen..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="search-input"
+          />
+          {searchQuery && (
+            <button
+              className="clear-search"
+              onClick={() => setSearchQuery('')}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
+        <div className="filter-group">
+          <label>Kategorie:</label>
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="filter-select"
+          >
+            {categories.map(cat => (
+              <option key={cat} value={cat}>
+                {cat === 'all' ? '📋 Alle' : `${getCategoryIcon(cat)} ${cat}`}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="filter-group">
+          <label>Status:</label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as any)}
+            className="filter-select"
+          >
+            <option value="all">Alle</option>
+            <option value="enabled">✅ Aktiviert</option>
+            <option value="disabled">❌ Deaktiviert</option>
+          </select>
+        </div>
+
+        <div className="view-toggle">
+          <button
+            className={`view-btn ${viewMode === 'table' ? 'active' : ''}`}
+            onClick={() => setViewMode('table')}
+            title="Tabellen-Ansicht"
+          >
+            ☰
+          </button>
+          <button
+            className={`view-btn ${viewMode === 'cards' ? 'active' : ''}`}
+            onClick={() => setViewMode('cards')}
+            title="Karten-Ansicht"
+          >
+            ▦
+          </button>
+        </div>
+      </div>
+
+      {/* Results Count */}
+      <div className="results-info">
+        Zeige {filteredFeatures.length} von {features.length} Features
+      </div>
+
+      {/* Features Table */}
+      {viewMode === 'table' ? (
+        <div className="features-table-container">
+          <table className="features-table">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th>Kategorie</th>
+                <th>Status</th>
+                <th>Zugriffsrollen</th>
+                <th>Version</th>
+                <th>Aktionen</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredFeatures.map((feature) => (
+                <tr key={feature.id} className={`feature-row ${!feature.enabled ? 'disabled' : ''}`}>
+                  <td>
+                    <div className="feature-info">
+                      <strong>{feature.name}</strong>
+                      <span className="feature-description">{feature.description}</span>
+                      <code className="feature-id">{feature.id}</code>
+                    </div>
+                  </td>
+                  <td>
+                    <span className="category-badge">
+                      {getCategoryIcon(feature.category)} {feature.category}
+                    </span>
+                  </td>
+                  <td>
+                    <label className="toggle-switch">
+                      <input
+                        type="checkbox"
+                        checked={feature.enabled}
+                        onChange={() => handleToggle(feature.id, feature.enabled)}
+                      />
+                      <span className="toggle-slider"></span>
+                    </label>
+                  </td>
+                  <td>
+                    <div className="roles-cell">
+                      {['public', 'user', 'moderator', 'admin'].map((role) => (
+                        <label key={role} className="role-checkbox-inline">
+                          <input
+                            type="checkbox"
+                            checked={feature.allowedRoles.includes(role as UserRole)}
+                            onChange={() => handleRoleToggle(feature.id, role as UserRole, feature.allowedRoles)}
+                            disabled={!feature.enabled}
+                          />
+                          <span className="role-label">{role}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </td>
+                  <td>
+                    <code className="version-badge">v{feature.version}</code>
+                  </td>
+                  <td>
+                    <span className={`status-indicator status-${getStatusColor(feature)}`}>●</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        /* Cards View */
+        <div className="features-grid">
+          {filteredFeatures.map((feature) => (
+            <div key={feature.id} className={`feature-card ${!feature.enabled ? 'disabled' : ''}`}>
+              <div className="card-header">
+                <span className="feature-icon">{getCategoryIcon(feature.category)}</span>
+                <h3>{feature.name}</h3>
+                <span className={`status-dot status-${getStatusColor(feature)}`}>●</span>
               </div>
 
-              <p className="feature-description">{feature.description}</p>
+              <p className="card-description">{feature.description}</p>
 
-              <div className="feature-meta">
-                <span className="feature-version">v{feature.version}</span>
-                <span className="feature-roles">
-                  {feature.allowedRoles.length} {feature.allowedRoles.length === 1 ? 'Rolle' : 'Rollen'}
-                </span>
+              <div className="card-meta">
+                <span className="category-tag">{feature.category}</span>
+                <code className="version">v{feature.version}</code>
               </div>
 
-              <div className="feature-controls">
-                <label className="feature-toggle">
+              <div className="card-controls">
+                <label className="toggle-switch">
                   <input
                     type="checkbox"
                     checked={feature.enabled}
@@ -121,66 +309,40 @@ export default function AdminFeatureFlags() {
                   />
                   <span className="toggle-slider"></span>
                   <span className="toggle-label">
-                    {feature.enabled ? '✅ Aktiviert' : '❌ Deaktiviert'}
+                    {feature.enabled ? 'Aktiviert' : 'Deaktiviert'}
                   </span>
                 </label>
 
                 {feature.enabled && (
-                  <div className="role-checkboxes">
+                  <div className="roles-section">
                     <h4>Zugriff für:</h4>
-                    <label className="role-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={feature.allowedRoles.includes('public')}
-                        onChange={() => handleRoleToggle(feature.id, 'public', feature.allowedRoles)}
-                      />
-                      <span className="role-icon">🌍</span>
-                      <span>Öffentlich (alle Besucher)</span>
-                    </label>
-                    <label className="role-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={feature.allowedRoles.includes('user')}
-                        onChange={() => handleRoleToggle(feature.id, 'user', feature.allowedRoles)}
-                      />
-                      <span className="role-icon">👤</span>
-                      <span>User (angemeldet)</span>
-                    </label>
-                    <label className="role-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={feature.allowedRoles.includes('moderator')}
-                        onChange={() => handleRoleToggle(feature.id, 'moderator', feature.allowedRoles)}
-                      />
-                      <span className="role-icon">🧪</span>
-                      <span>Moderatoren (Beta-Tester)</span>
-                    </label>
-                    <label className="role-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={feature.allowedRoles.includes('admin')}
-                        onChange={() => handleRoleToggle(feature.id, 'admin', feature.allowedRoles)}
-                      />
-                      <span className="role-icon">🔒</span>
-                      <span>Admins (nur du)</span>
-                    </label>
+                    <div className="roles-grid">
+                      {['public', 'user', 'moderator', 'admin'].map((role) => (
+                        <label key={role} className="role-checkbox">
+                          <input
+                            type="checkbox"
+                            checked={feature.allowedRoles.includes(role as UserRole)}
+                            onChange={() => handleRoleToggle(feature.id, role as UserRole, feature.allowedRoles)}
+                          />
+                          <span>{role}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
             </div>
           ))}
         </div>
+      )}
 
-        <div className="admin-info-box">
-          <h4>ℹ️ Info</h4>
-          <ul>
-            <li><strong>🌍 Öffentlich:</strong> Alle Besucher sehen das Feature (auch ohne Login)</li>
-            <li><strong>👤 User:</strong> Nur angemeldete User</li>
-            <li><strong>🧪 Moderatoren:</strong> Beta-Tester & Moderatoren (für Pre-Release Testing)</li>
-            <li><strong>🔒 Admins:</strong> Nur Administratoren</li>
-          </ul>
+      {filteredFeatures.length === 0 && (
+        <div className="empty-state">
+          <span className="empty-icon">🔍</span>
+          <h3>Keine Features gefunden</h3>
+          <p>Versuche andere Filter oder Suchbegriffe</p>
         </div>
-      </div>
-    </AdminLayoutCorporate>
+      )}
+    </div>
   );
 }

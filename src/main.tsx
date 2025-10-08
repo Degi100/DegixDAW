@@ -44,6 +44,7 @@ const FileBrowserPage = lazy(() => import('./pages/files/FileBrowserPage'));
 
 // Admin Components
 import AdminRoute from './components/admin/AdminRoute';
+import AdminLayoutCorporate from './components/admin/AdminLayoutCorporate';
 
 const AdminDashboardCorporate = lazy(() => import('./pages/admin/AdminDashboardCorporate'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
@@ -171,7 +172,9 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<PageLoader />}>
         <AdminRoute>
-          <AdminFeatureFlags />
+          <AdminLayoutCorporate>
+            <AdminFeatureFlags />
+          </AdminLayoutCorporate>
         </AdminRoute>
       </Suspense>
     )
