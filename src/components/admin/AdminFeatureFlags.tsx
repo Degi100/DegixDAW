@@ -6,12 +6,11 @@
 import { useState, useMemo } from 'react';
 import {
   toggleFeature,
-  updateAllowedRoles,
-  type UserRole,
   type FeatureFlag
 } from '../../lib/constants/featureFlags';
 import { useToast } from '../../hooks/useToast';
 import { useFeatureFlags } from '../../hooks/useFeatureFlags';
+import FeatureFlagEditor from './FeatureFlagEditor';
 
 export default function AdminFeatureFlagsPremium() {
   const { features, loading: isLoading } = useFeatureFlags();
@@ -65,15 +64,6 @@ export default function AdminFeatureFlagsPremium() {
   const handleToggle = (featureId: string, currentState: boolean) => {
     toggleFeature(featureId, !currentState);
     success(`Feature ${!currentState ? 'aktiviert' : 'deaktiviert'}`);
-  };
-
-  const handleRoleToggle = (featureId: string, role: UserRole, currentRoles: UserRole[]) => {
-    const newRoles = currentRoles.includes(role)
-      ? currentRoles.filter(r => r !== role)
-      : [...currentRoles, role];
-
-    updateAllowedRoles(featureId, newRoles);
-    success(`Rolle ${role} ${newRoles.includes(role) ? 'hinzugefügt' : 'entfernt'}`);
   };
 
   // Helper functions
@@ -257,19 +247,7 @@ export default function AdminFeatureFlagsPremium() {
                     </label>
                   </td>
                   <td>
-                    <div className="roles-cell">
-                      {['public', 'user', 'moderator', 'admin'].map((role) => (
-                        <label key={role} className="role-checkbox-inline">
-                          <input
-                            type="checkbox"
-                            checked={feature.allowedRoles.includes(role as UserRole)}
-                            onChange={() => handleRoleToggle(feature.id, role as UserRole, feature.allowedRoles)}
-                            disabled={!feature.enabled}
-                          />
-                          <span className="role-label">{role}</span>
-                        </label>
-                      ))}
-                    </div>
+                    <FeatureFlagEditor feature={feature} />
                   </td>
                   <td>
                     <code className="version-badge">v{feature.version}</code>
@@ -316,18 +294,7 @@ export default function AdminFeatureFlagsPremium() {
                 {feature.enabled && (
                   <div className="roles-section">
                     <h4>Zugriff für:</h4>
-                    <div className="roles-grid">
-                      {['public', 'user', 'moderator', 'admin'].map((role) => (
-                        <label key={role} className="role-checkbox">
-                          <input
-                            type="checkbox"
-                            checked={feature.allowedRoles.includes(role as UserRole)}
-                            onChange={() => handleRoleToggle(feature.id, role as UserRole, feature.allowedRoles)}
-                          />
-                          <span>{role}</span>
-                        </label>
-                      ))}
-                    </div>
+                    <FeatureFlagEditor feature={feature} />
                   </div>
                 )}
               </div>

@@ -156,7 +156,7 @@ export function updateAllowedRoles(featureId: string, roles: UserRole[]): void {
     .then(({ data, error }) => {
       if (error) {
         console.error(`[FeatureFlags] Failed to update roles for ${featureId}:`, error);
-        // TODO: Rollback optimistic update
+        // Rollback will happen via Realtime subscription
         return;
       }
 
@@ -169,6 +169,53 @@ export function updateAllowedRoles(featureId: string, roles: UserRole[]): void {
 
   // Dispatch event for listeners (backward compatibility)
   window.dispatchEvent(new Event('featureFlagsChanged'));
+}
+
+/**
+ * Update allowed roles for a feature (async version, recommended)
+ * @param featureId - Feature ID to update
+ * @param roles - New allowed roles
+ * @returns Promise with updated feature or error
+ */
+export async function updateAllowedRolesAsync(featureId: string, roles: UserRole[]): Promise<{ data: FeatureFlag | null; error: Error | null }> {
+  console.log(`%c[FeatureFlags] Updating roles for ${featureId}:`, 'color: #3b82f6', roles);
+
+  // Update optimistically in cache
+  const previousRoles = featureFlagsCache[featureId]?.allowedRoles || [];
+  if (featureFlagsCache[featureId]) {
+    featureFlagsCache[featureId] = {
+      ...featureFlagsCache[featureId],
+      allowedRoles: roles,
+    };
+  }
+
+  // Update in Supabase
+  const { data, error } = await updateRolesInService(featureId, roles);
+
+  if (error) {
+    console.error(`%c[FeatureFlags] Failed to update roles for ${featureId}:`, 'color: #ef4444', error);
+
+    // Rollback optimistic update on error
+    if (featureFlagsCache[featureId]) {
+      featureFlagsCache[featureId] = {
+        ...featureFlagsCache[featureId],
+        allowedRoles: previousRoles,
+      };
+    }
+
+    return { data: null, error };
+  }
+
+  if (data) {
+    // Update cache with server response
+    featureFlagsCache[featureId] = data;
+    console.log(`%c[FeatureFlags] Successfully updated roles for ${featureId}`, 'color: #22c55e', data.allowedRoles);
+
+    // Dispatch event for listeners
+    window.dispatchEvent(new Event('featureFlagsChanged'));
+  }
+
+  return { data, error: null };
 }
 
 /**

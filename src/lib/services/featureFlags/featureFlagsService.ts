@@ -65,9 +65,6 @@ export async function updateFeatureFlag(
   updates: FeatureFlagUpdate
 ): Promise<ServiceResponse<FeatureFlag>> {
   try {
-    // Get current user for audit trail
-    const { data: { user } } = await supabase.auth.getUser();
-
     // Prepare update payload (snake_case for DB)
     const updatePayload: Partial<FeatureFlagDB> = {};
 
@@ -78,10 +75,11 @@ export async function updateFeatureFlag(
     if (updates.version !== undefined) updatePayload.version = updates.version;
     if (updates.category !== undefined) updatePayload.category = updates.category;
 
-    // Add audit info
-    if (user) {
-      updatePayload.updated_by = user.id;
-    }
+    // Note: updated_by wird durch DB Trigger automatisch gesetzt
+    // Wir setzen es nicht manuell um "permission denied for table users" zu vermeiden
+
+    console.log(`%c[FeatureFlagsService] Sending update to Supabase:`, 'color: #f59e0b');
+    console.log('  Payload:', updatePayload);
 
     // Update in database
     const { data, error } = await supabase
@@ -90,6 +88,10 @@ export async function updateFeatureFlag(
       .eq('id', featureId)
       .select()
       .single();
+
+    console.log(`%c[FeatureFlagsService] Supabase response:`, 'color: #f59e0b');
+    console.log('  Data:', data);
+    console.log('  Error:', error);
 
     if (error) throw error;
 
@@ -121,7 +123,20 @@ export async function updateFeatureRoles(
   featureId: string,
   roles: UserRole[]
 ): Promise<ServiceResponse<FeatureFlag>> {
-  return updateFeatureFlag(featureId, { allowedRoles: roles });
+  console.log(`%c[FeatureFlagsService] updateFeatureRoles called:`, 'color: #8b5cf6; font-weight: bold');
+  console.log('  Feature ID:', featureId);
+  console.log('  New Roles:', roles);
+
+  const result = await updateFeatureFlag(featureId, { allowedRoles: roles });
+
+  console.log(`%c[FeatureFlagsService] updateFeatureRoles result:`, 'color: #8b5cf6; font-weight: bold');
+  console.log('  Success:', !!result.data);
+  console.log('  Error:', result.error?.message || 'none');
+  if (result.data) {
+    console.log('  Saved Roles:', result.data.allowedRoles);
+  }
+
+  return result;
 }
 
 /**
@@ -192,11 +207,8 @@ export async function createFeatureFlag(
   feature: Omit<FeatureFlag, 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>
 ): Promise<ServiceResponse<FeatureFlag>> {
   try {
-    // Get current user for audit trail
-    const { data: { user } } = await supabase.auth.getUser();
-
     // Prepare insert payload (snake_case for DB)
-    const insertPayload: Omit<FeatureFlagDB, 'created_at' | 'updated_at'> = {
+    const insertPayload: Omit<FeatureFlagDB, 'created_at' | 'updated_at' | 'created_by' | 'updated_by'> = {
       id: feature.id,
       name: feature.name,
       description: feature.description,
@@ -204,8 +216,6 @@ export async function createFeatureFlag(
       allowed_roles: feature.allowedRoles,
       version: feature.version,
       category: feature.category,
-      created_by: user?.id || null,
-      updated_by: user?.id || null,
     };
 
     // Insert into database
