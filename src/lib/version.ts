@@ -19,6 +19,30 @@ export interface VersionInfo {
 
 export const VERSION_HISTORY: VersionInfo[] = [
   {
+    version: "0.1.3",
+    date: "2025-10-08",
+    type: "patch",
+    changes: {
+      added: [
+        "Feature-Flags System - Supabase Backend mit Realtime-Updates und Multi-Role Support",
+        "Admin Feature-Management UI - Vollständige Verwaltung unter /admin/features",
+        "Chat Badge-System - Ungelesen-Anzeige mit Auto-Mark-as-Read",
+        "File-Upload & File-Browser - Datei-Management in Chat integriert"
+      ],
+      fixed: [
+        "TypeScript Test-Fehler - isExistingConversation Property behoben",
+        "Chat-Sidebar Performance - Hook-Refactoring, Scroll-Optimierung",
+        "Feature-Flag Navigation-Bug - Korrekte Feature-Ladung",
+        "Realtime Message-Sync - Keine doppelten Subscriptions mehr"
+      ],
+      changed: [
+        "CLAUDE.md Dokumentation aktualisiert - Feature-Flags, Git Workflow",
+        "Chat-Architektur - Extraction in Custom Hooks (useConversationMessages, useChatCoordination)",
+        ".gitignore erweitert - CLAUDE.md als private Projektdokumentation"
+      ]
+    }
+  },
+  {
     version: "0.1.2",
     date: "2025-10-05",
     type: "patch",

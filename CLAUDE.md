@@ -52,11 +52,14 @@ Siehe `scripts/db/README.md` und `scripts/sql/README.md` für detaillierte Daten
    - Moderator: Via `user_metadata.is_moderator` Flag
    - Geschützt via `AdminRoute`-Komponente ([src/components/admin/AdminRoute.tsx](src/components/admin/AdminRoute.tsx))
 
-2. **Feature Flags** ([src/lib/constants/featureFlags.ts](src/lib/constants/featureFlags.ts)):
+2. **Feature Flags** ([src/lib/services/featureFlags/](src/lib/services/featureFlags/)):
+   - **Supabase Backend** mit Realtime-Updates (seit v1.0.0)
    - Rollenbasierter Zugriff: `public`, `user`, `moderator`, `admin`
-   - Feature-Toggles gespeichert in localStorage
+   - Service Layer: `featureFlagsService.ts` (CRUD), `helpers.ts` (Utilities), `types.ts`
+   - Legacy Adapter: [src/lib/constants/featureFlags.ts](src/lib/constants/featureFlags.ts) für Backward Compatibility
+   - React Hook: `useFeatureFlags()` ([src/hooks/useFeatureFlags.ts](src/hooks/useFeatureFlags.ts))
    - Geschützt via `FeatureFlagRoute`-Komponente ([src/components/auth/FeatureFlagRoute.tsx](src/components/auth/FeatureFlagRoute.tsx))
-   - Admin kann Flags unter `/admin/features` verwalten
+   - Admin kann Flags unter `/admin/features` verwalten (Premium UI mit Pending Changes Pattern)
 
 **Wichtige Konzepte:**
 - Neue User benötigen IMMER Onboarding (Benutzernamen-Auswahl) nach der Registrierung
@@ -181,22 +184,42 @@ const { isAdmin, isSuperAdmin, isModerator, adminLevel } = useAdmin();
 
 ### Arbeiten mit Feature-Flags
 
+**Feature-Flags laden und überwachen:**
+```typescript
+import { useFeatureFlags } from './hooks/useFeatureFlags';
+
+const { features, loading, error, refresh } = useFeatureFlags();
+// features = Array von FeatureFlag-Objekten mit Realtime-Updates
+```
+
 **Zugriff prüfen:**
 ```typescript
 import { canAccessFeature, getUserRole } from './lib/constants/featureFlags';
 
+const { features } = useFeatureFlags();
 const { isAdmin, isModerator } = useAdmin();
-const userRole = getUserRole(isAdmin, isModerator);
-const hasAccess = canAccessFeature('feature_id', userRole, isAdmin);
+const userRole = getUserRole(!!user, isAdmin, isModerator);
+
+const feature = features.find(f => f.id === 'feature_id');
+const hasAccess = canAccessFeature(feature, userRole, isAdmin);
 ```
 
 **Feature togglen (nur Admin):**
 ```typescript
-import { toggleFeature, updateAllowedRoles } from './lib/constants/featureFlags';
+// Legacy API (synchron mit optimistic updates)
+import { toggleFeature, updateAllowedRolesAsync } from './lib/constants/featureFlags';
 
 toggleFeature('feature_id', true);
-updateAllowedRoles('feature_id', ['user', 'admin']);
+
+// Async API (empfohlen für neue Code)
+const { data, error } = await updateAllowedRolesAsync('feature_id', ['user', 'admin']);
 ```
+
+**Wichtige Hinweise:**
+- Feature-Flags werden in Supabase gespeichert (Tabelle: `feature_flags`)
+- Realtime-Updates via Supabase Subscriptions
+- Admin-UI unter `/admin/features` nutzt Pending Changes Pattern (explizites Speichern)
+- RLS Policy nutzt `auth.jwt() -> 'user_metadata' ->> 'is_admin'` für Permission-Checks
 
 ### Arbeiten mit Chat
 
@@ -245,28 +268,51 @@ npm test                 # Alle Tests ausführen
 npm test -- --watch      # Watch-Modus
 ```
 
+## Git Workflow & Deployment
+
+**WICHTIG: Immer vor Push den Build testen!**
+```bash
+npm run build            # TypeScript-Check + Production-Build
+```
+
+**Branch-Strategie:**
+- `main`: Production-Branch (deployed zu Netlify)
+- `develop`: Integration-Branch für Features
+- `feature/*`: Feature-Branches
+
+**Vor jedem Merge zu `main`:**
+1. `npm run build` ausführen (TypeScript-Errors blocken Netlify Build!)
+2. Alle TypeScript-Errors fixen
+3. Commit + Push zu Feature-Branch
+4. Merge zu `develop`
+5. Test auf `develop`
+6. Merge zu `main` → Netlify Auto-Deploy
+
+**Netlify Build Config:**
+- Build Command: `npm run build`
+- Publish Directory: `dist`
+- Environment Variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+
 ## Häufige Probleme
 
 **Port bereits in Verwendung:**
-Vite läuft auf Port 5173 mit `strictPort: true`. Falls Port belegt ist, beende den Prozess oder ändere den Port in [vite.config.ts](vite.config.ts).
+Vite läuft auf Port 5173 mit `strictPort: true`. Standard-Start: `npm run dev`. Wenn Port belegt, Prozess beenden oder Port in [vite.config.ts](vite.config.ts) ändern (nur für andere Entwickler).
 
 **Admin-Zugriff funktioniert nicht:**
 Überprüfe, ob `VITE_SUPER_ADMIN_EMAIL` exakt mit der E-Mail deines Users übereinstimmt. Reguläre Admins benötigen `is_admin: true` in ihren User-Metadaten.
 
-**Feature-Flag wird nicht angewendet:**
-Feature-Flags werden in localStorage mit dem Key `app_feature_flags` gespeichert. Lösche localStorage oder nutze das Admin-Panel unter `/admin/features` zum Zurücksetzen.
+**Supabase Realtime-Verbindung trennt:**
+Falls Feature-Flags oder Chat-Updates nicht ankommen:
+1. Browser Console prüfen auf `[FeatureFlagsService]` oder `[Realtime]` Fehler
+2. Supabase Dashboard → Settings → API → Realtime aktiviert?
+3. RLS Policies in `feature_flags` und `messages` Tabellen korrekt?
+4. Network Tab prüfen: WebSocket-Verbindung zu Supabase aktiv?
 
-**Onboarding-Schleife:**
-Falls in Onboarding-Schleife gefangen, prüfe:
-1. Profil existiert in `profiles`-Tabelle mit gültigem Benutzernamen
-2. `user_metadata.needs_username_onboarding` ist `false`
-3. Browser-Cache/localStorage löschen
-
-**Ungelesen-Count wird nicht aktualisiert:**
-Ungelesen-Counts hängen ab von:
-1. `conversation_members.last_read_at` Zeitstempel
-2. Nachrichten mit `created_at > last_read_at` UND `sender_id != current_user`
-3. Rufe `markAsRead()` auf, um Zeitstempel zu aktualisieren
+**TypeScript Build-Fehler:**
+`npm run build` schlägt fehl? Prüfe:
+1. `npm run lint` für ESLint-Errors
+2. IDE zeigt TypeScript-Fehler inline
+3. `tsconfig.json` Strict-Mode-Einstellungen
 
 ## Dokumentation
 
