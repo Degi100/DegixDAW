@@ -149,8 +149,8 @@ export async function createAssignmentComment(
     comment: comment || defaultComment,
     action_type: 'assignment',
     metadata: {
-      old_assignee: oldAssignee || undefined,
-      new_assignee: newAssignee || undefined,
+      ...(oldAssignee && { old_assignee: oldAssignee }),
+      ...(newAssignee && { new_assignee: newAssignee }),
     },
   });
 }

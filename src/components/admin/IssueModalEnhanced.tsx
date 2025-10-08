@@ -94,13 +94,13 @@ export default function IssueModalEnhanced({
 
     setLoading(true);
     try {
-      const submitData: CreateIssueRequest | UpdateIssueRequest = {
+      const submitData: any = {
         title: formData.title.trim(),
-        description: formData.description.trim() || undefined,
+        ...(formData.description.trim() && { description: formData.description.trim() }),
         priority: formData.priority,
-        category: formData.category || undefined,
-        labels: formData.labels.length > 0 ? formData.labels as any : undefined,
-        metadata: formData.pr_url ? { pr_url: formData.pr_url } : undefined,
+        ...(formData.category && { category: formData.category }),
+        ...(formData.labels.length > 0 && { labels: formData.labels }),
+        ...(formData.pr_url && { metadata: { pr_url: formData.pr_url } }),
       };
 
       await onSubmit(submitData);
@@ -192,8 +192,8 @@ export default function IssueModalEnhanced({
               >
                 <option value="">Keine Kategorie</option>
                 {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    📁 {cat}
+                  <option key={String(cat)} value={String(cat)}>
+                    📁 {String(cat)}
                   </option>
                 ))}
               </select>

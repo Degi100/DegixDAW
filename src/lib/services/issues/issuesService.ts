@@ -127,7 +127,7 @@ export async function assignIssue(
       if (error) throw error;
 
       return {
-        data: { success: true, assigned_to: undefined },
+        data: { success: true },
         error: null,
       };
     }

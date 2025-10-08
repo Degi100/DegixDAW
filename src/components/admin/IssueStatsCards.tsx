@@ -1,16 +1,16 @@
-// src/components/admin/IssueStatsCards.tsx
-// Stats cards for Issue Management
+// ============================================================================
+// ISSUE STATS CARDS - Updated for new IssueStats type
+// ============================================================================
+
+import type { IssueStats } from '../../lib/services/issues';
 
 interface IssueStatsCardsProps {
-  stats: {
-    open: number;
-    inProgress: number;
-    done: number;
-    urgentCount: number;
-  };
+  stats: IssueStats;
 }
 
 export default function IssueStatsCards({ stats }: IssueStatsCardsProps) {
+  const urgentCount = stats.by_priority.critical + stats.by_priority.high;
+
   return (
     <div className="issue-stats">
       <div className="issue-stats__card issue-stats__card--open">
@@ -23,7 +23,7 @@ export default function IssueStatsCards({ stats }: IssueStatsCardsProps) {
       <div className="issue-stats__card issue-stats__card--in-progress">
         <div className="issue-stats__icon">🟡</div>
         <div className="issue-stats__content">
-          <div className="issue-stats__value">{stats.inProgress}</div>
+          <div className="issue-stats__value">{stats.in_progress}</div>
           <div className="issue-stats__label">In Progress</div>
         </div>
       </div>
@@ -34,11 +34,11 @@ export default function IssueStatsCards({ stats }: IssueStatsCardsProps) {
           <div className="issue-stats__label">Done</div>
         </div>
       </div>
-      {stats.urgentCount > 0 && (
+      {urgentCount > 0 && (
         <div className="issue-stats__card issue-stats__card--urgent">
           <div className="issue-stats__icon">🚨</div>
           <div className="issue-stats__content">
-            <div className="issue-stats__value">{stats.urgentCount}</div>
+            <div className="issue-stats__value">{urgentCount}</div>
             <div className="issue-stats__label">Urgent</div>
           </div>
         </div>

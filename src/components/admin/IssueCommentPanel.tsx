@@ -2,7 +2,7 @@
 // ISSUE COMMENT PANEL - Sidebar for viewing/adding comments
 // ============================================================================
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useIssueComments, type IssueCommentWithUser } from '../../hooks/useIssueComments';
 import { useAuth } from '../../hooks/useAuth';
 import { formatRelativeTime } from '../../lib/services/issues';
