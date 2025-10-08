@@ -48,11 +48,16 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 BEGIN
-  -- Only admins can call this function
+  -- Check if user is admin (via profile role OR user_metadata OR super admin email)
   IF NOT EXISTS (
-    SELECT 1 FROM profiles
-    WHERE id = auth.uid()
-    AND role = 'admin'
+    SELECT 1 FROM profiles p
+    INNER JOIN auth.users au ON p.id = au.id
+    WHERE p.id = auth.uid()
+    AND (
+      p.role = 'admin'
+      OR (au.raw_user_meta_data->>'is_admin')::boolean = true
+      OR au.email = current_setting('app.super_admin_email', true)
+    )
   ) THEN
     RAISE EXCEPTION 'Access denied: Admin role required';
   END IF;
@@ -101,7 +106,11 @@ USING (
     AND role = 'admin'
   )
   -- AND target user is not the super admin (protected by email)
-  AND email != (SELECT current_setting('app.super_admin_email', true))
+  AND NOT EXISTS (
+    SELECT 1 FROM auth.users
+    WHERE id = profiles.id
+    AND email = current_setting('app.super_admin_email', true)
+  )
 )
 WITH CHECK (
   -- Same conditions as USING clause
@@ -110,7 +119,11 @@ WITH CHECK (
     WHERE id = auth.uid()
     AND role = 'admin'
   )
-  AND email != (SELECT current_setting('app.super_admin_email', true))
+  AND NOT EXISTS (
+    SELECT 1 FROM auth.users
+    WHERE id = profiles.id
+    AND email = current_setting('app.super_admin_email', true)
+  )
 );
 
 -- =====================================================
@@ -189,12 +202,18 @@ SECURITY DEFINER
 AS $$
 DECLARE
   super_admin_email text;
+  user_email text;
 BEGIN
   -- Get super admin email from app settings
   super_admin_email := current_setting('app.super_admin_email', true);
 
+  -- Get user's email from auth.users
+  SELECT email INTO user_email
+  FROM auth.users
+  WHERE id = NEW.id;
+
   -- If this is the super admin, prevent role changes
-  IF NEW.email = super_admin_email AND NEW.role != 'admin' THEN
+  IF user_email = super_admin_email AND NEW.role != 'admin' THEN
     RAISE EXCEPTION 'Cannot change super admin role';
   END IF;
 
