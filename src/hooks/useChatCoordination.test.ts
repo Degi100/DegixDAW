@@ -22,8 +22,8 @@ jest.mock('../lib/supabase', () => ({
 describe('useChatCoordination', () => {
   const mockProps = {
     allChats: [
-      { id: 'c1', unreadCount: 5, name: 'Chat 1' },
-      { id: 'c2', unreadCount: 0, name: 'Chat 2' }
+      { id: 'c1', unreadCount: 5, name: 'Chat 1', isExistingConversation: true },
+      { id: 'c2', unreadCount: 0, name: 'Chat 2', isExistingConversation: true }
     ],
     expandedChatId: null,
     setExpandedChatId: jest.fn(),
