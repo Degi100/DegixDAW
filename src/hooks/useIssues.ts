@@ -109,7 +109,8 @@ export function useIssues() {
         if (createError) throw createError;
 
         success('Issue erfolgreich erstellt! 🎉');
-        // Realtime subscription will handle UI update
+        // Manually refresh since Realtime might not trigger immediately
+        await loadIssues();
         return { success: true, data };
       } catch (err) {
         const errorMessage =
@@ -118,7 +119,7 @@ export function useIssues() {
         return { success: false, error: errorMessage };
       }
     },
-    [success, showError]
+    [success, showError, loadIssues]
   );
 
   const updateIssue = useCallback(
@@ -131,7 +132,8 @@ export function useIssues() {
 
         if (updateError) throw updateError;
 
-        // Realtime subscription will handle UI update
+        // Manually refresh since Realtime might not trigger immediately
+        await loadIssues();
         return { success: true, data };
       } catch (err) {
         const errorMessage =
@@ -140,7 +142,7 @@ export function useIssues() {
         return { success: false, error: errorMessage };
       }
     },
-    [showError]
+    [showError, loadIssues]
   );
 
   const deleteIssue = useCallback(
@@ -186,7 +188,8 @@ export function useIssues() {
         success(
           userId ? 'Issue zugewiesen! 🔒' : 'Zuweisung aufgehoben! 🔓'
         );
-        // Realtime subscription will handle UI update
+        // Manually refresh since Realtime might not trigger immediately
+        await loadIssues();
         return { success: true, data };
       } catch (err) {
         const errorMessage =
@@ -195,7 +198,7 @@ export function useIssues() {
         return { success: false, error: errorMessage };
       }
     },
-    [success, showError]
+    [success, showError, loadIssues]
   );
 
   // ============================================================================

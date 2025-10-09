@@ -192,8 +192,8 @@ export default function IssueModalEnhanced({
               >
                 <option value="">Keine Kategorie</option>
                 {categories.map((cat) => (
-                  <option key={String(cat)} value={String(cat)}>
-                    📁 {String(cat)}
+                  <option key={cat.id} value={cat.name}>
+                    {cat.emoji} {cat.name}
                   </option>
                 ))}
               </select>

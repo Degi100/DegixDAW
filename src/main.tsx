@@ -121,7 +121,7 @@ const router = createBrowserRouter([
     path: '/admin',
     element: (
       <Suspense fallback={<PageLoader />}>
-        <AdminRoute>
+        <AdminRoute requiredRoute="dashboard">
           <AdminDashboardCorporate />
         </AdminRoute>
       </Suspense>
@@ -131,7 +131,7 @@ const router = createBrowserRouter([
     path: '/admin/users',
     element: (
       <Suspense fallback={<PageLoader />}>
-        <AdminRoute>
+        <AdminRoute requiredRoute="users">
           <AdminUsers />
         </AdminRoute>
       </Suspense>
@@ -141,7 +141,7 @@ const router = createBrowserRouter([
     path: '/admin/issues',
     element: (
       <Suspense fallback={<PageLoader />}>
-        <AdminRoute>
+        <AdminRoute requiredRoute="issues">
           <AdminIssues />
         </AdminRoute>
       </Suspense>
@@ -151,7 +151,7 @@ const router = createBrowserRouter([
     path: '/admin/settings',
     element: (
       <Suspense fallback={<PageLoader />}>
-        <AdminRoute>
+        <AdminRoute requiredRoute="settings">
           <AdminSettings />
         </AdminRoute>
       </Suspense>
@@ -161,7 +161,7 @@ const router = createBrowserRouter([
     path: '/admin/settings/versions',
     element: (
       <Suspense fallback={<PageLoader />}>
-        <AdminRoute>
+        <AdminRoute requiredRoute="versions">
           <VersionsManagement />
         </AdminRoute>
       </Suspense>
@@ -171,7 +171,7 @@ const router = createBrowserRouter([
     path: '/admin/features',
     element: (
       <Suspense fallback={<PageLoader />}>
-        <AdminRoute>
+        <AdminRoute requiredRoute="features">
           <AdminLayoutCorporate>
             <AdminFeatureFlags />
           </AdminLayoutCorporate>

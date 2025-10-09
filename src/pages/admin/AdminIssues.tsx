@@ -229,6 +229,17 @@ export default function AdminIssues() {
           stats={stats}
         />
 
+        {/* New Issue Button - Always visible */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+          <button
+            onClick={handleCreateClick}
+            className="btn btn--primary"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            ➕ New Issue
+          </button>
+        </div>
+
         {/* Bulk Actions Bar */}
         {selectedIssueIds.length > 0 && (
           <div className="bulk-actions-bar">
@@ -279,7 +290,6 @@ export default function AdminIssues() {
           onViewComments={handleViewComments}
           formatDate={formatRelativeTime}
           onRefresh={refresh}
-          onCreateNew={handleCreateClick}
         />
       </div>
 

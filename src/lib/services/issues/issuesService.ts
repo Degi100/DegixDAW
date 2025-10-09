@@ -237,7 +237,9 @@ export function subscribeToIssues(
         callback(payload as any);
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      console.log('[IssuesService] Subscription status:', status);
+    });
 
   return subscription;
 }
