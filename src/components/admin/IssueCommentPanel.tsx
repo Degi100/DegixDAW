@@ -3,9 +3,10 @@
 // ============================================================================
 
 import { useState } from 'react';
-import { useIssueComments, type IssueCommentWithUser } from '../../hooks/useIssueComments';
+import { useIssueComments } from '../../hooks/useIssueComments';
 import { useAuth } from '../../hooks/useAuth';
 import { formatRelativeTime } from '../../lib/services/issues';
+import type { IssueCommentWithUser } from '../../hooks/useIssueComments';
 
 interface IssueCommentPanelProps {
   issueId: string;
@@ -22,6 +23,7 @@ export default function IssueCommentPanel({
   const { comments, loading, addComment, removeComment } = useIssueComments(issueId);
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,9 +42,18 @@ export default function IssueCommentPanel({
     setSubmitting(false);
   };
 
-  const handleDelete = async (commentId: string) => {
-    if (!confirm('Kommentar wirklich löschen?')) return;
-    await removeComment(commentId);
+  const handleDeleteClick = (commentId: string) => {
+    setDeleteConfirm(commentId);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm) return;
+    await removeComment(deleteConfirm);
+    setDeleteConfirm(null);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirm(null);
   };
 
   const getActionIcon = (actionType: string | null) => {
@@ -59,9 +70,14 @@ export default function IssueCommentPanel({
   };
 
   return (
-    <div className="issue-comment-panel">
-      {/* Header */}
-      <div className="issue-comment-panel__header">
+    <>
+      {/* Backdrop */}
+      <div className="modal-backdrop--comments" onClick={onClose} />
+
+      {/* Modal */}
+      <div className="issue-comment-panel">
+        {/* Header */}
+        <div className="issue-comment-panel__header">
         <div className="issue-comment-panel__title">
           <h3>💬 Comments</h3>
           <p className="issue-comment-panel__subtitle">{issueTitle}</p>
@@ -90,7 +106,7 @@ export default function IssueCommentPanel({
                 key={comment.id}
                 comment={comment}
                 isOwn={comment.user_id === user?.id}
-                onDelete={handleDelete}
+                onDelete={handleDeleteClick}
                 getActionIcon={getActionIcon}
               />
             ))}
@@ -120,7 +136,29 @@ export default function IssueCommentPanel({
           </div>
         </form>
       </div>
-    </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="delete-confirm-overlay" onClick={handleDeleteCancel}>
+          <div className="delete-confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="delete-confirm-modal__icon">🗑️</div>
+            <h3 className="delete-confirm-modal__title">Kommentar löschen?</h3>
+            <p className="delete-confirm-modal__message">
+              Diese Aktion kann nicht rückgängig gemacht werden.
+            </p>
+            <div className="delete-confirm-modal__actions">
+              <button onClick={handleDeleteCancel} className="delete-confirm-modal__btn delete-confirm-modal__btn--cancel">
+                Abbrechen
+              </button>
+              <button onClick={handleDeleteConfirm} className="delete-confirm-modal__btn delete-confirm-modal__btn--delete">
+                Löschen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      </div>
+    </>
   );
 }
 

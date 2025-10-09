@@ -123,22 +123,27 @@ export function useIssueComments(issueId: string | null) {
   const removeComment = useCallback(
     async (commentId: string) => {
       try {
+        // OPTIMISTIC UPDATE: Remove from UI immediately
+        setComments((prev) => prev.filter((c) => c.id !== commentId));
+
         const { success: deleteSuccess, error: deleteError } =
           await deleteComment(commentId);
 
         if (deleteError) throw deleteError;
 
         success('Kommentar gelöscht! 🗑️');
-        // Realtime subscription will handle UI update
         return { success: deleteSuccess };
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to delete comment';
         showError(errorMessage);
+
+        // ROLLBACK: Reload comments on error
+        loadComments();
         return { success: false, error: errorMessage };
       }
     },
-    [success, showError]
+    [success, showError, loadComments]
   );
 
   // ============================================================================

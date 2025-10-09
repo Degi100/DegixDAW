@@ -28,9 +28,6 @@ export async function getIssueComments(
         user:profiles!user_id (
           username,
           id
-        ),
-        user_email:auth.users!user_id (
-          email
         )
       `
       )
@@ -43,7 +40,7 @@ export async function getIssueComments(
     const commentsWithUser = data?.map((comment: any) => ({
       ...comment,
       user_username: comment.user?.username || null,
-      user_email: comment.user_email?.email || '',
+      user_email: '', // Email not available in profiles, only in auth.users
     }));
 
     return { data: commentsWithUser, error: null };

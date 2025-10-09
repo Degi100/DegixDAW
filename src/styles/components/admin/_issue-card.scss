@@ -91,6 +91,49 @@
       border-color: #fca5a5;
       background: $danger-100;
     }
+
+    // Assignment Button
+    &--assign {
+      border-color: #c4b5fd;
+      background: #f3f0ff;
+      position: relative;
+
+      &.locked {
+        border-color: #fbbf24;
+        background: #fef3c7;
+        cursor: not-allowed;
+      }
+    }
+
+    // Comments Button
+    &--comments {
+      border-color: #93c5fd;
+      background: #dbeafe;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: $spacing-1;
+
+      &.has-comments {
+        border-color: #3b82f6;
+        background: #bfdbfe;
+      }
+
+      .comment-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 4px;
+        background: #3b82f6;
+        color: white;
+        border-radius: $radius-full;
+        font-size: 0.625rem; // 10px
+        font-weight: 700;
+        line-height: 1;
+      }
+    }
   }
 
   // Badges Row
