@@ -32,6 +32,8 @@ interface IssueCardProps {
   onAssign?: (issue: IssueWithDetails) => void;
   onViewComments?: (issue: IssueWithDetails) => void;
   formatDate: (dateString: string) => string;
+  currentUserId: string | undefined;
+  isAdmin: boolean | undefined;
 }
 
 export default function IssueCard({
@@ -46,13 +48,21 @@ export default function IssueCard({
   onAssign,
   onViewComments,
   formatDate,
+  currentUserId,
+  isAdmin = false,
 }: IssueCardProps) {
-  const isLocked = !!issue.assigned_to_id;
+  // NEW LOCK LOGIC: Issue is locked if in_progress AND assigned to someone else
+  const isLockedForCurrentUser =
+    issue.status === 'in_progress' &&
+    issue.assigned_to_id &&
+    issue.assigned_to_id !== currentUserId &&
+    !isAdmin;
+
   const hasPR = !!issue.metadata?.pr_url;
   const hasComments = issue.comments_count > 0;
 
   return (
-    <div className={`issue-card ${isSelected ? 'issue-card--selected' : ''} ${isLocked ? 'issue-card--locked' : ''}`}>
+    <div className={`issue-card ${isSelected ? 'issue-card--selected' : ''} ${isLockedForCurrentUser ? 'issue-card--locked' : ''}`}>
       {/* Checkbox for Bulk Selection */}
       {onToggleSelect && (
         <div className="issue-card__checkbox">
@@ -91,10 +101,10 @@ export default function IssueCard({
         {onAssign && (
           <button
             onClick={() => onAssign(issue)}
-            className={`issue-card__action-btn issue-card__action-btn--assign ${isLocked ? 'locked' : ''}`}
-            title={isLocked ? `Zugewiesen an: ${issue.assigned_to_username}` : 'Issue zuweisen'}
+            className={`issue-card__action-btn issue-card__action-btn--assign ${isLockedForCurrentUser ? 'locked' : ''}`}
+            title={isLockedForCurrentUser ? `Zugewiesen an: ${issue.assigned_to_username}` : 'Issue zuweisen'}
           >
-            {isLocked ? '🔒' : '👤'}
+            {isLockedForCurrentUser ? '🔒' : '👤'}
           </button>
         )}
 
@@ -200,7 +210,7 @@ export default function IssueCard({
 
       <h3 className="issue-card__title">
         {issue.title}
-        {isLocked && (
+        {isLockedForCurrentUser && (
           <span className="issue-card__lock-indicator" title={`🔒 ${issue.assigned_to_username}`}>
             🔒
           </span>
@@ -225,7 +235,7 @@ export default function IssueCard({
         </div>
 
         {/* Assignee Info */}
-        {isLocked && (
+        {isLockedForCurrentUser && (
           <div className="issue-card__assignee">
             🔒 Assigned to: <strong>{issue.assigned_to_username || 'Unknown'}</strong>
           </div>

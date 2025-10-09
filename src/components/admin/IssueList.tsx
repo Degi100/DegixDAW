@@ -25,6 +25,8 @@ interface IssueListProps {
   onSaveMarkdown?: () => void;
   onRefresh?: () => void;
   onCreateNew?: () => void;
+  currentUserId: string | undefined;
+  isAdmin: boolean | undefined;
 }
 
 export default function IssueList({
@@ -47,6 +49,8 @@ export default function IssueList({
   onSaveMarkdown,
   onRefresh,
   onCreateNew,
+  currentUserId,
+  isAdmin = false,
 }: IssueListProps) {
   const hasFilters = searchTerm || statusFilter !== 'all' || priorityFilter !== 'all';
 
@@ -121,6 +125,8 @@ export default function IssueList({
           onEdit={onEdit}
           onDelete={onDelete}
           formatDate={formatDate}
+          currentUserId={currentUserId}
+          isAdmin={isAdmin}
         />
       ))}
     </div>

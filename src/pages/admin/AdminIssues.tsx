@@ -6,6 +6,7 @@ import { useState } from 'react';
 import AdminLayoutCorporate from '../../components/admin/AdminLayoutCorporate';
 import { useIssues, type IssueWithDetails, type CreateIssueRequest, type UpdateIssueRequest } from '../../hooks/useIssues';
 import { useAuth } from '../../hooks/useAuth';
+import { useAdmin } from '../../hooks/useAdmin';
 import { Spinner } from '../../components/ui/Loading';
 import IssueModalEnhanced from '../../components/admin/IssueModalEnhanced';
 import IssueCommentPanel from '../../components/admin/IssueCommentPanel';
@@ -18,6 +19,7 @@ import { useToast } from '../../hooks/useToast';
 
 export default function AdminIssues() {
   const { user } = useAuth();
+  const { isAdmin, isSuperAdmin } = useAdmin();
   const { success, error: showError } = useToast();
   const { issues, loading, createIssue, updateIssue, deleteIssue, assignIssue, getStats, refresh } = useIssues();
 
@@ -289,6 +291,8 @@ export default function AdminIssues() {
           onAssign={handleAssignClick}
           onViewComments={handleViewComments}
           formatDate={formatRelativeTime}
+          currentUserId={user?.id}
+          isAdmin={isAdmin || isSuperAdmin}
           onRefresh={refresh}
         />
       </div>

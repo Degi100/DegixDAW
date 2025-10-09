@@ -21,10 +21,10 @@ export interface ConversationMember {
   is_muted: boolean;
   is_pinned: boolean;
   // Profile enrichment
-  username?: string;
-  display_name?: string; // optional, da Mapping undefined liefern kann
-  avatar_url?: string;
-  is_online?: boolean;
+  username: string | undefined;
+  display_name: string | undefined; // optional, da Mapping undefined liefern kann
+  avatar_url: string | undefined;
+  is_online: boolean | undefined;
 }
 
 export interface Conversation {
@@ -565,7 +565,7 @@ export function useConversations() {
 
         // For each direct conversation, check if BOTH users are members
         for (const convId of directConvIds) {
-          const { data: members, count } = await supabase
+          const { count } = await supabase
             .from('conversation_members')
             .select('user_id', { count: 'exact' })
             .eq('conversation_id', convId)
