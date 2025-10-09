@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node scripts/claude-create-bug-issue.js:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
