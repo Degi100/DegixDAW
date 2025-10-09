@@ -4,7 +4,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import Button from '../../../../components/ui/Button';
 import { useAuth } from '../../../../hooks/useAuth';
-import { ADMIN_ROUTES, DEFAULT_ROUTES_BY_ROLE } from '../../../../lib/constants/adminRoutes';
 import type { UserEditModalProps } from '../../types/admin.types';
 import type { UserProfile } from '../../../../hooks/useUserData';
 
@@ -15,7 +14,6 @@ export default function UserEditModal({
   onUpdateUser
 }: UserEditModalProps) {
   const [editedUser, setEditedUser] = useState<UserProfile>(user);
-  const [allowedRoutes, setAllowedRoutes] = useState<string[]>([]);
   const { user: currentUser } = useAuth();
 
   // Check if this user is the super admin (protected)
@@ -42,27 +40,10 @@ export default function UserEditModal({
     return newLevel < currentLevel;
   }, [isEditingSelf, user.role, editedUser.role]);
 
-  // Show route permissions only for admin/moderator roles
-  const showRoutePermissions = useMemo(() => {
-    return editedUser.role === 'admin' || editedUser.role === 'moderator';
-  }, [editedUser.role]);
-
   // Update local state when user prop changes
   useEffect(() => {
     setEditedUser(user);
-
-    // Load allowed routes from user_metadata (ONLY saved, not defaults!)
-    const savedRoutes = (user as any).user_metadata?.allowed_admin_routes || [];
-    setAllowedRoutes(savedRoutes);
   }, [user]);
-
-  const toggleRoute = (routeId: string) => {
-    setAllowedRoutes(prev =>
-      prev.includes(routeId)
-        ? prev.filter(r => r !== routeId)
-        : [...prev, routeId]
-    );
-  };
 
   if (!isOpen) return null;
 
@@ -73,22 +54,13 @@ export default function UserEditModal({
       return;
     }
 
-    // Include allowed_admin_routes in user_metadata
-    const updatedUser = {
-      ...editedUser,
-      user_metadata: {
-        ...(editedUser as any).user_metadata,
-        allowed_admin_routes: showRoutePermissions ? allowedRoutes : []
-      }
-    };
-
-    await onUpdateUser(updatedUser);
+    await onUpdateUser(editedUser);
     onClose();
   };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content modal-content--large" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>✏️ Edit User</h3>
           <button className="modal-close" onClick={onClose}>×</button>
@@ -166,92 +138,6 @@ export default function UserEditModal({
               </select>
             </div>
           </div>
-
-          {/* Admin Route Permissions */}
-          {showRoutePermissions && !isSuperAdmin && (
-            <div className="form-group" style={{ marginTop: '1.5rem' }}>
-              <label style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem', display: 'block' }}>
-                🔐 Allowed Admin Routes
-              </label>
-              <small style={{ color: '#6c757d', marginBottom: '1rem', display: 'block' }}>
-                ✅ Green boxes = Default routes (always available). White boxes = Additional routes you can enable.
-              </small>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                gap: '0.75rem'
-              }}>
-                {ADMIN_ROUTES.map(route => {
-                  // Check if this route is a default for current role
-                  const defaultRoutes: readonly string[] = editedUser.role === 'moderator'
-                    ? DEFAULT_ROUTES_BY_ROLE.moderator
-                    : editedUser.role === 'admin'
-                      ? DEFAULT_ROUTES_BY_ROLE.admin
-                      : [];
-                  const isDefault = (defaultRoutes as readonly string[]).includes(route.id);
-                  const isChecked = allowedRoutes.includes(route.id);
-
-                  // All routes: Show with checkbox (can be toggled)
-                  // Defaults are pre-checked but can be unchecked by admin
-                  const shouldBeCheckedByDefault = isDefault && !allowedRoutes.length; // Only if no explicit routes set
-                  const finalChecked = isChecked || shouldBeCheckedByDefault;
-
-                  return (
-                    <label
-                      key={route.id}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        padding: '0.75rem',
-                        border: `2px solid ${isDefault ? '#28a745' : '#dee2e6'}`,
-                        borderRadius: '0.375rem',
-                        cursor: 'pointer',
-                        backgroundColor: finalChecked ? '#e7f3ff' : 'transparent',
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={finalChecked}
-                        onChange={() => toggleRoute(route.id)}
-                        style={{ cursor: 'pointer' }}
-                      />
-                      <span style={{ fontSize: '1.25rem' }}>{route.icon}</span>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 500, fontSize: '0.875rem' }}>
-                          {route.name} {isDefault && '(Default)'}
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: '#6c757d' }}>
-                          {route.description}
-                        </div>
-                      </div>
-                    </label>
-                  );
-                })}
-              </div>
-              {allowedRoutes.length === 0 && (
-                <small style={{ color: '#dc3545', marginTop: '0.5rem', display: 'block' }}>
-                  ⚠️ No routes selected - user will not be able to access admin panel
-                </small>
-              )}
-            </div>
-          )}
-
-          {isSuperAdmin && (
-            <div style={{
-              marginTop: '1.5rem',
-              padding: '1rem',
-              backgroundColor: '#f8f9fa',
-              borderRadius: '0.375rem',
-              border: '1px solid #dee2e6'
-            }}>
-              <strong>🛡️ Super Admin</strong>
-              <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.875rem', color: '#6c757d' }}>
-                Super Admins have access to all routes automatically
-              </p>
-            </div>
-          )}
         </div>
 
         <div className="modal-footer">

@@ -8,11 +8,10 @@ export interface AdminStatus {
   isAdmin: boolean;
   isSuperAdmin: boolean;
   isModerator: boolean;
-  isRegularAdmin: boolean;  // NEW: Unterscheidet zwischen Admin und Moderator
+  isRegularAdmin: boolean;
   loading: boolean;
   adminLevel: 'none' | 'admin' | 'super_admin';
   canAccessRoute: (routeId: string) => boolean;
-  allowedRoutes: string[];
 }
 
 export function useAdmin(): AdminStatus {
@@ -27,7 +26,6 @@ export function useAdmin(): AdminStatus {
         isRegularAdmin: false,
         loading: loading,
         adminLevel: 'none' as const,
-        allowedRoutes: [],
         canAccessRoute: () => false
       };
     }
@@ -45,19 +43,15 @@ export function useAdmin(): AdminStatus {
     // Admins (moderators are NOT admins, they have limited permissions)
     const isAdmin = isSuperAdmin || isRegularAdmin;
 
-    // Get allowed admin routes from user_metadata
-    const allowedRoutes: string[] = user.user_metadata?.allowed_admin_routes || [];
-
     return {
       isAdmin,
       isSuperAdmin,
       isModerator,
-      isRegularAdmin,  // NEW: Expose für UI-Filtering
+      isRegularAdmin,
       loading: false,
       adminLevel: isSuperAdmin ? 'super_admin' as const :
                   isRegularAdmin ? 'admin' as const :
                   'none' as const,
-      allowedRoutes,
       canAccessRoute: (routeId: string) => {
         // Super-Admin/Admin → alles
         if (isSuperAdmin || isRegularAdmin) return true;

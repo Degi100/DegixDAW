@@ -18,7 +18,6 @@ export interface UserProfile {
   is_active?: boolean;
   metadata?: Record<string, unknown>;
   user_metadata?: {
-    allowed_admin_routes?: string[];
     is_admin?: boolean;
     is_moderator?: boolean;
     [key: string]: unknown;
@@ -157,31 +156,22 @@ export function useUserData() {
 
       if (profileError) throw profileError;
 
-      // 2. Update auth.users.raw_user_meta_data (allowed_admin_routes, role flags)
-      if (user.user_metadata) {
-        // Build metadata updates
-        const metadataUpdates: Record<string, unknown> = {};
+      // 2. Update auth.users.raw_user_meta_data (role flags)
+      const metadataUpdates: Record<string, unknown> = {
+        is_admin: user.role === 'admin',
+        is_moderator: user.role === 'moderator'
+      };
 
-        // Always sync role flags
-        metadataUpdates.is_admin = user.role === 'admin';
-        metadataUpdates.is_moderator = user.role === 'moderator';
+      // Call RPC function to update user_metadata
+      const { error: metadataError } = await supabase
+        .rpc('update_user_metadata', {
+          target_user_id: user.id,
+          metadata_updates: metadataUpdates
+        });
 
-        // Include allowed_admin_routes if present
-        if (user.user_metadata.allowed_admin_routes !== undefined) {
-          metadataUpdates.allowed_admin_routes = user.user_metadata.allowed_admin_routes;
-        }
-
-        // Call RPC function to update user_metadata
-        const { error: metadataError } = await supabase
-          .rpc('update_user_metadata', {
-            target_user_id: user.id,
-            metadata_updates: metadataUpdates
-          });
-
-        if (metadataError) {
-          console.error('Error updating user_metadata:', metadataError);
-          throw metadataError;
-        }
+      if (metadataError) {
+        console.error('Error updating user_metadata:', metadataError);
+        throw metadataError;
       }
 
       success('Benutzer erfolgreich aktualisiert!');
