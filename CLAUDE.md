@@ -60,6 +60,16 @@ Siehe `scripts/db/README.md` und `scripts/sql/README.md` für detaillierte Daten
    - Geschützt via `AdminRoute`-Komponente ([src/components/admin/AdminRoute.tsx](src/components/admin/AdminRoute.tsx))
    - SQL Setup: [scripts/sql/admin_role_system_setup.sql](scripts/sql/admin_role_system_setup.sql) + [ADMIN_ROLE_SYSTEM.md](scripts/sql/ADMIN_ROLE_SYSTEM.md)
 
+   **🔐 Granulare Admin Route Permissions** (NEU):
+   - Super-Admin kann **pro Admin/Moderator** festlegen, welche `/admin/*` Routen zugänglich sind
+   - Route-Definitionen: [src/lib/constants/adminRoutes.ts](src/lib/constants/adminRoutes.ts)
+   - UI: User-Edit-Modal zeigt Multi-Select mit Route-Checkboxen (Dashboard, Users, Issues, Settings, Features, Versions)
+   - Storage: `user_metadata.allowed_admin_routes` (Array von Route-IDs, z.B. `['issues', 'users']`)
+   - Protection: `AdminRoute` prüft via `canAccessRoute(requiredRoute)` ob Zugriff erlaubt
+   - Super-Admin Bypass: Hat IMMER Zugriff auf alle Routen (kein Check nötig)
+   - **Beispiel**: Moderator "rdegi" bekommt nur Zugriff auf `/admin/issues` → Alle anderen Admin-Routen leiten zu `/404`
+   - **SQL Fix erforderlich**: `npm run db:sql fix_get_all_users_rpc` (behebt 400 Error bei User-Edit)
+
 2. **Feature Flags** ([src/lib/services/featureFlags/](src/lib/services/featureFlags/)):
    - **Supabase Backend** mit Realtime-Updates (seit v1.0.0)
    - Rollenbasierter Zugriff: `public`, `user`, `moderator`, `admin`
@@ -156,8 +166,50 @@ Alle Routen nutzen React.lazy() für dynamische Imports mit `<Suspense fallback=
 
 **Routen-Schutz:**
 - `PrivateRoute`: Prüft Authentifizierung
-- `AdminRoute`: Prüft Admin/Super-Admin-Rolle
+- `AdminRoute`: Prüft Admin/Super-Admin-Rolle + optional `requiredRoute` (granulare Permissions)
 - `FeatureFlagRoute`: Prüft Feature-Flag + Rollen-Zugriff
+
+### Issues System
+
+Supabase-basiertes Issue-Tracking-System für Bug-Reports, Feature-Requests und Task-Management:
+
+**Datenbank-Schema:**
+- `issues`: Kern-Tabelle (title, description, status, priority, category, labels, assigned_to, created_by, metadata)
+- `issue_comments`: Kommentare + Action-Log (comment, action_type, metadata)
+- RPC-Funktion: `get_issues_with_details()` (mit User-Info + Comments-Count)
+- RPC-Funktion: `assign_issue()` (mit Lock-Protection gegen Doppel-Assignments)
+
+**Service Layer** ([src/lib/services/issues/](src/lib/services/issues/)):
+- `issuesService.ts`: CRUD Operations, Assignment, Bulk-Actions
+- `commentsService.ts`: Kommentare laden, erstellen, löschen
+- `helpers.ts`: Filter, Sorting, Stats-Berechnung
+- `types.ts`: TypeScript-Interfaces
+
+**React Hooks:**
+- `useIssues` ([src/hooks/useIssues.ts](src/hooks/useIssues.ts)): Issues laden, CRUD, Assignment, Filter, Stats
+- `useIssueComments` ([src/hooks/useIssueComments.ts](src/hooks/useIssueComments.ts)): Kommentare laden, erstellen, Realtime
+
+**UI-Komponenten:**
+- `AdminIssues`: Haupt-Page mit Filters, Bulk-Actions, Create/Edit
+- `IssueCard`: Einzelnes Issue mit Status, Priority, Labels, Assignment-Button
+- `IssueList`: Tabellen-/Karten-View mit Bulk-Select
+- `IssueModalEnhanced`: Create/Edit-Modal mit Labels-Multi-Select, Categories, PR-URL
+- `IssueCommentPanel`: Sidebar für Kommentare
+
+**Features:**
+- Status: open, in_progress, done, closed
+- Priority: low, medium, high, critical (mit Smart-Sorting)
+- Categories: Custom-Categories via localStorage ([src/lib/constants/categories.ts](src/lib/constants/categories.ts))
+- Labels: bug, feature, urgent, docs, enhancement, question
+- Assignment mit Lock-Protection (verhindert race conditions)
+- PR-URL Integration (für "done" Issues)
+- Comments mit Action-Types (comment, status_change, assignment, label_change)
+
+**Wichtige Hinweise:**
+- **Realtime nicht zuverlässig**: UI nutzt **manuelle Refreshs** nach CRUD-Operationen (create/update/assign)
+- **RPC Type Fix**: `npm run db:sql fix_rpc_type_mismatch` behebt Column-Type-Mismatch
+- Status-Format: `in_progress` (underscore, nicht hyphen!)
+- SQL Setup: [scripts/sql/issues_system_setup.sql](scripts/sql/issues_system_setup.sql)
 
 ## Wichtige Entwicklungsmuster
 
