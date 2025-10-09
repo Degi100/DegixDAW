@@ -28,6 +28,8 @@ export default function FriendList() {
       if (conversationId) {
         navigate(`/chat/${conversationId}`);
       }
+    } catch (err) {
+      console.error('Error opening chat:', err);
     } finally {
       setLoadingChat(null);
     }
