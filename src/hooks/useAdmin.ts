@@ -8,6 +8,7 @@ export interface AdminStatus {
   isAdmin: boolean;
   isSuperAdmin: boolean;
   isModerator: boolean;
+  isRegularAdmin: boolean;  // NEW: Unterscheidet zwischen Admin und Moderator
   loading: boolean;
   adminLevel: 'none' | 'admin' | 'super_admin';
   canAccessRoute: (routeId: string) => boolean;
@@ -23,6 +24,7 @@ export function useAdmin(): AdminStatus {
         isAdmin: false,
         isSuperAdmin: false,
         isModerator: false,
+        isRegularAdmin: false,
         loading: loading,
         adminLevel: 'none' as const,
         allowedRoutes: [],
@@ -40,6 +42,7 @@ export function useAdmin(): AdminStatus {
     // Check Moderator via user metadata
     const isModerator = user.user_metadata?.is_moderator === true;
 
+    // Admins (moderators are NOT admins, they have limited permissions)
     const isAdmin = isSuperAdmin || isRegularAdmin;
 
     // Get allowed admin routes from user_metadata
@@ -49,20 +52,23 @@ export function useAdmin(): AdminStatus {
       isAdmin,
       isSuperAdmin,
       isModerator,
+      isRegularAdmin,  // NEW: Expose für UI-Filtering
       loading: false,
       adminLevel: isSuperAdmin ? 'super_admin' as const :
                   isRegularAdmin ? 'admin' as const :
                   'none' as const,
       allowedRoutes,
       canAccessRoute: (routeId: string) => {
-        // Super-Admin hat immer Zugriff auf alle Routen
-        if (isSuperAdmin) return true;
+        // Super-Admin/Admin → alles
+        if (isSuperAdmin || isRegularAdmin) return true;
 
-        // Kein Admin/Moderator → kein Zugriff
-        if (!isAdmin && !isModerator) return false;
+        // Moderator → Issues + Settings + Versions
+        if (isModerator && (routeId === 'issues' || routeId === 'settings' || routeId === 'versions')) {
+          return true;
+        }
 
-        // Prüfe ob Route in erlaubten Routen enthalten ist
-        return allowedRoutes.includes(routeId);
+        // Sonst nix
+        return false;
       }
     };
   }, [user, loading]);

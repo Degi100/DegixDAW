@@ -4,7 +4,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Button from '../../../../components/ui/Button';
 import { useAuth } from '../../../../hooks/useAuth';
-import { ADMIN_ROUTES } from '../../../../lib/constants/adminRoutes';
+import { ADMIN_ROUTES, DEFAULT_ROUTES_BY_ROLE } from '../../../../lib/constants/adminRoutes';
 import type { UserEditModalProps } from '../../types/admin.types';
 import type { UserProfile } from '../../../../hooks/useUserData';
 
@@ -50,9 +50,10 @@ export default function UserEditModal({
   // Update local state when user prop changes
   useEffect(() => {
     setEditedUser(user);
-    // Load allowed routes from user_metadata
-    const routes = (user as any).user_metadata?.allowed_admin_routes || [];
-    setAllowedRoutes(routes);
+
+    // Load allowed routes from user_metadata (ONLY saved, not defaults!)
+    const savedRoutes = (user as any).user_metadata?.allowed_admin_routes || [];
+    setAllowedRoutes(savedRoutes);
   }, [user]);
 
   const toggleRoute = (routeId: string) => {
@@ -173,41 +174,61 @@ export default function UserEditModal({
                 🔐 Allowed Admin Routes
               </label>
               <small style={{ color: '#6c757d', marginBottom: '1rem', display: 'block' }}>
-                Select which admin pages this user can access
+                ✅ Green boxes = Default routes (always available). White boxes = Additional routes you can enable.
               </small>
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
                 gap: '0.75rem'
               }}>
-                {ADMIN_ROUTES.map(route => (
-                  <label
-                    key={route.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      padding: '0.75rem',
-                      border: '1px solid #dee2e6',
-                      borderRadius: '0.375rem',
-                      cursor: 'pointer',
-                      backgroundColor: allowedRoutes.includes(route.id) ? '#e7f3ff' : 'transparent',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={allowedRoutes.includes(route.id)}
-                      onChange={() => toggleRoute(route.id)}
-                      style={{ cursor: 'pointer' }}
-                    />
-                    <span style={{ fontSize: '1.25rem' }}>{route.icon}</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 500, fontSize: '0.875rem' }}>{route.name}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#6c757d' }}>{route.description}</div>
-                    </div>
-                  </label>
-                ))}
+                {ADMIN_ROUTES.map(route => {
+                  // Check if this route is a default for current role
+                  const defaultRoutes: readonly string[] = editedUser.role === 'moderator'
+                    ? DEFAULT_ROUTES_BY_ROLE.moderator
+                    : editedUser.role === 'admin'
+                      ? DEFAULT_ROUTES_BY_ROLE.admin
+                      : [];
+                  const isDefault = (defaultRoutes as readonly string[]).includes(route.id);
+                  const isChecked = allowedRoutes.includes(route.id);
+
+                  // All routes: Show with checkbox (can be toggled)
+                  // Defaults are pre-checked but can be unchecked by admin
+                  const shouldBeCheckedByDefault = isDefault && !allowedRoutes.length; // Only if no explicit routes set
+                  const finalChecked = isChecked || shouldBeCheckedByDefault;
+
+                  return (
+                    <label
+                      key={route.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.75rem',
+                        border: `2px solid ${isDefault ? '#28a745' : '#dee2e6'}`,
+                        borderRadius: '0.375rem',
+                        cursor: 'pointer',
+                        backgroundColor: finalChecked ? '#e7f3ff' : 'transparent',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={finalChecked}
+                        onChange={() => toggleRoute(route.id)}
+                        style={{ cursor: 'pointer' }}
+                      />
+                      <span style={{ fontSize: '1.25rem' }}>{route.icon}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 500, fontSize: '0.875rem' }}>
+                          {route.name} {isDefault && '(Default)'}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#6c757d' }}>
+                          {route.description}
+                        </div>
+                      </div>
+                    </label>
+                  );
+                })}
               </div>
               {allowedRoutes.length === 0 && (
                 <small style={{ color: '#dc3545', marginTop: '0.5rem', display: 'block' }}>

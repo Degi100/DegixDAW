@@ -59,7 +59,7 @@ export default function Header(props: HeaderProps) {
       expandedChatId = null,
     } = props;
   const { success } = useToast();
-  const { isAdmin } = useAdmin();
+  const { isAdmin, isModerator } = useAdmin();
   const { user, signOut } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const { features } = useFeatureFlags(); // Load features for navigation
@@ -166,6 +166,7 @@ export default function Header(props: HeaderProps) {
             <UserDropdown
               user={user}
               isAdmin={isAdmin}
+              isModerator={isModerator}
               onLogout={handleLogout}
             />
           ) : (

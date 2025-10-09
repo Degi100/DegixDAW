@@ -44,6 +44,7 @@ const FileBrowserPage = lazy(() => import('./pages/files/FileBrowserPage'));
 
 // Admin Components
 import AdminRoute from './components/admin/AdminRoute';
+import ProtectedAdminRoute from './components/admin/ProtectedAdminRoute';
 import AdminLayoutCorporate from './components/admin/AdminLayoutCorporate';
 
 const AdminDashboardCorporate = lazy(() => import('./pages/admin/AdminDashboardCorporate'));
@@ -121,8 +122,10 @@ const router = createBrowserRouter([
     path: '/admin',
     element: (
       <Suspense fallback={<PageLoader />}>
-        <AdminRoute requiredRoute="dashboard">
-          <AdminDashboardCorporate />
+        <AdminRoute>
+          <ProtectedAdminRoute requiredRoute="dashboard">
+            <AdminDashboardCorporate />
+          </ProtectedAdminRoute>
         </AdminRoute>
       </Suspense>
     )
@@ -131,8 +134,10 @@ const router = createBrowserRouter([
     path: '/admin/users',
     element: (
       <Suspense fallback={<PageLoader />}>
-        <AdminRoute requiredRoute="users">
-          <AdminUsers />
+        <AdminRoute>
+          <ProtectedAdminRoute requiredRoute="users">
+            <AdminUsers />
+          </ProtectedAdminRoute>
         </AdminRoute>
       </Suspense>
     )
@@ -141,8 +146,10 @@ const router = createBrowserRouter([
     path: '/admin/issues',
     element: (
       <Suspense fallback={<PageLoader />}>
-        <AdminRoute requiredRoute="issues">
-          <AdminIssues />
+        <AdminRoute>
+          <ProtectedAdminRoute requiredRoute="issues">
+            <AdminIssues />
+          </ProtectedAdminRoute>
         </AdminRoute>
       </Suspense>
     )
@@ -151,8 +158,10 @@ const router = createBrowserRouter([
     path: '/admin/settings',
     element: (
       <Suspense fallback={<PageLoader />}>
-        <AdminRoute requiredRoute="settings">
-          <AdminSettings />
+        <AdminRoute>
+          <ProtectedAdminRoute requiredRoute="settings">
+            <AdminSettings />
+          </ProtectedAdminRoute>
         </AdminRoute>
       </Suspense>
     )
@@ -161,8 +170,10 @@ const router = createBrowserRouter([
     path: '/admin/settings/versions',
     element: (
       <Suspense fallback={<PageLoader />}>
-        <AdminRoute requiredRoute="versions">
-          <VersionsManagement />
+        <AdminRoute>
+          <ProtectedAdminRoute requiredRoute="versions">
+            <VersionsManagement />
+          </ProtectedAdminRoute>
         </AdminRoute>
       </Suspense>
     )
@@ -171,10 +182,12 @@ const router = createBrowserRouter([
     path: '/admin/features',
     element: (
       <Suspense fallback={<PageLoader />}>
-        <AdminRoute requiredRoute="features">
-          <AdminLayoutCorporate>
-            <AdminFeatureFlags />
-          </AdminLayoutCorporate>
+        <AdminRoute>
+          <ProtectedAdminRoute requiredRoute="features">
+            <AdminLayoutCorporate>
+              <AdminFeatureFlags />
+            </AdminLayoutCorporate>
+          </ProtectedAdminRoute>
         </AdminRoute>
       </Suspense>
     )

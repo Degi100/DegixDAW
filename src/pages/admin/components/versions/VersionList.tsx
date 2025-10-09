@@ -2,6 +2,7 @@
 // Version List Component - Clean Display of All Versions
 
 import type { VersionInfo } from '../../../../lib/version';
+import { useAdmin } from '../../../../hooks/useAdmin';
 
 interface VersionListProps {
   versions: VersionInfo[];
@@ -10,6 +11,8 @@ interface VersionListProps {
 }
 
 export default function VersionList({ versions, onEdit, onDelete }: VersionListProps) {
+  const { isModerator, isAdmin } = useAdmin();
+
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'major': return 'danger';
@@ -101,7 +104,8 @@ export default function VersionList({ versions, onEdit, onDelete }: VersionListP
                 <button
                   onClick={() => onDelete(version)}
                   className="btn btn-danger btn-sm"
-                  disabled={index === 0} // Aktuelle Version nicht löschbar
+                  disabled={index === 0 || (isModerator && !isAdmin)} // Aktuelle Version nicht löschbar + Moderator darf nicht löschen
+                  title={isModerator && !isAdmin ? 'Moderatoren dürfen keine Versionen löschen' : ''}
                 >
                   🗑️ Löschen
                 </button>

@@ -24,6 +24,7 @@
     "db:create-profiles": "node scripts/db/show-sql.js scripts/sql/create_missing_profiles.sql",
     "db:fix-profile-ids": "node scripts/db/show-sql.js scripts/sql/fix_profile_ids.sql",
     "db:chat-setup": "node scripts/db/show-sql.js scripts/sql/chat_system_setup.sql",
+    "db:update-user-metadata": "node scripts/db/show-sql.js scripts/sql/update_user_metadata.sql",
     "test:create-100-friends": "node scripts/db/show-sql.js scripts/sql/create_100_test_friends.sql",
     "test": "jest --passWithNoTests"
   },

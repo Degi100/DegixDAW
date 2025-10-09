@@ -83,3 +83,12 @@ export function extractRouteId(path: string): string | null {
 export function isAdminRoute(path: string): boolean {
   return path.startsWith('/admin');
 }
+
+/**
+ * Default-Routen pro Role (automatischer Zugriff ohne explizite Permission)
+ */
+export const DEFAULT_ROUTES_BY_ROLE = {
+  moderator: ['issues'],                          // Moderatoren bekommen Issues automatisch
+  admin: ['dashboard', 'issues', 'features'],     // Admins bekommen Dashboard + Issues + Features
+  super_admin: []                                 // Super-Admin hat sowieso Zugriff auf alles
+} as const;

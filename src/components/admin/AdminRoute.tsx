@@ -10,12 +10,11 @@ import { LoadingOverlay } from '../ui/Loading';
 interface AdminRouteProps {
   children: ReactNode;
   requireSuperAdmin?: boolean;
-  requiredRoute?: string; // Route-ID die für Zugriff benötigt wird (z.B. "issues")
 }
 
-export default function AdminRoute({ children, requireSuperAdmin = false, requiredRoute }: AdminRouteProps) {
+export default function AdminRoute({ children, requireSuperAdmin = false }: AdminRouteProps) {
   const { user, loading } = useAuth();
-  const { isAdmin, isSuperAdmin, canAccessRoute } = useAdmin();
+  const { isAdmin, isSuperAdmin, isModerator } = useAdmin();
   const [adminCheckComplete, setAdminCheckComplete] = useState(false);
 
 
@@ -43,17 +42,11 @@ export default function AdminRoute({ children, requireSuperAdmin = false, requir
   return <Navigate to="/welcome" replace />;
   }
 
-  // Check admin permissions
-  const hasRequiredPermission = requireSuperAdmin ? isSuperAdmin : isAdmin;
+  // Check admin permissions (moderators can enter admin panel but have limited routes)
+  const hasRequiredPermission = requireSuperAdmin ? isSuperAdmin : (isAdmin || isModerator);
 
   if (!hasRequiredPermission) {
     // Redirect to 404 to not reveal admin routes exist
-    return <Navigate to="/404" replace />;
-  }
-
-  // Check route-specific permissions (if requiredRoute is specified)
-  if (requiredRoute && !canAccessRoute(requiredRoute)) {
-    console.log(`[AdminRoute] Access denied to route: ${requiredRoute}`);
     return <Navigate to="/404" replace />;
   }
 
