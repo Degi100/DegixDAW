@@ -10,6 +10,8 @@
 import { useAnalytics } from '../../hooks/useAnalytics';
 import { StatsGrid } from '../../components/admin/analytics/StatsGrid';
 import { MilestonesList } from '../../components/admin/analytics/MilestonesList';
+import { GrowthChart } from '../../components/admin/analytics/GrowthChart';
+import { StorageBreakdown } from '../../components/admin/analytics/StorageBreakdown';
 import './AdminAnalytics.scss';
 
 export default function AdminAnalytics() {
@@ -74,9 +76,9 @@ export default function AdminAnalytics() {
 
       <div className="admin-analytics__content">
         <StatsGrid metrics={metrics} storage={storage} />
+        <GrowthChart metrics={metrics} storage={storage} />
+        <StorageBreakdown storage={storage} />
         <MilestonesList limit={12} />
-
-        {/* Future: Charts, Storage Breakdown, etc. */}
       </div>
     </div>
   );
