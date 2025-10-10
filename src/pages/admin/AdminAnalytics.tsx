@@ -7,14 +7,16 @@
  * Access: Admin/Super-Admin only
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAnalytics } from '../../hooks/useAnalytics';
+import { useAutoRefresh } from '../../hooks/useAutoRefresh';
 import { StatsGrid } from '../../components/admin/analytics/StatsGrid';
 import { MilestonesList } from '../../components/admin/analytics/MilestonesList';
 import { GrowthChart } from '../../components/admin/analytics/GrowthChart';
 import { StorageBreakdown } from '../../components/admin/analytics/StorageBreakdown';
 import { ExportModal } from '../../components/admin/analytics/ExportModal';
 import { AddMilestoneModal } from '../../components/admin/analytics/AddMilestoneModal';
+import { AutoRefreshSettings } from '../../components/admin/analytics/AutoRefreshSettings';
 import { milestones } from '../../lib/constants/milestones';
 import './AdminAnalytics.scss';
 
@@ -23,6 +25,21 @@ export default function AdminAnalytics() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [showAddMilestoneModal, setShowAddMilestoneModal] = useState(false);
   const [milestonesKey, setMilestonesKey] = useState(0);
+
+  // Auto-Refresh Hook
+  const autoRefresh = useAutoRefresh(refresh, {
+    defaultInterval: 30000, // 30 seconds
+    defaultEnabled: false
+  });
+
+  // Pause auto-refresh when modals are open
+  useEffect(() => {
+    if (showExportModal || showAddMilestoneModal) {
+      autoRefresh.pause();
+    } else {
+      autoRefresh.resume();
+    }
+  }, [showExportModal, showAddMilestoneModal, autoRefresh]);
 
   if (loading) {
     return (
@@ -88,6 +105,11 @@ export default function AdminAnalytics() {
             🔄 Refresh
           </button>
         </div>
+      </div>
+
+      {/* Auto-Refresh Settings */}
+      <div className="admin-analytics__settings">
+        <AutoRefreshSettings autoRefresh={autoRefresh} />
       </div>
 
       <div className="admin-analytics__content">
