@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(node scripts/claude-create-bug-issue.js:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []
