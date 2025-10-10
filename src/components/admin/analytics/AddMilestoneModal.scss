@@ -1,0 +1,222 @@
+/**
+ * AddMilestoneModal Styles
+ */
+
+.add-milestone-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease;
+}
+
+.add-milestone-modal {
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Header */
+.add-milestone-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+  }
+}
+
+.add-milestone-modal__close {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-primary);
+  color: var(--text-secondary);
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--surface-secondary);
+    color: var(--text-primary);
+    border-color: var(--primary-color);
+  }
+}
+
+/* Form */
+.add-milestone-modal__form {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  &::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.6;
+  }
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+/* Icon Selector */
+.icon-selector {
+  .form-input--icon {
+    text-align: center;
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+}
+
+.icon-presets {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0.5rem;
+}
+
+.icon-preset {
+  aspect-ratio: 1;
+  font-size: 1.25rem;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    border-color: var(--primary-color);
+    transform: scale(1.1);
+  }
+
+  &.active {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+}
+
+/* Error */
+.form-error {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  margin-top: 1rem;
+}
+
+.form-error__icon {
+  font-size: 1.25rem;
+}
+
+.form-error__message {
+  flex: 1;
+  font-size: 0.875rem;
+  color: #ef4444;
+}
+
+/* Footer */
+.add-milestone-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-top: 1px solid var(--border-color);
+  background: var(--surface-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .add-milestone-modal {
+    width: 95%;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .icon-presets {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

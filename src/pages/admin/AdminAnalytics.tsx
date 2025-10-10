@@ -2,20 +2,27 @@
  * AdminAnalytics Page
  *
  * Project Analytics Dashboard
- * Shows: Stats Overview, Milestones Timeline
+ * Shows: Stats Overview, Milestones Timeline, Export
  *
  * Access: Admin/Super-Admin only
  */
 
+import { useState } from 'react';
 import { useAnalytics } from '../../hooks/useAnalytics';
 import { StatsGrid } from '../../components/admin/analytics/StatsGrid';
 import { MilestonesList } from '../../components/admin/analytics/MilestonesList';
 import { GrowthChart } from '../../components/admin/analytics/GrowthChart';
 import { StorageBreakdown } from '../../components/admin/analytics/StorageBreakdown';
+import { ExportModal } from '../../components/admin/analytics/ExportModal';
+import { AddMilestoneModal } from '../../components/admin/analytics/AddMilestoneModal';
+import { milestones } from '../../lib/constants/milestones';
 import './AdminAnalytics.scss';
 
 export default function AdminAnalytics() {
   const { metrics, storage, loading, error, refresh } = useAnalytics();
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [showAddMilestoneModal, setShowAddMilestoneModal] = useState(false);
+  const [milestonesKey, setMilestonesKey] = useState(0);
 
   if (loading) {
     return (
@@ -69,17 +76,52 @@ export default function AdminAnalytics() {
             Real-time project statistics and growth metrics
           </p>
         </div>
-        <button onClick={refresh} className="btn btn--secondary" title="Refresh Data">
-          🔄 Refresh
-        </button>
+        <div className="admin-analytics__actions">
+          <button
+            onClick={() => setShowExportModal(true)}
+            className="btn btn--secondary"
+            title="Export Data"
+          >
+            📤 Export
+          </button>
+          <button onClick={refresh} className="btn btn--secondary" title="Refresh Data">
+            🔄 Refresh
+          </button>
+        </div>
       </div>
 
       <div className="admin-analytics__content">
         <StatsGrid metrics={metrics} storage={storage} />
         <GrowthChart metrics={metrics} storage={storage} />
         <StorageBreakdown storage={storage} />
-        <MilestonesList limit={12} />
+        <MilestonesList
+          key={milestonesKey}
+          limit={12}
+          onAddClick={() => setShowAddMilestoneModal(true)}
+        />
       </div>
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <ExportModal
+          metrics={metrics}
+          storage={storage}
+          milestones={milestones}
+          onClose={() => setShowExportModal(false)}
+        />
+      )}
+
+      {/* Add Milestone Modal */}
+      {showAddMilestoneModal && (
+        <AddMilestoneModal
+          onClose={() => setShowAddMilestoneModal(false)}
+          onSuccess={() => {
+            // Trigger reload in MilestonesList by changing key
+            setMilestonesKey(prev => prev + 1);
+            setShowAddMilestoneModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }
