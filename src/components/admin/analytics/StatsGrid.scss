@@ -1,0 +1,51 @@
+/**
+ * StatsGrid Styles
+ */
+
+.stats-grid {
+  margin-bottom: 2rem;
+}
+
+.stats-grid__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+  }
+}
+
+.stats-grid__subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.stats-grid__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .stats-grid__cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-grid__cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid__cards {
+    grid-template-columns: 1fr;
+  }
+}
