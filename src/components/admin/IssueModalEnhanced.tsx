@@ -1,10 +1,11 @@
 // ============================================================================
-// ISSUE MODAL - Enhanced with Labels, Assignment, PR URL
+// ISSUE MODAL - Enhanced with Labels, Assignment, PR URL, Speech-to-Text
 // ============================================================================
 
 import { useState, useEffect } from 'react';
 import type { IssueWithDetails, CreateIssueRequest, UpdateIssueRequest } from '../../lib/services/issues';
 import { getCategories } from '../../lib/constants/categories';
+import { SpeechTextarea } from '../speech/SpeechTextarea';
 
 interface IssueModalProps {
   isOpen: boolean;
@@ -152,16 +153,22 @@ export default function IssueModalEnhanced({
             {errors.title && <span className="form-error">{errors.title}</span>}
           </div>
 
-          {/* Description */}
+          {/* Description with Speech-to-Text */}
           <div className="form-group">
             <label className="form-label">Beschreibung</label>
-            <textarea
+            <SpeechTextarea
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="form-textarea"
-              placeholder="Detaillierte Beschreibung..."
-              rows={4}
+              onChange={(value) => setFormData({ ...formData, description: value })}
+              placeholder="Detaillierte Beschreibung eingeben oder Spracherkennung nutzen..."
+              defaultLanguage="de-DE"
+              languages={['de-DE', 'en-US']}
+              autoStop={true}
+              autoStopDelay={3000}
+              insertMode="cursor"
+              showLanguageSelector={true}
               disabled={loading}
+              rows={6}
+              className="form-textarea"
             />
           </div>
 

@@ -8,6 +8,7 @@ export interface AdminStatus {
   isAdmin: boolean;
   isSuperAdmin: boolean;
   isModerator: boolean;
+  isBetaUser: boolean;
   isRegularAdmin: boolean;
   loading: boolean;
   adminLevel: 'none' | 'admin' | 'super_admin';
@@ -23,6 +24,7 @@ export function useAdmin(): AdminStatus {
         isAdmin: false,
         isSuperAdmin: false,
         isModerator: false,
+        isBetaUser: false,
         isRegularAdmin: false,
         loading: loading,
         adminLevel: 'none' as const,
@@ -40,6 +42,9 @@ export function useAdmin(): AdminStatus {
     // Check Moderator via user metadata
     const isModerator = user.user_metadata?.is_moderator === true;
 
+    // Check Beta User via user metadata
+    const isBetaUser = user.user_metadata?.is_beta_user === true;
+
     // Admins (moderators are NOT admins, they have limited permissions)
     const isAdmin = isSuperAdmin || isRegularAdmin;
 
@@ -47,6 +52,7 @@ export function useAdmin(): AdminStatus {
       isAdmin,
       isSuperAdmin,
       isModerator,
+      isBetaUser,
       isRegularAdmin,
       loading: false,
       adminLevel: isSuperAdmin ? 'super_admin' as const :
