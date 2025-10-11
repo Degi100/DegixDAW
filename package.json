@@ -21,6 +21,8 @@
     "analytics:snapshot": "node scripts/analytics/create-snapshot-github-actions.js",
     "analytics:setup-cron": "node scripts/db/show-sql.js scripts/sql/analytics_snapshots_cron.sql",
     "analytics:setup-function": "node scripts/db/run-sql.js scripts/sql/analytics_snapshots_function_only.sql",
+    "analytics:diagnose": "node scripts/db/run-sql.js scripts/sql/diagnose_analytics_setup.sql",
+    "analytics:fix-rls": "node scripts/db/run-sql.js scripts/sql/fix_analytics_snapshots_rls.sql",
     "db:sync-profiles": "node scripts/db/show-sql.js scripts/sql/sync_profiles_auth_users.sql",
     "db:fix-profiles-rls": "node scripts/db/show-sql.js scripts/sql/fix_profiles_rls.sql",
     "db:social-setup": "node scripts/db/show-sql.js scripts/sql/social_connections_setup.sql",

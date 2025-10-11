@@ -214,13 +214,12 @@ async function getStorageStats() {
   console.log('📊 Calculating storage stats...');
 
   try {
-    // Query database size via PostgreSQL
-    const { data, error } = await supabase.rpc('pg_database_size', {
-      database_name: 'postgres'
-    });
+    // Query database size via Supabase RPC wrapper
+    const { data, error } = await supabase.rpc('get_database_size');
 
     if (error) {
-      console.warn('   ⚠️  Could not fetch DB size, using estimate');
+      console.warn('   ⚠️  Could not fetch DB size:', error.message);
+      console.warn('   ⚠️  Using estimate (0 MB)');
     }
 
     const databaseSizeMB = data ? (data / (1024 * 1024)).toFixed(2) : 0;
