@@ -29,18 +29,13 @@ CREATE POLICY "Admins can read all snapshots"
     (auth.jwt() -> 'user_metadata' ->> 'is_admin')::boolean = true
   );
 
--- Policy 2: Service Role can create snapshots (for GitHub Actions)
--- Service Role Key bypasses RLS automatically, but we add this for clarity
-CREATE POLICY "Service role can create snapshots"
-  ON project_snapshots
-  FOR INSERT
-  WITH CHECK (true);  -- Service Role Key bypasses RLS anyway
-
--- Policy 3: Admins can create snapshots manually (from dashboard)
-CREATE POLICY "Admins can create snapshots manually"
+-- Policy 2: Allow snapshots creation (GitHub Actions + Admins)
+-- IMPORTANT: Only ONE INSERT policy to avoid conflicts
+CREATE POLICY "Allow snapshots creation"
   ON project_snapshots
   FOR INSERT
   WITH CHECK (
+    -- Allow if user is admin (for manual snapshots from dashboard)
     (auth.jwt() -> 'user_metadata' ->> 'is_admin')::boolean = true
   );
 
