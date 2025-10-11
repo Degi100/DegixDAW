@@ -14,11 +14,11 @@ interface AdminRouteProps {
 
 export default function AdminRoute({ children, requireSuperAdmin = false }: AdminRouteProps) {
   const { user, loading } = useAuth();
-  const { isAdmin, isSuperAdmin } = useAdmin();
+  const { isAdmin, isSuperAdmin, isModerator } = useAdmin();
   const [adminCheckComplete, setAdminCheckComplete] = useState(false);
-  
 
-  
+
+
   // Warte bis Admin-Check abgeschlossen ist
   useEffect(() => {
     if (!loading && user) {
@@ -42,9 +42,9 @@ export default function AdminRoute({ children, requireSuperAdmin = false }: Admi
   return <Navigate to="/welcome" replace />;
   }
 
-  // Check admin permissions
-  const hasRequiredPermission = requireSuperAdmin ? isSuperAdmin : isAdmin;
-  
+  // Check admin permissions (moderators can enter admin panel but have limited routes)
+  const hasRequiredPermission = requireSuperAdmin ? isSuperAdmin : (isAdmin || isModerator);
+
   if (!hasRequiredPermission) {
     // Redirect to 404 to not reveal admin routes exist
     return <Navigate to="/404" replace />;

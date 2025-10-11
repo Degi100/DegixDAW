@@ -74,7 +74,8 @@ export default function AdminUsers() {
   const {
     handleBulkActivate,
     handleBulkDeactivate,
-    handleBulkDelete
+    handleBulkDelete,
+    handleBulkRoleChange
   } = useBulkOperations(selectedUsers, loadUsers, () => setSelectedUsers(new Set()));
 
   // Pagination
@@ -381,6 +382,7 @@ export default function AdminUsers() {
           onBulkActivate={handleBulkActivate}
           onBulkDeactivate={handleBulkDeactivate}
           onBulkDelete={handleBulkDelete}
+          onBulkRoleChange={handleBulkRoleChange}
         />
 
         <ExportModal

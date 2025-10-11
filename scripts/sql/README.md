@@ -2,13 +2,60 @@
 
 Dieses Verzeichnis enthält alle SQL-Skripte für die Datenbank-Einrichtung und Wartung.
 
-## 📦 Setup Scripts
+## ⚡ Quick Start (Neues Projekt)
 
-### `supabase_setup.sql`
-**Vollständiges Datenbank-Setup** - Führe dies zuerst aus!
-- Erstellt alle Tabellen (users, issues, etc.)
-- Richtet RLS Policies ein
-- Erstellt Trigger und Indizes
+**Problem: User-Tabelle in Admin-Panel ist leer?**
+→ Du hast `admin_role_system_setup.sql` noch nicht ausgeführt!
+
+**3 Schritte zur Lösung:**
+```bash
+# 1. Script-Inhalt anzeigen
+npm run db:show scripts/sql/admin_role_system_setup.sql
+
+# 2. Öffne Supabase SQL-Editor
+# https://supabase.com/dashboard/project/YOUR_PROJECT/sql
+
+# 3. Kopiere Script-Inhalt, klicke "Run" ✅
+```
+
+**Danach:** User-Tabelle zeigt alle angemeldeten User!
+
+---
+
+## 🚀 MUST-RUN Scripts (In dieser Reihenfolge!)
+
+### 1. `admin_role_system_setup.sql` ⭐ KRITISCH
+**Admin Role-System + User Management**
+- Erstellt Role-System (user/moderator/admin)
+- RPC Function: `get_all_users_with_metadata()`
+- Super Admin Protection (DB-Level)
+- **OHNE DIESES SCRIPT: User-Tabelle bleibt leer!**
+- 📖 Dokumentation: [ADMIN_ROLE_SYSTEM.md](ADMIN_ROLE_SYSTEM.md)
+
+```bash
+# Script anzeigen:
+npm run db:show scripts/sql/admin_role_system_setup.sql
+# Dann in Supabase SQL-Editor kopieren + ausführen
+```
+
+### 2. `feature_flags_setup.sql`
+**Feature-Flags System**
+- Erstellt `feature_flags` Tabelle
+- RLS Policies + Realtime
+- Für Feature-Toggle Funktionalität
+
+### 3. `chat_system_setup.sql`
+**Chat-Funktionalität**
+- Erstellt Chat-Tabellen (conversations, messages, etc.)
+- RLS Policies für Chat-Zugriff
+
+---
+
+## 📦 Legacy Setup Scripts
+
+### `supabase_setup.sql` (⚠️ VERALTET)
+- Alte Version ohne Role-System
+- **Nutze stattdessen: admin_role_system_setup.sql**
 
 ### `issues_table_setup.sql`
 **Issue Management Tabelle**

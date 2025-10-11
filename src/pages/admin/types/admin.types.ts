@@ -96,6 +96,7 @@ export interface BulkActionsModalProps extends BaseModalProps {
   onBulkActivate: () => Promise<void>;
   onBulkDeactivate: () => Promise<void>;
   onBulkDelete: () => Promise<void>;
+  onBulkRoleChange?: (newRole: 'user' | 'beta_user' | 'moderator' | 'admin') => Promise<void>;
 }
 
 export interface ExportModalProps extends BaseModalProps {

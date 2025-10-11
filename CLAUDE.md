@@ -33,7 +33,17 @@ npm run db:sql           # SQL-Skripte ausführen
 npm run db:show          # SQL-Datei-Inhalte anzeigen
 ```
 
-Siehe `scripts/db/README.md` und `scripts/sql/README.md` für detaillierte Datenbank-Management-Dokumentation.
+### Analytics-Operationen
+```bash
+npm run analytics:snapshot          # Snapshot manuell erstellen (lokal testen)
+npm run analytics:backfill          # Historische Snapshots befüllen
+npm run analytics:setup-cron        # pg_cron Setup (Supabase Pro)
+npm run analytics:setup-function    # DB-Funktionen ohne Cron (Free Tier)
+```
+
+**Automatische Snapshots:** Via GitHub Actions (empfohlen) - siehe `scripts/analytics/GITHUB_ACTIONS_SETUP.md`
+
+Siehe `scripts/db/README.md`, `scripts/sql/README.md` und `scripts/analytics/README.md` für detaillierte Dokumentation.
 
 ## Architektur-Übersicht
 
@@ -46,11 +56,29 @@ Siehe `scripts/db/README.md` und `scripts/sql/README.md` für detaillierte Daten
 - Auth-State wird vom `useAuth`-Hook verwaltet ([src/hooks/useAuth.ts](src/hooks/useAuth.ts))
 
 **Autorisierungs-Ebenen:**
-1. **Admin-System** ([src/hooks/useAdmin.ts](src/hooks/useAdmin.ts)):
-   - Super Admin: Via `VITE_SUPER_ADMIN_EMAIL` Umgebungsvariable
-   - Regulärer Admin: Via `user_metadata.is_admin` Flag
-   - Moderator: Via `user_metadata.is_moderator` Flag
+1. **Role-Based Admin-System** ([src/hooks/useAdmin.ts](src/hooks/useAdmin.ts)):
+   - **Super Admin**: Via `VITE_SUPER_ADMIN_EMAIL` (🛡️ komplett geschützt, kann von NIEMANDEM editiert/gelöscht werden)
+   - **Admin**: Via `profiles.role = 'admin'` (volle Rechte, kann alle Roles verwalten, kann sich nicht selbst degradieren)
+   - **Moderator**: Via `profiles.role = 'moderator'` (kann User ↔ Beta-User ↔ Moderator ändern, NICHT zu Admin)
+   - **Beta-User**: Via `profiles.role = 'beta_user'` (🧪 Premium Tester, früher Zugriff, Feedback geben)
+   - **User**: Standard-Role für alle neuen User
+   - **User-Management**: `/admin/users` - Edit, Delete, Bulk Role-Change ([src/hooks/useBulkOperations.ts](src/hooks/useBulkOperations.ts))
+   - **Protections**:
+     - Self-Demotion verhindert (Admin/Mod kann sich nicht selbst runterstufen)
+     - Super-Admin Edit/Delete Buttons disabled im Frontend
+     - DB-Trigger verhindert unerlaubte Role-Changes
    - Geschützt via `AdminRoute`-Komponente ([src/components/admin/AdminRoute.tsx](src/components/admin/AdminRoute.tsx))
+   - SQL Setup: [scripts/sql/admin_role_system_setup.sql](scripts/sql/admin_role_system_setup.sql) + [ADMIN_ROLE_SYSTEM.md](scripts/sql/ADMIN_ROLE_SYSTEM.md)
+
+   **🔐 Granulare Admin Route Permissions** (NEU):
+   - Super-Admin kann **pro Admin/Moderator** festlegen, welche `/admin/*` Routen zugänglich sind
+   - Route-Definitionen: [src/lib/constants/adminRoutes.ts](src/lib/constants/adminRoutes.ts)
+   - UI: User-Edit-Modal zeigt Multi-Select mit Route-Checkboxen (Dashboard, Users, Issues, Settings, Features, Versions)
+   - Storage: `user_metadata.allowed_admin_routes` (Array von Route-IDs, z.B. `['issues', 'users']`)
+   - Protection: `AdminRoute` prüft via `canAccessRoute(requiredRoute)` ob Zugriff erlaubt
+   - Super-Admin Bypass: Hat IMMER Zugriff auf alle Routen (kein Check nötig)
+   - **Beispiel**: Moderator "rdegi" bekommt nur Zugriff auf `/admin/issues` → Alle anderen Admin-Routen leiten zu `/404`
+   - **SQL Fix erforderlich**: `npm run db:sql fix_get_all_users_rpc` (behebt 400 Error bei User-Edit)
 
 2. **Feature Flags** ([src/lib/services/featureFlags/](src/lib/services/featureFlags/)):
    - **Supabase Backend** mit Realtime-Updates (seit v1.0.0)
@@ -67,6 +95,8 @@ Siehe `scripts/db/README.md` und `scripts/sql/README.md` für detaillierte Daten
 - Auth-State-Checks erfolgen bei Initialisierung via `useAuth.initialized` Flag
 - Admin-Routen leiten zu `/404` weiter (nicht `/welcome`), um Existenz vor Nicht-Admins zu verbergen
 - Feature Flags unterstützen Multi-Rollen-Zugriff und können via Admin-Panel getoggelt werden
+- **Super Admin Protection**: Super Admin kann weder gelöscht noch role-degraded werden (UI + DB-Level)
+- **Role-Sync**: Roles werden automatisch in `user_metadata` (is_admin, is_moderator) gespiegelt
 
 ### Echtzeit-Chat-System
 
@@ -146,8 +176,50 @@ Alle Routen nutzen React.lazy() für dynamische Imports mit `<Suspense fallback=
 
 **Routen-Schutz:**
 - `PrivateRoute`: Prüft Authentifizierung
-- `AdminRoute`: Prüft Admin/Super-Admin-Rolle
+- `AdminRoute`: Prüft Admin/Super-Admin-Rolle + optional `requiredRoute` (granulare Permissions)
 - `FeatureFlagRoute`: Prüft Feature-Flag + Rollen-Zugriff
+
+### Issues System
+
+Supabase-basiertes Issue-Tracking-System für Bug-Reports, Feature-Requests und Task-Management:
+
+**Datenbank-Schema:**
+- `issues`: Kern-Tabelle (title, description, status, priority, category, labels, assigned_to, created_by, metadata)
+- `issue_comments`: Kommentare + Action-Log (comment, action_type, metadata)
+- RPC-Funktion: `get_issues_with_details()` (mit User-Info + Comments-Count)
+- RPC-Funktion: `assign_issue()` (mit Lock-Protection gegen Doppel-Assignments)
+
+**Service Layer** ([src/lib/services/issues/](src/lib/services/issues/)):
+- `issuesService.ts`: CRUD Operations, Assignment, Bulk-Actions
+- `commentsService.ts`: Kommentare laden, erstellen, löschen
+- `helpers.ts`: Filter, Sorting, Stats-Berechnung
+- `types.ts`: TypeScript-Interfaces
+
+**React Hooks:**
+- `useIssues` ([src/hooks/useIssues.ts](src/hooks/useIssues.ts)): Issues laden, CRUD, Assignment, Filter, Stats
+- `useIssueComments` ([src/hooks/useIssueComments.ts](src/hooks/useIssueComments.ts)): Kommentare laden, erstellen, Realtime
+
+**UI-Komponenten:**
+- `AdminIssues`: Haupt-Page mit Filters, Bulk-Actions, Create/Edit
+- `IssueCard`: Einzelnes Issue mit Status, Priority, Labels, Assignment-Button
+- `IssueList`: Tabellen-/Karten-View mit Bulk-Select
+- `IssueModalEnhanced`: Create/Edit-Modal mit Labels-Multi-Select, Categories, PR-URL
+- `IssueCommentPanel`: Sidebar für Kommentare
+
+**Features:**
+- Status: open, in_progress, done, closed
+- Priority: low, medium, high, critical (mit Smart-Sorting)
+- Categories: Custom-Categories via localStorage ([src/lib/constants/categories.ts](src/lib/constants/categories.ts))
+- Labels: bug, feature, urgent, docs, enhancement, question
+- Assignment mit Lock-Protection (verhindert race conditions)
+- PR-URL Integration (für "done" Issues)
+- Comments mit Action-Types (comment, status_change, assignment, label_change)
+
+**Wichtige Hinweise:**
+- **Realtime nicht zuverlässig**: UI nutzt **manuelle Refreshs** nach CRUD-Operationen (create/update/assign)
+- **RPC Type Fix**: `npm run db:sql fix_rpc_type_mismatch` behebt Column-Type-Mismatch
+- Status-Format: `in_progress` (underscore, nicht hyphen!)
+- SQL Setup: [scripts/sql/issues_system_setup.sql](scripts/sql/issues_system_setup.sql)
 
 ## Wichtige Entwicklungsmuster
 
@@ -254,6 +326,35 @@ Nutze `verifyCurrentPassword()` aus [src/lib/supabase.ts](src/lib/supabase.ts) v
 **Profil-Aktionen:**
 Siehe [src/lib/profile/profileActions.ts](src/lib/profile/profileActions.ts) für zentralisierte Profil-Update-Logik.
 
+### Admin User-Management
+
+**User-Verwaltung unter `/admin/users`:**
+
+Das Admin-Panel bietet umfassende User-Management-Funktionen:
+
+**Single-User-Operations:**
+- **Edit User** ([UserEditModal.tsx](src/pages/admin/components/modals/UserEditModal.tsx)):
+  - Role-Änderung: User ↔ Beta-User ↔ Moderator ↔ Admin
+  - Full Name, Username, Email-Anpassung
+  - Self-Demotion Prevention: Admin/Moderator kann sich nicht selbst degradieren
+  - Super-Admin Protection: Edit-Button disabled für `VITE_SUPER_ADMIN_EMAIL`
+
+- **Delete User** ([UserDeleteModal.tsx](src/pages/admin/components/modals/UserDeleteModal.tsx)):
+  - Löscht Profile aus `profiles`-Tabelle (NICHT `auth.users`, da Service Role Key im Frontend nicht verfügbar)
+  - Super-Admin Protection: Delete-Button disabled + Warnung
+
+**Bulk-Operations** ([useBulkOperations.ts](src/hooks/useBulkOperations.ts)):
+- **Bulk Activate/Deactivate**: Setzt `is_active` für mehrere User gleichzeitig
+- **Bulk Role Change**: Ändert Roles für mehrere User (mit Dropdown-Auswahl: User, Beta-User, Moderator, Admin)
+- **Bulk Delete**: Löscht mehrere User gleichzeitig (mit Confirmation)
+- UI: Checkbox-Selection in [UserTableRow.tsx](src/components/admin/UserTableRow.tsx) + [BulkActionsModal.tsx](src/pages/admin/components/modals/BulkActionsModal.tsx)
+
+**Wichtige Regeln:**
+- User-Daten werden via RPC-Function `get_all_users_with_metadata()` geladen (JOIN `auth.users` + `profiles`)
+- RLS Policies erlauben nur Admin-Zugriff (JWT-basiert: `auth.jwt() -> 'user_metadata' ->> 'is_admin'`)
+- Self-Demotion wird via Frontend-Check UND DB-Trigger verhindert ([prevent_self_demotion](scripts/sql/admin_role_system_setup.sql))
+- Super-Admin ist via `VITE_SUPER_ADMIN_EMAIL` definiert und kann von NIEMANDEM geändert/gelöscht werden
+
 ## Testing
 
 Jest konfiguriert mit:
@@ -294,6 +395,24 @@ npm run build            # TypeScript-Check + Production-Build
 - Environment Variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 
 ## Häufige Probleme
+
+**User-Tabelle in Admin-Panel ist leer:**
+Das häufigste Problem bei neuen Projekten! Die RPC-Function `get_all_users_with_metadata()` fehlt in Supabase.
+
+**3-Schritte-Lösung:**
+```bash
+# 1. Script-Inhalt anzeigen
+npm run db:show scripts/sql/admin_role_system_setup.sql
+
+# 2. Öffne Supabase SQL-Editor
+# https://supabase.com/dashboard/project/YOUR_PROJECT/sql
+
+# 3. Kopiere Script-Inhalt, klicke "Run" ✅
+```
+
+**Danach:** User-Tabelle zeigt alle angemeldeten User + Role-System ist aktiv!
+
+Siehe [scripts/sql/README.md](scripts/sql/README.md) für Details zum Admin-Role-System-Setup.
 
 **Port bereits in Verwendung:**
 Vite läuft auf Port 5173 mit `strictPort: true`. Standard-Start: `npm run dev`. Wenn Port belegt, Prozess beenden oder Port in [vite.config.ts](vite.config.ts) ändern (nur für andere Entwickler).

@@ -7,6 +7,7 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true, // Verhindert automatischen Port-Wechsel
+    host: true, // Ermöglicht Zugriff aus dem Netzwerk
   },
   build: {
     // Chunk size warning limit

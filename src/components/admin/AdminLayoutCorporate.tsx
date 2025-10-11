@@ -1,6 +1,6 @@
 // src/components/admin/AdminLayoutCorporate.tsx
 // Ultimate Corporate Professional Admin Layout
-import { type ReactNode } from 'react';
+import { type ReactNode, useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAdmin } from '../../hooks/useAdmin';
 import Header from '../layout/Header';
@@ -9,6 +9,7 @@ interface AdminNavItem {
   path: string;
   icon: string;
   label: string;
+  routeId: string;      // Route-ID für Permission-Check
   hasChildren?: boolean;
   parent?: string;
 }
@@ -18,25 +19,38 @@ interface AdminLayoutProps {
 }
 
 const navItems: AdminNavItem[] = [
-  { path: "/admin", icon: "📊", label: "Übersicht" },
-  { path: "/admin/users", icon: "👥", label: "Users" },
-  { path: "/admin/issues", icon: "🐛", label: "Issues" },
-  { path: "/admin/settings", icon: "⚙️", label: "Settings", hasChildren: true }
+  { path: "/admin", icon: "📊", label: "Übersicht", routeId: "dashboard" },
+  { path: "/admin/analytics", icon: "📈", label: "Analytics", routeId: "analytics" },
+  { path: "/admin/users", icon: "👥", label: "Users", routeId: "users" },
+  { path: "/admin/issues", icon: "🐛", label: "Issues", routeId: "issues" },
+  { path: "/admin/features", icon: "🚩", label: "Feature Flags", routeId: "features" },
+  { path: "/admin/settings", icon: "⚙️", label: "Settings", routeId: "settings", hasChildren: true }
 ];
 
 const subNavItems: AdminNavItem[] = [
-  { path: "/admin/settings/versions", icon: "📦", label: "Versions", parent: "/admin/settings" }
-];
-
-const navSections = [
-  {
-    title: "Management",
-    items: navItems
-  }
+  { path: "/admin/settings/versions", icon: "📦", label: "Versions", routeId: "versions", parent: "/admin/settings" }
 ];
 
 export default function AdminLayoutCorporate({ children }: AdminLayoutProps) {
-  const { adminLevel } = useAdmin();
+  const { adminLevel, isModerator, isRegularAdmin, isSuperAdmin } = useAdmin();
+
+  // Filter nav items: Moderatoren sehen NUR Issues + Settings
+  const filteredNavItems = useMemo(() => {
+    // Moderator (kein Regular-Admin/Super-Admin) → nur Issues + Settings
+    if (isModerator && !isRegularAdmin && !isSuperAdmin) {
+      return navItems.filter(item => item.routeId === 'issues' || item.routeId === 'settings');
+    }
+    // Admin/Super-Admin → alles
+    return navItems;
+  }, [isModerator, isRegularAdmin, isSuperAdmin]);
+
+  const filteredSubNavItems = useMemo(() => {
+    // Moderatoren sehen nur Versions in Sub-Navigation
+    if (isModerator && !isRegularAdmin && !isSuperAdmin) {
+      return subNavItems.filter(item => item.routeId === 'versions');
+    }
+    return subNavItems;
+  }, [isModerator, isRegularAdmin, isSuperAdmin]);
 
   return (
     <div className="admin-layout">
@@ -50,10 +64,9 @@ export default function AdminLayoutCorporate({ children }: AdminLayoutProps) {
         <div className="admin-content">
           <nav className="admin-sidebar">
             <div className="admin-nav">
-              {navSections.map((section, sectionIndex) => (
-                <div key={sectionIndex} className="admin-nav-section">
-                  <h3 className="admin-nav-section-title">{section.title}</h3>
-                  {section.items.map((item) => (
+              <div className="admin-nav-section">
+                <h3 className="admin-nav-section-title">Management</h3>
+                {filteredNavItems.map((item) => (
                     <div key={item.path}>
                       <NavLink
                         to={item.path}
@@ -69,7 +82,7 @@ export default function AdminLayoutCorporate({ children }: AdminLayoutProps) {
                       {/* Sub-Navigation für Settings */}
                       {item.hasChildren && (
                         <div className="admin-subnav">
-                          {subNavItems
+                          {filteredSubNavItems
                             .filter(subItem => subItem.parent === item.path)
                             .map((subItem) => (
                               <NavLink
@@ -87,8 +100,7 @@ export default function AdminLayoutCorporate({ children }: AdminLayoutProps) {
                       )}
                     </div>
                   ))}
-                </div>
-              ))}
+              </div>
             </div>
           </nav>
 

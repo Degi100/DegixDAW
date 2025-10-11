@@ -1,0 +1,46 @@
+name: Daily Analytics Snapshot
+
+# Runs daily at 00:00 UTC (1:00 AM CET / 2:00 AM CEST)
+# Can also be triggered manually via GitHub UI
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight UTC
+  workflow_dispatch:     # Allow manual trigger
+
+jobs:
+  create-snapshot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full git history for commit counting
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm ci
+
+      - name: 📊 Create Analytics Snapshot
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Auto-provided by GitHub
+        run: node scripts/analytics/create-snapshot-github-actions.js
+
+      - name: ✅ Success Notification
+        if: success()
+        run: |
+          echo "✅ Snapshot created successfully!"
+          echo "Date: $(date -u)"
+
+      - name: ❌ Failure Notification
+        if: failure()
+        run: |
+          echo "❌ Snapshot creation failed!"
+          echo "Check the logs above for details."

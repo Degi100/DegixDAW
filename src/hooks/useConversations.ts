@@ -21,10 +21,10 @@ export interface ConversationMember {
   is_muted: boolean;
   is_pinned: boolean;
   // Profile enrichment
-  username?: string;
-  display_name?: string; // optional, da Mapping undefined liefern kann
-  avatar_url?: string;
-  is_online?: boolean;
+  username: string | undefined;
+  display_name: string | undefined; // optional, da Mapping undefined liefern kann
+  avatar_url: string | undefined;
+  is_online: boolean | undefined;
 }
 
 export interface Conversation {
@@ -126,6 +126,13 @@ export function useConversations() {
 
       if (membersError) throw membersError;
 
+      console.log('👥 ALL Members from DB:', allMembers);
+      console.log('👥 Total members count:', allMembers?.length);
+      console.log('👥 Members per conversation:', conversationIds.map(convId => ({
+        conversation_id: convId,
+        members: allMembers?.filter(m => m.conversation_id === convId).map(m => m.user_id)
+      })));
+
       // 4. Get profiles for all member user_ids
       const allUserIds = Array.from(new Set(allMembers?.map(m => m.user_id) || []));
       console.debug('User-IDs für Profile-Abfrage:', allUserIds);
@@ -152,6 +159,8 @@ export function useConversations() {
         .eq('status', 'accepted');
 
       const friendIds = friendsData?.map(f => f.user_id === currentUserId ? f.friend_id : f.user_id) || [];
+      console.log('👥 Friend IDs:', friendIds);
+      console.log('📋 Friendships data:', friendsData);
 
       // 5. Get last message for each conversation
       const { data: lastMessages } = await supabase
@@ -192,7 +201,6 @@ export function useConversations() {
           (!membership.last_read_at || new Date(msg.created_at) > new Date(membership.last_read_at))
         ).length || 0;
         
-        console.log(`📊 Chat ${membership.conversation_id}: ${count} unread messages (last_read_at: ${membership.last_read_at})`);
         unreadCountMap.set(membership.conversation_id, count);
       });
 
@@ -205,7 +213,8 @@ export function useConversations() {
           const profile = profilesMap.get(m.user_id);
           return {
             ...m,
-            display_name: profile?.full_name || profile?.username || ''
+            display_name: profile?.full_name || profile?.username || '',
+            username: profile?.username
           };
         });
 
@@ -244,6 +253,7 @@ export function useConversations() {
         return false;
       });
 
+      console.log('🔍 Filtered conversations count:', filteredConversations.length);
       setConversations(filteredConversations);
       console.log('✅ Conversations loaded with unread counts:', filteredConversations.map(c => ({ id: c.id, unreadCount: c.unreadCount })));
     } catch (err) {
@@ -371,7 +381,7 @@ export function useConversations() {
 
       if (convError) throw convError;
 
-      // Add both members (mit .upsert() statt .insert() für Idempotenz)
+      // Add both members
       const { error: member1Error } = await supabase
         .from('conversation_members')
         .upsert(
@@ -542,36 +552,33 @@ export function useConversations() {
     const userId = user.id;
 
     try {
-      // 1. Check if conversation already exists
-      const { data: existingMembers, error: searchError } = await supabase
+      // Get my direct conversations
+      const { data: myConvs } = await supabase
         .from('conversation_members')
         .select('conversation_id, conversations!inner(type)')
         .eq('user_id', userId);
 
-      if (searchError) throw searchError;
+      if (myConvs) {
+        const directConvIds = myConvs
+          .filter((m: any) => m.conversations.type === 'direct')
+          .map((m: any) => m.conversation_id);
 
-      // Filter for direct conversations
-      const directConvIds = existingMembers
-        ?.filter((m: { conversation_id: string; conversations: { type: string }[] }) => m.conversations[0]?.type === 'direct')
-        .map((m: { conversation_id: string; conversations: { type: string }[] }) => m.conversation_id) || [];
+        // For each direct conversation, check if BOTH users are members
+        for (const convId of directConvIds) {
+          const { count } = await supabase
+            .from('conversation_members')
+            .select('user_id', { count: 'exact' })
+            .eq('conversation_id', convId)
+            .in('user_id', [userId, otherUserId]);
 
-      if (directConvIds.length > 0) {
-        // Check which of these conversations includes the other user
-        const { data: otherUserMembers, error: otherSearchError } = await supabase
-          .from('conversation_members')
-          .select('conversation_id')
-          .eq('user_id', otherUserId)
-          .in('conversation_id', directConvIds);
-
-        if (otherSearchError) throw otherSearchError;
-
-        // Found existing conversation
-        if (otherUserMembers && otherUserMembers.length > 0) {
-          return otherUserMembers[0].conversation_id;
+          // If both users are members (count === 2), this is the conversation!
+          if (count === 2) {
+            return convId;
+          }
         }
       }
 
-      // 2. No existing conversation, create new one
+      // No existing conversation found, create new one
       const conversationId = await createDirectConversation(otherUserId);
       return conversationId;
     } catch (err) {

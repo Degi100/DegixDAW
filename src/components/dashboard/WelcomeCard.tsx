@@ -3,6 +3,7 @@
 
 import type { User } from '@supabase/supabase-js';
 import Button from '../ui/Button';
+import RoleBadge from './RoleBadge';
 
 interface WelcomeCardProps {
   user: User;
@@ -81,6 +82,9 @@ export default function WelcomeCard({ user }: WelcomeCardProps) {
                   {user.email_confirmed_at ? '🟢 Verifiziert' : '🟡 E-Mail-Bestätigung ausstehend'}
                 </span>
               </div>
+
+              {/* Role Badge - Shows user's role */}
+              <RoleBadge />
             </div>
           </div>
         </div>

@@ -60,9 +60,36 @@ export function useBulkOperations(selectedUsers: Set<string>, onUsersUpdated: ()
     }
   };
 
+  const handleBulkRoleChange = async (newRole: 'user' | 'beta_user' | 'moderator' | 'admin') => {
+    try {
+      const userIds = Array.from(selectedUsers);
+      const { error: bulkError } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .in('id', userIds);
+
+      if (bulkError) throw bulkError;
+
+      const roleNames = {
+        user: 'User',
+        beta_user: 'Beta Tester',
+        moderator: 'Moderator',
+        admin: 'Admin'
+      };
+
+      success(`${userIds.length} Benutzer zu ${roleNames[newRole]} geändert`);
+      clearSelection();
+      onUsersUpdated();
+    } catch (err) {
+      console.error('Bulk role change error:', err);
+      error('Fehler beim Ändern der Rollen');
+    }
+  };
+
   return {
     handleBulkActivate,
     handleBulkDeactivate,
-    handleBulkDelete
+    handleBulkDelete,
+    handleBulkRoleChange
   };
 }

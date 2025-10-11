@@ -1,0 +1,182 @@
+/**
+ * Language Selector Styles
+ *
+ * Compact dropdown and full button mode for language selection
+ */
+
+@use '../../abstracts/variables/colors' as *;
+
+.language-selector {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  // ============================================================================
+  // Label (Full Mode)
+  // ============================================================================
+
+  &__label-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: $gray-700;
+  }
+
+  // ============================================================================
+  // Button
+  // ============================================================================
+
+  &__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 10px;
+    background: $white;
+    border: 2px solid $border-color;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: $gray-700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      border-color: $primary-500;
+      background: $primary-50;
+      color: $primary-600;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+      background: $gray-100;
+    }
+
+    // Active state
+    &--active {
+      border-color: $primary-500;
+      background: $primary-500;
+      color: $white;
+
+      &:hover:not(:disabled) {
+        background: $primary-600;
+      }
+    }
+  }
+
+  &__flag {
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  &__code {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  &__label {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  // ============================================================================
+  // Compact Mode (Dropdown)
+  // ============================================================================
+
+  &--compact {
+    .language-selector__button {
+      min-width: 60px;
+      padding: 6px 8px;
+    }
+  }
+
+  // ============================================================================
+  // Dropdown
+  // ============================================================================
+
+  &__dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 1000;
+    min-width: 120px;
+    background: $white;
+    border: 1px solid $border-color;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    animation: language-selector-dropdown-in 0.15s ease-out;
+  }
+
+  &__option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 12px;
+    background: $white;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    color: $gray-700;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: $gray-50;
+    }
+
+    &--active {
+      background: $primary-50;
+      color: $primary-600;
+
+      &:hover {
+        background: $primary-100;
+      }
+    }
+
+    // Remove default button styles
+    &:focus {
+      outline: none;
+    }
+  }
+
+  // ============================================================================
+  // Full Mode (Button Group)
+  // ============================================================================
+
+  &__buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  // ============================================================================
+  // Disabled State
+  // ============================================================================
+
+  &--disabled {
+    .language-selector__button {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+  }
+}
+
+// ============================================================================
+// Keyframes
+// ============================================================================
+
+@keyframes language-selector-dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

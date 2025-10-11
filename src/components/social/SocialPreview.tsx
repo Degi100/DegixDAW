@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { useFriends, type Friendship } from '../../hooks/useFriends';
 import { useFollowers, type Follower } from '../../hooks/useFollowers';
 import { useChat } from '../../contexts/ChatContext';
+import { useConversations } from '../../hooks/useConversations';
+import { supabase } from '../../lib/supabase';
 
 interface SocialPreviewProps {
   type: 'friends' | 'followers' | 'following' | 'requests';
@@ -12,6 +14,7 @@ interface SocialPreviewProps {
 
 export default function SocialPreview({ type }: SocialPreviewProps) {
   const { openChat } = useChat();
+  const { createOrOpenDirectConversation } = useConversations();
   const { friends, pendingRequests, acceptFriendRequest, rejectFriendRequest, removeFriend } = useFriends();
   const { followers, following, removeFollower, unfollowUser } = useFollowers();
   const [showCount, setShowCount] = useState(5);
@@ -102,21 +105,33 @@ export default function SocialPreview({ type }: SocialPreviewProps) {
     }
   };
 
-  const handleOpenChat = (item: Friendship | Follower) => {
+  const handleOpenChat = async (item: Friendship | Follower) => {
     // Get the user ID to chat with
     let chatUserId: string | undefined;
-    
+
     if ('friend_profile' in item) {
-      // For friends, get the friend_id
-      chatUserId = item.friend_id;
+      // For friends, we need to get the OTHER user's ID
+      // The friendship can be stored either way: user_id = me + friend_id = them OR user_id = them + friend_id = me
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        chatUserId = item.user_id === user.id ? item.friend_id : item.user_id;
+      }
     } else if ('profile' in item) {
       // For followers/following
       chatUserId = type === 'followers' ? item.follower_id : item.following_id;
     }
 
     if (chatUserId) {
-      // Open chat sidebar and start conversation
-      openChat(chatUserId);
+      try {
+        // Create or open the conversation (this adds both members!)
+        const conversationId = await createOrOpenDirectConversation(chatUserId);
+        if (conversationId) {
+          // Open the chat sidebar with the conversation
+          openChat(chatUserId);
+        }
+      } catch (error) {
+        console.error('Error creating conversation:', error);
+      }
     }
   };  return (
     <div className="social-preview">

@@ -10,10 +10,11 @@ import type { User } from '@supabase/supabase-js';
 interface UserDropdownProps {
   user: User;
   isAdmin: boolean;
+  isModerator?: boolean;  // Optional für Moderatoren
   onLogout: () => void;
 }
 
-export default function UserDropdown({ user, isAdmin, onLogout }: UserDropdownProps) {
+export default function UserDropdown({ user, isAdmin, isModerator = false, onLogout }: UserDropdownProps) {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -91,7 +92,7 @@ export default function UserDropdown({ user, isAdmin, onLogout }: UserDropdownPr
               <span>Settings</span>
             </button>
 
-            {isAdmin && (
+            {(isAdmin || isModerator) && (
               <button
                 onClick={() => handleItemClick('admin')}
                 className="dropdown-item"

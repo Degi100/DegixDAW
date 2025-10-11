@@ -14,9 +14,14 @@ export interface UserProfile {
   email_confirmed_at: string | null;
   phone?: string;
   avatar_url?: string;
-  role?: 'admin' | 'user' | 'moderator';
+  role?: 'admin' | 'user' | 'moderator' | 'beta_user';
   is_active?: boolean;
   metadata?: Record<string, unknown>;
+  user_metadata?: {
+    is_admin?: boolean;
+    is_moderator?: boolean;
+    [key: string]: unknown;
+  };
 }
 
 export function useUserData() {
@@ -137,6 +142,7 @@ export function useUserData() {
 
   const updateUser = useCallback(async (user: UserProfile) => {
     try {
+      // 1. Update profiles table (basic info)
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -150,6 +156,24 @@ export function useUserData() {
 
       if (profileError) throw profileError;
 
+      // 2. Update auth.users.raw_user_meta_data (role flags)
+      const metadataUpdates: Record<string, unknown> = {
+        is_admin: user.role === 'admin',
+        is_moderator: user.role === 'moderator'
+      };
+
+      // Call RPC function to update user_metadata
+      const { error: metadataError } = await supabase
+        .rpc('update_user_metadata', {
+          target_user_id: user.id,
+          metadata_updates: metadataUpdates
+        });
+
+      if (metadataError) {
+        console.error('Error updating user_metadata:', metadataError);
+        throw metadataError;
+      }
+
       success('Benutzer erfolgreich aktualisiert!');
       loadUsers();
     } catch (err) {
@@ -160,7 +184,12 @@ export function useUserData() {
 
   const deleteUser = useCallback(async (userId: string) => {
     try {
-      const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
+      // Delete profile (auth.users will be cascaded via trigger or RLS)
+      const { error: deleteError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
       if (deleteError) throw deleteError;
 
       success('Benutzer erfolgreich gelöscht!');

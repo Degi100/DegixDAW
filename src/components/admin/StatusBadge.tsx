@@ -38,6 +38,7 @@ function getRoleInfo(role?: string) {
   switch (role) {
     case 'admin': return { text: 'Admin', class: 'danger' };
     case 'moderator': return { text: 'Moderator', class: 'warning' };
+    case 'beta_user': return { text: 'Beta Tester', class: 'info' };
     default: return { text: 'User', class: 'secondary' };
   }
 }
