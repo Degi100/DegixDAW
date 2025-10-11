@@ -17,6 +17,7 @@
     "db:mark-done": "node scripts/db/mark-issues-done-v2.js",
     "db:sql": "node scripts/db/run-sql.js",
     "db:show": "node scripts/db/show-sql.js",
+    "analytics:backfill": "node scripts/analytics/backfill-snapshots.js",
     "db:sync-profiles": "node scripts/db/show-sql.js scripts/sql/sync_profiles_auth_users.sql",
     "db:fix-profiles-rls": "node scripts/db/show-sql.js scripts/sql/fix_profiles_rls.sql",
     "db:social-setup": "node scripts/db/show-sql.js scripts/sql/social_connections_setup.sql",

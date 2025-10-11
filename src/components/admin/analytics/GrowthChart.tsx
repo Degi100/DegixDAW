@@ -4,14 +4,15 @@
  * Multi-line chart showing project growth over time
  * Toggleable metrics: LOC, Users, Messages, Storage
  *
- * NOTE: For MVP, shows mock historical data
- * Future: Connect to project_snapshots table
+ * Uses real historical data from project_snapshots table
+ * Falls back to mock data if no snapshots available
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { getSnapshots } from '../../../lib/services/analytics/snapshotsService';
 import type { ProjectMetrics, StorageStats } from '../../../lib/services/analytics/types';
-import './GrowthChart.scss';
+import '../../../styles/components/analytics/GrowthChart.scss';
 
 interface GrowthChartProps {
   metrics: ProjectMetrics;
@@ -24,6 +25,14 @@ interface ChartDataPoint {
   users: number;
   messages: number;
   storage_mb: number;
+  // Language Breakdown
+  typescript: number;
+  javascript: number;
+  scss: number;
+  css: number;
+  sql: number;
+  json: number;
+  markdown: number;
 }
 
 export function GrowthChart({ metrics, storage }: GrowthChartProps) {
@@ -31,40 +40,98 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
     loc: true,
     users: true,
     messages: false,
-    storage: false
+    storage: false,
+    typescript: false,
+    javascript: false,
+    scss: false,
+    css: false,
+    sql: false,
+    json: false,
+    markdown: false
   });
 
-  // Mock historical data (last 30 days)
-  // TODO: Replace with real data from project_snapshots table
+  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [usingRealData, setUsingRealData] = useState(false);
+
+  // Load historical snapshots from database
+  useEffect(() => {
+    loadSnapshotData();
+  }, []);
+
+  const loadSnapshotData = async () => {
+    try {
+      console.log('[GrowthChart] Loading snapshots...');
+      const snapshots = await getSnapshots(30); // Last 30 snapshots
+
+      if (snapshots.length > 0) {
+        // Convert snapshots to chart data
+        const data = snapshots
+          .reverse() // Oldest first
+          .map((snapshot) => ({
+            date: new Date(snapshot.snapshot_date).toLocaleDateString('de-DE', {
+              day: '2-digit',
+              month: 'short'
+            }),
+            loc: snapshot.total_loc,
+            users: snapshot.total_users,
+            messages: snapshot.total_messages,
+            storage_mb: snapshot.total_storage_mb,
+            typescript: snapshot.typescript_loc || 0,
+            javascript: snapshot.javascript_loc || 0,
+            scss: snapshot.scss_loc || 0,
+            css: snapshot.css_loc || 0,
+            sql: snapshot.sql_loc || 0,
+            json: snapshot.json_loc || 0,
+            markdown: snapshot.markdown_loc || 0
+          }));
+
+        setChartData(data);
+        setUsingRealData(true);
+        console.log(`[GrowthChart] ✅ Loaded ${snapshots.length} snapshots`);
+      } else {
+        // Fallback to mock data
+        console.warn('[GrowthChart] No snapshots found, using mock data');
+        setChartData(generateMockData());
+        setUsingRealData(false);
+      }
+    } catch (error) {
+      console.error('[GrowthChart] Failed to load snapshots:', error);
+      setChartData(generateMockData());
+      setUsingRealData(false);
+    }
+  };
+
+  // Fallback mock data generator
   const generateMockData = (): ChartDataPoint[] => {
     const data: ChartDataPoint[] = [];
     const today = new Date();
     const daysSinceStart = metrics.code.projectAge.days;
-
-    // Generate data points (one per day for last 30 days, or project age if less)
     const daysToShow = Math.min(30, daysSinceStart);
 
     for (let i = daysToShow; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
-
-      // Simulate growth (exponential curve with some variance)
       const progress = 1 - (i / daysToShow);
-      const variance = Math.random() * 0.1 - 0.05; // ±5% variance
+      const variance = Math.random() * 0.1 - 0.05;
 
       data.push({
         date: date.toLocaleDateString('de-DE', { day: '2-digit', month: 'short' }),
         loc: Math.floor(metrics.code.loc * (progress + variance)),
         users: Math.floor(metrics.users.total * (progress + variance)),
         messages: Math.floor(metrics.messages.total * (progress + variance)),
-        storage_mb: storage.total_mb * (progress + variance)
+        storage_mb: storage.total_mb * (progress + variance),
+        typescript: Math.floor(metrics.code.loc * 0.665 * (progress + variance)),
+        javascript: Math.floor(metrics.code.loc * 0.021 * (progress + variance)),
+        scss: Math.floor(metrics.code.loc * 0.234 * (progress + variance)),
+        css: Math.floor(metrics.code.loc * 0.015 * (progress + variance)),
+        sql: Math.floor(metrics.code.loc * 0.039 * (progress + variance)),
+        json: Math.floor(metrics.code.loc * 0.008 * (progress + variance)),
+        markdown: Math.floor(metrics.code.loc * 0.020 * (progress + variance))
       });
     }
 
     return data;
   };
-
-  const data = generateMockData();
 
   const toggleLine = (key: keyof typeof visibleLines) => {
     setVisibleLines(prev => ({ ...prev, [key]: !prev[key] }));
@@ -86,6 +153,33 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
       );
     }
     return null;
+  };
+
+  // Get current values (last data point) for active lines
+  const getCurrentValues = () => {
+    if (chartData.length === 0) return [];
+
+    const lastPoint = chartData[chartData.length - 1];
+    const values = [];
+
+    if (visibleLines.loc) values.push({ label: 'Total LOC', value: lastPoint.loc, color: '#3b82f6' });
+    if (visibleLines.users) values.push({ label: 'Users', value: lastPoint.users, color: '#8b5cf6' });
+    if (visibleLines.messages) values.push({ label: 'Messages', value: lastPoint.messages, color: '#06b6d4' });
+    if (visibleLines.storage) values.push({ label: 'Storage', value: `${lastPoint.storage_mb.toFixed(1)} MB`, color: '#f59e0b' });
+    if (visibleLines.typescript) values.push({ label: 'TypeScript', value: lastPoint.typescript, color: '#3178c6' });
+    if (visibleLines.javascript) values.push({ label: 'JavaScript', value: lastPoint.javascript, color: '#f7df1e' });
+    if (visibleLines.scss) values.push({ label: 'SCSS', value: lastPoint.scss, color: '#cc6699' });
+    if (visibleLines.css) values.push({ label: 'CSS', value: lastPoint.css, color: '#264de4' });
+    if (visibleLines.sql) values.push({ label: 'SQL', value: lastPoint.sql, color: '#00758f' });
+    if (visibleLines.json) values.push({ label: 'JSON', value: lastPoint.json, color: '#5a5a5a' });
+    if (visibleLines.markdown) values.push({ label: 'Markdown', value: lastPoint.markdown, color: '#083fa1' });
+
+    // Sort by value (highest first) - handle string values (storage)
+    return values.sort((a, b) => {
+      const aVal = typeof a.value === 'string' ? parseFloat(a.value) : a.value;
+      const bVal = typeof b.value === 'string' ? parseFloat(b.value) : b.value;
+      return bVal - aVal;
+    });
   };
 
   return (
@@ -121,11 +215,61 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
           >
             💾 Storage
           </button>
+          <button
+            className={`toggle ${visibleLines.typescript ? 'active' : ''}`}
+            onClick={() => toggleLine('typescript')}
+            style={{ borderColor: visibleLines.typescript ? '#3178c6' : 'var(--border-color)' }}
+          >
+            📘 TS
+          </button>
+          <button
+            className={`toggle ${visibleLines.javascript ? 'active' : ''}`}
+            onClick={() => toggleLine('javascript')}
+            style={{ borderColor: visibleLines.javascript ? '#f7df1e' : 'var(--border-color)' }}
+          >
+            📙 JS
+          </button>
+          <button
+            className={`toggle ${visibleLines.scss ? 'active' : ''}`}
+            onClick={() => toggleLine('scss')}
+            style={{ borderColor: visibleLines.scss ? '#cc6699' : 'var(--border-color)' }}
+          >
+            💅 SCSS
+          </button>
+          <button
+            className={`toggle ${visibleLines.sql ? 'active' : ''}`}
+            onClick={() => toggleLine('sql')}
+            style={{ borderColor: visibleLines.sql ? '#00758f' : 'var(--border-color)' }}
+          >
+            🗄️ SQL
+          </button>
+          <button
+            className={`toggle ${visibleLines.css ? 'active' : ''}`}
+            onClick={() => toggleLine('css')}
+            style={{ borderColor: visibleLines.css ? '#264de4' : 'var(--border-color)' }}
+          >
+            🎨 CSS
+          </button>
+          <button
+            className={`toggle ${visibleLines.json ? 'active' : ''}`}
+            onClick={() => toggleLine('json')}
+            style={{ borderColor: visibleLines.json ? '#5a5a5a' : 'var(--border-color)' }}
+          >
+            📦 JSON
+          </button>
+          <button
+            className={`toggle ${visibleLines.markdown ? 'active' : ''}`}
+            onClick={() => toggleLine('markdown')}
+            style={{ borderColor: visibleLines.markdown ? '#083fa1' : 'var(--border-color)' }}
+          >
+            📝 MD
+          </button>
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={400}>
-        <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+      <div className="growth-chart__container">
+        <ResponsiveContainer width="100%" height={400}>
+        <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
           <XAxis
             dataKey="date"
@@ -189,11 +333,121 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
               activeDot={{ r: 6 }}
             />
           )}
+
+          {visibleLines.typescript && (
+            <Line
+              type="monotone"
+              dataKey="typescript"
+              name="TypeScript LOC"
+              stroke="#3178c6"
+              strokeWidth={2}
+              dot={{ fill: '#3178c6', r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+          )}
+
+          {visibleLines.javascript && (
+            <Line
+              type="monotone"
+              dataKey="javascript"
+              name="JavaScript LOC"
+              stroke="#f7df1e"
+              strokeWidth={2}
+              dot={{ fill: '#f7df1e', r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+          )}
+
+          {visibleLines.scss && (
+            <Line
+              type="monotone"
+              dataKey="scss"
+              name="SCSS LOC"
+              stroke="#cc6699"
+              strokeWidth={2}
+              dot={{ fill: '#cc6699', r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+          )}
+
+          {visibleLines.sql && (
+            <Line
+              type="monotone"
+              dataKey="sql"
+              name="SQL LOC"
+              stroke="#00758f"
+              strokeWidth={2}
+              dot={{ fill: '#00758f', r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+          )}
+
+          {visibleLines.css && (
+            <Line
+              type="monotone"
+              dataKey="css"
+              name="CSS LOC"
+              stroke="#264de4"
+              strokeWidth={2}
+              dot={{ fill: '#264de4', r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+          )}
+
+          {visibleLines.json && (
+            <Line
+              type="monotone"
+              dataKey="json"
+              name="JSON LOC"
+              stroke="#5a5a5a"
+              strokeWidth={2}
+              dot={{ fill: '#5a5a5a', r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+          )}
+
+          {visibleLines.markdown && (
+            <Line
+              type="monotone"
+              dataKey="markdown"
+              name="Markdown LOC"
+              stroke="#083fa1"
+              strokeWidth={2}
+              dot={{ fill: '#083fa1', r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+          )}
         </LineChart>
       </ResponsiveContainer>
 
+        {/* Current Values Panel */}
+        <div className="growth-chart__values">
+          <h3>Current Values</h3>
+          {getCurrentValues().map((item, index) => (
+            <div key={index} className="value-item">
+              <span className="value-label" style={{ color: item.color }}>
+                {item.label}
+              </span>
+              <span className="value-number" style={{ color: item.color }}>
+                {typeof item.value === 'number' ? item.value.toLocaleString() : item.value}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <p className="growth-chart__note">
-        💡 Note: Historical data is simulated. Connect to <code>project_snapshots</code> table for real data.
+        {usingRealData ? (
+          <>
+            ✅ Using real snapshot data from <code>project_snapshots</code> table ({chartData.length}{' '}
+            data points)
+          </>
+        ) : (
+          <>
+            ⚠️ Using simulated data. Create snapshots via "📸 Snapshot" button to see real historical
+            growth.
+          </>
+        )}
       </p>
     </div>
   );

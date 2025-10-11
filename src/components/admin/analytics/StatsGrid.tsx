@@ -8,7 +8,7 @@
 
 import { StatsCard } from './StatsCard';
 import type { ProjectMetrics, StorageStats } from '../../../lib/services/analytics/types';
-import './StatsGrid.scss';
+import '../../../styles/components/analytics/StatsGrid.scss';
 
 interface StatsGridProps {
   metrics: ProjectMetrics;

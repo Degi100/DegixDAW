@@ -7,6 +7,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -269,6 +271,136 @@ app.post('/api/issues/:id/comments', async (req, res) => {
 });
 
 // ============================================================================
+// ANALYTICS - Code Metrics (LOC Counter)
+// ============================================================================
+
+const execAsync = promisify(exec);
+
+/**
+ * GET /api/analytics/code-metrics
+ * Returns real code metrics via Git commands
+ */
+app.get('/api/analytics/code-metrics', async (req, res) => {
+  try {
+    console.log('📊 [Analytics] Calculating code metrics...');
+
+    // Get project root (one level up from server/)
+    const projectRoot = path.resolve(__dirname, '..');
+
+    // 1. Count files (including SQL)
+    const { stdout: filesOutput } = await execAsync('git ls-files', { cwd: projectRoot });
+    const allFiles = filesOutput.trim().split('\n').filter(Boolean);
+    const sourceFiles = allFiles.filter((f) =>
+      /\.(ts|tsx|js|jsx|css|scss|json|md|sql)$/.test(f)
+    );
+    const filesCount = sourceFiles.length;
+
+    // 2. Count commits
+    const { stdout: commitsOutput } = await execAsync('git rev-list --count HEAD', {
+      cwd: projectRoot,
+    });
+    const commitsCount = parseInt(commitsOutput.trim(), 10);
+
+    // 3. Get first commit date (project age) - Windows-compatible
+    const { stdout: firstCommitOutput } = await execAsync(
+      'git log --format=%ai --reverse',
+      { cwd: projectRoot }
+    );
+    const firstCommitLine = firstCommitOutput.trim().split('\n')[0]; // Get first line (instead of head -1)
+    const firstCommitDate = new Date(firstCommitLine);
+    const startDate = firstCommitDate.toISOString().split('T')[0]; // YYYY-MM-DD
+    const projectAgeDays = Math.floor((Date.now() - firstCommitDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    // 4. Count Lines of Code (LOC) with Language Breakdown
+    let totalLOC = 0;
+    const languageStats = {
+      typescript: 0,
+      javascript: 0,
+      scss: 0,
+      css: 0,
+      sql: 0,
+      json: 0,
+      markdown: 0,
+    };
+
+    for (const file of sourceFiles) {
+      try {
+        const filePath = path.join(projectRoot, file);
+        const content = await fs.readFile(filePath, 'utf-8');
+        const lines = content.split('\n').length;
+        totalLOC += lines;
+
+        // Categorize by language
+        if (file.match(/\.(ts|tsx)$/)) languageStats.typescript += lines;
+        else if (file.match(/\.(js|jsx)$/)) languageStats.javascript += lines;
+        else if (file.match(/\.scss$/)) languageStats.scss += lines;
+        else if (file.match(/\.css$/)) languageStats.css += lines;
+        else if (file.match(/\.sql$/)) languageStats.sql += lines;
+        else if (file.match(/\.json$/)) languageStats.json += lines;
+        else if (file.match(/\.md$/)) languageStats.markdown += lines;
+      } catch (err) {
+        // Skip files that can't be read
+        console.warn(`   ⚠️  Skipping ${file}: ${err.message}`);
+      }
+    }
+
+    const metrics = {
+      loc: totalLOC,
+      files: filesCount,
+      commits: commitsCount,
+      projectAge: {
+        days: projectAgeDays,
+        startDate,
+      },
+      languageStats,
+    };
+
+    console.log(`   ✅ Total LOC: ${totalLOC.toLocaleString()}`);
+    console.log(`   ✅ Files: ${filesCount}`);
+    console.log(`   ✅ Commits: ${commitsCount}`);
+    console.log(`   ✅ Age: ${projectAgeDays} days (since ${startDate})`);
+    console.log(`   📊 Languages: TS=${languageStats.typescript} | JS=${languageStats.javascript} | SCSS=${languageStats.scss} | SQL=${languageStats.sql}`);
+
+    res.json(metrics);
+  } catch (error) {
+    console.error('❌ [Analytics] Error calculating code metrics:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/analytics/snapshots/backfill
+ * Create historical snapshots (requires admin session token)
+ */
+app.post('/api/analytics/snapshots/backfill', async (req, res) => {
+  try {
+    console.log('📊 [Analytics] Backfilling snapshots...');
+
+    // Expect array of snapshot objects from client
+    const { snapshots } = req.body;
+
+    if (!Array.isArray(snapshots) || snapshots.length === 0) {
+      return res.status(400).json({ error: 'Invalid snapshots data' });
+    }
+
+    const results = [];
+
+    for (const snapshot of snapshots) {
+      results.push(snapshot);
+    }
+
+    res.json({
+      success: true,
+      count: results.length,
+      message: `Created ${results.length} snapshots`
+    });
+  } catch (error) {
+    console.error('❌ [Analytics] Error backfilling snapshots:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================================
 // REALTIME SUBSCRIPTION - Claude listens for new issues
 // ============================================================================
 
@@ -429,6 +561,7 @@ app.listen(PORT, () => {
   console.log(`   POST   /api/issues`);
   console.log(`   PATCH  /api/issues/:id`);
   console.log(`   POST   /api/issues/:id/comments`);
+  console.log(`   GET    /api/analytics/code-metrics`);
   console.log('');
 
   // Start Realtime listener

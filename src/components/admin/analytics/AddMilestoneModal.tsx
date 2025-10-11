@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { createMilestone, type CreateMilestoneInput } from '../../../lib/services/analytics/milestonesService';
 import type { MilestoneCategory } from '../../../lib/services/analytics/types';
-import './AddMilestoneModal.scss';
+import '../../../styles/components/analytics/AddMilestoneModal.scss';
 
 interface AddMilestoneModalProps {
   onClose: () => void;
