@@ -53,6 +53,7 @@ const AdminIssues = lazy(() => import('./pages/admin/AdminIssues'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 const VersionsManagement = lazy(() => import('./pages/admin/VersionsManagement'));
 const AdminFeatureFlags = lazy(() => import('./components/admin/AdminFeatureFlags'));
+const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
 
 const router = createBrowserRouter([
   // Public welcome/login page
@@ -188,6 +189,18 @@ const router = createBrowserRouter([
               <AdminFeatureFlags />
             </AdminLayoutCorporate>
           </ProtectedAdminRoute>
+        </AdminRoute>
+      </Suspense>
+    )
+  },
+  {
+    path: '/admin/analytics',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <AdminRoute>
+          <AdminLayoutCorporate>
+            <AdminAnalytics />
+          </AdminLayoutCorporate>
         </AdminRoute>
       </Suspense>
     )

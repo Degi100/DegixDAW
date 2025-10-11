@@ -33,7 +33,17 @@ npm run db:sql           # SQL-Skripte ausführen
 npm run db:show          # SQL-Datei-Inhalte anzeigen
 ```
 
-Siehe `scripts/db/README.md` und `scripts/sql/README.md` für detaillierte Datenbank-Management-Dokumentation.
+### Analytics-Operationen
+```bash
+npm run analytics:snapshot          # Snapshot manuell erstellen (lokal testen)
+npm run analytics:backfill          # Historische Snapshots befüllen
+npm run analytics:setup-cron        # pg_cron Setup (Supabase Pro)
+npm run analytics:setup-function    # DB-Funktionen ohne Cron (Free Tier)
+```
+
+**Automatische Snapshots:** Via GitHub Actions (empfohlen) - siehe `scripts/analytics/GITHUB_ACTIONS_SETUP.md`
+
+Siehe `scripts/db/README.md`, `scripts/sql/README.md` und `scripts/analytics/README.md` für detaillierte Dokumentation.
 
 ## Architektur-Übersicht
 
