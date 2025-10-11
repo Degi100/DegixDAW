@@ -25,8 +25,8 @@ https://github.com/DEIN_USERNAME/DegixDAW/settings/secrets/actions
 
 Klicke auf **"New repository secret"** und füge folgende Secrets hinzu:
 
-#### Secret 1: `SUPABASE_URL`
-- **Name:** `SUPABASE_URL`
+#### Secret 1: `VITE_SUPABASE_URL`
+- **Name:** `VITE_SUPABASE_URL`
 - **Value:** Deine Supabase Project URL
   ```
   https://DEIN_PROJECT.supabase.co
@@ -156,7 +156,7 @@ Klicke auf einen Run → Klicke auf "create-snapshot" Job → Sieh dir die Logs 
 **Lösung:**
 1. Gehe zu Repository Settings → Secrets → Actions
 2. Prüfe dass **genau diese Namen** existieren:
-   - `SUPABASE_URL`
+   - `VITE_SUPABASE_URL`
    - `SUPABASE_SERVICE_ROLE_KEY`
 3. Achte auf Groß-/Kleinschreibung!
 
