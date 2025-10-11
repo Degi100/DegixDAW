@@ -33,6 +33,7 @@
     "test": "jest --passWithNoTests"
   },
   "dependencies": {
+    "@rcpch/digital-growth-charts-react-component-library": "^7.4.3",
     "@supabase/supabase-js": "^2.57.4",
     "express": "^5.1.0",
     "react": "^19.1.1",
