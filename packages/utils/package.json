@@ -1,0 +1,13 @@
+{
+  "name": "@degixdaw/utils",
+  "version": "1.0.0",
+  "description": "Shared utilities for DegixDAW",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": ["degixdaw", "utils", "shared"],
+  "author": "DegixDAW Team",
+  "license": "MIT"
+}

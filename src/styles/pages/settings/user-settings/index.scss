@@ -1,9 +1,0 @@
-// ============================================
-// USER SETTINGS - MODULAR INDEX
-// ============================================
-// This file aggregates all user-settings modules
-// for clean, maintainable imports
-
-@forward 'user-settings-base';
-@forward 'user-settings-sidebar';
-@forward 'user-settings-content';

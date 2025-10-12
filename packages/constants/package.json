@@ -1,0 +1,10 @@
+{
+  "name": "@degixdaw/constants",
+  "version": "1.0.0",
+  "description": "Shared constants for DegixDAW",
+  "main": "index.ts",
+  "types": "index.ts",
+  "keywords": ["degixdaw", "constants", "shared"],
+  "author": "DegixDAW Team",
+  "license": "MIT"
+}

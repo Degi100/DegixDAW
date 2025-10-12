@@ -1,157 +1,252 @@
-# DegixDAW Frontend
+# DegixDAW Monorepo
 
-**D**AW-integrated, **E**ffortless, **G**lobal, **I**nstant e**X**change - Professional React web application for music collaboration.
+**D**AW-integrated, **E**ffortless, **G**lobal, **I**nstant e**X**change - Professional music collaboration platform with native desktop and VST plugin support.
 
-## 🚀 Overview
+## 🎵 Overview
 
-A modern, full-stack music collaboration platform built with React 19 and TypeScript. Features real-time DAW integration, global collaboration tools, and comprehensive user management with Supabase backend.
+DegixDAW is a comprehensive music collaboration ecosystem consisting of:
 
-## ✨ Key Features
+- **Web Frontend**: React 19 + TypeScript web application
+- **Web Backend**: Express API server with Supabase integration
+- **Desktop App**: Native desktop application (Electron/Tauri) - Coming Soon
+- **VST Plugins**: Audio plugins for DAW integration (JUCE) - Coming Soon
+- **Shared Packages**: Common types, utilities, and constants
 
-- 🎵 **Professional DAW Integration** - Seamless workflow with digital audio workstations
-- 🌍 **Real-time Collaboration** - Live project sharing and social features for musicians worldwide
-- ⚡ **Modern Authentication** - Email/password + OAuth (Google, Discord) with secure password management
-- 🔐 **Advanced Security** - Password visibility toggle, validation, and Supabase auth integration
-- 🎯 **Smart Username System** - AI-powered suggestions with real-time availability checking
-- 📧 **Professional Email Management** - Secure email change functionality with validation
-- 🎨 **Modular Component Architecture** - Reusable UI components with TypeScript
-- 📱 **Responsive Design** - Mobile-optimized interface with smooth animations
-- 🔔 **Toast Notifications** - Professional notification system with error handling
-- ⚙️ **Complete User Management** - Profile editing, settings, and account management
-- 👥 **Social Features** - Friend connections and music collaboration tools
-- 🔧 **Admin Panel** - Administrative tools for platform management
+## 📦 Monorepo Structure
 
-## 🏗️ Architecture
-
-### Tech Stack
-- **React 19** with TypeScript
-- **Vite** for lightning-fast development and building
-- **React Router** for client-side routing
-- **Supabase** for authentication, database, and real-time features
-- **Sass/SCSS** for advanced styling capabilities
-- **Express.js** for local API development
-- **Zod** for runtime type validation
-
-### Project Structure
 ```
-src/
-├── components/
-│   ├── admin/          # Administrative components
-│   ├── auth/           # Authentication system
-│   ├── chat/           # Real-time messaging
-│   ├── dashboard/      # Main dashboard components
-│   ├── layout/         # Layout and navigation
-│   ├── profile/        # User profile management
-│   ├── settings/       # User settings and preferences
-│   ├── social/         # Social features and connections
-│   └── ui/             # Reusable UI components
-├── hooks/              # Custom React hooks
-├── lib/                # Utilities and configurations
-├── pages/              # Route components and pages
-├── styles/             # SCSS stylesheets and design system
-└── utils/              # Helper functions and utilities
-```
-
-### Core UI Components
-```
-src/components/ui/
-├── Button.tsx              # Multi-variant button system
-├── Input.tsx               # Enhanced form inputs with validation
-├── Toast.tsx               # Notification system
-├── Loading.tsx             # Loading states and skeletons
-├── UsernameSuggestions.tsx # AI-powered username generation
-└── ErrorBoundary.tsx       # Error handling and fallbacks
+DegixDAW/
+├── web/
+│   ├── frontend/        # React 19 + TypeScript web app
+│   └── backend/         # Express API server
+├── desktop/             # Electron/Tauri desktop app (Coming Soon)
+├── vst/                 # VST/AU/AAX plugins (Coming Soon)
+├── packages/
+│   ├── types/           # Shared TypeScript types
+│   ├── utils/           # Shared utilities
+│   └── constants/       # Shared constants
+├── .github/
+│   └── workflows/       # CI/CD pipelines
+└── package.json         # Monorepo root with workspaces
 ```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Node.js 20+**
-- **npm** or **yarn**
+
+- **Node.js 18+**
+- **npm 9+**
 - **Supabase account** (for backend services)
 
-### Installation & Setup
+### Installation
 
-1. **Install dependencies:**
 ```bash
+# Clone repository
+git clone https://github.com/yourusername/degixdaw.git
+cd degixdaw
+
+# Install all dependencies (root + workspaces)
 npm install
+
+# Or manually:
+npm run install:all
 ```
 
-2. **Environment configuration:**
-Create `.env.local`:
+### Development
+
+```bash
+# Start frontend dev server (Vite on port 5173)
+npm run dev:frontend
+
+# Start backend dev server (Express on port 3001)
+npm run dev:backend
+
+# Start both simultaneously
+npm run dev:all
+```
+
+### Building
+
+```bash
+# Build frontend only
+npm run build:frontend
+
+# Build backend only
+npm run build:backend
+
+# Build everything
+npm run build:all
+```
+
+### Testing & Linting
+
+```bash
+# Run frontend tests
+npm run test:frontend
+
+# Lint frontend
+npm run lint:frontend
+
+# Lint backend
+npm run lint:backend
+
+# Lint everything
+npm run lint:all
+```
+
+## 🏗️ Project Details
+
+### Web Frontend ([web/frontend/](web/frontend/))
+
+Modern React web application with:
+- React 19 + TypeScript
+- Vite for fast dev/build
+- Supabase auth & realtime
+- Real-time chat & social features
+- Feature flags system
+- Admin panel with role-based access
+
+**Tech Stack**: React, TypeScript, Vite, Supabase, SCSS, Zod
+
+[📚 Frontend Documentation](web/frontend/README.md)
+
+### Web Backend ([web/backend/](web/backend/))
+
+Express API server providing:
+- RESTful API endpoints
+- Supabase integration
+- Authentication middleware
+- CORS configuration
+- Health monitoring
+
+**Tech Stack**: Express, TypeScript, Supabase
+
+[📚 Backend Documentation](web/backend/README.md)
+
+### Desktop App ([desktop/](desktop/))
+
+🚧 **Coming Soon** - Native desktop application with:
+- VST plugin hosting
+- DAW protocol integration
+- Low-latency audio processing
+- System tray integration
+
+**Tech Stack**: Electron/Tauri (TBD), React, Rust/Node.js
+
+[📚 Desktop Documentation](desktop/README.md)
+
+### VST Plugins ([vst/](vst/))
+
+🚧 **Coming Soon** - Native audio plugins:
+- VST3 format
+- Audio Unit (macOS)
+- AAX (Pro Tools)
+- Real-time audio processing
+
+**Tech Stack**: JUCE Framework, C++
+
+[📚 VST Documentation](vst/README.md)
+
+### Shared Packages ([packages/](packages/))
+
+Shared code across all workspaces:
+
+- **@degixdaw/types**: TypeScript interfaces and types
+- **@degixdaw/utils**: Common utility functions
+- **@degixdaw/constants**: Shared constants and enums
+
+## 📜 Available Scripts
+
+### Development
+```bash
+npm run dev:frontend      # Start frontend dev server
+npm run dev:backend       # Start backend dev server
+npm run dev:all           # Start both (concurrently)
+```
+
+### Building
+```bash
+npm run build:frontend    # Build frontend for production
+npm run build:backend     # Build backend for production
+npm run build:all         # Build everything
+```
+
+### Testing & Linting
+```bash
+npm run test:frontend     # Run frontend tests
+npm run test:all          # Run all tests
+npm run lint:frontend     # Lint frontend code
+npm run lint:backend      # Lint backend code
+npm run lint:all          # Lint everything
+```
+
+### Utilities
+```bash
+npm run install:all       # Install all dependencies
+npm run clean             # Remove all node_modules
+```
+
+## 🔧 Environment Setup
+
+### Frontend Environment
+
+Create `web/frontend/.env.local`:
+
 ```env
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_anon_key
+VITE_SUPER_ADMIN_EMAIL=admin@example.com
 ```
 
-3. **Start development server:**
-```bash
-npm run dev
+### Backend Environment
+
+Create `web/backend/.env`:
+
+```env
+PORT=3001
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+FRONTEND_URL=http://localhost:5173
 ```
 
-4. **Build for production:**
-```bash
-npm run build
-```
+## 🛠️ Tech Stack
 
-### Development Commands
-
-#### Core Commands
-- `npm run dev` - Start Vite development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build locally
-- `npm run lint` - Run ESLint code quality checks
-
-#### Database & API
-- `npm run api` - Start local Express API server
-- `npm run app` - Run both frontend and API concurrently
-- `npm run db:migrate` - Run database migrations
-- `npm run db:seed` - Seed database with initial data
-
-#### Utilities
-- `npm run setup:issues` - Initialize issues tracking table
-- `npm run db:cleanup` - Clean up database
-- `npm run db:sync-profiles` - Sync user profiles with auth
-
-## 🔧 Development
-
-### Code Quality & Standards
-- **TypeScript Strict Mode** - Full type safety across the application
-- **ESLint** - Code linting with React and TypeScript rules
-- **Prettier** - Code formatting for consistent style
-- **Error Boundaries** - Graceful error handling throughout the app
-
-### Available Scripts
-```bash
-# Development
-npm run dev              # Start development server
-npm run api              # Start local API server
-npm run app              # Run both dev and API together
-
-# Building & Preview
-npm run build            # Production build
-npm run preview          # Preview production build
-
-# Code Quality
-npm run lint             # ESLint checks
-
-# Database Operations
-npm run db:migrate       # Run migrations
-npm run db:seed          # Seed database
-npm run db:cleanup       # Clean database
-npm run db:sync-profiles # Sync user profiles
-
-# Utilities
-npm run setup:issues     # Initialize issues table
-```
+| Component | Technologies |
+|-----------|-------------|
+| **Frontend** | React 19, TypeScript, Vite, Supabase, SCSS |
+| **Backend** | Express, TypeScript, Supabase |
+| **Desktop** | Electron/Tauri (TBD), React |
+| **VST** | JUCE, C++ |
+| **Shared** | TypeScript, npm workspaces |
+| **Database** | Supabase (PostgreSQL) |
+| **Auth** | Supabase Auth |
+| **Realtime** | Supabase Realtime |
 
 ## 📚 Documentation
 
-Complete documentation available in the [`docs/`](./docs/) directory:
+- [Web Frontend Docs](web/frontend/README.md)
+- [Web Backend Docs](web/backend/README.md)
+- [Desktop Docs](desktop/README.md)
+- [VST Docs](vst/README.md)
+- [Deployment Guide](DEPLOYMENT.md)
 
-- **[📖 Documentation Index](./docs/README.md)** - Complete overview
-- **[📋 Project Summary](./docs/PROJECT_SUMMARY.md)** - Architecture & features
-- **[🗄️ Supabase Setup](./docs/SUPABASE_SETUP.md)** - Database configuration
-- **[🔐 Token Management](./docs/TOKEN_MANAGEMENT.md)** - Authentication guide
-- **[🚀 Deployment Guide](./DEPLOYMENT.md)** - Production deployment
+## 🤝 Contributing
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## 🙏 Acknowledgments
+
+Built with modern web technologies and a passion for music collaboration.
+
+---
+
+**Status**: 
+- ✅ Web Frontend - Production Ready
+- ✅ Web Backend - In Development
+- 🚧 Desktop App - Planned
+- 🚧 VST Plugins - Planned

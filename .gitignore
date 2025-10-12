@@ -1,3 +1,7 @@
+# ===================================
+# DegixDAW Monorepo .gitignore
+# ===================================
+
 # Logs
 logs
 *.log
@@ -7,10 +11,24 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+**/node_modules
+
+# Build outputs
 dist
 dist-ssr
+build
+**/dist
+**/build
 *.local
+
+# Environment files
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
 
 # Editor directories and files
 .vscode/*
@@ -35,7 +53,42 @@ ISSUES_*.md
 # Project documentation (internal use only)
 CLAUDE.md
 
-# Environment files
-.env
-.env.local
+# TypeScript build info
+*.tsbuildinfo
 
+# Testing
+coverage
+.nyc_output
+
+# OS specific
+Thumbs.db
+Desktop.ini
+
+# ===================================
+# Workspace-specific ignores
+# ===================================
+
+# Frontend (web/frontend)
+web/frontend/.vite
+web/frontend/.turbo
+
+# Backend (web/backend)
+web/backend/dist
+
+# Desktop app (desktop)
+desktop/out
+desktop/dist
+desktop/.next
+desktop/.turbo
+
+# VST plugins (vst)
+vst/Builds/
+vst/JuceLibraryCode/
+vst/*.dylib
+vst/*.so
+vst/*.dll
+vst/*.vst3
+
+# Shared packages
+packages/*/dist
+packages/*/build

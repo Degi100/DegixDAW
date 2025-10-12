@@ -1,5 +1,0 @@
-# Netlify redirects for React Router
-/*    /index.html   200
-
-# OAuth callback redirects
-/auth/callback  /auth/callback  200

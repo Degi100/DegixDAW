@@ -1,0 +1,13 @@
+{
+  "name": "@degixdaw/types",
+  "version": "1.0.0",
+  "description": "Shared TypeScript types for DegixDAW",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": ["degixdaw", "types", "shared"],
+  "author": "DegixDAW Team",
+  "license": "MIT"
+}
