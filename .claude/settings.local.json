@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(git commit -m \"$(cat <<''EOF''\nrefactor: Restructure project as npm workspaces monorepo\n\nMajor architectural change to support multi-platform development:\n\n**New Structure:**\n- web/frontend/     - React 19 + TypeScript (moved from root)\n- web/backend/      - Express API server (new)\n- packages/types/   - Shared TypeScript interfaces\n- packages/utils/   - Shared utilities\n- packages/constants/ - Shared constants\n- desktop/          - Placeholder for Electron/Tauri app\n- vst/              - Placeholder for VST plugins\n\n**Changes:**\n- Migrated frontend from root to web/frontend workspace\n- Created Express backend with Supabase integration\n- Set up npm workspaces for cross-workspace development\n- Added parallel dev scripts (dev:all, build:all, lint:all)\n- Updated documentation (README.md, CLAUDE.md) for monorepo workflow\n- Cleaned up 499+ legacy files from root directory\n- Configured .gitignore for monorepo structure\n\n**Available Commands:**\n- npm run dev:all          # Run frontend + backend in parallel\n- npm run build:all        # Build all workspaces\n- npm run lint:all         # Lint all workspaces\n\nSee MONOREPO_MIGRATION.md for detailed migration documentation.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
-    ],
-    "deny": [],
-    "ask": []
-  }
-}
