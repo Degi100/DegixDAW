@@ -1,70 +1,117 @@
-# DegixDAW VST Plugins
+# DegixDAW Desktop Application
 
-Native VST/AU/AAX audio plugins for DegixDAW.
+Native Windows desktop app for DegixDAW with Supabase integration.
 
-## Features (Planned)
+## Features
 
-- VST3 plugin format
-- Audio Unit (AU) for macOS
-- AAX for Pro Tools
-- Real-time audio processing
-- Parameter automation
-- Preset management
-- MIDI support
+- **Authentication**: Supabase OAuth integration
+- **File Browser**: Multi-tab file browser with filtering
+  - All files, Received, Images, Audio, MIDI, Video
+  - Clipboard support (Ctrl+C)
+  - Context menu integration
+- **Storage API**: Direct Supabase REST API client
+  - Message attachments listing
+  - File metadata retrieval
+  - WinHTTP implementation
 
 ## Tech Stack
 
-### JUCE Framework (Recommended)
-- Cross-platform C++ framework for audio plugins
-- Supports VST3, AU, AAX, LV2, Standalone
-- Industry standard for plugin development
-- Excellent documentation and community
+- **Language**: C++17
+- **GUI**: Windows API (Win32)
+- **HTTP**: WinHTTP
+- **Backend**: Supabase (Auth + Storage)
+- **Build**: CMake + Visual Studio 2022
 
-## Development Setup
-
-```bash
-# Not yet implemented
-# Coming soon...
-
-# Prerequisites:
-# - CMake
-# - C++17 compiler (MSVC, GCC, Clang)
-# - JUCE framework
-# - Platform SDKs (VST3 SDK, AU SDK, AAX SDK)
-```
-
-## Architecture
+## Project Structure
 
 ```
 vst/
-├── Source/
-│   ├── PluginProcessor.h/cpp    # Audio processing
-│   ├── PluginEditor.h/cpp       # GUI
-│   └── Parameters.h/cpp         # Parameter definitions
-├── JuceLibraryCode/             # JUCE framework
-├── Builds/                      # Platform-specific builds
-│   ├── VisualStudio2022/        # Windows
-│   ├── Xcode/                   # macOS
-│   └── LinuxMakefile/           # Linux
-└── Resources/                   # Graphics, presets
+├── CMakeLists.txt           # Build configuration
+├── src/
+│   ├── main.cpp             # Application entry point
+│   ├── auth/
+│   │   ├── Auth.cpp/h       # Supabase authentication
+│   ├── gui/
+│   │   └── FileBrowser.cpp/h # File browser UI
+│   ├── util/
+│   │   └── StringUtil.cpp/h  # UTF-8/UTF-16 helpers
+│   ├── storagedata.cpp/h    # Storage API client
+│   ├── config.h             # Configuration
+│   ├── types.h              # Type definitions
+│   ├── debug.cpp            # Debug utilities
+│   └── test.cpp             # Test code
+└── build/                   # Generated build files
 ```
 
-## Plugin Types (Planned)
+## Build Instructions
 
-1. **DegixDAW Synth** - Virtual synthesizer
-2. **DegixDAW FX** - Audio effects (reverb, delay, EQ, compressor)
-3. **DegixDAW Bridge** - DAW integration plugin (communicates with web frontend)
+### Prerequisites
 
-## Integration with Desktop App
+- Visual Studio 2022 with C++ Desktop Development
+- CMake 3.15+
+- Windows SDK
 
-The desktop app (`desktop/`) will:
-- Host these VST plugins
-- Provide UI for plugin management
-- Handle audio routing and processing
+### Building
 
-## Status
+```bash
+# Generate Visual Studio solution
+cmake -B build -G "Visual Studio 17 2022"
 
-🚧 **Under Construction** - Not yet implemented
+# Build project
+cmake --build build --config Release
+
+# Or open in Visual Studio
+start build/DegixDAW-VST.sln
+```
+
+### VS Code
+
+Install extensions:
+- C/C++ (Microsoft)
+- CMake Tools (Microsoft)
+
+Press `Ctrl+Shift+P` → "CMake: Configure" to generate build files.
+
+## Configuration
+
+Create `src/config.h` with your Supabase credentials:
+
+```cpp
+#define SUPABASE_URL "https://your-project.supabase.co"
+#define SUPABASE_ANON_KEY "your-anon-key"
+```
+
+## Running
+
+```bash
+# Via CMake
+cmake --build build --target run
+
+# Or directly
+./build/bin/DegixDAW-VST.exe
+```
+
+## Integration with Web Frontend
+
+The desktop app communicates with the web frontend via:
+- Shared Supabase database
+- Real-time subscriptions
+- Storage API for file sharing
+
+## Development Status
+
+✅ **Implemented:**
+- Authentication flow
+- File browser UI
+- Storage API client
+- UTF-8/UTF-16 conversion
+
+🚧 **TODO:**
+- Complete OAuth callback handling
+- Implement file upload
+- Add audio playback
+- MIDI file parsing
+- DAW integration
 
 ## Contributing
 
