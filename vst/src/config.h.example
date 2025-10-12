@@ -1,0 +1,12 @@
+#pragma once
+
+// Supabase Configuration
+// Copy this file to config.h and fill in your credentials
+
+// Your Supabase project URL (without https://)
+// Example: "yourproject.supabase.co"
+static const wchar_t* SUPABASE_HOST = L"YOUR_PROJECT_ID.supabase.co";
+
+// Your Supabase anon/public key
+// Get from: Supabase Dashboard → Settings → API → anon public
+static const char* SUPABASE_ANON_KEY = "YOUR_ANON_KEY_HERE";

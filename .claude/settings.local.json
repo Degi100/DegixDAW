@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(for file in \"e:/$Recycle.Bin/S-1-5-21-4053773308-3037631630-2701759785-1001/$R\"*.{cpp,h})",
+      "Bash(basename:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

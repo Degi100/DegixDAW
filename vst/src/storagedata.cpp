@@ -1,5 +1,6 @@
 #include "storagedata.h"
 #include "auth/Auth.h"
+#include "config.h"  // Contains SUPABASE_HOST, SUPABASE_ANON_KEY
 #include <windows.h>
 #include <winhttp.h>
 #include <string>
@@ -8,9 +9,6 @@
 #include "util/json.hpp" // Lokale Header-only-Variante
 #include <fstream>
 
-// Supabase-Parameter (wie in Auth.cpp)
-static const wchar_t* SUPABASE_HOST = L"xcdzugnjzrkngzmtzeip.supabase.co";
-static const char* SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjZHp1Z25qenJrbmd6bXR6ZWlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3MzY4NjAsImV4cCI6MjA3NDMxMjg2MH0.5W99cq4lNO_5XqVWkGJ8_q4C6PzD0gSKnJjj37NU-rU";
 // REST API Base Path
 static const wchar_t* ATTACHMENTS_BASE_PATH = L"/rest/v1/message_attachments";
 // Storage API als Fallback

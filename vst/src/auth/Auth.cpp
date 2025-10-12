@@ -1,13 +1,12 @@
 #include "Auth.h"
+#include "config.h"  // Contains SUPABASE_HOST, SUPABASE_ANON_KEY
 #include <windows.h>
 #include <winhttp.h>
 #include <string>
 #include <sstream>
 
-// Supabase-Parameter
-static const wchar_t* SUPABASE_HOST = L"xcdzugnjzrkngzmtzeip.supabase.co";
+// Supabase auth endpoint
 static const wchar_t* SUPABASE_PATH = L"/auth/v1/token?grant_type=password";
-static const char* SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjZHp1Z25qenJrbmd6bXR6ZWlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3MzY4NjAsImV4cCI6MjA3NDMxMjg2MH0.5W99cq4lNO_5XqVWkGJ8_q4C6PzD0gSKnJjj37NU-rU";
 
 // Static member für JWT Token
 std::string Auth::s_accessToken;

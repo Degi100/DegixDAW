@@ -89,6 +89,10 @@ vst/*.so
 vst/*.dll
 vst/*.vst3
 
+# VST configuration (contains sensitive API keys)
+vst/src/config.h
+**/config.h
+
 # Shared packages
 packages/*/dist
 packages/*/build
