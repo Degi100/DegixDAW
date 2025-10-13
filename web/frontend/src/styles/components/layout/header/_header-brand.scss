@@ -1,0 +1,98 @@
+// ============================================
+// HEADER BRAND - Logo & Branding
+// ============================================
+
+@use '../../../abstracts/index' as *;
+
+// ============================================
+// BRAND/LOGO
+// ============================================
+
+.header-brand {
+  flex-shrink: 0;
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+  text-decoration: none;
+  color: $gray-900;
+  font-weight: $font-weight-bold;
+  font-size: $font-size-lg;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $primary-600;
+  }
+
+  &:focus {
+    outline: 2px solid $primary-500;
+    outline-offset: 2px;
+  }
+
+  &.compact {
+    display: flex;
+    align-items: center;
+    gap: $spacing-1;
+    padding: 0;
+    background: none;
+    border: none;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-bold;
+    color: $primary-700;
+
+    @media (max-width: $breakpoint-md) {
+      font-size: $font-size-base;
+    }
+  }
+}
+
+.brand-icon {
+  font-size: $font-size-2xl;
+  line-height: 1;
+
+  @media (max-width: $breakpoint-md) {
+    font-size: $font-size-lg;
+  }
+}
+
+.brand-name {
+  white-space: nowrap;
+}
+
+.brand-container {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-1;
+}
+
+.app-version {
+  font-size: $font-size-xs;
+  color: $gray-500;
+  font-weight: $font-weight-normal;
+  margin-left: $spacing-1;
+  user-select: none;
+}
+
+.admin-badge {
+  background: $primary-600;
+  color: $white;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-full;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  margin-left: $spacing-2;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: fit-content;
+
+  &.compact {
+    font-size: $font-size-xs;
+    padding: 0 $spacing-xs;
+    margin-left: $spacing-1;
+  }
+}

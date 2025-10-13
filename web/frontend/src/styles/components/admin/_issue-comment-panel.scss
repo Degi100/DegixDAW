@@ -1,0 +1,475 @@
+// ============================================
+// ISSUE COMMENT PANEL - Compact Modal
+// ============================================
+
+@use '../../abstracts/variables/colors' as *;
+@use '../../abstracts/variables/spacing' as *;
+
+.issue-comment-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 550px;
+  max-width: 90vw;
+  max-height: 75vh;
+  background: $white;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  z-index: 1001;
+  animation: modalFadeIn 0.15s ease-out;
+
+  @media (max-width: 768px) {
+    width: 95vw;
+    max-height: 85vh;
+  }
+
+  // Header
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $spacing-4 $spacing-5;
+    border-bottom: 1px solid $gray-200;
+    flex-shrink: 0;
+  }
+
+  &__title {
+    flex: 1;
+
+    h3 {
+      font-size: 1.125rem; // 18px
+      font-weight: 600;
+      margin: 0 0 4px 0;
+      color: $gray-900;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+
+  &__subtitle {
+    font-size: 0.8125rem; // 13px
+    color: $gray-500;
+    margin: 0;
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__close {
+    background: $gray-100;
+    border: none;
+    color: $gray-600;
+    font-size: 1.25rem; // 20px
+    width: 32px;
+    height: 32px;
+    border-radius: $radius-base;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: $spacing-3;
+
+    &:hover {
+      background: $gray-200;
+      color: $gray-900;
+    }
+  }
+
+  // Body (Comments List)
+  &__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: $spacing-4;
+    background: $gray-50;
+    min-height: 0; // Important for flex scrolling
+  }
+
+  &__loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-2;
+    padding: $spacing-6;
+    color: $gray-500;
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 2px solid $gray-200;
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.875rem; // 14px
+    }
+  }
+
+  &__empty {
+    text-align: center;
+    padding: $spacing-8 $spacing-4;
+    color: $gray-400;
+
+    p {
+      margin: 0 0 $spacing-1 0;
+      font-size: 0.9375rem; // 15px
+      font-weight: 500;
+    }
+
+    small {
+      font-size: 0.8125rem; // 13px
+    }
+  }
+
+  &__comments {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-3;
+  }
+
+  // Footer (Add Comment Form)
+  &__footer {
+    padding: $spacing-4 $spacing-5;
+    border-top: 1px solid $gray-200;
+    background: $white;
+    flex-shrink: 0;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-2;
+  }
+
+  &__textarea {
+    width: 100%;
+    min-height: 60px;
+    max-height: 120px;
+    padding: $spacing-2 $spacing-3;
+    border: 1px solid $gray-300;
+    border-radius: $radius-base;
+    font-family: inherit;
+    font-size: 0.875rem; // 14px
+    resize: vertical;
+    transition: border-color 0.15s;
+
+    &:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+    }
+
+    &:disabled {
+      background: $gray-100;
+      cursor: not-allowed;
+    }
+
+    &::placeholder {
+      color: $gray-400;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  &__submit {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: $white;
+    border: none;
+    border-radius: $radius-base;
+    font-size: 0.875rem; // 14px
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// ============================================
+// COMMENT ITEM - Compact Design
+// ============================================
+
+.comment-item {
+  background: $white;
+  padding: $spacing-3;
+  border-radius: $radius-base;
+  border: 1px solid $gray-200;
+  transition: border-color 0.15s;
+
+  &:hover {
+    border-color: $gray-300;
+  }
+
+  // Own Comment
+  &--own {
+    background: #f0f9ff;
+    border-color: #bae6fd;
+  }
+
+  // Auto Comment (status/assignment changes)
+  &--auto {
+    background: #fefce8;
+    border-color: #fde68a;
+    border-left: 2px solid #eab308;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $spacing-2;
+  }
+
+  &__author {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: $gray-900;
+    font-size: 0.8125rem; // 13px
+  }
+
+  &__icon {
+    font-size: 0.875rem; // 14px
+  }
+
+  &__auto-badge {
+    display: inline-block;
+    padding: 1px 5px;
+    background: #fbbf24;
+    color: $gray-900;
+    border-radius: $radius-full;
+    font-size: 0.625rem; // 10px
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__time {
+    font-size: 0.6875rem; // 11px
+    color: $gray-400;
+  }
+
+  &__delete {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 0.875rem; // 14px
+    padding: 4px;
+    border-radius: $radius-base;
+    transition: all 0.15s;
+    opacity: 0;
+
+    .comment-item:hover & {
+      opacity: 1;
+    }
+
+    &:hover {
+      background: $danger-100;
+    }
+  }
+
+  &__content {
+    p {
+      margin: 0;
+      color: $gray-700;
+      font-size: 0.8125rem; // 13px
+      line-height: 1.5;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+  }
+
+  &__metadata {
+    margin-top: $spacing-2;
+    padding-top: $spacing-2;
+    border-top: 1px solid $gray-100;
+
+    small {
+      font-size: 0.6875rem; // 11px
+      color: $gray-500;
+
+      code {
+        background: $gray-100;
+        padding: 1px 4px;
+        border-radius: $radius-base;
+        font-family: 'Courier New', monospace;
+        font-size: 0.625rem; // 10px
+      }
+    }
+  }
+}
+
+// ============================================
+// MODAL BACKDROP
+// ============================================
+
+.modal-backdrop--comments {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  animation: backdropFadeIn 0.15s ease-out;
+}
+
+// ============================================
+// DELETE CONFIRMATION MODAL
+// ============================================
+
+.delete-confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1002;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: backdropFadeIn 0.15s ease-out;
+}
+
+.delete-confirm-modal {
+  background: $white;
+  border-radius: $radius-base;
+  padding: $spacing-6;
+  max-width: 380px;
+  width: 90vw;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalScaleIn 0.2s ease-out;
+  text-align: center;
+
+  &__icon {
+    font-size: 3rem; // 48px
+    margin-bottom: $spacing-3;
+  }
+
+  &__title {
+    font-size: 1.25rem; // 20px
+    font-weight: 700;
+    color: $gray-900;
+    margin: 0 0 $spacing-2 0;
+  }
+
+  &__message {
+    font-size: 0.875rem; // 14px
+    color: $gray-600;
+    margin: 0 0 $spacing-5 0;
+  }
+
+  &__actions {
+    display: flex;
+    gap: $spacing-3;
+    justify-content: center;
+  }
+
+  &__btn {
+    padding: 10px 24px;
+    border-radius: $radius-base;
+    font-size: 0.875rem; // 14px
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    min-width: 100px;
+
+    &--cancel {
+      background: $gray-100;
+      color: $gray-700;
+
+      &:hover {
+        background: $gray-200;
+      }
+    }
+
+    &--delete {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: $white;
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+  }
+}
+
+// ============================================
+// ANIMATIONS
+// ============================================
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+@keyframes backdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

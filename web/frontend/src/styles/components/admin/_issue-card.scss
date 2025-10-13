@@ -1,0 +1,254 @@
+// ============================================
+// ISSUE CARD - Individual Issue Display
+// ============================================
+
+@use '../../abstracts/variables/colors' as *;
+@use '../../abstracts/variables/spacing' as *;
+
+.issue-card {
+  position: relative;
+  background: $white;
+  padding: $spacing-5;
+  border-radius: $radius-xl;
+  border: 1px solid $gray-200;
+  transition: all 0.2s ease-in-out;
+
+  // Mobile: Reduce padding
+  @media (max-width: 639px) {
+    padding: $spacing-4;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
+  }
+
+  // Actions (Top Right)
+  &__actions {
+    position: absolute;
+    top: $spacing-4;
+    right: $spacing-4;
+    display: flex;
+    gap: $spacing-2;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+
+    // Mobile: Adjust positioning
+    @media (max-width: 639px) {
+      position: relative;
+      top: 0;
+      right: 0;
+      margin-bottom: $spacing-3;
+      gap: $spacing-1;
+    }
+  }
+
+  &__action-btn {
+    padding: $spacing-1 $spacing-3;
+    border-radius: $radius-base;
+    cursor: pointer;
+    font-size: 0.875rem; // 14px
+    transition: all 0.15s;
+    background: transparent;
+    border: 1px solid;
+
+    @media (hover: hover) {
+      &:hover {
+        transform: translateY(-1px);
+      }
+    }
+
+    // Mobile: Smaller buttons
+    @media (max-width: 639px) {
+      padding: $spacing-1 $spacing-2;
+      font-size: 0.75rem; // 12px
+    }
+
+    // Variants
+    &--progress {
+      border-color: #fcd34d;
+      background: $warning-100;
+    }
+
+    &--done {
+      border-color: #86efac;
+      background: $success-100;
+    }
+
+    &--copy {
+      border-color: #93c5fd;
+      background: $primary-100;
+    }
+
+    &--edit {
+      border-color: $gray-300;
+      background: $white;
+    }
+
+    &--delete {
+      border-color: #fca5a5;
+      background: $danger-100;
+    }
+
+    // Assignment Button
+    &--assign {
+      border-color: #c4b5fd;
+      background: #f3f0ff;
+      position: relative;
+
+      &.locked {
+        border-color: #fbbf24;
+        background: #fef3c7;
+        cursor: not-allowed;
+      }
+    }
+
+    // Comments Button
+    &--comments {
+      border-color: #93c5fd;
+      background: #dbeafe;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: $spacing-1;
+
+      &.has-comments {
+        border-color: #3b82f6;
+        background: #bfdbfe;
+      }
+
+      .comment-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 4px;
+        background: #3b82f6;
+        color: white;
+        border-radius: $radius-full;
+        font-size: 0.625rem; // 10px
+        font-weight: 700;
+        line-height: 1;
+      }
+    }
+  }
+
+  // Badges Row
+  &__badges {
+    display: flex;
+    gap: $spacing-2;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: $spacing-3;
+
+    // Mobile: Reduce spacing for action buttons
+    @media (max-width: 639px) {
+      padding-right: 0;
+    }
+
+    @media (min-width: 640px) {
+      padding-right: 200px; // Space for action buttons
+    }
+  }
+
+  &__priority-select {
+    display: inline-flex;
+    align-items: center;
+    gap: $spacing-1;
+    padding: $spacing-1 $spacing-3;
+    border-radius: $radius-full;
+    font-size: 0.75rem; // 12px
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    border: 1px solid;
+    transition: all 0.15s;
+
+    @media (hover: hover) {
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+
+    // Variants based on priority (set via inline styles for dynamic colors)
+  }
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: $spacing-1;
+    padding: $spacing-1 $spacing-3;
+    border-radius: $radius-full;
+    font-size: 0.75rem; // 12px
+    font-weight: 600;
+    border: 1px solid;
+    transition: all 0.2s ease-in-out;
+
+    &--category {
+      background: $gray-100;
+      color: $gray-700;
+      border-color: $gray-300;
+    }
+  }
+
+  // Content
+  &__title {
+    font-size: 1rem; // 16px
+    font-weight: 600;
+    margin-bottom: $spacing-2;
+    color: $gray-900;
+    line-height: 1.5;
+    word-wrap: break-word;
+
+    @media (max-width: 639px) {
+      font-size: 0.9375rem; // 15px
+    }
+  }
+
+  &__description {
+    font-size: 0.875rem; // 14px
+    color: $gray-500;
+    margin-bottom: $spacing-3;
+    line-height: 1.5;
+    word-wrap: break-word;
+
+    @media (max-width: 639px) {
+      font-size: 0.8125rem; // 13px
+    }
+  }
+
+  // Footer (Dates)
+  &__footer {
+    display: flex;
+    gap: $spacing-4;
+    font-size: 0.75rem; // 12px
+    color: $gray-400;
+    padding-top: $spacing-3;
+    border-top: 1px solid $gray-100;
+    flex-wrap: wrap;
+
+    @media (max-width: 639px) {
+      gap: $spacing-2;
+      font-size: 0.6875rem; // 11px
+    }
+  }
+}
+
+// ============================================
+// ANIMATIONS
+// ============================================
+
+@keyframes badge-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}

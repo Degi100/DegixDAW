@@ -1,0 +1,173 @@
+/**
+ * Speech Textarea Styles
+ *
+ * Textarea with integrated speech-to-text controls
+ */
+
+@use '../../abstracts/variables/colors' as *;
+
+.speech-textarea {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+
+  // ============================================================================
+  // Textarea Wrapper
+  // ============================================================================
+
+  &__wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  // ============================================================================
+  // Textarea Input
+  // ============================================================================
+
+  &__input {
+    width: 100%;
+    padding: 12px 16px;
+    padding-right: 120px; // Space for controls
+    background: $white;
+    border: 2px solid $border-color;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    color: $gray-900;
+    resize: vertical;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &::placeholder {
+      color: $gray-400;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: $primary-500;
+      box-shadow: 0 0 0 3px rgba($primary-500, 0.1);
+    }
+
+    &:disabled {
+      background: $gray-100;
+      color: $gray-500;
+      cursor: not-allowed;
+    }
+
+    // Hover state
+    &:hover:not(:disabled):not(:focus) {
+      border-color: $border-color-hover;
+    }
+  }
+
+  // ============================================================================
+  // Controls (Speech Button + Language Selector)
+  // ============================================================================
+
+  &__controls {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 1;
+  }
+
+  &__button {
+    // Inherits styles from .speech-button
+  }
+
+  &__language {
+    // Inherits styles from .language-selector
+  }
+
+  // ============================================================================
+  // Error Message
+  // ============================================================================
+
+  &__error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: $warning-50;
+    border: 1px solid $warning-500;
+    border-radius: 6px;
+    font-size: 13px;
+    color: $warning-600;
+    animation: speech-textarea-error-in 0.2s ease-out;
+  }
+
+  &__error-icon {
+    flex-shrink: 0;
+    font-size: 16px;
+  }
+
+  &__error-message {
+    flex: 1;
+    font-weight: 500;
+  }
+
+  // ============================================================================
+  // Warning Message (Browser Not Supported)
+  // ============================================================================
+
+  &__warning {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: $info-50;
+    border: 1px solid $info-500;
+    border-radius: 6px;
+    font-size: 13px;
+    color: $info-500;
+  }
+
+  &__warning-icon {
+    flex-shrink: 0;
+    font-size: 16px;
+  }
+
+  &__warning-message {
+    flex: 1;
+    font-weight: 500;
+  }
+}
+
+// ============================================================================
+// Keyframes
+// ============================================================================
+
+@keyframes speech-textarea-error-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ============================================================================
+// Responsive Design
+// ============================================================================
+
+@media (max-width: 640px) {
+  .speech-textarea {
+    &__input {
+      padding-right: 100px; // Smaller space for controls on mobile
+    }
+
+    &__controls {
+      bottom: 8px;
+      right: 8px;
+      gap: 6px;
+    }
+  }
+}

@@ -1,0 +1,74 @@
+// SCSS Modul: Login Corporate
+@use '../../abstracts/index' as *;
+
+.login-corporate {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0f9ff 0%, $corporate-blue-100 20%, #f8fafc 100%);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+
+  &::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.03) 0%, transparent 50%);
+    animation: float 20s ease-in-out infinite;
+    z-index: 0;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(30px, -30px) rotate(120deg); }
+  66% { transform: translate(-20px, 20px) rotate(240deg); }
+}
+
+.login-header {
+  background: linear-gradient(135deg, $corporate-blue-600 0%, $corporate-blue-700 100%);
+  color: white;
+  position: relative;
+  overflow: hidden;
+  z-index: 10;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    transform: skewX(-15deg);
+  }
+}
+
+.login-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.brand-section {
+  .brand-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+    background: linear-gradient(45deg, #ffffff, $corporate-blue-100);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .brand-subtitle {
+    font-size: 0.875rem;
+  }
+}

@@ -1,0 +1,301 @@
+// ============================================
+// ADMIN COMPONENTS (Badges, Stats, Realtime)
+// ============================================
+
+@use '../../abstracts/index' as *;
+
+// ============================================
+// STATUS BADGES
+// ============================================
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-full;
+  font-size: $font-size-sm;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &.active,
+  &.success {
+    background: rgba($success, 0.1);
+    color: $success;
+    border: 1px solid rgba($success, 0.2);
+  }
+
+  &.pending,
+  &.warning {
+    background: rgba($warning, 0.1);
+    color: $warning;
+    border: 1px solid rgba($warning, 0.2);
+  }
+
+  &.inactive,
+  &.danger {
+    background: rgba($danger, 0.1);
+    color: $danger;
+    border: 1px solid rgba($danger, 0.2);
+  }
+
+  &.secondary {
+    background: rgba($gray-500, 0.1);
+    color: $gray-700;
+    border: 1px solid rgba($gray-500, 0.2);
+  }
+}
+
+// ============================================
+// USER STATS
+// ============================================
+
+.users-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-card {
+    background: var(--theme-bg-primary);
+    border: 1px solid var(--theme-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    transition: var(--transition);
+    box-shadow: var(--theme-shadow);
+
+    &:hover {
+      box-shadow: var(--theme-shadow-lg);
+      transform: translateY(-1px);
+    }
+
+    &.highlight {
+      border-color: var(--primary-color);
+      background: linear-gradient(135deg, rgba(30, 64, 175, 0.05), rgba(30, 64, 175, 0.05));
+    }
+
+    .stats-icon {
+      font-size: $font-size-xl;
+      opacity: 0.8;
+    }
+
+    .stats-content {
+      flex: 1;
+
+      .stats-number {
+        font-size: $font-size-xl;
+        font-weight: 700;
+        color: var(--theme-text-primary);
+        line-height: 1;
+      }
+
+      .stats-label {
+        font-size: $font-size-sm;
+        color: var(--theme-text-secondary);
+        margin-top: $spacing-xs;
+      }
+    }
+  }
+}
+
+// ============================================
+// REALTIME INDICATOR
+// ============================================
+
+.realtime-indicator {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  background: var(--theme-bg-tertiary);
+  border-radius: $radius-md;
+  font-size: $font-size-sm;
+  border: 1px solid var(--theme-border);
+  transition: var(--transition);
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: $radius-full;
+    display: inline-block;
+
+    &.active {
+      background: $success;
+      box-shadow: 0 0 6px rgba($success, 0.4);
+      animation: pulse 2s infinite;
+    }
+
+    &.inactive {
+      background: var(--theme-text-tertiary);
+    }
+  }
+
+  .realtime-toggle {
+    background: none;
+    border: 1px solid var(--theme-border);
+    padding: $spacing-xs $spacing-sm;
+    border-radius: $radius-sm;
+    font-size: $font-size-xs;
+    cursor: pointer;
+    transition: var(--transition);
+    color: var(--theme-text-primary);
+
+    &:hover {
+      background: var(--theme-bg-primary);
+    }
+  }
+
+  .last-updated {
+    color: var(--theme-text-secondary);
+    font-size: $font-size-xs;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+// ============================================
+// BULK ACTIONS & EXPORT
+// ============================================
+
+.bulk-actions {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+
+  .btn {
+    justify-content: center;
+    font-weight: 600;
+  }
+}
+
+.export-preview {
+  background: var(--theme-bg-tertiary);
+  padding: $spacing-md;
+  border-radius: $radius-md;
+  margin: $spacing-md 0;
+
+  .export-columns {
+    font-family: monospace;
+    font-size: $font-size-sm;
+    color: var(--theme-text-secondary);
+    margin-top: $spacing-sm;
+  }
+}
+
+// ============================================
+// ANALYTICS
+// ============================================
+
+.analytics-grid {
+  display: grid;
+  gap: $spacing-lg;
+
+  .analytics-card {
+    background: var(--theme-bg-primary);
+    border: 1px solid var(--theme-border);
+    border-radius: var(--radius-lg);
+    padding: $spacing-lg;
+
+    h4 {
+      margin: 0 0 $spacing-md 0;
+      color: var(--theme-text-primary);
+      font-size: $font-size-base;
+    }
+
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: $spacing-sm 0;
+      border-bottom: 1px solid var(--theme-border);
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .metric-label {
+        color: var(--theme-text-secondary);
+        font-size: $font-size-sm;
+      }
+
+      .metric-value {
+        font-weight: 600;
+        color: var(--theme-text-primary);
+        font-size: $font-size-base;
+      }
+
+      .metric-percent {
+        font-size: $font-size-xs;
+        color: var(--theme-text-tertiary);
+        margin-left: $spacing-sm;
+      }
+    }
+  }
+}
+
+// ============================================
+// KEYBOARD SHORTCUTS HELP
+// ============================================
+
+.keyboard-shortcuts-help {
+  position: fixed;
+  bottom: $spacing-lg;
+  right: $spacing-lg;
+  background: var(--theme-bg-primary);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--theme-shadow-lg);
+  padding: $spacing-lg;
+  max-width: 300px;
+  z-index: 100;
+
+  @media (max-width: 767px) {
+    position: static;
+    margin-top: $spacing-lg;
+    max-width: none;
+  }
+
+  h4 {
+    margin: 0 0 $spacing-md 0;
+    font-size: $font-size-base;
+    color: var(--theme-text-primary);
+  }
+
+  .shortcuts-grid {
+    display: grid;
+    gap: $spacing-sm;
+
+    .shortcut {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: $spacing-xs 0;
+
+      kbd {
+        background: var(--theme-bg-tertiary);
+        border: 1px solid var(--theme-border);
+        border-radius: $radius-sm;
+        padding: $spacing-xs $spacing-sm;
+        font-family: monospace;
+        font-size: $font-size-xs;
+        color: var(--theme-text-primary);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      span {
+        font-size: $font-size-sm;
+        color: var(--theme-text-secondary);
+      }
+    }
+  }
+}

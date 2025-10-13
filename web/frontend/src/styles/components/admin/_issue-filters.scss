@@ -1,0 +1,140 @@
+// ============================================
+// ISSUE FILTERS - Search, Filters & Sort
+// ============================================
+
+@use '../../abstracts/variables/colors' as *;
+@use '../../abstracts/variables/spacing' as *;
+
+.issue-filters {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-3;
+  background: $white;
+  padding: $spacing-4;
+  border-radius: $radius-xl;
+  border: 1px solid $gray-200;
+  margin-bottom: $spacing-6;
+
+  // Tablet: Wrap in row
+  @media (min-width: 768px) {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  &__search {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+
+    // Mobile: Full width
+    @media (max-width: 767px) {
+      min-width: 100%;
+    }
+  }
+
+  &__search-icon {
+    position: absolute;
+    left: $spacing-3;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1rem; // 16px
+    pointer-events: none;
+    color: $gray-400;
+  }
+
+  &__search-input {
+    width: 100%;
+    padding: $spacing-2 $spacing-3 $spacing-2 calc(#{$spacing-3} + 1.5rem);
+    border: 1px solid $gray-300;
+    border-radius: $radius-md;
+    font-size: 0.875rem; // 14px
+    outline: none;
+    transition: all 0.2s;
+
+    &:focus {
+      border-color: $primary-500;
+      box-shadow: 0 0 0 3px rgba($primary-500, 0.1);
+    }
+
+    &::placeholder {
+      color: $gray-400;
+    }
+  }
+
+  &__select {
+    padding: $spacing-2 calc(#{$spacing-3} * 2 + 0.5rem) $spacing-2 $spacing-3;
+    border: 1px solid $gray-300;
+    border-radius: $radius-md;
+    font-size: 0.875rem; // 14px
+    background: $white;
+    cursor: pointer;
+    min-width: 150px;
+    color: $black;
+    transition: all 0.2s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right $spacing-3 center;
+
+    &:hover {
+      border-color: $gray-400;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: $primary-500;
+      box-shadow: 0 0 0 3px rgba($primary-500, 0.1);
+    }
+
+    // Mobile: Full width
+    @media (max-width: 767px) {
+      min-width: 100%;
+    }
+
+    // Desktop: Min width for sort dropdown
+    &--sort {
+      @media (min-width: 768px) {
+        min-width: 200px;
+      }
+    }
+
+    option {
+      color: $black;
+      background: $white;
+    }
+  }
+
+  &__toggle {
+    padding: $spacing-2 $spacing-4;
+    border: 1px solid $gray-300;
+    border-radius: $radius-md;
+    font-size: 0.875rem; // 14px
+    background: $white;
+    color: $gray-700;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: $spacing-2;
+    
+    &:hover {
+      border-color: $primary-400;
+      background: $primary-50;
+      color: $primary-700;
+    }
+
+    &--active {
+      background: $primary-100;
+      border-color: $primary-500;
+      color: $primary-700;
+      font-weight: 500;
+    }
+
+    // Mobile: Full width
+    @media (max-width: 767px) {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}

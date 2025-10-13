@@ -1,0 +1,45 @@
+// ============================================
+// ISSUE LIST - Container for Issue Cards
+// ============================================
+
+@use '../../abstracts/variables/colors' as *;
+@use '../../abstracts/variables/spacing' as *;
+
+.issue-list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-3;
+
+  &--empty {
+    text-align: center;
+    padding: $spacing-16 $spacing-5;
+    background: $white;
+    border-radius: $radius-xl;
+    border: 2px dashed $gray-300;
+
+    // Mobile: Reduce padding
+    @media (max-width: 639px) {
+      padding: $spacing-10 $spacing-4;
+    }
+  }
+
+  &__empty-icon {
+    font-size: 4rem; // 64px
+    margin-bottom: $spacing-4;
+    line-height: 1;
+
+    @media (max-width: 639px) {
+      font-size: 3rem; // 48px
+    }
+  }
+
+  &__empty-text {
+    font-size: 1rem; // 16px
+    color: $gray-500;
+    margin: 0;
+
+    @media (max-width: 639px) {
+      font-size: 0.875rem; // 14px
+    }
+  }
+}

@@ -1,0 +1,107 @@
+// ============================================
+// USER SETTINGS CONTENT - Content Area & Sections
+// ============================================
+
+@use '../../../abstracts/index' as *;
+
+
+
+// ============================================
+// SETTINGS CONTENT AREA
+// ============================================
+
+.settings-content {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: $radius-lg;
+  padding: $spacing-8;
+  min-height: 600px;
+
+  @media (max-width: 768px) {
+    padding: $spacing-4;
+  }
+}
+
+// ============================================
+// CONTENT CARDS
+// ============================================
+
+.content-card {
+  .card-header {
+    margin-bottom: $spacing-6;
+
+    .card-title {
+      font-size: $font-size-3xl;
+      font-weight: $font-weight-semibold;
+      line-height: $line-height-tight;
+      margin: 0 0 $spacing-3 0;
+      margin-bottom: $spacing-2;
+      color: var(--color-text-primary);
+    }
+
+    .card-subtitle {
+      color: var(--color-text-secondary);
+      font-size: $font-size-sm;
+    }
+  }
+}
+
+// ============================================
+// SETTINGS SECTIONS
+// ============================================
+
+.settings-section {
+  margin-bottom: $spacing-8;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  .section-title {
+    font-size: $font-size-2xl;
+    font-weight: $font-weight-semibold;
+    line-height: $line-height-tight;
+    margin: 0 0 $spacing-2 0;
+    margin-bottom: $spacing-2;
+    color: var(--color-text-primary);
+  }
+
+  .section-description {
+    color: var(--color-text-secondary);
+    margin-bottom: $spacing-4;
+    line-height: 1.5;
+  }
+}
+
+// ============================================
+// ACTION BUTTONS
+// ============================================
+
+.action-buttons {
+  display: flex;
+  gap: $spacing-3;
+  flex-wrap: wrap;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+
+    .btn {
+      width: 100%;
+    }
+  }
+}
+
+// ============================================
+// FORM ELEMENTS
+// ============================================
+
+.form-group {
+  margin-bottom: $spacing-4;
+
+  label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: $spacing-2;
+    color: var(--color-text-primary);
+  }
+}

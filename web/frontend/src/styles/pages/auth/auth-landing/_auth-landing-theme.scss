@@ -1,0 +1,113 @@
+// ============================================
+// AUTH LANDING THEME - Responsive & Dark Mode
+// ============================================
+
+@use '../../../abstracts/index' as *;
+
+// ============================================
+// RESPONSIVE DESIGN
+// ============================================
+
+@media (max-width: $breakpoint-lg) {
+  .auth-main {
+    padding: $spacing-6 $spacing-4;
+  }
+
+  .auth-container {
+    gap: $spacing-8;
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .auth-main {
+    padding: $spacing-4 $spacing-4;
+  }
+}
+
+// ============================================
+// DARK MODE
+// ============================================
+
+[data-theme="dark"] {
+  .auth-landing {
+    background: linear-gradient(135deg, $dark-bg-1 0%, $dark-bg-2 50%, $dark-bg-1 100%);
+  }
+
+  .auth-header {
+    background: rgba($dark-bg-secondary, 0.9);
+    border-bottom-color: rgba($dark-border, 0.5);
+  }
+
+  .auth-brand-title {
+    color: $dark-text-primary;
+  }
+
+  .auth-brand-subtitle {
+    color: $dark-text-muted;
+  }
+
+  .auth-hero-title {
+    color: $dark-text-primary;
+  }
+
+  .auth-hero-subtitle {
+    color: $dark-text-secondary;
+  }
+
+  .auth-feature {
+    color: $dark-text-primary;
+  }
+
+  .auth-form-section {
+    background: $dark-bg-secondary;
+    border-color: rgba($dark-border, 0.5);
+  }
+
+  .auth-form-title {
+    color: $dark-text-primary;
+  }
+
+  .auth-form-subtitle {
+    color: $dark-text-secondary;
+  }
+
+  .auth-link {
+    color: $primary-400;
+
+    &:hover {
+      color: $primary-300;
+    }
+  }
+
+  .auth-divider {
+    &::before {
+      background: $dark-border;
+    }
+
+    span {
+      background: $dark-bg-secondary;
+      color: $dark-text-muted;
+    }
+  }
+
+  .google-btn {
+    border-color: $dark-border;
+    color: $dark-text-primary;
+
+    &:hover {
+      background-color: $dark-bg-tertiary;
+    }
+  }
+
+  .auth-switch p {
+    color: $dark-text-secondary;
+  }
+
+  .auth-switch-link {
+    color: $primary-400;
+
+    &:hover {
+      color: $primary-300;
+    }
+  }
+}

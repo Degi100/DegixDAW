@@ -1,0 +1,16 @@
+/* src/styles/utilities/index.css */
+/* Master utilities import - Organized modular utility system */
+
+/* Core Variables & Base Styles */
+@import '../variables.css';
+
+/* Utility Modules */
+@import './base.css';        /* Foundation: containers, layout, typography */
+@import './components.css';  /* UI Components: cards, avatars, grids */
+@import './buttons.css';     /* Button System: variants, sizes, states */
+@import './forms.css';       /* Form System: inputs, validation, layouts */
+@import './loading.css';     /* Loading States: spinners, skeletons, progress */
+@import './responsive.css';  /* Responsive: breakpoints, mobile-first utilities */
+
+/* Component Styles - Main SCSS Entry Point */
+@import '../main.scss';   /* Corporate Theme (includes all pages, components, themes) */
