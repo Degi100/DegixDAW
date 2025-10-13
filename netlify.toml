@@ -3,9 +3,9 @@
   base = "/"
 
   # Build-Command für Frontend (direkter workspace build)
-  # Force clean install - delete ALL node_modules including workspaces
-  # Remove sass-embedded after install to force use of sass
-  command = "rm -rf node_modules web/*/node_modules packages/*/node_modules && npm ci && rm -rf web/frontend/node_modules/sass-embedded && npm run build --workspace=web/frontend"
+  # Delete package-lock to regenerate for Linux platform
+  # Use npm install instead of npm ci to generate platform-specific lock
+  command = "rm -rf node_modules web/*/node_modules packages/*/node_modules package-lock.json && npm install && rm -rf web/frontend/node_modules/sass-embedded && npm run build --workspace=web/frontend"
 
   # Publish-Directory (wo die gebaute App liegt)
   publish = "web/frontend/dist"
