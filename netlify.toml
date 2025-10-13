@@ -2,8 +2,8 @@
   # Root command läuft im Root-Verzeichnis
   base = "/"
 
-  # Build-Command für Frontend (clean install in workspace wegen rollup optional dependencies bug)
-  command = "npm ci && cd web/frontend && npm ci && cd ../.. && npm run build:frontend"
+  # Build-Command für Frontend
+  command = "npm ci && npm run build:frontend"
 
   # Publish-Directory (wo die gebaute App liegt)
   publish = "web/frontend/dist"
