@@ -10,7 +10,7 @@
 
 [build.environment]
   # Node Version
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
 
 # Redirects für SPA (Single Page Application)
 [[redirects]]
