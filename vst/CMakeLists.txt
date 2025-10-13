@@ -15,11 +15,11 @@ endif()
 set(SOURCES
     src/main.cpp
     src/storagedata.cpp
-    src/debug.cpp
-    src/test.cpp
     src/auth/Auth.cpp
+    src/gui/MainWindow.cpp
     src/gui/FileBrowser.cpp
     src/util/StringUtil.cpp
+    src/util/CredentialStorage.cpp
 )
 
 set(HEADERS
@@ -27,8 +27,10 @@ set(HEADERS
     src/config.h
     src/types.h
     src/auth/Auth.h
+    src/gui/MainWindow.h
     src/gui/FileBrowser.h
     src/util/StringUtil.h
+    src/util/CredentialStorage.h
 )
 
 # Executable target
@@ -47,6 +49,7 @@ if(WIN32)
         user32
         gdi32
         kernel32
+        crypt32
     )
 endif()
 
