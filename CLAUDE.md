@@ -9,12 +9,15 @@ DegixDAW/
 ├── web/
 │   ├── frontend/        # React 19 + TypeScript (Port 5173)
 │   └── backend/         # Express API (Port 3001)
-├── desktop/             # Electron/Tauri (geplant)
-├── vst/                 # VST Plugins (geplant)
+├── desktop/             # C++ Desktop App (MSVC)
+│   ├── src/             # C++ Source Files
+│   ├── compile.bat      # Build Script (F5)
+│   └── build/           # Build Output
 ├── packages/
 │   ├── types/           # Shared TypeScript Types
 │   ├── utils/           # Shared Utilities
 │   └── constants/       # Shared Constants
+├── netlify.toml         # Netlify Deploy Config
 └── package.json         # npm workspaces root
 ```
 
@@ -228,21 +231,56 @@ cd packages/types && npm run build
 cd web/frontend && npm install
 ```
 
+### Desktop App ([desktop/](desktop/))
+
+C++ Desktop-Anwendung mit Windows GUI.
+
+**Features:**
+- Native Windows App (Win32 API)
+- Supabase Auth Integration
+- File Browser
+- Credential Storage
+
+**Kompilieren:**
+```bash
+# Option 1: Mit Batch Script (empfohlen)
+cd desktop
+compile.bat              # Oder F5 auf Tastatur-Makro
+
+# Option 2: Mit Visual Studio
+# Öffne DegixDAW-Desktop.sln in Visual Studio
+```
+
+**Ausgabe:**
+```
+desktop/build/DegixDAW.exe
+```
+
+**Hinweis:**
+- Automatisches Finden aller `.cpp` Dateien
+- MSVC Compiler erforderlich (Visual Studio 2022)
+- Build-Fehler in ROT, Erfolg in GRÜN
+
 ## Deployment
 
-**Frontend:** Netlify/Vercel
+**Frontend:** Netlify
 - Build Command: `npm run build:frontend`
 - Publish Directory: `web/frontend/dist`
+- Config: `netlify.toml` (automatisch erkannt)
 
 **Backend:** Railway/Render
 - Build Command: `npm run build:backend`
 - Start Command: `npm start --workspace=web/backend`
 
+**Desktop:** Lokale Builds
+- Windows: `compile.bat`
+- Ausgabe: `desktop/build/DegixDAW.exe`
+
 **Environment Variables:** Separate für Frontend/Backend setzen!
 
 ## Nächste Schritte
 
-1. **Desktop App**: Electron/Tauri Setup
+1. ✅ **Desktop App**: C++ Desktop App mit Windows GUI (fertig)
 2. **VST Plugins**: JUCE Framework Integration
 3. **CI/CD**: GitHub Actions für alle Workspaces
 4. **Monorepo Tools**: Optional Turborepo/Nx für Caching
@@ -252,5 +290,5 @@ cd web/frontend && npm install
 - [Root README.md](README.md): Monorepo Overview
 - [web/frontend/CLAUDE.md](web/frontend/CLAUDE.md): Frontend Details
 - [web/backend/README.md](web/backend/README.md): Backend Details
-- [desktop/README.md](desktop/README.md): Desktop App Plan
-- [vst/README.md](vst/README.md): VST Plugin Plan
+- [desktop/README.md](desktop/README.md): Desktop App Details
+- [netlify.toml](netlify.toml): Netlify Deployment Config

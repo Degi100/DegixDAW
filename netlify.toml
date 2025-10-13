@@ -1,0 +1,24 @@
+[build]
+  # Root command läuft im Root-Verzeichnis
+  base = "/"
+
+  # Build-Command für Frontend
+  command = "npm run build:frontend"
+
+  # Publish-Directory (wo die gebaute App liegt)
+  publish = "web/frontend/dist"
+
+[build.environment]
+  # Node Version
+  NODE_VERSION = "18"
+
+# Redirects für SPA (Single Page Application)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Environment Variables (optional - kannst du auch im Netlify Dashboard setzen)
+# [context.production.environment]
+#   VITE_SUPABASE_URL = "your-production-url"
+#   VITE_SUPABASE_ANON_KEY = "your-production-key"

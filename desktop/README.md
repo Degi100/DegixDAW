@@ -1,64 +1,124 @@
-# DegixDAW Desktop
+# DegixDAW Desktop Application
 
-Electron/Tauri desktop application for DegixDAW with native DAW integration.
+Native Windows desktop app for DegixDAW with Supabase integration.
 
-## Features (Planned)
+## Features
 
-- Native desktop integration
-- VST plugin hosting
-- DAW protocol integration (ReWire, VST3, AAX)
-- Low-latency audio processing
-- File system access for project management
-- System tray integration
+- **Authentication**: Supabase OAuth integration
+- **File Browser**: Multi-tab file browser with filtering
+  - All files, Received, Images, Audio, MIDI, Video
+  - Clipboard support (Ctrl+C)
+  - Context menu integration
+- **Storage API**: Direct Supabase REST API client
+  - Message attachments listing
+  - File metadata retrieval
+  - WinHTTP implementation
 
-## Tech Stack (To Be Decided)
+## Tech Stack
 
-### Option 1: Electron
-- **Pros**: Mature ecosystem, web tech reuse, extensive plugin support
-- **Cons**: Large bundle size, higher memory usage
+- **Language**: C++17
+- **GUI**: Windows API (Win32)
+- **HTTP**: WinHTTP
+- **Backend**: Supabase (Auth + Storage)
+- **Build**: CMake + Visual Studio 2022
 
-### Option 2: Tauri
-- **Pros**: Smaller bundle, lower memory usage, Rust backend
-- **Cons**: Younger ecosystem, less plugin support
+## Project Structure
 
-## Development Setup
+```
+vst/
+├── CMakeLists.txt           # Build configuration
+├── src/
+│   ├── main.cpp             # Application entry point
+│   ├── auth/
+│   │   ├── Auth.cpp/h       # Supabase authentication
+│   ├── gui/
+│   │   └── FileBrowser.cpp/h # File browser UI
+│   ├── util/
+│   │   └── StringUtil.cpp/h  # UTF-8/UTF-16 helpers
+│   ├── storagedata.cpp/h    # Storage API client
+│   ├── config.h             # Configuration
+│   ├── types.h              # Type definitions
+│   ├── debug.cpp            # Debug utilities
+│   └── test.cpp             # Test code
+└── build/                   # Generated build files
+```
+
+## Build Instructions
+
+### Prerequisites
+
+- Visual Studio 2022 with C++ Desktop Development
+- CMake 3.15+
+- Windows SDK
+
+### Building
 
 ```bash
-# Not yet implemented
-# Coming soon...
+# Generate Visual Studio solution
+cmake -B build -G "Visual Studio 17 2022"
+
+# Build project
+cmake --build build --config Release
+
+# Or open in Visual Studio
+start build/DegixDAW-VST.sln
 ```
 
-## Architecture
+### VS Code
 
+Install extensions:
+- C/C++ (Microsoft)
+- CMake Tools (Microsoft)
+
+Press `Ctrl+Shift+P` → "CMake: Configure" to generate build files.
+
+## Configuration
+
+Create `src/config.h` with your Supabase credentials:
+
+```cpp
+#define SUPABASE_URL "https://your-project.supabase.co"
+#define SUPABASE_ANON_KEY "your-anon-key"
 ```
-desktop/
-├── src/
-│   ├── main/           # Main process (Node.js/Rust)
-│   ├── renderer/       # Renderer process (React)
-│   ├── audio/          # Audio engine integration
-│   └── plugins/        # VST plugin loader
-├── resources/          # App icons, assets
-└── scripts/            # Build scripts
+
+## Running
+
+```bash
+# Via CMake
+cmake --build build --target run
+
+# Or directly
+./build/bin/DegixDAW-VST.exe
 ```
 
 ## Integration with Web Frontend
 
-The desktop app will reuse React components from `web/frontend`:
-- Shared UI components
-- Shared business logic
-- Shared types from `packages/types`
+The desktop app communicates with the web frontend via:
+- Shared Supabase database
+- Real-time subscriptions
+- Storage API for file sharing
 
-## Audio Processing
+## Development Status
 
-- Integration with VST plugins from `vst/` directory
-- Real-time audio streaming
-- MIDI support
-- Audio file I/O
+✅ **Implemented:**
+- Authentication flow
+- File browser UI
+- Storage API client
+- UTF-8/UTF-16 conversion
 
-## Status
-
-🚧 **Under Construction** - Not yet implemented
+🚧 **TODO:**
+- Complete OAuth callback handling
+- Implement file upload
+- Add audio playback
+- MIDI file parsing
+- DAW integration
 
 ## Contributing
 
 See [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines.
+
+## Resources
+
+- [JUCE Framework](https://juce.com/)
+- [VST3 SDK](https://steinbergmedia.github.io/vst3_doc/)
+- [Audio Plugin Development Guide](https://www.theaudioprogrammer.com/)
