@@ -2,8 +2,8 @@
   # Root command läuft im Root-Verzeichnis
   base = "/"
 
-  # Build-Command für Frontend
-  command = "npm ci && npm run build:frontend"
+  # Build-Command für Frontend (direkter workspace build)
+  command = "npm ci && npm run build --workspace=web/frontend"
 
   # Publish-Directory (wo die gebaute App liegt)
   publish = "web/frontend/dist"
