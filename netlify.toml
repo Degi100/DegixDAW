@@ -1,14 +1,12 @@
 [build]
-  # Root command läuft im Root-Verzeichnis
-  base = "/"
+  # Set base to frontend directory like it was before monorepo
+  base = "web/frontend"
 
-  # Build-Command für Frontend (direkter workspace build)
-  # Delete package-lock to regenerate for Linux platform
-  # Use npm install instead of npm ci to generate platform-specific lock
-  command = "rm -rf node_modules web/*/node_modules packages/*/node_modules package-lock.json && npm install && rm -rf web/frontend/node_modules/sass-embedded && npm run build --workspace=web/frontend"
+  # Simple build command like before
+  command = "npm install && npm run build"
 
-  # Publish-Directory (wo die gebaute App liegt)
-  publish = "web/frontend/dist"
+  # Publish directory relative to base
+  publish = "dist"
 
 [build.environment]
   # Node Version
