@@ -50,7 +50,9 @@ async function getCodeMetrics() {
   console.log('📊 Calculating code metrics...');
 
   try {
-    const projectRoot = path.resolve(__dirname, '..', '..');
+    // After monorepo migration: scripts are in web/frontend/scripts/analytics
+    // Need to go up 4 levels to reach repo root
+    const projectRoot = path.resolve(__dirname, '..', '..', '..', '..');
 
     // 1. Count files
     const { stdout: filesOutput } = await execAsync('git ls-files', { cwd: projectRoot });
