@@ -3,7 +3,8 @@
   base = "/"
 
   # Build-Command für Frontend (direkter workspace build)
-  command = "npm ci && npm run build --workspace=web/frontend"
+  # Force clean install to fix rollup optional deps
+  command = "rm -rf node_modules && npm ci && npm run build --workspace=web/frontend"
 
   # Publish-Directory (wo die gebaute App liegt)
   publish = "web/frontend/dist"
