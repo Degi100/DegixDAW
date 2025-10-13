@@ -1,12 +1,12 @@
 [build]
-  # Set base to frontend directory like it was before monorepo
-  base = "web/frontend"
+  # Build from root for monorepo workspace support
+  base = "."
 
-  # Simple build command like before
-  command = "npm install && npm run build"
+  # Install from root (respects workspaces), then build frontend
+  command = "npm install && npm run build:frontend"
 
-  # Publish directory relative to base
-  publish = "dist"
+  # Publish directory relative to root
+  publish = "web/frontend/dist"
 
 [build.environment]
   # Node Version
