@@ -28,6 +28,7 @@ interface ChartDataPoint {
   // Language Breakdown
   typescript: number;
   javascript: number;
+  cpp: number;
   scss: number;
   css: number;
   sql: number;
@@ -43,6 +44,7 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
     storage: false,
     typescript: false,
     javascript: false,
+    cpp: false,
     scss: false,
     css: false,
     sql: false,
@@ -78,6 +80,7 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
             storage_mb: snapshot.total_storage_mb,
             typescript: snapshot.typescript_loc || 0,
             javascript: snapshot.javascript_loc || 0,
+            cpp: snapshot.cpp_loc || 0,
             scss: snapshot.scss_loc || 0,
             css: snapshot.css_loc || 0,
             sql: snapshot.sql_loc || 0,
@@ -122,6 +125,7 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
         storage_mb: storage.total_mb * (progress + variance),
         typescript: Math.floor(metrics.code.loc * 0.665 * (progress + variance)),
         javascript: Math.floor(metrics.code.loc * 0.021 * (progress + variance)),
+        cpp: Math.floor(metrics.code.loc * 0.002 * (progress + variance)),
         scss: Math.floor(metrics.code.loc * 0.234 * (progress + variance)),
         css: Math.floor(metrics.code.loc * 0.015 * (progress + variance)),
         sql: Math.floor(metrics.code.loc * 0.039 * (progress + variance)),
@@ -168,6 +172,7 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
     if (visibleLines.storage) values.push({ label: 'Storage', value: `${lastPoint.storage_mb.toFixed(1)} MB`, color: '#f59e0b' });
     if (visibleLines.typescript) values.push({ label: 'TypeScript', value: lastPoint.typescript, color: '#3178c6' });
     if (visibleLines.javascript) values.push({ label: 'JavaScript', value: lastPoint.javascript, color: '#f7df1e' });
+    if (visibleLines.cpp) values.push({ label: 'C++', value: lastPoint.cpp, color: '#659ad2' });
     if (visibleLines.scss) values.push({ label: 'SCSS', value: lastPoint.scss, color: '#cc6699' });
     if (visibleLines.css) values.push({ label: 'CSS', value: lastPoint.css, color: '#264de4' });
     if (visibleLines.sql) values.push({ label: 'SQL', value: lastPoint.sql, color: '#00758f' });
@@ -228,6 +233,13 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
             style={{ borderColor: visibleLines.javascript ? '#f7df1e' : 'var(--border-color)' }}
           >
             📙 JS
+          </button>
+          <button
+            className={`toggle ${visibleLines.cpp ? 'active' : ''}`}
+            onClick={() => toggleLine('cpp')}
+            style={{ borderColor: visibleLines.cpp ? '#659ad2' : 'var(--border-color)' }}
+          >
+            ⚙️ C++
           </button>
           <button
             className={`toggle ${visibleLines.scss ? 'active' : ''}`}
@@ -354,6 +366,18 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
               stroke="#f7df1e"
               strokeWidth={2}
               dot={{ fill: '#f7df1e', r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+          )}
+
+          {visibleLines.cpp && (
+            <Line
+              type="monotone"
+              dataKey="cpp"
+              name="C++ LOC"
+              stroke="#659ad2"
+              strokeWidth={2}
+              dot={{ fill: '#659ad2', r: 4 }}
               activeDot={{ r: 6 }}
             />
           )}

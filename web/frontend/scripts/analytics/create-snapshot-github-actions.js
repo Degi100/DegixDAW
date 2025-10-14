@@ -58,7 +58,7 @@ async function getCodeMetrics() {
     const { stdout: filesOutput } = await execAsync('git ls-files', { cwd: projectRoot });
     const allFiles = filesOutput.trim().split('\n').filter(Boolean);
     const sourceFiles = allFiles.filter((f) =>
-      /\.(ts|tsx|js|jsx|css|scss|json|md|sql)$/.test(f)
+      /\.(ts|tsx|js|jsx|cpp|h|css|scss|json|md|sql)$/.test(f)
     );
     const filesCount = sourceFiles.length;
 
@@ -83,6 +83,7 @@ async function getCodeMetrics() {
     const languageStats = {
       typescript: 0,
       javascript: 0,
+      cpp: 0,
       scss: 0,
       css: 0,
       sql: 0,
@@ -100,6 +101,7 @@ async function getCodeMetrics() {
         // Categorize by language
         if (file.match(/\.(ts|tsx)$/)) languageStats.typescript += lines;
         else if (file.match(/\.(js|jsx)$/)) languageStats.javascript += lines;
+        else if (file.match(/\.(cpp|h)$/)) languageStats.cpp += lines;
         else if (file.match(/\.scss$/)) languageStats.scss += lines;
         else if (file.match(/\.css$/)) languageStats.css += lines;
         else if (file.match(/\.sql$/)) languageStats.sql += lines;
@@ -115,7 +117,7 @@ async function getCodeMetrics() {
     console.log(`   ✅ Files: ${filesCount}`);
     console.log(`   ✅ Commits: ${commitsCount}`);
     console.log(`   ✅ Age: ${projectAgeDays} days (since ${startDate})`);
-    console.log(`   📊 Languages: TS=${languageStats.typescript} | JS=${languageStats.javascript} | SCSS=${languageStats.scss} | SQL=${languageStats.sql}`);
+    console.log(`   📊 Languages: TS=${languageStats.typescript} | JS=${languageStats.javascript} | C++=${languageStats.cpp} | SCSS=${languageStats.scss} | SQL=${languageStats.sql}`);
 
     return {
       loc: totalLOC,
@@ -291,6 +293,7 @@ async function createSnapshot() {
       // Language Breakdown
       typescript_loc: code.languageStats.typescript,
       javascript_loc: code.languageStats.javascript,
+      cpp_loc: code.languageStats.cpp,
       scss_loc: code.languageStats.scss,
       css_loc: code.languageStats.css,
       sql_loc: code.languageStats.sql,
