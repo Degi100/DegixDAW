@@ -78,7 +78,7 @@ async function getCodeMetrics() {
     const startDate = firstCommitDate.toISOString().split('T')[0]; // YYYY-MM-DD
     const projectAgeDays = Math.floor((Date.now() - firstCommitDate.getTime()) / (1000 * 60 * 60 * 24));
 
-    // 4. Count Lines of Code (LOC) with Language Breakdown
+    // 4. Count Lines of Code (LOC) with Language Breakdown + Detailed Breakdown
     let totalLOC = 0;
     const languageStats = {
       typescript: 0,
@@ -92,6 +92,19 @@ async function getCodeMetrics() {
       other: 0,
     };
 
+    // Detailed breakdown for tooltips
+    const breakdown = {
+      typescript: { frontend: 0, backend: 0, packages: 0, desktop: 0 },
+      javascript: { frontend: 0, backend: 0, packages: 0, desktop: 0 },
+      cpp: { files: 0, loc: 0 },
+      scss: { files: 0, loc: 0 },
+      css: { files: 0, loc: 0 },
+      sql: { files: 0, loc: 0 },
+      json: { packageLock: 0, configs: 0, other: 0, files: 0 },
+      markdown: { readme: 0, docs: 0, other: 0, files: 0 },
+      other: { yml: 0, toml: 0, bat: 0, sh: 0, html: 0, xml: 0, txt: 0, files: 0 }
+    };
+
     for (const file of sourceFiles) {
       try {
         const filePath = path.join(projectRoot, file);
@@ -99,16 +112,66 @@ async function getCodeMetrics() {
         const lines = content.split('\n').length;
         totalLOC += lines;
 
-        // Categorize by language
-        if (file.match(/\.(ts|tsx)$/)) languageStats.typescript += lines;
-        else if (file.match(/\.(js|jsx)$/)) languageStats.javascript += lines;
-        else if (file.match(/\.(cpp|h)$/)) languageStats.cpp += lines;
-        else if (file.match(/\.scss$/)) languageStats.scss += lines;
-        else if (file.match(/\.css$/)) languageStats.css += lines;
-        else if (file.match(/\.sql$/)) languageStats.sql += lines;
-        else if (file.match(/\.json$/)) languageStats.json += lines;
-        else if (file.match(/\.md$/)) languageStats.markdown += lines;
-        else languageStats.other += lines; // Everything else
+        // Categorize by language with detailed breakdown
+        if (file.match(/\.(ts|tsx)$/)) {
+          languageStats.typescript += lines;
+          if (file.startsWith('web/frontend/')) breakdown.typescript.frontend += lines;
+          else if (file.startsWith('web/backend/')) breakdown.typescript.backend += lines;
+          else if (file.startsWith('packages/')) breakdown.typescript.packages += lines;
+          else if (file.startsWith('desktop/')) breakdown.typescript.desktop += lines;
+        }
+        else if (file.match(/\.(js|jsx)$/)) {
+          languageStats.javascript += lines;
+          if (file.startsWith('web/frontend/')) breakdown.javascript.frontend += lines;
+          else if (file.startsWith('web/backend/')) breakdown.javascript.backend += lines;
+          else if (file.startsWith('packages/')) breakdown.javascript.packages += lines;
+          else if (file.startsWith('desktop/')) breakdown.javascript.desktop += lines;
+        }
+        else if (file.match(/\.(cpp|h)$/)) {
+          languageStats.cpp += lines;
+          breakdown.cpp.files++;
+          breakdown.cpp.loc += lines;
+        }
+        else if (file.match(/\.scss$/)) {
+          languageStats.scss += lines;
+          breakdown.scss.files++;
+          breakdown.scss.loc += lines;
+        }
+        else if (file.match(/\.css$/)) {
+          languageStats.css += lines;
+          breakdown.css.files++;
+          breakdown.css.loc += lines;
+        }
+        else if (file.match(/\.sql$/)) {
+          languageStats.sql += lines;
+          breakdown.sql.files++;
+          breakdown.sql.loc += lines;
+        }
+        else if (file.match(/\.json$/)) {
+          languageStats.json += lines;
+          breakdown.json.files++;
+          if (file.includes('package-lock.json')) breakdown.json.packageLock += lines;
+          else if (file.match(/(tsconfig|package|vite\.config|eslint)\.json/)) breakdown.json.configs += lines;
+          else breakdown.json.other += lines;
+        }
+        else if (file.match(/\.md$/)) {
+          languageStats.markdown += lines;
+          breakdown.markdown.files++;
+          if (file.match(/README\.md$/i)) breakdown.markdown.readme += lines;
+          else if (file.match(/CLAUDE\.md$/i)) breakdown.markdown.docs += lines;
+          else breakdown.markdown.other += lines;
+        }
+        else {
+          languageStats.other += lines;
+          breakdown.other.files++;
+          if (file.match(/\.(yml|yaml)$/)) breakdown.other.yml += lines;
+          else if (file.match(/\.toml$/)) breakdown.other.toml += lines;
+          else if (file.match(/\.bat$/)) breakdown.other.bat += lines;
+          else if (file.match(/\.sh$/)) breakdown.other.sh += lines;
+          else if (file.match(/\.html$/)) breakdown.other.html += lines;
+          else if (file.match(/\.xml$/)) breakdown.other.xml += lines;
+          else if (file.match(/\.txt$/)) breakdown.other.txt += lines;
+        }
       } catch (err) {
         // Skip files that can't be read
         console.warn(`   ⚠️  Skipping ${file}: ${err.message}`);
@@ -130,6 +193,7 @@ async function getCodeMetrics() {
         startDate,
       },
       languageStats,
+      breakdown, // Detailed breakdown for tooltips
     };
   } catch (error) {
     console.error('❌ Error calculating code metrics:', error.message);
@@ -321,6 +385,9 @@ async function createSnapshot() {
       database_size_mb: storage.database.total_mb,
       storage_size_mb: storage.storage.total_mb,
       total_storage_mb: storage.total_mb,
+
+      // Detailed Breakdown (for tooltips)
+      breakdown: code.breakdown,
 
       // Metadata
       created_by: null, // GitHub Actions has no user context
