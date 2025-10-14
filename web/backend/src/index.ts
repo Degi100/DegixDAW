@@ -42,11 +42,13 @@ app.get('/api/analytics/code-metrics', async (req: Request, res: Response) => {
     // Get project root (two levels up from backend/src/)
     const projectRoot = path.resolve(__dirname, '..', '..');
 
-    // 1. Count files (including SQL)
+    // 1. Count files
     const { stdout: filesOutput } = await execAsync('git ls-files', { cwd: projectRoot });
     const allFiles = filesOutput.trim().split('\n').filter(Boolean);
+
+    // Filter only text source files (exclude binary, images, etc)
     const sourceFiles = allFiles.filter((f) =>
-      /\.(ts|tsx|js|jsx|cpp|h|css|scss|json|md|sql)$/.test(f)
+      /\.(ts|tsx|js|jsx|cpp|h|css|scss|json|md|sql|yml|yaml|toml|txt|bat|sh|html|xml)$/.test(f)
     );
     const filesCount = sourceFiles.length;
 
@@ -77,6 +79,7 @@ app.get('/api/analytics/code-metrics', async (req: Request, res: Response) => {
       sql: 0,
       json: 0,
       markdown: 0,
+      other: 0,
     };
 
     for (const file of sourceFiles) {
@@ -95,6 +98,7 @@ app.get('/api/analytics/code-metrics', async (req: Request, res: Response) => {
         else if (file.match(/\.sql$/)) languageStats.sql += lines;
         else if (file.match(/\.json$/)) languageStats.json += lines;
         else if (file.match(/\.md$/)) languageStats.markdown += lines;
+        else languageStats.other += lines; // Everything else
       } catch (err: any) {
         // Skip files that can't be read
         console.warn(`   ⚠️  Skipping ${file}: ${err.message}`);

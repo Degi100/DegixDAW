@@ -104,7 +104,7 @@ async function getCodeMetricsForCommit(projectRoot) {
     const { stdout: filesOutput } = await execAsync('git ls-files', { cwd: projectRoot });
     const allFiles = filesOutput.trim().split('\n').filter(Boolean);
     const sourceFiles = allFiles.filter((f) =>
-      /\.(ts|tsx|js|jsx|cpp|h|css|scss|json|md|sql)$/.test(f)
+      /\.(ts|tsx|js|jsx|cpp|h|css|scss|json|md|sql|yml|yaml|toml|txt|bat|sh|html|xml)$/.test(f)
     );
     const filesCount = sourceFiles.length;
 
@@ -125,6 +125,7 @@ async function getCodeMetricsForCommit(projectRoot) {
       sql: 0,
       json: 0,
       markdown: 0,
+      other: 0,
     };
 
     for (const file of sourceFiles) {
@@ -143,6 +144,7 @@ async function getCodeMetricsForCommit(projectRoot) {
         else if (file.match(/\.sql$/)) languageStats.sql += lines;
         else if (file.match(/\.json$/)) languageStats.json += lines;
         else if (file.match(/\.md$/)) languageStats.markdown += lines;
+        else languageStats.other += lines; // Everything else
       } catch (err) {
         // Skip files that can't be read
         // (might be binary or deleted in detached state)
@@ -198,6 +200,7 @@ async function createSnapshotForDate(date, code, projectRoot) {
     sql_loc: code.languageStats.sql,
     json_loc: code.languageStats.json,
     markdown_loc: code.languageStats.markdown,
+    other_loc: code.languageStats.other,
 
     // User/Message/Issue Metrics (0 for historical data - no Supabase history)
     total_users: 0,

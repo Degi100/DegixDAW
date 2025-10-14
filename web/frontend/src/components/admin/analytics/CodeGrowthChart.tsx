@@ -2,7 +2,7 @@
  * CodeGrowthChart Component
  *
  * Shows code development over time
- * Metrics: LOC, TypeScript, JavaScript, C++, SCSS, CSS, SQL
+ * Metrics: LOC, TypeScript, JavaScript, C++, SCSS, CSS, SQL, Other
  *
  * Uses real historical data from project_snapshots table
  */
@@ -21,6 +21,7 @@ interface CodeDataPoint {
   scss: number;
   css: number;
   sql: number;
+  other: number;
 }
 
 export function CodeGrowthChart() {
@@ -31,7 +32,8 @@ export function CodeGrowthChart() {
     cpp: false,
     scss: false,
     css: false,
-    sql: false
+    sql: false,
+    other: false
   });
 
   const [chartData, setChartData] = useState<CodeDataPoint[]>([]);
@@ -62,7 +64,8 @@ export function CodeGrowthChart() {
             cpp: snapshot.cpp_loc || 0,
             scss: snapshot.scss_loc || 0,
             css: snapshot.css_loc || 0,
-            sql: snapshot.sql_loc || 0
+            sql: snapshot.sql_loc || 0,
+            other: snapshot.other_loc || 0
           }));
 
         setChartData(data);
@@ -116,6 +119,7 @@ export function CodeGrowthChart() {
     if (visibleLines.scss) values.push({ label: 'SCSS', value: lastPoint.scss, color: '#cc6699' });
     if (visibleLines.css) values.push({ label: 'CSS', value: lastPoint.css, color: '#264de4' });
     if (visibleLines.sql) values.push({ label: 'SQL', value: lastPoint.sql, color: '#00758f' });
+    if (visibleLines.other) values.push({ label: 'Other', value: lastPoint.other, color: '#9ca3af' });
 
     // Sort by value (highest first)
     return values.sort((a, b) => b.value - a.value);
@@ -174,6 +178,13 @@ export function CodeGrowthChart() {
             style={{ borderColor: visibleLines.sql ? '#00758f' : 'var(--border-color)' }}
           >
             🗄️ SQL
+          </button>
+          <button
+            className={`toggle ${visibleLines.other ? 'active' : ''}`}
+            onClick={() => toggleLine('other')}
+            style={{ borderColor: visibleLines.other ? '#9ca3af' : 'var(--border-color)' }}
+          >
+            📄 Other
           </button>
         </div>
       </div>
@@ -277,6 +288,18 @@ export function CodeGrowthChart() {
               stroke="#00758f"
               strokeWidth={2}
               dot={{ fill: '#00758f', r: 3 }}
+              activeDot={{ r: 5 }}
+            />
+          )}
+
+          {visibleLines.other && (
+            <Line
+              type="monotone"
+              dataKey="other"
+              name="Other"
+              stroke="#9ca3af"
+              strokeWidth={2}
+              dot={{ fill: '#9ca3af', r: 3 }}
               activeDot={{ r: 5 }}
             />
           )}

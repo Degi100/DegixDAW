@@ -30,6 +30,7 @@ export interface ProjectSnapshot {
   sql_loc?: number;
   json_loc?: number;
   markdown_loc?: number;
+  other_loc?: number;
 
   // User Metrics
   total_users: number;
@@ -90,6 +91,7 @@ export async function createSnapshot(date?: string): Promise<ProjectSnapshot> {
     sql_loc: (code as any).languageStats?.sql || 0,
     json_loc: (code as any).languageStats?.json || 0,
     markdown_loc: (code as any).languageStats?.markdown || 0,
+    other_loc: (code as any).languageStats?.other || 0,
 
     // Users
     total_users: metrics.users.total,
