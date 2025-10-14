@@ -39,8 +39,8 @@ app.get('/api/analytics/code-metrics', async (req: Request, res: Response) => {
   try {
     console.log('📊 [Analytics] Calculating code metrics...');
 
-    // Get project root (two levels up from backend/src/)
-    const projectRoot = path.resolve(__dirname, '..', '..');
+    // Get project root (three levels up from web/backend/src/)
+    const projectRoot = path.resolve(__dirname, '..', '..', '..');
 
     // 1. Count files
     const { stdout: filesOutput } = await execAsync('git ls-files', { cwd: projectRoot });
