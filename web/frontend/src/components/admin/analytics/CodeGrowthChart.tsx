@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceDot } from 'recharts';
 import { getSnapshots } from '../../../lib/services/analytics/snapshotsService';
 import '../../../styles/components/analytics/GrowthChart.scss';
 
@@ -27,6 +27,14 @@ interface CodeDataPoint {
   breakdown?: any; // Detailed breakdown for tooltips
 }
 
+interface Milestone {
+  date: string;
+  loc: number;
+  type: 'threshold' | 'big_jump' | 'first_cpp' | 'special';
+  label: string;
+  emoji: string;
+}
+
 export function CodeGrowthChart() {
   const [visibleLines, setVisibleLines] = useState({
     total: true,
@@ -42,6 +50,7 @@ export function CodeGrowthChart() {
   });
 
   const [chartData, setChartData] = useState<CodeDataPoint[]>([]);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [usingRealData, setUsingRealData] = useState(false);
 
   // Load historical snapshots from database
@@ -77,6 +86,7 @@ export function CodeGrowthChart() {
           }));
 
         setChartData(data);
+        setMilestones(detectMilestones(data));
         setUsingRealData(true);
         console.log(`[CodeGrowthChart] ✅ Loaded ${snapshots.length} snapshots`);
       } else {
@@ -94,6 +104,59 @@ export function CodeGrowthChart() {
 
   const toggleLine = (key: keyof typeof visibleLines) => {
     setVisibleLines(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  // Detect milestones from chart data
+  const detectMilestones = (data: CodeDataPoint[]) => {
+    const detectedMilestones: Milestone[] = [];
+    const thresholds = [10000, 25000, 50000, 75000, 100000];
+
+    for (let i = 0; i < data.length; i++) {
+      const current = data[i];
+      const previous = i > 0 ? data[i - 1] : null;
+
+      // 1. Threshold milestones (10k, 25k, 50k, etc.)
+      if (previous) {
+        for (const threshold of thresholds) {
+          if (previous.total < threshold && current.total >= threshold) {
+            detectedMilestones.push({
+              date: current.date,
+              loc: current.total,
+              type: 'threshold',
+              label: `${(threshold / 1000)}k LOC`,
+              emoji: '🎯'
+            });
+          }
+        }
+      }
+
+      // 2. Big jumps (>10k LOC increase in one day)
+      if (previous) {
+        const jump = current.total - previous.total;
+        if (jump > 10000) {
+          detectedMilestones.push({
+            date: current.date,
+            loc: current.total,
+            type: 'big_jump',
+            label: `+${(jump / 1000).toFixed(1)}k`,
+            emoji: '📈'
+          });
+        }
+      }
+
+      // 3. First C++ code
+      if (previous && previous.cpp === 0 && current.cpp > 0) {
+        detectedMilestones.push({
+          date: current.date,
+          loc: current.total,
+          type: 'first_cpp',
+          label: 'First C++',
+          emoji: '⚙️'
+        });
+      }
+    }
+
+    return detectedMilestones;
   };
 
   // Custom Tooltip with detailed breakdown
@@ -383,6 +446,32 @@ export function CodeGrowthChart() {
               activeDot={{ r: 5 }}
             />
           )}
+
+          {/* Milestone Markers */}
+          {milestones.map((milestone, index) => {
+            const color = milestone.type === 'threshold' ? '#fbbf24' :
+                         milestone.type === 'big_jump' ? '#f59e0b' :
+                         milestone.type === 'first_cpp' ? '#659ad2' : '#10b981';
+
+            return (
+              <ReferenceDot
+                key={index}
+                x={milestone.date}
+                y={milestone.loc}
+                r={8}
+                fill={color}
+                stroke="#fff"
+                strokeWidth={2}
+                label={{
+                  value: `${milestone.emoji} ${milestone.label}`,
+                  position: 'top',
+                  fill: 'var(--text-primary)',
+                  fontSize: 12,
+                  fontWeight: 'bold'
+                }}
+              />
+            );
+          })}
         </LineChart>
       </ResponsiveContainer>
 
