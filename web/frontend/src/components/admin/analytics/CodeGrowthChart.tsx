@@ -24,6 +24,7 @@ interface CodeDataPoint {
   json: number;
   markdown: number;
   other: number;
+  breakdown?: any; // Detailed breakdown for tooltips
 }
 
 export function CodeGrowthChart() {
@@ -71,7 +72,8 @@ export function CodeGrowthChart() {
             sql: snapshot.sql_loc || 0,
             json: snapshot.json_loc || 0,
             markdown: snapshot.markdown_loc || 0,
-            other: snapshot.other_loc || 0
+            other: snapshot.other_loc || 0,
+            breakdown: (snapshot as any).breakdown // Include breakdown for tooltips
           }));
 
         setChartData(data);
@@ -94,17 +96,49 @@ export function CodeGrowthChart() {
     setVisibleLines(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // Custom Tooltip
+  // Custom Tooltip with detailed breakdown
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
         <div className="growth-tooltip">
           <p className="growth-tooltip__date">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} className="growth-tooltip__item" style={{ color: entry.color }}>
-              {entry.name}: <strong>{entry.value.toLocaleString()}</strong> LOC
-            </p>
-          ))}
+          {payload.map((entry: any, index: number) => {
+            const breakdown = entry.payload?.breakdown;
+
+            return (
+              <div key={index} className="growth-tooltip__item">
+                <p style={{ color: entry.color, marginBottom: '4px' }}>
+                  <strong>{entry.name}: {entry.value.toLocaleString()} LOC</strong>
+                </p>
+
+                {/* Detailed breakdown for specific categories */}
+                {breakdown && entry.dataKey === 'typescript' && breakdown.typescript && (
+                  <div style={{ fontSize: '0.85em', paddingLeft: '12px', opacity: 0.9 }}>
+                    {breakdown.typescript.frontend > 0 && <div>├─ Frontend: {breakdown.typescript.frontend.toLocaleString()}</div>}
+                    {breakdown.typescript.backend > 0 && <div>├─ Backend: {breakdown.typescript.backend.toLocaleString()}</div>}
+                    {breakdown.typescript.packages > 0 && <div>└─ Packages: {breakdown.typescript.packages.toLocaleString()}</div>}
+                  </div>
+                )}
+
+                {breakdown && entry.dataKey === 'json' && breakdown.json && (
+                  <div style={{ fontSize: '0.85em', paddingLeft: '12px', opacity: 0.9 }}>
+                    {breakdown.json.packageLock > 0 && <div>├─ package-lock: {breakdown.json.packageLock.toLocaleString()}</div>}
+                    {breakdown.json.configs > 0 && <div>├─ Configs: {breakdown.json.configs.toLocaleString()}</div>}
+                    {breakdown.json.other > 0 && <div>└─ Other: {breakdown.json.other.toLocaleString()}</div>}
+                  </div>
+                )}
+
+                {breakdown && entry.dataKey === 'other' && breakdown.other && (
+                  <div style={{ fontSize: '0.85em', paddingLeft: '12px', opacity: 0.9 }}>
+                    {breakdown.other.yml > 0 && <div>├─ YML: {breakdown.other.yml}</div>}
+                    {breakdown.other.toml > 0 && <div>├─ TOML: {breakdown.other.toml}</div>}
+                    {breakdown.other.bat > 0 && <div>├─ BAT: {breakdown.other.bat}</div>}
+                    {breakdown.other.html > 0 && <div>└─ HTML: {breakdown.other.html}</div>}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       );
     }
