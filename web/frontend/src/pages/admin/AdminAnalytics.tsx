@@ -12,7 +12,8 @@ import { useAnalytics } from '../../hooks/useAnalytics';
 import { useAutoRefresh } from '../../hooks/useAutoRefresh';
 import { StatsGrid } from '../../components/admin/analytics/StatsGrid';
 import { MilestonesList } from '../../components/admin/analytics/MilestonesList';
-import { GrowthChart } from '../../components/admin/analytics/GrowthChart';
+import { CodeGrowthChart } from '../../components/admin/analytics/CodeGrowthChart';
+import { ProjectMetricsChart } from '../../components/admin/analytics/ProjectMetricsChart';
 import { StorageBreakdown } from '../../components/admin/analytics/StorageBreakdown';
 import { ExportModal } from '../../components/admin/analytics/ExportModal';
 import { AddMilestoneModal } from '../../components/admin/analytics/AddMilestoneModal';
@@ -171,7 +172,8 @@ export default function AdminAnalytics() {
 
       <div className="admin-analytics__content">
         <StatsGrid metrics={metrics} storage={storage} />
-        <GrowthChart metrics={metrics} storage={storage} />
+        <CodeGrowthChart />
+        <ProjectMetricsChart />
         <StorageBreakdown storage={storage} />
         <MilestonesList
           key={milestonesKey}

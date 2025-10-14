@@ -1,58 +1,40 @@
 /**
- * GrowthChart Component
+ * CodeGrowthChart Component
  *
- * Multi-line chart showing project growth over time
- * Toggleable metrics: LOC, Users, Messages, Storage
+ * Shows code development over time
+ * Metrics: LOC, TypeScript, JavaScript, C++, SCSS, CSS, SQL
  *
  * Uses real historical data from project_snapshots table
- * Falls back to mock data if no snapshots available
  */
 
 import { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { getSnapshots } from '../../../lib/services/analytics/snapshotsService';
-import type { ProjectMetrics, StorageStats } from '../../../lib/services/analytics/types';
 import '../../../styles/components/analytics/GrowthChart.scss';
 
-interface GrowthChartProps {
-  metrics: ProjectMetrics;
-  storage: StorageStats;
-}
-
-interface ChartDataPoint {
+interface CodeDataPoint {
   date: string;
-  loc: number;
-  users: number;
-  messages: number;
-  storage_mb: number;
-  // Language Breakdown
+  total: number;
   typescript: number;
   javascript: number;
   cpp: number;
   scss: number;
   css: number;
   sql: number;
-  json: number;
-  markdown: number;
 }
 
-export function GrowthChart({ metrics, storage }: GrowthChartProps) {
+export function CodeGrowthChart() {
   const [visibleLines, setVisibleLines] = useState({
-    loc: true,
-    users: true,
-    messages: false,
-    storage: false,
+    total: true,
     typescript: false,
     javascript: false,
     cpp: false,
     scss: false,
     css: false,
-    sql: false,
-    json: false,
-    markdown: false
+    sql: false
   });
 
-  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [chartData, setChartData] = useState<CodeDataPoint[]>([]);
   const [usingRealData, setUsingRealData] = useState(false);
 
   // Load historical snapshots from database
@@ -62,7 +44,7 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
 
   const loadSnapshotData = async () => {
     try {
-      console.log('[GrowthChart] Loading snapshots...');
+      console.log('[CodeGrowthChart] Loading snapshots...');
       const snapshots = await getSnapshots(30); // Last 30 snapshots
 
       if (snapshots.length > 0) {
@@ -74,31 +56,26 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
               day: '2-digit',
               month: 'short'
             }),
-            loc: snapshot.total_loc,
-            users: snapshot.total_users,
-            messages: snapshot.total_messages,
-            storage_mb: snapshot.total_storage_mb,
+            total: snapshot.total_loc,
             typescript: snapshot.typescript_loc || 0,
             javascript: snapshot.javascript_loc || 0,
             cpp: snapshot.cpp_loc || 0,
             scss: snapshot.scss_loc || 0,
             css: snapshot.css_loc || 0,
-            sql: snapshot.sql_loc || 0,
-            json: snapshot.json_loc || 0,
-            markdown: snapshot.markdown_loc || 0
+            sql: snapshot.sql_loc || 0
           }));
 
         setChartData(data);
         setUsingRealData(true);
-        console.log(`[GrowthChart] ✅ Loaded ${snapshots.length} snapshots`);
+        console.log(`[CodeGrowthChart] ✅ Loaded ${snapshots.length} snapshots`);
       } else {
         // No snapshots found - show empty chart
-        console.warn('[GrowthChart] No snapshots found');
+        console.warn('[CodeGrowthChart] No snapshots found');
         setChartData([]);
         setUsingRealData(false);
       }
     } catch (error) {
-      console.error('[GrowthChart] Failed to load snapshots:', error);
+      console.error('[CodeGrowthChart] Failed to load snapshots:', error);
       setChartData([]);
       setUsingRealData(false);
     }
@@ -116,8 +93,7 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
           <p className="growth-tooltip__date">{label}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} className="growth-tooltip__item" style={{ color: entry.color }}>
-              {entry.name}: <strong>{entry.value.toLocaleString()}</strong>
-              {entry.dataKey === 'storage_mb' && ' MB'}
+              {entry.name}: <strong>{entry.value.toLocaleString()}</strong> LOC
             </p>
           ))}
         </div>
@@ -133,73 +109,43 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
     const lastPoint = chartData[chartData.length - 1];
     const values = [];
 
-    if (visibleLines.loc) values.push({ label: 'Total LOC', value: lastPoint.loc, color: '#3b82f6' });
-    if (visibleLines.users) values.push({ label: 'Users', value: lastPoint.users, color: '#8b5cf6' });
-    if (visibleLines.messages) values.push({ label: 'Messages', value: lastPoint.messages, color: '#06b6d4' });
-    if (visibleLines.storage) values.push({ label: 'Storage', value: `${lastPoint.storage_mb.toFixed(1)} MB`, color: '#f59e0b' });
+    if (visibleLines.total) values.push({ label: 'Total LOC', value: lastPoint.total, color: '#3b82f6' });
     if (visibleLines.typescript) values.push({ label: 'TypeScript', value: lastPoint.typescript, color: '#3178c6' });
     if (visibleLines.javascript) values.push({ label: 'JavaScript', value: lastPoint.javascript, color: '#f7df1e' });
     if (visibleLines.cpp) values.push({ label: 'C++', value: lastPoint.cpp, color: '#659ad2' });
     if (visibleLines.scss) values.push({ label: 'SCSS', value: lastPoint.scss, color: '#cc6699' });
     if (visibleLines.css) values.push({ label: 'CSS', value: lastPoint.css, color: '#264de4' });
     if (visibleLines.sql) values.push({ label: 'SQL', value: lastPoint.sql, color: '#00758f' });
-    if (visibleLines.json) values.push({ label: 'JSON', value: lastPoint.json, color: '#5a5a5a' });
-    if (visibleLines.markdown) values.push({ label: 'Markdown', value: lastPoint.markdown, color: '#083fa1' });
 
-    // Sort by value (highest first) - handle string values (storage)
-    return values.sort((a, b) => {
-      const aVal = typeof a.value === 'string' ? parseFloat(a.value) : a.value;
-      const bVal = typeof b.value === 'string' ? parseFloat(b.value) : b.value;
-      return bVal - aVal;
-    });
+    // Sort by value (highest first)
+    return values.sort((a, b) => b.value - a.value);
   };
 
   return (
     <div className="growth-chart">
       <div className="growth-chart__header">
-        <h2>📈 Growth Timeline</h2>
+        <h2>💻 Code Growth</h2>
         <div className="growth-chart__toggles">
           <button
-            className={`toggle ${visibleLines.loc ? 'active' : ''}`}
-            onClick={() => toggleLine('loc')}
-            style={{ borderColor: visibleLines.loc ? '#3b82f6' : 'var(--border-color)' }}
+            className={`toggle ${visibleLines.total ? 'active' : ''}`}
+            onClick={() => toggleLine('total')}
+            style={{ borderColor: visibleLines.total ? '#3b82f6' : 'var(--border-color)' }}
           >
-            📝 LOC
-          </button>
-          <button
-            className={`toggle ${visibleLines.users ? 'active' : ''}`}
-            onClick={() => toggleLine('users')}
-            style={{ borderColor: visibleLines.users ? '#8b5cf6' : 'var(--border-color)' }}
-          >
-            👥 Users
-          </button>
-          <button
-            className={`toggle ${visibleLines.messages ? 'active' : ''}`}
-            onClick={() => toggleLine('messages')}
-            style={{ borderColor: visibleLines.messages ? '#06b6d4' : 'var(--border-color)' }}
-          >
-            💬 Messages
-          </button>
-          <button
-            className={`toggle ${visibleLines.storage ? 'active' : ''}`}
-            onClick={() => toggleLine('storage')}
-            style={{ borderColor: visibleLines.storage ? '#f59e0b' : 'var(--border-color)' }}
-          >
-            💾 Storage
+            📝 Total LOC
           </button>
           <button
             className={`toggle ${visibleLines.typescript ? 'active' : ''}`}
             onClick={() => toggleLine('typescript')}
             style={{ borderColor: visibleLines.typescript ? '#3178c6' : 'var(--border-color)' }}
           >
-            📘 TS
+            📘 TypeScript
           </button>
           <button
             className={`toggle ${visibleLines.javascript ? 'active' : ''}`}
             onClick={() => toggleLine('javascript')}
             style={{ borderColor: visibleLines.javascript ? '#f7df1e' : 'var(--border-color)' }}
           >
-            📙 JS
+            📙 JavaScript
           </button>
           <button
             className={`toggle ${visibleLines.cpp ? 'active' : ''}`}
@@ -216,13 +162,6 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
             💅 SCSS
           </button>
           <button
-            className={`toggle ${visibleLines.sql ? 'active' : ''}`}
-            onClick={() => toggleLine('sql')}
-            style={{ borderColor: visibleLines.sql ? '#00758f' : 'var(--border-color)' }}
-          >
-            🗄️ SQL
-          </button>
-          <button
             className={`toggle ${visibleLines.css ? 'active' : ''}`}
             onClick={() => toggleLine('css')}
             style={{ borderColor: visibleLines.css ? '#264de4' : 'var(--border-color)' }}
@@ -230,18 +169,11 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
             🎨 CSS
           </button>
           <button
-            className={`toggle ${visibleLines.json ? 'active' : ''}`}
-            onClick={() => toggleLine('json')}
-            style={{ borderColor: visibleLines.json ? '#5a5a5a' : 'var(--border-color)' }}
+            className={`toggle ${visibleLines.sql ? 'active' : ''}`}
+            onClick={() => toggleLine('sql')}
+            style={{ borderColor: visibleLines.sql ? '#00758f' : 'var(--border-color)' }}
           >
-            📦 JSON
-          </button>
-          <button
-            className={`toggle ${visibleLines.markdown ? 'active' : ''}`}
-            onClick={() => toggleLine('markdown')}
-            style={{ borderColor: visibleLines.markdown ? '#083fa1' : 'var(--border-color)' }}
-          >
-            📝 MD
+            🗄️ SQL
           </button>
         </div>
       </div>
@@ -265,50 +197,14 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
             iconType="line"
           />
 
-          {visibleLines.loc && (
+          {visibleLines.total && (
             <Line
               type="monotone"
-              dataKey="loc"
-              name="Lines of Code"
+              dataKey="total"
+              name="Total LOC"
               stroke="#3b82f6"
-              strokeWidth={2}
+              strokeWidth={3}
               dot={{ fill: '#3b82f6', r: 4 }}
-              activeDot={{ r: 6 }}
-            />
-          )}
-
-          {visibleLines.users && (
-            <Line
-              type="monotone"
-              dataKey="users"
-              name="Users"
-              stroke="#8b5cf6"
-              strokeWidth={2}
-              dot={{ fill: '#8b5cf6', r: 4 }}
-              activeDot={{ r: 6 }}
-            />
-          )}
-
-          {visibleLines.messages && (
-            <Line
-              type="monotone"
-              dataKey="messages"
-              name="Messages"
-              stroke="#06b6d4"
-              strokeWidth={2}
-              dot={{ fill: '#06b6d4', r: 4 }}
-              activeDot={{ r: 6 }}
-            />
-          )}
-
-          {visibleLines.storage && (
-            <Line
-              type="monotone"
-              dataKey="storage_mb"
-              name="Storage (MB)"
-              stroke="#f59e0b"
-              strokeWidth={2}
-              dot={{ fill: '#f59e0b', r: 4 }}
               activeDot={{ r: 6 }}
             />
           )}
@@ -317,11 +213,11 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
             <Line
               type="monotone"
               dataKey="typescript"
-              name="TypeScript LOC"
+              name="TypeScript"
               stroke="#3178c6"
               strokeWidth={2}
-              dot={{ fill: '#3178c6', r: 4 }}
-              activeDot={{ r: 6 }}
+              dot={{ fill: '#3178c6', r: 3 }}
+              activeDot={{ r: 5 }}
             />
           )}
 
@@ -329,11 +225,11 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
             <Line
               type="monotone"
               dataKey="javascript"
-              name="JavaScript LOC"
+              name="JavaScript"
               stroke="#f7df1e"
               strokeWidth={2}
-              dot={{ fill: '#f7df1e', r: 4 }}
-              activeDot={{ r: 6 }}
+              dot={{ fill: '#f7df1e', r: 3 }}
+              activeDot={{ r: 5 }}
             />
           )}
 
@@ -341,11 +237,11 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
             <Line
               type="monotone"
               dataKey="cpp"
-              name="C++ LOC"
+              name="C++"
               stroke="#659ad2"
               strokeWidth={2}
-              dot={{ fill: '#659ad2', r: 4 }}
-              activeDot={{ r: 6 }}
+              dot={{ fill: '#659ad2', r: 3 }}
+              activeDot={{ r: 5 }}
             />
           )}
 
@@ -353,23 +249,11 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
             <Line
               type="monotone"
               dataKey="scss"
-              name="SCSS LOC"
+              name="SCSS"
               stroke="#cc6699"
               strokeWidth={2}
-              dot={{ fill: '#cc6699', r: 4 }}
-              activeDot={{ r: 6 }}
-            />
-          )}
-
-          {visibleLines.sql && (
-            <Line
-              type="monotone"
-              dataKey="sql"
-              name="SQL LOC"
-              stroke="#00758f"
-              strokeWidth={2}
-              dot={{ fill: '#00758f', r: 4 }}
-              activeDot={{ r: 6 }}
+              dot={{ fill: '#cc6699', r: 3 }}
+              activeDot={{ r: 5 }}
             />
           )}
 
@@ -377,35 +261,23 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
             <Line
               type="monotone"
               dataKey="css"
-              name="CSS LOC"
+              name="CSS"
               stroke="#264de4"
               strokeWidth={2}
-              dot={{ fill: '#264de4', r: 4 }}
-              activeDot={{ r: 6 }}
+              dot={{ fill: '#264de4', r: 3 }}
+              activeDot={{ r: 5 }}
             />
           )}
 
-          {visibleLines.json && (
+          {visibleLines.sql && (
             <Line
               type="monotone"
-              dataKey="json"
-              name="JSON LOC"
-              stroke="#5a5a5a"
+              dataKey="sql"
+              name="SQL"
+              stroke="#00758f"
               strokeWidth={2}
-              dot={{ fill: '#5a5a5a', r: 4 }}
-              activeDot={{ r: 6 }}
-            />
-          )}
-
-          {visibleLines.markdown && (
-            <Line
-              type="monotone"
-              dataKey="markdown"
-              name="Markdown LOC"
-              stroke="#083fa1"
-              strokeWidth={2}
-              dot={{ fill: '#083fa1', r: 4 }}
-              activeDot={{ r: 6 }}
+              dot={{ fill: '#00758f', r: 3 }}
+              activeDot={{ r: 5 }}
             />
           )}
         </LineChart>
@@ -420,7 +292,7 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
                 {item.label}
               </span>
               <span className="value-number" style={{ color: item.color }}>
-                {typeof item.value === 'number' ? item.value.toLocaleString() : item.value}
+                {item.value.toLocaleString()} LOC
               </span>
             </div>
           ))}
@@ -430,12 +302,11 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
       <p className="growth-chart__note">
         {usingRealData ? (
           <>
-            ✅ Using real snapshot data from <code>project_snapshots</code> table ({chartData.length}{' '}
-            data points)
+            ✅ Using real snapshot data ({chartData.length} data points)
           </>
         ) : (
           <>
-            ⚠️ No snapshots found. Create snapshots via "📸 Snapshot" button to see historical growth.
+            ⚠️ No snapshots found. Create snapshots via "📸 Snapshot" button.
           </>
         )}
       </p>
