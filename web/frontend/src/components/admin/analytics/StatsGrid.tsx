@@ -71,7 +71,7 @@ export function StatsGrid({ metrics, storage }: StatsGridProps) {
         <StatsCard
           icon="📝"
           label="Lines of Code"
-          value={formatNumber(metrics.code.loc)}
+          value={metrics.code.loc.toLocaleString()}
           subtitle={`${metrics.code.files} files`}
         />
 
