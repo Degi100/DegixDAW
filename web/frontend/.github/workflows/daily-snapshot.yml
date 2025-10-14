@@ -24,14 +24,15 @@ jobs:
           cache: 'npm'
 
       - name: 📦 Install Dependencies
-        run: npm ci
+        run: npm ci --workspace=web/frontend
 
       - name: 📊 Create Analytics Snapshot
+        working-directory: web/frontend
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Auto-provided by GitHub
-        run: node web/frontend/scripts/analytics/create-snapshot-github-actions.js
+        run: node scripts/analytics/create-snapshot-github-actions.js
 
       - name: ✅ Success Notification
         if: success()
