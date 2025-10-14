@@ -2,7 +2,7 @@
  * CodeGrowthChart Component
  *
  * Shows code development over time
- * Metrics: LOC, TypeScript, JavaScript, C++, SCSS, CSS, SQL, Other
+ * Metrics: LOC, TypeScript, JavaScript, C++, SCSS, CSS, SQL, JSON, Markdown, Other
  *
  * Uses real historical data from project_snapshots table
  */
@@ -21,6 +21,8 @@ interface CodeDataPoint {
   scss: number;
   css: number;
   sql: number;
+  json: number;
+  markdown: number;
   other: number;
 }
 
@@ -33,6 +35,8 @@ export function CodeGrowthChart() {
     scss: false,
     css: false,
     sql: false,
+    json: false,
+    markdown: false,
     other: false
   });
 
@@ -65,6 +69,8 @@ export function CodeGrowthChart() {
             scss: snapshot.scss_loc || 0,
             css: snapshot.css_loc || 0,
             sql: snapshot.sql_loc || 0,
+            json: snapshot.json_loc || 0,
+            markdown: snapshot.markdown_loc || 0,
             other: snapshot.other_loc || 0
           }));
 
@@ -119,6 +125,8 @@ export function CodeGrowthChart() {
     if (visibleLines.scss) values.push({ label: 'SCSS', value: lastPoint.scss, color: '#cc6699' });
     if (visibleLines.css) values.push({ label: 'CSS', value: lastPoint.css, color: '#264de4' });
     if (visibleLines.sql) values.push({ label: 'SQL', value: lastPoint.sql, color: '#00758f' });
+    if (visibleLines.json) values.push({ label: 'JSON', value: lastPoint.json, color: '#f59e0b' });
+    if (visibleLines.markdown) values.push({ label: 'Markdown', value: lastPoint.markdown, color: '#10b981' });
     if (visibleLines.other) values.push({ label: 'Other', value: lastPoint.other, color: '#9ca3af' });
 
     // Sort by value (highest first)
@@ -178,6 +186,20 @@ export function CodeGrowthChart() {
             style={{ borderColor: visibleLines.sql ? '#00758f' : 'var(--border-color)' }}
           >
             🗄️ SQL
+          </button>
+          <button
+            className={`toggle ${visibleLines.json ? 'active' : ''}`}
+            onClick={() => toggleLine('json')}
+            style={{ borderColor: visibleLines.json ? '#f59e0b' : 'var(--border-color)' }}
+          >
+            📦 JSON
+          </button>
+          <button
+            className={`toggle ${visibleLines.markdown ? 'active' : ''}`}
+            onClick={() => toggleLine('markdown')}
+            style={{ borderColor: visibleLines.markdown ? '#10b981' : 'var(--border-color)' }}
+          >
+            📝 Markdown
           </button>
           <button
             className={`toggle ${visibleLines.other ? 'active' : ''}`}
@@ -288,6 +310,30 @@ export function CodeGrowthChart() {
               stroke="#00758f"
               strokeWidth={2}
               dot={{ fill: '#00758f', r: 3 }}
+              activeDot={{ r: 5 }}
+            />
+          )}
+
+          {visibleLines.json && (
+            <Line
+              type="monotone"
+              dataKey="json"
+              name="JSON"
+              stroke="#f59e0b"
+              strokeWidth={2}
+              dot={{ fill: '#f59e0b', r: 3 }}
+              activeDot={{ r: 5 }}
+            />
+          )}
+
+          {visibleLines.markdown && (
+            <Line
+              type="monotone"
+              dataKey="markdown"
+              name="Markdown"
+              stroke="#10b981"
+              strokeWidth={2}
+              dot={{ fill: '#10b981', r: 3 }}
               activeDot={{ r: 5 }}
             />
           )}
