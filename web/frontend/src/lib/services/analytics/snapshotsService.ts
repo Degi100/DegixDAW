@@ -24,6 +24,7 @@ export interface ProjectSnapshot {
   // Language Breakdown (LOC per language)
   typescript_loc?: number;
   javascript_loc?: number;
+  cpp_loc?: number;
   scss_loc?: number;
   css_loc?: number;
   sql_loc?: number;
@@ -83,6 +84,7 @@ export async function createSnapshot(date?: string): Promise<ProjectSnapshot> {
     // Language Breakdown (if available from API)
     typescript_loc: (code as any).languageStats?.typescript || 0,
     javascript_loc: (code as any).languageStats?.javascript || 0,
+    cpp_loc: (code as any).languageStats?.cpp || 0,
     scss_loc: (code as any).languageStats?.scss || 0,
     css_loc: (code as any).languageStats?.css || 0,
     sql_loc: (code as any).languageStats?.sql || 0,
