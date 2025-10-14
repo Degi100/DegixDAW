@@ -92,49 +92,16 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
         setUsingRealData(true);
         console.log(`[GrowthChart] ✅ Loaded ${snapshots.length} snapshots`);
       } else {
-        // Fallback to mock data
-        console.warn('[GrowthChart] No snapshots found, using mock data');
-        setChartData(generateMockData());
+        // No snapshots found - show empty chart
+        console.warn('[GrowthChart] No snapshots found');
+        setChartData([]);
         setUsingRealData(false);
       }
     } catch (error) {
       console.error('[GrowthChart] Failed to load snapshots:', error);
-      setChartData(generateMockData());
+      setChartData([]);
       setUsingRealData(false);
     }
-  };
-
-  // Fallback mock data generator
-  const generateMockData = (): ChartDataPoint[] => {
-    const data: ChartDataPoint[] = [];
-    const today = new Date();
-    const daysSinceStart = metrics.code.projectAge.days;
-    const daysToShow = Math.min(30, daysSinceStart);
-
-    for (let i = daysToShow; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const progress = 1 - (i / daysToShow);
-      const variance = Math.random() * 0.1 - 0.05;
-
-      data.push({
-        date: date.toLocaleDateString('de-DE', { day: '2-digit', month: 'short' }),
-        loc: Math.floor(metrics.code.loc * (progress + variance)),
-        users: Math.floor(metrics.users.total * (progress + variance)),
-        messages: Math.floor(metrics.messages.total * (progress + variance)),
-        storage_mb: storage.total_mb * (progress + variance),
-        typescript: Math.floor(metrics.code.loc * 0.665 * (progress + variance)),
-        javascript: Math.floor(metrics.code.loc * 0.021 * (progress + variance)),
-        cpp: Math.floor(metrics.code.loc * 0.002 * (progress + variance)),
-        scss: Math.floor(metrics.code.loc * 0.234 * (progress + variance)),
-        css: Math.floor(metrics.code.loc * 0.015 * (progress + variance)),
-        sql: Math.floor(metrics.code.loc * 0.039 * (progress + variance)),
-        json: Math.floor(metrics.code.loc * 0.008 * (progress + variance)),
-        markdown: Math.floor(metrics.code.loc * 0.020 * (progress + variance))
-      });
-    }
-
-    return data;
   };
 
   const toggleLine = (key: keyof typeof visibleLines) => {
@@ -468,8 +435,7 @@ export function GrowthChart({ metrics, storage }: GrowthChartProps) {
           </>
         ) : (
           <>
-            ⚠️ Using simulated data. Create snapshots via "📸 Snapshot" button to see real historical
-            growth.
+            ⚠️ No snapshots found. Create snapshots via "📸 Snapshot" button to see historical growth.
           </>
         )}
       </p>
