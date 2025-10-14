@@ -8,12 +8,13 @@
  */
 
 import { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceDot } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceDot, Brush } from 'recharts';
 import { getSnapshots } from '../../../lib/services/analytics/snapshotsService';
 import '../../../styles/components/analytics/GrowthChart.scss';
 
 interface CodeDataPoint {
   date: string;
+  rawDate?: Date; // For filtering
   total: number;
   typescript: number;
   javascript: number;
@@ -35,6 +36,8 @@ interface Milestone {
   emoji: string;
 }
 
+type TimeRange = '3d' | '7d' | '14d' | '1m' | '3m' | '6m' | '1y' | 'all';
+
 export function CodeGrowthChart() {
   const [visibleLines, setVisibleLines] = useState({
     total: true,
@@ -50,8 +53,10 @@ export function CodeGrowthChart() {
   });
 
   const [chartData, setChartData] = useState<CodeDataPoint[]>([]);
+  const [allData, setAllData] = useState<CodeDataPoint[]>([]); // Store all data for filtering
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [usingRealData, setUsingRealData] = useState(false);
+  const [timeRange, setTimeRange] = useState<TimeRange>('all');
 
   // Load historical snapshots from database
   useEffect(() => {
@@ -61,7 +66,7 @@ export function CodeGrowthChart() {
   const loadSnapshotData = async () => {
     try {
       console.log('[CodeGrowthChart] Loading snapshots...');
-      const snapshots = await getSnapshots(30); // Last 30 snapshots
+      const snapshots = await getSnapshots(365); // Load more data for longer time ranges
 
       if (snapshots.length > 0) {
         // Convert snapshots to chart data
@@ -72,6 +77,7 @@ export function CodeGrowthChart() {
               day: '2-digit',
               month: 'short'
             }),
+            rawDate: new Date(snapshot.snapshot_date), // Store raw date for filtering
             total: snapshot.total_loc,
             typescript: snapshot.typescript_loc || 0,
             javascript: snapshot.javascript_loc || 0,
@@ -85,18 +91,21 @@ export function CodeGrowthChart() {
             breakdown: (snapshot as any).breakdown // Include breakdown for tooltips
           }));
 
-        setChartData(data);
+        setAllData(data); // Store all data
+        setChartData(data); // Show all by default
         setMilestones(detectMilestones(data));
         setUsingRealData(true);
         console.log(`[CodeGrowthChart] ✅ Loaded ${snapshots.length} snapshots`);
       } else {
         // No snapshots found - show empty chart
         console.warn('[CodeGrowthChart] No snapshots found');
+        setAllData([]);
         setChartData([]);
         setUsingRealData(false);
       }
     } catch (error) {
       console.error('[CodeGrowthChart] Failed to load snapshots:', error);
+      setAllData([]);
       setChartData([]);
       setUsingRealData(false);
     }
@@ -105,6 +114,47 @@ export function CodeGrowthChart() {
   const toggleLine = (key: keyof typeof visibleLines) => {
     setVisibleLines(prev => ({ ...prev, [key]: !prev[key] }));
   };
+
+  // Filter data based on time range
+  useEffect(() => {
+    if (allData.length === 0) return;
+
+    const now = new Date();
+    let cutoffDate: Date;
+
+    switch (timeRange) {
+      case '3d':
+        cutoffDate = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+        break;
+      case '7d':
+        cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case '14d':
+        cutoffDate = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+        break;
+      case '1m':
+        cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case '3m':
+        cutoffDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        break;
+      case '6m':
+        cutoffDate = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+        break;
+      case '1y':
+        cutoffDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+        break;
+      case 'all':
+      default:
+        setChartData(allData);
+        setMilestones(detectMilestones(allData));
+        return;
+    }
+
+    const filtered = allData.filter((d: any) => d.rawDate >= cutoffDate);
+    setChartData(filtered);
+    setMilestones(detectMilestones(filtered));
+  }, [timeRange, allData]);
 
   // Detect milestones from chart data
   const detectMilestones = (data: CodeDataPoint[]) => {
@@ -234,6 +284,59 @@ export function CodeGrowthChart() {
     <div className="growth-chart">
       <div className="growth-chart__header">
         <h2>💻 Code Growth</h2>
+
+        {/* Time Range Filters */}
+        <div className="growth-chart__time-filters">
+          <button
+            className={`time-filter ${timeRange === '3d' ? 'active' : ''}`}
+            onClick={() => setTimeRange('3d')}
+          >
+            3 Tage
+          </button>
+          <button
+            className={`time-filter ${timeRange === '7d' ? 'active' : ''}`}
+            onClick={() => setTimeRange('7d')}
+          >
+            7 Tage
+          </button>
+          <button
+            className={`time-filter ${timeRange === '14d' ? 'active' : ''}`}
+            onClick={() => setTimeRange('14d')}
+          >
+            14 Tage
+          </button>
+          <button
+            className={`time-filter ${timeRange === '1m' ? 'active' : ''}`}
+            onClick={() => setTimeRange('1m')}
+          >
+            1 Monat
+          </button>
+          <button
+            className={`time-filter ${timeRange === '3m' ? 'active' : ''}`}
+            onClick={() => setTimeRange('3m')}
+          >
+            3 Monate
+          </button>
+          <button
+            className={`time-filter ${timeRange === '6m' ? 'active' : ''}`}
+            onClick={() => setTimeRange('6m')}
+          >
+            6 Monate
+          </button>
+          <button
+            className={`time-filter ${timeRange === '1y' ? 'active' : ''}`}
+            onClick={() => setTimeRange('1y')}
+          >
+            1 Jahr
+          </button>
+          <button
+            className={`time-filter ${timeRange === 'all' ? 'active' : ''}`}
+            onClick={() => setTimeRange('all')}
+          >
+            Alle
+          </button>
+        </div>
+
         <div className="growth-chart__toggles">
           <button
             className={`toggle ${visibleLines.total ? 'active' : ''}`}
@@ -308,8 +411,9 @@ export function CodeGrowthChart() {
         </div>
       </div>
 
-      <div className="growth-chart__container">
-        <ResponsiveContainer width="100%" height={400}>
+      {/* Chart Container - Full Width */}
+      <div className="growth-chart__chart-wrapper">
+        <ResponsiveContainer width="100%" height={450}>
         <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
           <XAxis
@@ -472,19 +576,49 @@ export function CodeGrowthChart() {
               />
             );
           })}
+
+          {/* Zoom/Brush Tool */}
+          <Brush
+            dataKey="date"
+            height={30}
+            stroke="var(--primary-color)"
+            fill="var(--bg-secondary)"
+            travellerWidth={10}
+          />
         </LineChart>
       </ResponsiveContainer>
+      </div>
 
-        {/* Current Values Panel */}
-        <div className="growth-chart__values">
-          <h3>Current Values</h3>
+      {/* Current Values Below Chart - Better Readability */}
+      <div className="growth-chart__current-values">
+        <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem', color: 'var(--text-primary)' }}>
+          📊 Current Values
+        </h3>
+        <div className="values-grid">
           {getCurrentValues().map((item, index) => (
-            <div key={index} className="value-item">
-              <span className="value-label" style={{ color: item.color }}>
+            <div key={index} className="value-card" style={{
+              borderLeft: `3px solid ${item.color}`,
+              padding: '0.75rem 1rem',
+              background: 'var(--bg-secondary)',
+              borderRadius: '6px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <span style={{
+                fontSize: '0.95rem',
+                fontWeight: '500',
+                color: 'var(--text-secondary)'
+              }}>
                 {item.label}
               </span>
-              <span className="value-number" style={{ color: item.color }}>
-                {item.value.toLocaleString()} LOC
+              <span style={{
+                fontSize: '1.1rem',
+                fontWeight: '700',
+                color: item.color,
+                fontFamily: 'monospace'
+              }}>
+                {item.value.toLocaleString()}
               </span>
             </div>
           ))}

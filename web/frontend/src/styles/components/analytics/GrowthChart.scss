@@ -12,10 +12,8 @@
 
 .growth-chart__header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   margin-bottom: 1.5rem;
-  flex-wrap: wrap;
   gap: 1rem;
 
   h2 {
@@ -23,6 +21,39 @@
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
+  }
+}
+
+/* Time Range Filters */
+.growth-chart__time-filters {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.time-filter {
+  padding: 0.4rem 0.9rem;
+  background: var(--surface-primary);
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--surface-secondary);
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+  }
+
+  &.active {
+    color: #fff;
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    font-weight: 600;
   }
 }
 
@@ -80,53 +111,32 @@
   }
 }
 
-/* Chart + Values Container - MOBILE FIRST */
-.growth-chart__container {
-  display: flex;
-  flex-direction: column; /* Stack vertically on mobile */
-  gap: 1rem;
-}
-
-/* Current Values Panel - MOBILE FIRST */
-.growth-chart__values {
+/* Chart Wrapper - Full Width */
+.growth-chart__chart-wrapper {
   width: 100%;
-  background: var(--surface-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
 
-  h3 {
-    font-size: 0.9375rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0 0 1rem 0;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border-color);
+/* Current Values Below Chart */
+.growth-chart__current-values {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.values-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 0.75rem;
+}
+
+.value-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   }
-}
-
-.value-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-
-  &:last-child {
-    border-bottom: none;
-  }
-}
-
-.value-label {
-  font-size: 0.8125rem;
-  font-weight: 500;
-  opacity: 0.9;
-}
-
-.value-number {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  font-family: 'Courier New', monospace;
 }
 
 .growth-chart__note {
