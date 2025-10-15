@@ -278,6 +278,34 @@ desktop/build/DegixDAW.exe
 
 **Environment Variables:** Separate für Frontend/Backend setzen!
 
+## GitHub Actions & CI/CD
+
+### Required GitHub Secrets
+
+Für die Daily Analytics Snapshots (`.github/workflows/daily-snapshot.yml`):
+
+```
+VITE_SUPABASE_URL           # Deine Supabase Project URL
+SUPABASE_SERVICE_ROLE_KEY   # Supabase Service Role Key (NICHT Anon Key!)
+```
+
+**Setup:**
+1. Gehe zu Repository Settings → Secrets and variables → Actions
+2. Klicke auf "New repository secret"
+3. Füge beide Secrets hinzu
+
+**Test:**
+```bash
+# Manuell triggern via GitHub UI:
+# Actions → Daily Analytics Snapshot → Run workflow
+```
+
+### Workflow Status
+
+- ✅ **Daily Snapshot**: Läuft täglich um 00:00 UTC (1:00 CET / 2:00 CEST)
+- 📊 **Metrics**: LOC, Files, Commits, Users, Messages, Issues
+- 🔄 **Manual Trigger**: Via GitHub Actions UI möglich
+
 ## Nächste Schritte
 
 1. ✅ **Desktop App**: C++ Desktop App mit Windows GUI (fertig)
