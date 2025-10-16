@@ -47,11 +47,121 @@ static std::wstring BuildQueryPath(storagedata::FileFilter filter) {
 }
 
 namespace storagedata {
-    bool ListFiles(std::vector<std::string>& outFiles, FileFilter filter, std::string* lastError) {
+    // Neue API: Returns detailed FileInfo structs
+    bool ListFilesDetailed(std::vector<FileInfo>& outFiles, FileFilter filter, std::string* lastError) {
         std::ofstream log("debug.log", std::ios::app);
         outFiles.clear();
-        
-        log << "=== ListFiles called with filter: " << static_cast<int>(filter) << " ===\n";
+
+        log << "=== ListFilesDetailed called with filter: " << static_cast<int>(filter) << " ===\n";
+
+        HINTERNET hSession = WinHttpOpen(L"DegixDAW-VST/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
+        if (!hSession) { if (lastError) *lastError = "WinHttpOpen fehlgeschlagen"; log << "WinHttpOpen fehlgeschlagen\n"; return false; }
+
+        HINTERNET hConnect = WinHttpConnect(hSession, SUPABASE_HOST, INTERNET_DEFAULT_HTTPS_PORT, 0);
+        if (!hConnect) { if (lastError) *lastError = "WinHttpConnect fehlgeschlagen"; log << "WinHttpConnect fehlgeschlagen\n"; WinHttpCloseHandle(hSession); return false; }
+
+        std::wstring queryPath = BuildQueryPath(filter);
+        log << "Query Path: " << std::string(queryPath.begin(), queryPath.end()) << "\n";
+
+        HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", queryPath.c_str(), NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
+        if (!hRequest) { if (lastError) *lastError = "WinHttpOpenRequest fehlgeschlagen"; log << "WinHttpOpenRequest fehlgeschlagen\n"; WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession); return false; }
+
+        std::string accessToken = Auth::GetAccessToken();
+        if (accessToken.empty()) {
+            log << "WARNUNG: Kein JWT-Token verfügbar, verwende ANON_KEY (RLS könnte blockieren)\n";
+            accessToken = SUPABASE_ANON_KEY;
+        } else {
+            log << "JWT-Token gefunden, verwende authentifizierten Zugriff\n";
+        }
+
+        std::wstring headers = L"apikey: ";
+        headers += std::wstring(SUPABASE_ANON_KEY, SUPABASE_ANON_KEY + strlen(SUPABASE_ANON_KEY));
+        headers += L"\r\nAuthorization: Bearer ";
+        headers += std::wstring(accessToken.begin(), accessToken.end());
+        headers += L"\r\nPrefer: return=representation";
+
+        BOOL bResults = WinHttpSendRequest(hRequest, headers.c_str(), (DWORD)headers.length(), WINHTTP_NO_REQUEST_DATA, 0, 0, 0);
+        if (!bResults) {
+            if (lastError) *lastError = "WinHttpSendRequest fehlgeschlagen";
+            log << "WinHttpSendRequest fehlgeschlagen\n";
+            WinHttpCloseHandle(hRequest); WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession); return false;
+        }
+
+        bResults = WinHttpReceiveResponse(hRequest, NULL);
+        if (!bResults) {
+            if (lastError) *lastError = "WinHttpReceiveResponse fehlgeschlagen";
+            log << "WinHttpReceiveResponse fehlgeschlagen\n";
+            WinHttpCloseHandle(hRequest); WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession); return false;
+        }
+
+        DWORD dwStatusCode = 0; DWORD dwSize = sizeof(dwStatusCode);
+        WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, NULL, &dwStatusCode, &dwSize, NULL);
+        log << "HTTP-Status: " << dwStatusCode << "\n";
+
+        WinHttpQueryDataAvailable(hRequest, &dwSize);
+        std::string response;
+        while (dwSize > 0) {
+            std::vector<char> buffer(dwSize);
+            DWORD dwDownloaded = 0;
+            WinHttpReadData(hRequest, buffer.data(), dwSize, &dwDownloaded);
+            response.append(buffer.data(), dwDownloaded);
+            WinHttpQueryDataAvailable(hRequest, &dwSize);
+        }
+        log << "Response: " << response << "\n";
+        WinHttpCloseHandle(hRequest); WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession);
+
+        try {
+            auto j = json::parse(response);
+            if (j.is_array() && !j.empty()) {
+                for (const auto& entry : j) {
+                    if (entry.contains("file_name") && entry.contains("file_url")) {
+                        FileInfo info;
+
+                        // Handle null values properly
+                        info.id = (entry.contains("id") && !entry["id"].is_null()) ? entry["id"].get<std::string>() : "";
+                        info.fileName = entry["file_name"].get<std::string>();
+                        info.fileType = (entry.contains("file_type") && !entry["file_type"].is_null()) ? entry["file_type"].get<std::string>() : "unknown";
+                        info.storagePath = entry["file_url"].get<std::string>();
+                        info.thumbnailPath = (entry.contains("thumbnail_url") && !entry["thumbnail_url"].is_null()) ? entry["thumbnail_url"].get<std::string>() : "";
+                        info.fileSize = (entry.contains("file_size") && !entry["file_size"].is_null()) ? entry["file_size"].get<long long>() : 0LL;
+                        info.createdAt = (entry.contains("created_at") && !entry["created_at"].is_null()) ? entry["created_at"].get<std::string>() : "";
+
+                        outFiles.push_back(info);
+                        log << "Datei gefunden: " << info.fileName << " -> " << info.storagePath << "\n";
+                    }
+                }
+            }
+        } catch (const std::exception& ex) {
+            if (lastError) *lastError = std::string("JSON-Parsing fehlgeschlagen: ") + ex.what();
+            log << "JSON-Parsing fehlgeschlagen: " << ex.what() << "\n";
+            return false;
+        }
+
+        log << "Fertig. " << outFiles.size() << " Einträge.\n";
+        return true;
+    }
+
+    // Legacy API: Wrapper around ListFilesDetailed
+    bool ListFiles(std::vector<std::string>& outFiles, FileFilter filter, std::string* lastError) {
+        std::vector<FileInfo> detailedFiles;
+        if (!ListFilesDetailed(detailedFiles, filter, lastError)) {
+            return false;
+        }
+
+        // Convert FileInfo to display strings
+        outFiles.clear();
+        for (const auto& info : detailedFiles) {
+            outFiles.push_back(info.GetDisplayName());
+        }
+        return true;
+    }
+
+    // OLD IMPLEMENTATION - DEPRECATED - keeping for reference
+    bool ListFiles_OLD(std::vector<std::string>& outFiles, FileFilter filter, std::string* lastError) {
+        std::ofstream log("debug.log", std::ios::app);
+        outFiles.clear();
+
+        log << "=== ListFiles_OLD called with filter: " << static_cast<int>(filter) << " ===\n";
         
         HINTERNET hSession = WinHttpOpen(L"DegixDAW-VST/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
         if (!hSession) { if (lastError) *lastError = "WinHttpOpen fehlgeschlagen"; log << "WinHttpOpen fehlgeschlagen\n"; return false; }
