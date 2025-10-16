@@ -182,10 +182,9 @@ export function useMessageAttachments() {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from(STORAGE_BUCKET)
-        .getPublicUrl(uploadData.path);
+      // Store the storage path (not a public URL!)
+      // We'll generate signed URLs when displaying images
+      const storagePath = uploadData.path;
 
       setUploads(prev => new Map(prev).set(fileId, {
         file,
@@ -199,7 +198,7 @@ export function useMessageAttachments() {
         width?: number;
         height?: number;
         duration?: number;
-      } = { url: urlData.publicUrl };
+      } = { url: storagePath }; // Store path, not URL
 
       // Generate thumbnail for images
       if (category === 'image') {
@@ -212,11 +211,8 @@ export function useMessageAttachments() {
             .upload(thumbFileName, blob);
 
           if (!thumbError && thumbData) {
-            const { data: thumbUrlData } = supabase.storage
-              .from(STORAGE_BUCKET)
-              .getPublicUrl(thumbData.path);
-            
-            result.thumbnailUrl = thumbUrlData.publicUrl;
+            // Store thumbnail path (not public URL)
+            result.thumbnailUrl = thumbData.path;
             result.width = width;
             result.height = height;
           }
@@ -237,11 +233,8 @@ export function useMessageAttachments() {
             .upload(thumbFileName, blob);
 
           if (!thumbError && thumbData) {
-            const { data: thumbUrlData } = supabase.storage
-              .from(STORAGE_BUCKET)
-              .getPublicUrl(thumbData.path);
-            
-            result.thumbnailUrl = thumbUrlData.publicUrl;
+            // Store thumbnail path (not public URL)
+            result.thumbnailUrl = thumbData.path;
             result.width = width;
             result.height = height;
             result.duration = duration;

@@ -14,9 +14,18 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
     autoRefreshToken: true, // Automatisches Token-Refresh
     persistSession: true, // Session über Browser-Restart beibehalten
     detectSessionInUrl: true, // OAuth Callbacks erkennen
-    
+
     // Fallback to implicit flow for better compatibility
     flowType: 'implicit' // Weniger streng als PKCE, besser für Tests
+  },
+  global: {
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    }
+  },
+  db: {
+    schema: 'public'
   }
 })
 

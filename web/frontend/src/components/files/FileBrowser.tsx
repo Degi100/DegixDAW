@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useToast } from '../../hooks/useToast';
 import { MAX_FILE_SIZE_MB } from '../../lib/constants/storage';
+import { getSignedUrl } from '../../hooks/useSignedUrl';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,6 +18,8 @@ interface FileItem {
   type: string;
   url: string;
   thumbnailUrl?: string;
+  signedUrl?: string | null;
+  signedThumbnailUrl?: string | null;
   createdAt: string;
   conversationId?: string;
   messageId?: string;
@@ -78,7 +81,20 @@ export default function FileBrowser({ userId, onClose }: FileBrowserProps) {
         conversationId: att.message?.conversation_id,
       }));
 
-      setFiles(fileItems);
+      // Generate signed URLs for all files
+      const filesWithSignedUrls = await Promise.all(
+        fileItems.map(async (file) => {
+          const signedUrl = await getSignedUrl(file.url);
+          const signedThumbnailUrl = file.thumbnailUrl ? await getSignedUrl(file.thumbnailUrl) : null;
+          return {
+            ...file,
+            signedUrl,
+            signedThumbnailUrl,
+          };
+        })
+      );
+
+      setFiles(filesWithSignedUrls);
     } catch (err) {
       console.error('Error loading files:', err);
       showError('Fehler beim Laden der Dateien');
@@ -247,9 +263,13 @@ export default function FileBrowser({ userId, onClose }: FileBrowserProps) {
               {/* Preview */}
               <div className="file-item-preview">
                 {file.type.startsWith('image/') ? (
-                  <img src={file.thumbnailUrl || file.url} alt={file.name} />
-                ) : file.type.startsWith('video/') && file.thumbnailUrl ? (
-                  <img src={file.thumbnailUrl} alt={file.name} />
+                  file.signedThumbnailUrl || file.signedUrl ? (
+                    <img src={file.signedThumbnailUrl || file.signedUrl || ''} alt={file.name} />
+                  ) : (
+                    <div className="file-item-icon">⏳</div>
+                  )
+                ) : file.type.startsWith('video/') && file.signedThumbnailUrl ? (
+                  <img src={file.signedThumbnailUrl} alt={file.name} />
                 ) : (
                   <div className="file-item-icon">
                     {getFileIcon(file.type)}
@@ -271,23 +291,29 @@ export default function FileBrowser({ userId, onClose }: FileBrowserProps) {
 
               {/* Actions */}
               <div className="file-item-actions">
-                <a
-                  href={file.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="file-action-btn"
-                  title="Öffnen"
-                >
-                  👁️
-                </a>
-                <a
-                  href={file.url}
-                  download={file.name}
-                  className="file-action-btn"
-                  title="Download"
-                >
-                  ⬇️
-                </a>
+                {file.signedUrl ? (
+                  <>
+                    <a
+                      href={file.signedUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-action-btn"
+                      title="Öffnen"
+                    >
+                      👁️
+                    </a>
+                    <a
+                      href={file.signedUrl}
+                      download={file.name}
+                      className="file-action-btn"
+                      title="Download"
+                    >
+                      ⬇️
+                    </a>
+                  </>
+                ) : (
+                  <span className="file-action-btn" title="Lädt...">⏳</span>
+                )}
               </div>
             </div>
           ))
