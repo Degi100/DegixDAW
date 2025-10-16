@@ -8,8 +8,10 @@
 #include <algorithm>
 #include <winhttp.h>
 #include <gdiplus.h>
+#include <objbase.h>
 
 #pragma comment(lib, "gdiplus.lib")
+#pragma comment(lib, "winhttp.lib")
 
 using namespace Gdiplus;
 
@@ -132,21 +134,9 @@ LRESULT CALLBACK FileBrowser::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
         if (pThis && LOWORD(wParam) == 1001 && HIWORD(wParam) == LBN_SELCHANGE) {
             // User hat eine Datei in der Liste ausgewählt
             int selIndex = (int)SendMessage(pThis->hList_, LB_GETCURSEL, 0, 0);
-            if (selIndex != LB_ERR) {
-                int len = (int)SendMessage(pThis->hList_, LB_GETTEXTLEN, selIndex, 0);
-                if (len > 0) {
-                    std::vector<WCHAR> buffer(len + 1);
-                    SendMessage(pThis->hList_, LB_GETTEXT, selIndex, (LPARAM)buffer.data());
-
-                    // Konvertiere zurück zu UTF-8
-                    int utf8Len = WideCharToMultiByte(CP_UTF8, 0, buffer.data(), -1, NULL, 0, NULL, NULL);
-                    std::vector<char> utf8Buffer(utf8Len);
-                    WideCharToMultiByte(CP_UTF8, 0, buffer.data(), -1, utf8Buffer.data(), utf8Len, NULL, NULL);
-                    std::string fileName(utf8Buffer.data());
-
-                    // Lade Bildvorschau
-                    pThis->LoadImagePreview(fileName);
-                }
+            if (selIndex != LB_ERR && selIndex < (int)pThis->currentFiles_.size()) {
+                // Lade Bildvorschau direkt mit Index
+                pThis->LoadImagePreview(selIndex);
             }
         }
         break;
@@ -242,9 +232,12 @@ LRESULT CALLBACK FileBrowser::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 }
 
 void FileBrowser::PopulateList(int tabIndex) {
+    std::ofstream log("debug.log", std::ios::app);
+    log << "\n=== COMPILED ! PopulateList called, tabIndex=" << tabIndex << " ===\n";
+
     if (!hList_) return;
     SendMessage(hList_, LB_RESETCONTENT, 0, 0);
-    
+
     // Filter basierend auf Tab auswählen
     storagedata::FileFilter filter;
     switch (tabIndex) {
@@ -261,21 +254,25 @@ void FileBrowser::PopulateList(int tabIndex) {
             filter = storagedata::FileFilter::ALL;
             break;
     }
-    
-    // Dateien mit entsprechendem Filter laden
-    std::vector<std::string> files;
+
+    // Dateien mit detaillierten Infos laden
+    currentFiles_.clear();
     std::string err;
-    if (storagedata::ListFiles(files, filter, &err)) {
-        if (files.empty()) {
+    if (storagedata::ListFilesDetailed(currentFiles_, filter, &err)) {
+        log << "ListFilesDetailed SUCCESS: Found " << currentFiles_.size() << " files\n";
+        if (currentFiles_.empty()) {
             SendMessage(hList_, LB_ADDSTRING, 0, (LPARAM)L"Keine Dateien gefunden.");
         } else {
-            // Alle Dateien mit korrekter UTF-8 Konvertierung anzeigen
-            for (const auto& file : files) {
-                std::wstring wfile = Utf8ToUtf16(file);
-                SendMessage(hList_, LB_ADDSTRING, 0, (LPARAM)wfile.c_str());
+            // Alle Dateien mit DisplayName (inkl. Größe) anzeigen
+            for (const auto& fileInfo : currentFiles_) {
+                log << "  File: " << fileInfo.fileName << " (" << fileInfo.fileType << ")\n";
+                log << "    StoragePath: " << fileInfo.storagePath << "\n";
+                std::wstring displayName = Utf8ToUtf16(fileInfo.GetDisplayName());
+                SendMessage(hList_, LB_ADDSTRING, 0, (LPARAM)displayName.c_str());
             }
         }
     } else {
+        log << "ListFilesDetailed FAILED: " << err << "\n";
         std::wstring werr = Utf8ToUtf16(err);
         SendMessage(hList_, LB_ADDSTRING, 0, (LPARAM)werr.c_str());
     }
@@ -330,41 +327,307 @@ LRESULT CALLBACK FileBrowser::PreviewProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-// Extrahiere Dateinamen aus Display-String (entferne Größe)
-std::string FileBrowser::GetImageUrl(const std::string& displayName) {
-    // displayName Format: "filename.jpg (0.16 MB)"
-    // Wir müssen den reinen Dateinamen extrahieren
-    size_t pos = displayName.find(" (");
-    std::string fileName = (pos != std::string::npos) ? displayName.substr(0, pos) : displayName;
+// Generiere Signed URL für Storage-Pfad via Supabase Storage API
+std::string FileBrowser::GenerateSignedUrl(const std::string& storagePath) {
+    std::ofstream log("debug.log", std::ios::app);
+    log << "\n=== GenerateSignedUrl called ===\n";
+    log << "StoragePath: " << storagePath << "\n";
 
-    // TODO: Hier müssen wir die storage_path aus der Datenbank laden
-    // Für jetzt: Konstruiere URL basierend auf bekanntem Muster
-    // Format: https://HOST/storage/v1/object/authenticated/chat-attachments/USER_ID/ATTACHMENT_ID/FILENAME
+    // Hole JWT Token aus Auth
+    std::string jwt = Auth::GetAccessToken();
+    if (jwt.empty()) {
+        log << "ERROR: No JWT token!\n";
+        return "";
+    }
+    log << "JWT Token found (length=" << jwt.length() << ")\n";
 
-    // Diese Info müssen wir aus der message_attachments Tabelle laden!
-    // Siehe storagedata.cpp - wir brauchen storage_path oder user_id + attachment_id
+    // Supabase Storage API Endpoint - POST mit JSON Body
+    std::string apiPath = "/storage/v1/object/sign/chat-attachments/" + storagePath;
+    log << "API Path: " << apiPath << "\n";
 
-    return ""; // Placeholder - wird in nächstem Schritt implementiert
+    HINTERNET hSession = WinHttpOpen(L"DegixDAW/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    if (!hSession) return "";
+
+    HINTERNET hConnect = WinHttpConnect(hSession, L"xcdzugnjzrkngzmtzeip.supabase.co", INTERNET_DEFAULT_HTTPS_PORT, 0);
+    if (!hConnect) {
+        WinHttpCloseHandle(hSession);
+        return "";
+    }
+
+    std::wstring wApiPath = Utf8ToUtf16(apiPath);
+    HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", wApiPath.c_str(), NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
+    if (!hRequest) {
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return "";
+    }
+
+    // JSON Body mit expiresIn
+    std::string jsonBody = "{\"expiresIn\":3600}";
+    DWORD jsonBodyLen = (DWORD)jsonBody.length();
+
+    // Headers setzen
+    std::string authHeader = "Authorization: Bearer " + jwt;
+    std::wstring wAuthHeader = Utf8ToUtf16(authHeader);
+    WinHttpAddRequestHeaders(hRequest, wAuthHeader.c_str(), -1, WINHTTP_ADDREQ_FLAG_ADD);
+    WinHttpAddRequestHeaders(hRequest, L"Content-Type: application/json", -1, WINHTTP_ADDREQ_FLAG_ADD);
+
+    log << "Sending POST request with body: " << jsonBody << "\n";
+
+    // Request senden mit JSON Body
+    if (!WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, (LPVOID)jsonBody.c_str(), jsonBodyLen, jsonBodyLen, 0)) {
+        log << "ERROR: WinHttpSendRequest failed\n";
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return "";
+    }
+
+    if (!WinHttpReceiveResponse(hRequest, NULL)) {
+        log << "ERROR: WinHttpReceiveResponse failed\n";
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return "";
+    }
+
+    // HTTP Status prüfen
+    DWORD statusCode = 0;
+    DWORD statusSize = sizeof(statusCode);
+    WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, NULL, &statusCode, &statusSize, NULL);
+    log << "HTTP Status: " << statusCode << "\n";
+
+    // Response lesen
+    std::string response;
+    DWORD bytesAvailable = 0;
+    while (WinHttpQueryDataAvailable(hRequest, &bytesAvailable) && bytesAvailable > 0) {
+        std::vector<char> buffer(bytesAvailable + 1, 0);
+        DWORD bytesRead = 0;
+        if (WinHttpReadData(hRequest, buffer.data(), bytesAvailable, &bytesRead)) {
+            response.append(buffer.data(), bytesRead);
+        }
+    }
+
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+
+    log << "Response: " << response << "\n";
+
+    // Parse JSON Response (Simple string search for "signedURL")
+    size_t pos = response.find("\"signedURL\":\"");
+    if (pos != std::string::npos) {
+        size_t start = pos + 13; // Length of "signedURL":""
+        size_t end = response.find("\"", start);
+        if (end != std::string::npos) {
+            std::string signedUrl = response.substr(start, end - start);
+
+            // Supabase gibt relativen Pfad zurück - mache es zu voller URL
+            if (signedUrl[0] == '/') {
+                signedUrl = "https://xcdzugnjzrkngzmtzeip.supabase.co/storage/v1" + signedUrl;
+                log << "Converted relative path to full URL\n";
+            }
+
+            log << "SUCCESS: Got signed URL (length=" << signedUrl.length() << ")\n";
+            return signedUrl;
+        }
+    }
+
+    log << "ERROR: Could not parse signedURL from response\n";
+    return "";
 }
 
-// Lade Bild von Supabase mit Authentication
-void FileBrowser::LoadImagePreview(const std::string& fileName) {
+// Lade Bild von URL mit WinHTTP
+Gdiplus::Image* FileBrowser::DownloadImage(const std::string& url) {
+    std::ofstream log("debug.log", std::ios::app);
+    log << "\n=== DownloadImage called ===\n";
+    log << "URL: " << url << "\n";
+
+    // Parse URL (Format: https://host/path)
+    size_t hostStart = url.find("://");
+    if (hostStart == std::string::npos) {
+        log << "ERROR: No '://' found in URL\n";
+        return nullptr;
+    }
+    hostStart += 3;
+
+    size_t pathStart = url.find("/", hostStart);
+    if (pathStart == std::string::npos) {
+        log << "ERROR: No path separator found\n";
+        return nullptr;
+    }
+
+    std::string host = url.substr(hostStart, pathStart - hostStart);
+    std::string path = url.substr(pathStart);
+
+    log << "Host: " << host << "\n";
+    log << "Path: " << path.substr(0, 80) << "...\n";
+
+    std::wstring wHost = Utf8ToUtf16(host);
+    std::wstring wPath = Utf8ToUtf16(path);
+
+    HINTERNET hSession = WinHttpOpen(L"DegixDAW/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    if (!hSession) {
+        log << "ERROR: WinHttpOpen failed\n";
+        return nullptr;
+    }
+
+    HINTERNET hConnect = WinHttpConnect(hSession, wHost.c_str(), INTERNET_DEFAULT_HTTPS_PORT, 0);
+    if (!hConnect) {
+        log << "ERROR: WinHttpConnect failed\n";
+        WinHttpCloseHandle(hSession);
+        return nullptr;
+    }
+
+    HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", wPath.c_str(), NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
+    if (!hRequest) {
+        log << "ERROR: WinHttpOpenRequest failed\n";
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return nullptr;
+    }
+
+    if (!WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0)) {
+        log << "ERROR: WinHttpSendRequest failed\n";
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return nullptr;
+    }
+
+    if (!WinHttpReceiveResponse(hRequest, NULL)) {
+        log << "ERROR: WinHttpReceiveResponse failed\n";
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return nullptr;
+    }
+
+    // HTTP Status prüfen
+    DWORD statusCode = 0;
+    DWORD statusSize = sizeof(statusCode);
+    WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, NULL, &statusCode, &statusSize, NULL);
+    log << "HTTP Status: " << statusCode << "\n";
+
+    // Lade Bild-Daten in Memory
+    std::vector<BYTE> imageData;
+    DWORD bytesAvailable = 0;
+    while (WinHttpQueryDataAvailable(hRequest, &bytesAvailable) && bytesAvailable > 0) {
+        size_t currentSize = imageData.size();
+        imageData.resize(currentSize + bytesAvailable);
+        DWORD bytesRead = 0;
+        if (!WinHttpReadData(hRequest, &imageData[currentSize], bytesAvailable, &bytesRead)) {
+            log << "ERROR: WinHttpReadData failed\n";
+            break;
+        }
+    }
+
+    log << "Downloaded " << imageData.size() << " bytes\n";
+
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+
+    if (imageData.empty()) {
+        log << "ERROR: No image data received\n";
+        return nullptr;
+    }
+
+    // Erstelle GDI+ Image aus Memory Buffer
+    log << "Creating GDI+ Image from buffer...\n";
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, imageData.size());
+    if (!hMem) {
+        log << "ERROR: GlobalAlloc failed\n";
+        return nullptr;
+    }
+
+    void* pMem = GlobalLock(hMem);
+    if (!pMem) {
+        log << "ERROR: GlobalLock failed\n";
+        GlobalFree(hMem);
+        return nullptr;
+    }
+
+    memcpy(pMem, imageData.data(), imageData.size());
+    GlobalUnlock(hMem);
+
+    IStream* pStream = nullptr;
+    HRESULT hr = CreateStreamOnHGlobal(hMem, TRUE, &pStream);
+    if (hr != S_OK) {
+        log << "ERROR: CreateStreamOnHGlobal failed (HRESULT=" << hr << ")\n";
+        GlobalFree(hMem);
+        return nullptr;
+    }
+
+    log << "Creating Image from stream...\n";
+    Gdiplus::Image* image = Gdiplus::Image::FromStream(pStream);
+    pStream->Release();
+
+    if (!image) {
+        log << "ERROR: Image::FromStream returned nullptr\n";
+        return nullptr;
+    }
+
+    Gdiplus::Status status = image->GetLastStatus();
+    if (status != Gdiplus::Ok) {
+        log << "ERROR: GDI+ Status = " << status << " (0=Ok, 1=GenericError, 2=InvalidParameter...)\n";
+        delete image;
+        return nullptr;
+    }
+
+    log << "SUCCESS: GDI+ Image created! Size: " << image->GetWidth() << "x" << image->GetHeight() << "\n";
+    return image;
+}
+
+// Lade Bildvorschau anhand des FileInfo Index
+void FileBrowser::LoadImagePreview(int fileIndex) {
+    std::ofstream log("debug.log", std::ios::app);
+    log << "\n=== LoadImagePreview called, fileIndex=" << fileIndex << " ===\n";
+
     // Altes Bild löschen
     if (currentImage_) {
         delete currentImage_;
         currentImage_ = nullptr;
     }
 
-    // TODO: Implementiere Bild-Download
-    // 1. GetImageUrl() - hole storage_path aus DB
-    // 2. WinHTTP Download mit JWT Token
-    // 3. Lade in Memory Stream
-    // 4. Erstelle GDI+ Image
+    // Index validieren
+    if (fileIndex < 0 || fileIndex >= (int)currentFiles_.size()) {
+        log << "ERROR: Invalid index! currentFiles_.size()=" << currentFiles_.size() << "\n";
+        InvalidateRect(hPreview_, NULL, TRUE);
+        return;
+    }
 
-    // Placeholder: Zeige "Loading..." Text
+    const storagedata::FileInfo& fileInfo = currentFiles_[fileIndex];
+    log << "File: " << fileInfo.fileName << "\n";
+    log << "Type: " << fileInfo.fileType << "\n";
+    log << "StoragePath: " << fileInfo.storagePath << "\n";
+
+    // Nur Bilder laden
+    if (!fileInfo.IsImage()) {
+        log << "Not an image, skipping\n";
+        InvalidateRect(hPreview_, NULL, TRUE);
+        return;
+    }
+
+    // Signed URL generieren
+    log << "Generating signed URL...\n";
+    std::string signedUrl = GenerateSignedUrl(fileInfo.storagePath);
+    if (signedUrl.empty()) {
+        log << "ERROR: Failed to generate signed URL\n";
+        InvalidateRect(hPreview_, NULL, TRUE);
+        return;
+    }
+    log << "Signed URL: " << signedUrl.substr(0, 100) << "...\n";
+
+    // Bild herunterladen
+    log << "Downloading image...\n";
+    currentImage_ = DownloadImage(signedUrl);
+    if (currentImage_) {
+        log << "SUCCESS: Image downloaded and loaded!\n";
+    } else {
+        log << "ERROR: Failed to download/load image\n";
+    }
+
+    // Preview neu zeichnen
     InvalidateRect(hPreview_, NULL, TRUE);
-
-    // Vorläufig: Zeige MessageBox als Debug
-    std::wstring msg = L"Lade Vorschau für: " + Utf8ToUtf16(fileName);
-    // MessageBoxW(hPreview_, msg.c_str(), L"Debug", MB_OK);
 }

@@ -121,8 +121,31 @@ namespace storagedata {
                         info.id = (entry.contains("id") && !entry["id"].is_null()) ? entry["id"].get<std::string>() : "";
                         info.fileName = entry["file_name"].get<std::string>();
                         info.fileType = (entry.contains("file_type") && !entry["file_type"].is_null()) ? entry["file_type"].get<std::string>() : "unknown";
-                        info.storagePath = entry["file_url"].get<std::string>();
-                        info.thumbnailPath = (entry.contains("thumbnail_url") && !entry["thumbnail_url"].is_null()) ? entry["thumbnail_url"].get<std::string>() : "";
+
+                        // Extract storage path from full URL
+                        // URL format: https://HOST/storage/v1/object/public/chat-attachments/USER_ID/MSG_ID/FILE.jpg
+                        // We need: USER_ID/MSG_ID/FILE.jpg
+                        std::string fullUrl = entry["file_url"].get<std::string>();
+                        size_t pos = fullUrl.find("/chat-attachments/");
+                        if (pos != std::string::npos) {
+                            info.storagePath = fullUrl.substr(pos + 18); // Skip "/chat-attachments/"
+                        } else {
+                            info.storagePath = fullUrl; // Fallback
+                        }
+
+                        // Same for thumbnail
+                        if (entry.contains("thumbnail_url") && !entry["thumbnail_url"].is_null()) {
+                            std::string thumbUrl = entry["thumbnail_url"].get<std::string>();
+                            size_t thumbPos = thumbUrl.find("/chat-attachments/");
+                            if (thumbPos != std::string::npos) {
+                                info.thumbnailPath = thumbUrl.substr(thumbPos + 18);
+                            } else {
+                                info.thumbnailPath = thumbUrl;
+                            }
+                        } else {
+                            info.thumbnailPath = "";
+                        }
+
                         info.fileSize = (entry.contains("file_size") && !entry["file_size"].is_null()) ? entry["file_size"].get<long long>() : 0LL;
                         info.createdAt = (entry.contains("created_at") && !entry["created_at"].is_null()) ? entry["created_at"].get<std::string>() : "";
 

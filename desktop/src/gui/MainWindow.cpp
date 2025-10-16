@@ -31,7 +31,7 @@ int MainWindow::Show(HINSTANCE hInstance, int nCmdShow) {
 }
 
 LRESULT CALLBACK MainWindow::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    static HWND hEmail, hPassword, hLogin, hWelcomeLabel, hPasswordLabel, hStayLoggedIn, hLogout;
+    static HWND hEmail, hPassword, hLogin, hWelcomeLabel, hPasswordLabel, hStayLoggedIn, hLogout, hSignupLink;
     switch (uMsg) {
         case WM_CREATE: {
             CREATESTRUCT* cs = (CREATESTRUCT*)lParam;
@@ -42,6 +42,7 @@ LRESULT CALLBACK MainWindow::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
             hPassword = CreateWindowW(L"EDIT", L"", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_PASSWORD | WS_TABSTOP, 70, 40, 200, 20, hwnd, (HMENU)11, NULL, NULL);
             hStayLoggedIn = CreateWindowW(L"BUTTON", L"Immer angemeldet bleiben", WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP, 70, 70, 200, 20, hwnd, (HMENU)12, NULL, NULL);
             hLogin = CreateWindowW(L"BUTTON", L"Login", WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | WS_TABSTOP, 10, 100, 100, 30, hwnd, (HMENU)1, NULL, NULL);
+            hSignupLink = CreateWindowW(L"STATIC", L"Jetzt anmelden: https://degix.netlify.app/", WS_VISIBLE | WS_CHILD | SS_NOTIFY, 10, 140, 350, 20, hwnd, (HMENU)13, NULL, NULL);
             // Tab-Reihenfolge explizit setzen (hWndInsertAfter ist das Fenster, NACH dem eingefügt wird)
             SetWindowPos(hPassword, hEmail, 0,0,0,0, SWP_NOMOVE|SWP_NOSIZE);
             SetWindowPos(hStayLoggedIn, hPassword, 0,0,0,0, SWP_NOMOVE|SWP_NOSIZE);
@@ -65,6 +66,10 @@ LRESULT CALLBACK MainWindow::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
             return 0;
         }
         case WM_COMMAND: {
+            if (LOWORD(wParam) == 13) { // Signup Link
+                ShellExecuteW(hwnd, L"open", L"https://degix.netlify.app/", NULL, NULL, SW_SHOWNORMAL);
+                return 0;
+            }
             if (LOWORD(wParam) == 2) { // Logout Button
                 // Gespeicherte Credentials löschen
                 CredentialStorage::ClearCredentials();
@@ -90,6 +95,7 @@ LRESULT CALLBACK MainWindow::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
                 hPassword = CreateWindowW(L"EDIT", L"", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_PASSWORD | WS_TABSTOP, 70, 40, 200, 20, hwnd, (HMENU)11, NULL, NULL);
                 hStayLoggedIn = CreateWindowW(L"BUTTON", L"Immer angemeldet bleiben", WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP, 70, 70, 200, 20, hwnd, (HMENU)12, NULL, NULL);
                 hLogin = CreateWindowW(L"BUTTON", L"Login", WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON | WS_TABSTOP, 10, 100, 100, 30, hwnd, (HMENU)1, NULL, NULL);
+                hSignupLink = CreateWindowW(L"STATIC", L"Jetzt anmelden: https://degix.netlify.app/", WS_VISIBLE | WS_CHILD | SS_NOTIFY, 10, 140, 350, 20, hwnd, (HMENU)13, NULL, NULL);
                 SetWindowPos(hPassword, hEmail, 0,0,0,0, SWP_NOMOVE|SWP_NOSIZE);
                 SetWindowPos(hStayLoggedIn, hPassword, 0,0,0,0, SWP_NOMOVE|SWP_NOSIZE);
                 SetWindowPos(hLogin, hStayLoggedIn, 0,0,0,0, SWP_NOMOVE|SWP_NOSIZE);
@@ -165,6 +171,17 @@ LRESULT CALLBACK MainWindow::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
                 HDC hdc = (HDC)wParam;
                 SetTextColor(hdc, RGB(0, 0, 255));
                 SetBkMode(hdc, TRANSPARENT);
+                return (LRESULT)GetSysColorBrush(COLOR_WINDOW);
+            }
+            if ((HWND)lParam == hSignupLink) {
+                HDC hdc = (HDC)wParam;
+                SetTextColor(hdc, RGB(0, 0, 255)); // Blau
+                SetBkMode(hdc, TRANSPARENT);
+                // Unterstrichen Font setzen
+                HFONT hFont = CreateFontW(16, 0, 0, 0, FW_NORMAL, FALSE, TRUE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Arial");
+                SendMessage((HWND)lParam, WM_SETFONT, (WPARAM)hFont, TRUE);
+                // Cursor zu Hand ändern
+                SetCursor(LoadCursor(NULL, IDC_HAND));
                 return (LRESULT)GetSysColorBrush(COLOR_WINDOW);
             }
             return 0;

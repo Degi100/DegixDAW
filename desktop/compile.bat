@@ -45,7 +45,7 @@ echo    Compiling...
 echo ==========================================
 echo.
 
-cl.exe /nologo /Zi /EHsc /std:c++17 /DUNICODE /D_UNICODE /Fe:build\DegixDAW.exe /Fo:build\ !SOURCES! /Isrc /link winhttp.lib comctl32.lib user32.lib gdi32.lib kernel32.lib crypt32.lib /SUBSYSTEM:WINDOWS 2>&1 | findstr /v /c:"note:" /c:"with" /c:"[" /c:"]" /c:"_Elem" /c:"_Iter" /c:"_Size" /c:"_Alloc" /c:"_InIt" /c:"_OutIt" /c:"_Sent" /c:"Vorlage" /c:"Verweis" /c:"Instanziierung" /c:"kompilierte" /c:"gerade"
+cl.exe /nologo /Zi /EHsc /std:c++17 /DUNICODE /D_UNICODE /Fe:build\DegixDAW.exe /Fo:build\ !SOURCES! /Isrc /link winhttp.lib comctl32.lib user32.lib gdi32.lib gdiplus.lib ole32.lib shell32.lib kernel32.lib crypt32.lib /SUBSYSTEM:WINDOWS 2>&1 | findstr /v /c:"note:" /c:"with" /c:"[" /c:"]" /c:"_Elem" /c:"_Iter" /c:"_Size" /c:"_Alloc" /c:"_InIt" /c:"_OutIt" /c:"_Sent" /c:"Vorlage" /c:"Verweis" /c:"Instanziierung" /c:"kompilierte" /c:"gerade"
 
 if %errorlevel% neq 0 (
     echo.

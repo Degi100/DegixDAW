@@ -2,6 +2,8 @@
 #include <windows.h>
 #include <gdiplus.h>
 #include <string>
+#include <vector>
+#include "../storagedata.h"
 
 class FileBrowser {
 public:
@@ -17,7 +19,9 @@ private:
     HWND hList_ = nullptr;
     HWND hPreview_ = nullptr;
     Gdiplus::Image* currentImage_ = nullptr;
+    std::vector<storagedata::FileInfo> currentFiles_;  // Cache der aktuellen Dateien
     void PopulateList(int tabIndex);
-    void LoadImagePreview(const std::string& fileName);
-    std::string GetImageUrl(const std::string& displayName);
+    void LoadImagePreview(int fileIndex);  // Lade Preview anhand Index in currentFiles_
+    std::string GenerateSignedUrl(const std::string& storagePath);  // Generiere Supabase signed URL
+    Gdiplus::Image* DownloadImage(const std::string& url);  // Lade Bild via WinHTTP
 };
