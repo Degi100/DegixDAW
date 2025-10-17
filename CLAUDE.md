@@ -13,6 +13,23 @@ DegixDAW/
 │   ├── src/             # C++ Source Files
 │   ├── compile.bat      # Build Script (F5)
 │   └── build/           # Build Output
+├── vst-plugin/          # JUCE VST3 Plugin (geplant)
+│   ├── Source/          # C++ VST Code
+│   └── CMakeLists.txt   # JUCE Build Config
+├── docs/
+│   └── architecture/    # Architektur-Dokumentation
+│       ├── 00_BIG_PICTURE.md        # Vision & Roadmap
+│       ├── 01_SYSTEM_OVERVIEW.md    # Komponenten & Tech Stack
+│       ├── 02_DATABASE_SCHEMA.md    # SQL Schema
+│       ├── 03_DATA_FLOW.md          # User Journeys
+│       ├── 04_STORAGE_STRATEGY.md   # File Storage & RLS
+│       ├── 05_VST_PLUGIN.md         # JUCE Architektur
+│       ├── 06_DEPLOYMENT.md         # CI/CD & Production
+│       └── migrations/              # SQL Migrations
+│           ├── README.md            # Migration Guide
+│           ├── 001_create_tables.sql    # ✅ DONE
+│           ├── 002_create_indexes.sql   # ✅ DONE
+│           └── 003_create_triggers.sql  # ✅ DONE
 ├── packages/
 │   ├── types/           # Shared TypeScript Types
 │   ├── utils/           # Shared Utilities
@@ -306,17 +323,164 @@ SUPABASE_SERVICE_ROLE_KEY   # Supabase Service Role Key (NICHT Anon Key!)
 - 📊 **Metrics**: LOC, Files, Commits, Users, Messages, Issues
 - 🔄 **Manual Trigger**: Via GitHub Actions UI möglich
 
+## 🎯 DegixDAW Vision & Alleinstellungsmerkmale
+
+**Was macht DegixDAW einzigartig?**
+
+DegixDAW ist eine **All-in-One Musikerplattform** für asynchrone Kollaboration. NICHT für Real-time Jamming (technisch unmöglich wegen Latency), sondern für **Producer-Workflow mit DAW-Integration**.
+
+### Core Features (Unique Selling Points)
+
+1. **VST3 Plugin** (JUCE) - Bridge zwischen DAW und Cloud
+   - Login im Plugin (OAuth2)
+   - Projekte aus Cloud laden → direkt in Cubase/Ableton/Logic
+   - Mixdowns aus DAW hochladen
+   - Preset-Management
+
+2. **Browser-basierter MIDI/Audio Editor** (Tone.js + Web MIDI API)
+   - Piano Roll im Browser
+   - MIDI-Events editieren
+   - Playback mit Tone.js
+   - Speichern in Supabase
+
+3. **Preset & Mixdown Sharing**
+   - Producer teilt Preset mit Mix Engineer
+   - Mix Engineer lädt in DAW (via VST Plugin)
+   - Mixdown zurück hochladen
+   - Producer streamed finales Ergebnis
+
+4. **Integrierte Plattform** (kein Slack, Discord, Dropbox nötig)
+   - Chat + Social + Musik-Features in einem
+   - Kein Context-Switching zwischen Tools
+
+### Tech Stack
+
+**Frontend:**
+- React 19 + TypeScript + Vite
+- Tone.js (MIDI Playback & Synthesis)
+- Web MIDI API (Keyboard Input)
+
+**Backend:**
+- Supabase (PostgreSQL + Storage + Auth + Realtime)
+- Row-Level Security (RLS) für alle Zugriffe
+- Signed URLs (1h expiry) für private Files
+
+**VST Plugin:**
+- JUCE Framework (C++17)
+- VST3 SDK
+- OAuth2 Flow
+- HTTP Client für Supabase API
+
+**Desktop App:**
+- C++ Win32 (Windows)
+- Supabase Integration
+- File Browser
+
+### Datenbank-Status
+
+✅ **Migration Complete** (15 MB → 17 MB)
+
+**8 neue Tabellen:**
+- `projects` - Musik-Projekte
+- `project_collaborators` - Kollaboratoren (Owner/Editor/Viewer)
+- `tracks` - Audio/MIDI/Bus/FX Tracks
+- `midi_events` - MIDI Note On/Off Events
+- `mixdowns` - Finale Audio-Mixdowns
+- `presets` - VST/Synth Presets
+- `track_comments` - Track-Kommentare mit Timestamps
+- `project_versions` - Versionshistorie
+
+**23 Performance-Indexes** (z.B. für creator_id, project_id, timestamp_ms)
+
+**6 Auto-Update Triggers** (updated_at, search_vector)
+
+**Alte Tabellen unberührt:** profiles, messages, conversations, issues, etc.
+
+### Entwicklungsstand
+
+**Gesamt: ~20%**
+
+- ✅ Chat & Auth: 60%
+- ✅ Social Features: 40%
+- ✅ Admin Panel: 80%
+- ✅ Database Schema: 100% (Migration done!)
+- Desktop App: 3%
+- MIDI Editor: 0% (User hat 5 Jahre alte Erfahrung damit)
+- VST Plugin: 5% (User hat JUCE "Hello World" getestet)
+
+### Roadmap
+
+**PoC Phase (8 Wochen):**
+1. MIDI Editor v1 (Piano Roll + Tone.js)
+2. VST Plugin v1 (Login + Project List)
+3. Projekt Download (Cloud → DAW)
+4. Mixdown Upload (DAW → Cloud)
+
+**MVP Phase (12 Wochen):**
+- Multi-Track Editor
+- Audio Recording im Browser
+- Preset Browser + Search
+- Collaboration Features
+
+**Production (12+ Wochen):**
+- Mobile App (React Native)
+- macOS VST Build
+- Monetization (Pro Features)
+
 ## Nächste Schritte
 
-1. ✅ **Desktop App**: C++ Desktop App mit Windows GUI (fertig)
-2. **VST Plugins**: JUCE Framework Integration
-3. **CI/CD**: GitHub Actions für alle Workspaces
-4. **Monorepo Tools**: Optional Turborepo/Nx für Caching
+### Sofort (Nach diesem Commit)
+
+1. ⏳ Branch erstellen: `feat/music-database-schema`
+2. ⏳ Commit: Architecture docs + Database migrations
+3. ⏳ `nul` File löschen (Windows-Bug)
+
+### Entwicklungsphase
+
+**Option A: MIDI Editor zuerst** (empfohlen)
+- User hat bereits Erfahrung damit (5 Jahre alt)
+- Tone.js Integration
+- Piano Roll UI
+- Speichern in neue `projects` Tabelle
+
+**Option B: VST Plugin zuerst**
+- User hat JUCE bereits getestet
+- SupabaseClient bauen
+- OAuth2 Flow implementieren
+- Project List laden
+
+**Entscheidung:** Nutzer wählt!
 
 ## Weitere Dokumentation
 
+### Monorepo Docs
 - [Root README.md](README.md): Monorepo Overview
 - [web/frontend/CLAUDE.md](web/frontend/CLAUDE.md): Frontend Details
 - [web/backend/README.md](web/backend/README.md): Backend Details
 - [desktop/README.md](desktop/README.md): Desktop App Details
 - [netlify.toml](netlify.toml): Netlify Deployment Config
+
+### Architektur Docs (NEU!)
+- [docs/architecture/00_BIG_PICTURE.md](docs/architecture/00_BIG_PICTURE.md): Vision & Roadmap
+- [docs/architecture/01_SYSTEM_OVERVIEW.md](docs/architecture/01_SYSTEM_OVERVIEW.md): Komponenten
+- [docs/architecture/02_DATABASE_SCHEMA.md](docs/architecture/02_DATABASE_SCHEMA.md): SQL Schema
+- [docs/architecture/03_DATA_FLOW.md](docs/architecture/03_DATA_FLOW.md): User Journeys
+- [docs/architecture/04_STORAGE_STRATEGY.md](docs/architecture/04_STORAGE_STRATEGY.md): File Storage
+- [docs/architecture/05_VST_PLUGIN.md](docs/architecture/05_VST_PLUGIN.md): JUCE Architektur
+- [docs/architecture/06_DEPLOYMENT.md](docs/architecture/06_DEPLOYMENT.md): CI/CD
+
+### Migration Docs
+- [docs/architecture/migrations/README.md](docs/architecture/migrations/README.md): Step-by-Step Guide
+- [docs/architecture/migrations/001_create_tables.sql](docs/architecture/migrations/001_create_tables.sql): ✅ Executed
+- [docs/architecture/migrations/002_create_indexes.sql](docs/architecture/migrations/002_create_indexes.sql): ✅ Executed
+- [docs/architecture/migrations/003_create_triggers.sql](docs/architecture/migrations/003_create_triggers.sql): ✅ Executed
+
+## Known Issues & Cleanup
+
+**ISSUES.md:** 30 Issues (16 Open, 2 In Progress, 12 Done, 11 Urgent)
+
+**Code TODOs:** 24 TODOs nicht in ISSUES.md
+
+**Console.logs:** 303 Vorkommen in 74 Files (Cleanup empfohlen)
+
+**Windows Bug:** `nul` File im Root → Löschen + `.gitignore`
