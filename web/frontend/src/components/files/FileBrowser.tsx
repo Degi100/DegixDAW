@@ -14,7 +14,7 @@ interface FileBrowserProps {
   onClose?: () => void;
 }
 
-export default function FileBrowser({ userId, onClose }: FileBrowserProps) {
+export default function FileBrowser({ userId }: FileBrowserProps) {
   // Data
   const { loading, refresh, filterByTab, filterByType } = useAllAttachments({ userId });
 
