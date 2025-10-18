@@ -29,12 +29,15 @@ export async function getSignedUrl(storagePath: string | null | undefined): Prom
       .createSignedUrl(storagePath, SIGNED_URL_EXPIRY);
 
     if (error) {
-      console.error('Failed to create signed URL:', error);
+      // Silently fail for "Object not found" (file was deleted from storage)
+      if (error.message?.includes('Object not found')) {
+        return null;
+      }
+      console.warn('Failed to create signed URL:', error.message);
       return null;
     }
 
     if (!data?.signedUrl) {
-      console.error('No signed URL returned');
       return null;
     }
 
@@ -46,7 +49,7 @@ export async function getSignedUrl(storagePath: string | null | undefined): Prom
 
     return data.signedUrl;
   } catch (err) {
-    console.error('Error generating signed URL:', err);
+    console.warn('Error generating signed URL:', err);
     return null;
   }
 }

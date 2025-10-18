@@ -172,7 +172,18 @@ export function useMessageAttachments() {
       const fileExt = file.name.split('.').pop();
       const fileName = `${conversationId}/${messageId}/${Date.now()}.${fileExt}`;
 
+      // DEBUG: Log file details
+      console.log('🔍 Upload Debug:', {
+        fileName,
+        fileType: file.type,
+        fileSize: file.size,
+        isFile: file instanceof File,
+        isBlob: file instanceof Blob,
+        bucket: STORAGE_BUCKET
+      });
+
       // Upload main file
+      // NOTE: Do NOT set contentType - let Supabase auto-detect from File object
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from(STORAGE_BUCKET)
         .upload(fileName, file, {
@@ -180,7 +191,18 @@ export function useMessageAttachments() {
           upsert: false
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('❌ Upload Error Details:', {
+          error: uploadError,
+          message: uploadError.message,
+          statusCode: (uploadError as any).statusCode,
+          name: uploadError.name,
+          fileName,
+          fileType: file.type,
+          fileSize: file.size
+        });
+        throw uploadError;
+      }
 
       // Store the storage path (not a public URL!)
       // We'll generate signed URLs when displaying images

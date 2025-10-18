@@ -18,12 +18,6 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
     // Fallback to implicit flow for better compatibility
     flowType: 'implicit' // Weniger streng als PKCE, besser für Tests
   },
-  global: {
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    }
-  },
   db: {
     schema: 'public'
   }
