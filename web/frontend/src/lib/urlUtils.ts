@@ -2,24 +2,16 @@
 
 /**
  * Get the base URL for redirects
- * Uses production URL in deployed environment, localhost for development
+ * Automatically detects the current environment (localhost, Vercel, Netlify, etc.)
  */
 export function getBaseUrl(): string {
-  // Check if we're in a deployed environment
+  // Always use the current origin in browser
   if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    
-    // If localhost or development environment, use current origin
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return window.location.origin;
-    }
-    
-    // Production environment - use the deployed URL
-    return 'https://degix.netlify.app';
+    return window.location.origin;
   }
-  
-  // Fallback for SSR or other environments
-  return 'https://degix.netlify.app';
+
+  // Fallback for SSR or other environments (should rarely be used)
+  return 'https://degixdaw.vercel.app';
 }
 
 /**
