@@ -1,15 +1,129 @@
 // ============================================
 // SEND FILE MODAL STYLES
-// Moderne, schicke UI für File-Sharing
+// Moderne UI für File-Sharing - Deluxe Edition
+// Matches FileBrowser Design System
 // ============================================
 
-.send-file-modal {
-  max-width: 600px;
-  width: 90%;
+// Modal Overlay mit höherem z-index
+.modal-overlay {
+  z-index: 9999 !important;
+}
 
-  // Steps
+.modal.send-file-modal {
+  max-width: 700px;
+  width: 95%;
+  background: var(--color-bg-primary);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-height: 95vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+  z-index: 10000;
+
+  // ============================================
+  // MODAL STRUCTURE
+  // ============================================
+  .modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
+
+    h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .modal-close {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      border: none;
+      background: rgba(239, 68, 68, 0.1);
+      color: rgba(239, 68, 68, 1);
+      cursor: pointer;
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+
+      &:hover {
+        background: rgba(239, 68, 68, 1);
+        color: white;
+        transform: rotate(90deg);
+      }
+    }
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    background: var(--color-bg-secondary);
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      &.btn-secondary {
+        background: var(--color-bg-tertiary);
+        color: var(--color-text-primary);
+
+        &:hover:not(:disabled) {
+          background: var(--color-border);
+        }
+      }
+
+      &.btn-primary {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 1), rgba(99, 102, 241, 1));
+        color: white;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+
+        &:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        &:active:not(:disabled) {
+          transform: translateY(0);
+        }
+      }
+    }
+  }
+
+  // ============================================
+  // STEPS
+  // ============================================
   .send-file-step {
-    margin-bottom: 24px;
+    margin-bottom: 1.5rem;
 
     &:last-child {
       margin-bottom: 0;
@@ -19,20 +133,20 @@
   .send-file-label {
     display: block;
     font-weight: 600;
-    margin-bottom: 8px;
-    color: var(--text-primary, #1a1a1a);
-    font-size: 14px;
+    margin-bottom: 0.75rem;
+    color: var(--color-text-primary);
+    font-size: 0.9375rem;
 
     .required {
-      color: var(--error, #e74c3c);
-      margin-left: 2px;
+      color: rgba(239, 68, 68, 1);
+      margin-left: 4px;
     }
 
     .optional {
-      color: var(--text-secondary, #666);
+      color: var(--color-text-secondary);
       font-weight: 400;
-      font-size: 13px;
-      margin-left: 4px;
+      font-size: 0.8125rem;
+      margin-left: 6px;
     }
   }
 
@@ -40,13 +154,13 @@
   // FILE DROP ZONE
   // ============================================
   .file-drop-zone {
-    border: 2px dashed var(--border-color, #ddd);
+    border: 2px dashed var(--color-border);
     border-radius: 12px;
-    padding: 48px 24px;
+    padding: 1.5rem 1rem;
     text-align: center;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: var(--bg-secondary, #f9f9f9);
+    background: var(--color-bg-secondary);
     position: relative;
     overflow: hidden;
 
@@ -55,18 +169,18 @@
       position: absolute;
       inset: 0;
       background: linear-gradient(135deg,
-        rgba(52, 152, 219, 0.05) 0%,
-        rgba(155, 89, 182, 0.05) 100%
+        rgba(59, 130, 246, 0.05) 0%,
+        rgba(99, 102, 241, 0.05) 100%
       );
       opacity: 0;
       transition: opacity 0.3s ease;
     }
 
     &:hover {
-      border-color: var(--primary, #3498db);
-      background: var(--bg-hover, #f0f8ff);
+      border-color: rgba(59, 130, 246, 1);
+      background: rgba(59, 130, 246, 0.05);
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
 
       &::before {
         opacity: 1;
@@ -78,8 +192,8 @@
     }
 
     &.drag-active {
-      border-color: var(--primary, #3498db);
-      background: var(--primary-light, #e3f2fd);
+      border-color: rgba(59, 130, 246, 1);
+      background: rgba(59, 130, 246, 0.1);
       border-style: solid;
       border-width: 3px;
 
@@ -93,111 +207,115 @@
     }
 
     .file-drop-icon {
-      font-size: 56px;
-      margin-bottom: 16px;
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
       transition: transform 0.3s ease;
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
     }
 
     .file-drop-text {
-      font-size: 16px;
-      font-weight: 500;
-      color: var(--text-primary, #1a1a1a);
-      margin-bottom: 8px;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      margin-bottom: 0.5rem;
+
+      strong {
+        display: block;
+      }
+
+      span {
+        font-size: 0.8125rem;
+        font-weight: 400;
+        color: var(--color-text-secondary);
+      }
     }
 
-    .file-drop-hint {
-      font-size: 14px;
-      color: var(--text-secondary, #666);
-      font-weight: 400;
+    .file-drop-limit {
+      font-size: 0.6875rem;
+      color: var(--color-text-tertiary);
+      font-weight: 500;
     }
   }
 
   // ============================================
   // SELECTED FILE PREVIEW
   // ============================================
-  .selected-file-preview {
+  .file-selected {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 20px;
-    border: 2px solid var(--success, #4caf50);
+    gap: 1rem;
+    padding: 1.25rem;
+    border: 2px solid rgba(76, 175, 80, 1);
     border-radius: 12px;
     background: linear-gradient(135deg,
       rgba(76, 175, 80, 0.05) 0%,
       rgba(76, 175, 80, 0.02) 100%
     );
     position: relative;
-    overflow: hidden;
 
     &::before {
       content: '✓';
       position: absolute;
-      top: 8px;
-      right: 8px;
-      width: 24px;
-      height: 24px;
-      background: var(--success, #4caf50);
+      top: 0.5rem;
+      right: 0.5rem;
+      width: 1.5rem;
+      height: 1.5rem;
+      background: rgba(76, 175, 80, 1);
       color: white;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
+      font-size: 0.875rem;
       font-weight: bold;
     }
 
-    .selected-file-icon {
-      font-size: 48px;
+    .file-selected-icon {
+      font-size: 3rem;
       flex-shrink: 0;
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
     }
 
-    .selected-file-info {
+    .file-selected-info {
       flex: 1;
       min-width: 0;
 
-      .selected-file-name {
+      .file-selected-name {
         font-weight: 600;
-        font-size: 15px;
-        color: var(--text-primary, #1a1a1a);
-        margin-bottom: 6px;
+        font-size: 0.9375rem;
+        color: var(--color-text-primary);
+        margin-bottom: 0.375rem;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
 
-      .selected-file-meta {
-        font-size: 13px;
-        color: var(--text-secondary, #666);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-
-        &::before {
-          content: '•';
-          color: var(--text-tertiary, #999);
-        }
+      .file-selected-size {
+        font-size: 0.8125rem;
+        color: var(--color-text-secondary);
       }
     }
 
-    .selected-file-remove {
+    .file-selected-remove {
       flex-shrink: 0;
-      width: 36px;
-      height: 36px;
+      width: 2.25rem;
+      height: 2.25rem;
       border-radius: 50%;
       border: none;
-      background: var(--error-bg, #fee);
-      color: var(--error, #e74c3c);
+      background: rgba(239, 68, 68, 0.1);
+      color: rgba(239, 68, 68, 1);
       cursor: pointer;
-      font-size: 20px;
+      font-size: 1.25rem;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
       &:hover {
-        background: var(--error, #e74c3c);
+        background: rgba(239, 68, 68, 1);
         color: white;
         transform: rotate(90deg) scale(1.1);
       }
@@ -216,37 +334,67 @@
 
     .recipient-search-input {
       width: 100%;
-      padding: 14px 16px;
-      padding-right: 40px;
-      border: 2px solid var(--border-color, #ddd);
+      padding: 0.875rem 1rem;
+      padding-right: 2.5rem;
+      border: 2px solid rgba(59, 130, 246, 0.3);
       border-radius: 10px;
-      font-size: 16px;
+      font-size: 1rem;
       transition: all 0.3s ease;
-      background: white;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
+      color: var(--color-text-primary) !important;
+      -webkit-text-fill-color: var(--color-text-primary) !important;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
 
       &::placeholder {
-        color: var(--text-tertiary, #999);
+        color: var(--color-text-tertiary) !important;
+        -webkit-text-fill-color: var(--color-text-tertiary) !important;
       }
 
       &:focus {
         outline: none;
-        border-color: var(--primary, #3498db);
-        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        border-color: rgba(59, 130, 246, 1);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15), 0 2px 12px rgba(59, 130, 246, 0.2);
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%);
       }
 
       &:disabled {
-        background: var(--bg-disabled, #f5f5f5);
+        background: var(--color-bg-tertiary);
         cursor: not-allowed;
         opacity: 0.6;
       }
     }
 
-    .recipient-search-spinner {
+    .recipient-clear {
       position: absolute;
-      right: 14px;
+      right: 0.875rem;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 18px;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      border: none;
+      background: rgba(239, 68, 68, 0.1);
+      color: rgba(239, 68, 68, 1);
+      cursor: pointer;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+
+      &:hover {
+        background: rgba(239, 68, 68, 1);
+        color: white;
+        transform: translateY(-50%) rotate(90deg);
+      }
+    }
+
+    .recipient-search-loading {
+      position: absolute;
+      right: 0.875rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.125rem;
       animation: spin 1s linear infinite;
     }
 
@@ -258,55 +406,57 @@
     // Search Results Dropdown
     .recipient-search-results {
       position: absolute;
-      top: calc(100% + 8px);
+      top: calc(100% + 0.5rem);
       left: 0;
       right: 0;
-      background: white;
-      border: 2px solid var(--border-color, #ddd);
+      background: rgba(30, 41, 59, 0.98);
+      backdrop-filter: blur(8px);
+      border: 2px solid rgba(59, 130, 246, 0.3);
       border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-      max-height: 280px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(59, 130, 246, 0.1);
+      max-height: 17.5rem;
       overflow-y: auto;
       z-index: 100;
 
       // Custom scrollbar
       &::-webkit-scrollbar {
-        width: 8px;
+        width: 0.5rem;
       }
 
       &::-webkit-scrollbar-track {
-        background: #f1f1f1;
+        background: rgba(15, 23, 42, 0.5);
         border-radius: 0 12px 12px 0;
       }
 
       &::-webkit-scrollbar-thumb {
-        background: #ccc;
+        background: rgba(59, 130, 246, 0.5);
         border-radius: 4px;
 
         &:hover {
-          background: #aaa;
+          background: rgba(59, 130, 246, 0.8);
         }
       }
 
       .recipient-search-result {
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 14px 16px;
+        gap: 0.75rem;
+        padding: 0.875rem 1rem;
         border: none;
-        background: white;
+        background: transparent;
         width: 100%;
         text-align: left;
         cursor: pointer;
         transition: all 0.2s ease;
+        color: rgba(241, 245, 249, 0.95) !important;
 
         &:hover {
-          background: var(--bg-hover, #f5f5f5);
-          padding-left: 20px;
+          background: rgba(59, 130, 246, 0.2);
+          padding-left: 1.25rem;
         }
 
         &:not(:last-child) {
-          border-bottom: 1px solid var(--border-light, #f0f0f0);
+          border-bottom: 1px solid rgba(59, 130, 246, 0.15);
         }
 
         &:first-child {
@@ -318,8 +468,8 @@
         }
 
         .recipient-avatar {
-          width: 44px;
-          height: 44px;
+          width: 2.75rem;
+          height: 2.75rem;
           border-radius: 50%;
           overflow: hidden;
           flex-shrink: 0;
@@ -334,97 +484,75 @@
           &-placeholder {
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, var(--primary, #3498db), var(--primary-dark, #2980b9));
+            background: linear-gradient(135deg, rgba(59, 130, 246, 1), rgba(99, 102, 241, 1));
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 18px;
+            font-size: 1.125rem;
           }
         }
 
         .recipient-username {
           font-weight: 500;
-          font-size: 15px;
-          color: var(--text-primary, #1a1a1a);
+          font-size: 0.9375rem;
+          color: rgba(241, 245, 249, 0.95) !important;
+          -webkit-text-fill-color: rgba(241, 245, 249, 0.95) !important;
         }
       }
     }
 
-    // Selected Recipient Badge
-    .selected-recipient {
-      margin-top: 12px;
-      padding: 14px 18px;
-      background: linear-gradient(135deg,
-        rgba(76, 175, 80, 0.1) 0%,
-        rgba(76, 175, 80, 0.05) 100%
-      );
-      border: 2px solid var(--success, #4caf50);
-      border-radius: 10px;
-      color: var(--success-dark, #2e7d32);
-      font-weight: 500;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      &::before {
-        content: '✓';
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 20px;
-        height: 20px;
-        background: var(--success, #4caf50);
-        color: white;
-        border-radius: 50%;
-        font-size: 12px;
-        font-weight: bold;
-      }
-
-      strong {
-        color: var(--success-dark, #1b5e20);
-      }
+    // Hint text
+    .recipient-hint {
+      display: block;
+      margin-top: 0.5rem;
+      font-size: 0.8125rem;
+      color: var(--color-text-secondary);
+      font-style: italic;
     }
   }
 
   // ============================================
   // MESSAGE TEXTAREA
   // ============================================
-  .send-file-message {
+  .file-message-input {
     width: 100%;
-    padding: 14px 16px;
-    border: 2px solid var(--border-color, #ddd);
+    padding: 0.875rem 1rem;
+    border: 2px solid rgba(99, 102, 241, 0.3);
     border-radius: 10px;
-    font-size: 15px;
+    font-size: 0.9375rem;
     font-family: inherit;
     line-height: 1.5;
     resize: vertical;
     transition: all 0.3s ease;
-    background: white;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+    color: var(--color-text-primary);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
 
     &::placeholder {
-      color: var(--text-tertiary, #999);
+      color: var(--color-text-tertiary);
     }
 
     &:focus {
       outline: none;
-      border-color: var(--primary, #3498db);
-      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+      border-color: rgba(99, 102, 241, 1);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15), 0 2px 12px rgba(99, 102, 241, 0.2);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
     }
 
     &:disabled {
-      background: var(--bg-disabled, #f5f5f5);
+      background: var(--color-bg-tertiary);
       cursor: not-allowed;
       opacity: 0.6;
     }
   }
 
-  .send-file-message-hint {
-    font-size: 12px;
-    color: var(--text-secondary, #666);
-    margin-top: 6px;
+  .char-count {
+    display: block;
+    margin-top: 0.375rem;
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
     text-align: right;
     font-weight: 500;
   }
@@ -450,104 +578,180 @@
 }
 
 // ============================================
-// RESPONSIVE
+// RESPONSIVE - MOBILE OPTIMIERT
 // ============================================
 @media (max-width: 640px) {
-  .send-file-modal {
-    width: 95%;
+  .modal.send-file-modal {
+    width: 100%;
     max-width: none;
+    max-height: 100vh;
+    border-radius: 0;
+    margin: 0;
+
+    .modal-header {
+      padding: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
+      backdrop-filter: blur(10px);
+
+      h2 {
+        font-size: 1.125rem;
+      }
+
+      .modal-close {
+        width: 1.75rem;
+        height: 1.75rem;
+        font-size: 1.125rem;
+      }
+    }
+
+    .modal-body {
+      padding: 1rem;
+    }
+
+    .modal-footer {
+      padding: 1rem;
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+      flex-direction: column-reverse;
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+        padding: 1rem;
+        font-size: 1rem;
+      }
+    }
+
+    .send-file-step {
+      margin-bottom: 1.25rem;
+    }
+
+    .send-file-label {
+      font-size: 0.875rem;
+    }
 
     .file-drop-zone {
-      padding: 36px 20px;
+      padding: 2rem 1rem;
 
       .file-drop-icon {
-        font-size: 48px;
-      }
-    }
-
-    .selected-file-preview {
-      padding: 16px;
-      gap: 12px;
-
-      .selected-file-icon {
-        font-size: 40px;
+        font-size: 2.75rem;
+        margin-bottom: 0.75rem;
       }
 
-      .selected-file-info {
-        .selected-file-name {
-          font-size: 14px;
-        }
+      .file-drop-text {
+        font-size: 0.9375rem;
 
-        .selected-file-meta {
-          font-size: 12px;
+        span {
+          font-size: 0.8125rem;
         }
       }
+
+      .file-drop-limit {
+        font-size: 0.6875rem;
+        margin-top: 0.5rem;
+      }
     }
 
-    .recipient-search {
-      .recipient-search-results {
-        max-height: 200px;
+    .file-selected {
+      padding: 1rem;
+      gap: 0.75rem;
 
-        .recipient-search-result {
-          padding: 12px;
+      &::before {
+        width: 1.25rem;
+        height: 1.25rem;
+        font-size: 0.75rem;
+      }
 
-          .recipient-avatar {
-            width: 40px;
-            height: 40px;
-          }
+      .file-selected-icon {
+        font-size: 2.25rem;
+      }
+
+      .file-selected-info {
+        .file-selected-name {
+          font-size: 0.875rem;
+        }
+
+        .file-selected-size {
+          font-size: 0.75rem;
         }
       }
-    }
-  }
-}
 
-@media (prefers-color-scheme: dark) {
-  .send-file-modal {
-    .file-drop-zone {
-      background: var(--bg-secondary-dark, #2a2a2a);
-      border-color: var(--border-dark, #444);
-
-      &:hover {
-        background: var(--bg-hover-dark, #333);
+      .file-selected-remove {
+        width: 2rem;
+        height: 2rem;
+        font-size: 1.125rem;
       }
-
-      &.drag-active {
-        background: var(--primary-dark, #2c3e50);
-      }
-    }
-
-    .selected-file-preview {
-      background: linear-gradient(135deg,
-        rgba(76, 175, 80, 0.08) 0%,
-        rgba(76, 175, 80, 0.03) 100%
-      );
     }
 
     .recipient-search {
       .recipient-search-input {
-        background: var(--bg-dark, #2a2a2a);
-        border-color: var(--border-dark, #444);
-        color: var(--text-light, #e0e0e0);
+        font-size: 1rem;
+        padding: 0.875rem;
       }
 
       .recipient-search-results {
-        background: var(--bg-dark, #2a2a2a);
-        border-color: var(--border-dark, #444);
+        max-height: 12rem;
+        border-radius: 8px;
 
         .recipient-search-result {
-          background: var(--bg-dark, #2a2a2a);
+          padding: 0.75rem;
 
           &:hover {
-            background: var(--bg-hover-dark, #333);
+            padding-left: 1rem;
+          }
+
+          .recipient-avatar {
+            width: 2.5rem;
+            height: 2.5rem;
+
+            &-placeholder {
+              font-size: 1rem;
+            }
+          }
+
+          .recipient-username {
+            font-size: 0.875rem;
           }
         }
       }
+
+      .recipient-hint {
+        font-size: 0.75rem;
+      }
     }
 
-    .send-file-message {
-      background: var(--bg-dark, #2a2a2a);
-      border-color: var(--border-dark, #444);
-      color: var(--text-light, #e0e0e0);
+    .file-message-input {
+      font-size: 1rem;
+      padding: 0.875rem;
+    }
+
+    .char-count {
+      font-size: 0.6875rem;
+    }
+  }
+}
+
+// ============================================
+// TABLET OPTIMIERT
+// ============================================
+@media (min-width: 641px) and (max-width: 1024px) {
+  .modal.send-file-modal {
+    width: 90%;
+    max-width: 550px;
+
+    .modal-header {
+      h2 {
+        font-size: 1.1875rem;
+      }
+    }
+
+    .file-drop-zone {
+      padding: 2.5rem 1.5rem;
     }
   }
 }

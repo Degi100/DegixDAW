@@ -1,5 +1,6 @@
 // ============================================
-// SEND FILE MODAL V2
+// SEND FILE MODAL V3
+// Deluxe Edition - Matches FileBrowser Design
 // Uploads files as chat messages
 // Supports: With recipient OR self-conversation
 // ============================================
@@ -63,7 +64,7 @@ export default function SendFileModal({ userId, onClose, onSuccess }: SendFileMo
   };
 
   // ============================================
-  // USER SEARCH
+  // USER SEARCH - NUR FREUNDE
   // ============================================
   const searchUsers = useCallback(
     async (query: string) => {
@@ -75,10 +76,30 @@ export default function SendFileModal({ userId, onClose, onSuccess }: SendFileMo
       setSearching(true);
 
       try {
+        // Get accepted friendships (both directions)
+        const { data: friendships, error: friendsError } = await supabase
+          .from('friendships')
+          .select('user_id, friend_id')
+          .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
+          .eq('status', 'accepted');
+
+        if (friendsError) throw friendsError;
+
+        // Extract friend IDs
+        const friendIds = friendships?.map(f =>
+          f.user_id === userId ? f.friend_id : f.user_id
+        ) || [];
+
+        if (friendIds.length === 0) {
+          setSearchResults([]);
+          return;
+        }
+
+        // Search for friends by username
         const { data, error } = await supabase
           .from('profiles')
           .select('id, username')
-          .neq('id', userId) // Exclude self
+          .in('id', friendIds)
           .ilike('username', `%${query}%`)
           .limit(10);
 
@@ -113,13 +134,11 @@ export default function SendFileModal({ userId, onClose, onSuccess }: SendFileMo
 
   // ============================================
   // GET OR CREATE CONVERSATION
-  // Uses conversation_members table (not user1_id/user2_id)
   // ============================================
   const getOrCreateConversation = async (otherUserId: string): Promise<string | null> => {
     try {
       const isSelfConversation = otherUserId === userId;
 
-      // 1. Get all my conversations
       const { data: myConvs } = await supabase
         .from('conversation_members')
         .select('conversation_id, conversations!inner(type)')
@@ -130,9 +149,7 @@ export default function SendFileModal({ userId, onClose, onSuccess }: SendFileMo
           .filter((m: any) => m.conversations.type === 'direct')
           .map((m: any) => m.conversation_id);
 
-        // 2. For each direct conversation, check if it has EXACTLY the right members
         for (const convId of directConvIds) {
-          // Get ALL members of this conversation
           const { data: allMembers } = await supabase
             .from('conversation_members')
             .select('user_id')
@@ -143,12 +160,10 @@ export default function SendFileModal({ userId, onClose, onSuccess }: SendFileMo
           const memberIds = allMembers.map(m => m.user_id).sort();
 
           if (isSelfConversation) {
-            // Self-conversation: EXACTLY 1 member (only userId)
             if (memberIds.length === 1 && memberIds[0] === userId) {
               return convId;
             }
           } else {
-            // Normal conversation: EXACTLY 2 members (userId + otherUserId)
             const expectedIds = [userId, otherUserId].sort();
             if (
               memberIds.length === 2 &&
@@ -161,7 +176,6 @@ export default function SendFileModal({ userId, onClose, onSuccess }: SendFileMo
         }
       }
 
-      // 3. No existing conversation found, create new one
       const { data: newConv, error: createError } = await supabase
         .from('conversations')
         .insert({
@@ -174,9 +188,7 @@ export default function SendFileModal({ userId, onClose, onSuccess }: SendFileMo
 
       if (createError) throw createError;
 
-      // 4. Add member(s) to conversation
       if (isSelfConversation) {
-        // Self-conversation: only add current user
         await supabase
           .from('conversation_members')
           .insert({
@@ -185,7 +197,6 @@ export default function SendFileModal({ userId, onClose, onSuccess }: SendFileMo
             role: 'admin',
           });
       } else {
-        // Normal conversation: add both users
         await supabase
           .from('conversation_members')
           .insert([
@@ -222,16 +233,13 @@ export default function SendFileModal({ userId, onClose, onSuccess }: SendFileMo
     setUploading(true);
 
     try {
-      // 1. Determine recipient (self if none selected)
       const recipientId = selectedRecipient?.id || userId;
 
-      // 2. Get or create conversation
       const conversationId = await getOrCreateConversation(recipientId);
       if (!conversationId) {
         throw new Error('Konversation konnte nicht erstellt werden');
       }
 
-      // 3. Create message entry
       const { data: messageData, error: messageError } = await supabase
         .from('messages')
         .insert({
@@ -245,20 +253,17 @@ export default function SendFileModal({ userId, onClose, onSuccess }: SendFileMo
 
       if (messageError) throw messageError;
 
-      // 4. Upload file attachment using existing hook
       const result = await uploadAndAttach(selectedFile, messageData.id, conversationId);
 
       if (!result) {
         throw new Error('Datei-Upload fehlgeschlagen');
       }
 
-      // 5. Update conversation's last_message_at
       await supabase
         .from('conversations')
         .update({ last_message_at: new Date().toISOString() })
         .eq('id', conversationId);
 
-      // Success!
       if (selectedRecipient) {
         showSuccess(`Datei an ${selectedRecipient.username} gesendet!`);
       } else {
@@ -391,7 +396,7 @@ export default function SendFileModal({ userId, onClose, onSuccess }: SendFileMo
 
               {!selectedRecipient && (
                 <small className="recipient-hint">
-                  💡 Kein Empfänger = Datei landet in "Meine Dateien"
+                  👥 Nur Freunde | 💡 Kein Empfänger = Datei landet in "Meine Dateien"
                 </small>
               )}
             </div>

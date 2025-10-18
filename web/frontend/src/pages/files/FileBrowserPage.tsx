@@ -6,11 +6,25 @@ export default function FileBrowserPage() {
 
   if (!user) {
     return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <p>Bitte melden Sie sich an, um auf Ihre Dateien zuzugreifen.</p>
+      <div className="dashboard-corporate">
+        <main className="dashboard-main">
+          <div className="dashboard-container">
+            <div className="loading-state">
+              <p>Bitte melden Sie sich an, um auf Ihre Dateien zuzugreifen.</p>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
 
-  return <FileBrowser userId={user.id} />;
+  return (
+    <div className="dashboard-corporate">
+      <main className="dashboard-main">
+        <div className="dashboard-container">
+          <FileBrowser userId={user.id} />
+        </div>
+      </main>
+    </div>
+  );
 }
