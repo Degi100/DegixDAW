@@ -19,6 +19,52 @@ export interface VersionInfo {
 
 export const VERSION_HISTORY: VersionInfo[] = [
   {
+    version: "0.1.4",
+    date: "2025-10-18",
+    type: "patch",
+    changes: {
+      added: [
+        "SendFileModal Deluxe Edition - Komplettes Redesign mit FileBrowser Design System",
+        "Friend-only File Sharing - Dateien nur an akzeptierte Freunde schicken",
+        "FileBrowser Mobile Optimization - Card-basierte Tabellen-Ansicht für Mobile",
+        "FileBrowser Dashboard Integration - Einheitliches Layout mit Dashboard-Cards",
+        "Multi-Select File Delete - Checkbox-basiertes Löschen mit 'Alles auswählen'",
+        "Soft Delete System - WhatsApp-Style 'Für mich löschen' mit RLS Policies",
+        "Vercel Deployment Support - Dynamische URL-Erkennung für Multi-Platform",
+        "Project Analytics Dashboard - Real-time Stats & Growth Metrics mit Recharts",
+        "Analytics Export - CSV/JSON Export + Custom Milestones",
+        "Daily Analytics Snapshots - GitHub Actions + Automated Data Collection",
+        "Issues System - Complete Ticket Management mit Comments, Labels, Assignment",
+        "Desktop App (C++) - Windows Native App mit Supabase Integration",
+        "Music Project Database Schema - Projects, Tracks, MIDI Events, Mixdowns, Presets"
+      ],
+      fixed: [
+        "SendFileModal z-index - Modal bleibt über Main-Header (z-index: 9999)",
+        "Dropdown Search Visibility - Dunkler Hintergrund mit lesbarem Text",
+        "FileBrowser TypeScript Build - Unused onClose parameter entfernt",
+        "OAuth Redirect URLs - Dynamische URL-Generierung für alle Plattformen",
+        "Netlify Build Issues - Monorepo-Struktur korrekt konfiguriert",
+        "GitHub Actions Analytics - Workflow nach Monorepo-Migration wiederhergestellt",
+        "Chat Conversation Creation - Korrekte Member-Zuweisung bei neuen Conversations",
+        "RLS Policy Conflicts - Duplicate SELECT policies für message_attachments behoben"
+      ],
+      changed: [
+        "Monorepo Restructure - npm workspaces mit web/frontend, web/backend, packages/",
+        "SendFileModal Compact Design - Kleinere Drop Zone, farbige Input-Felder",
+        "FileBrowser Card Styling - Blue Glow Border + Box-Shadow wie Dashboard",
+        "Mobile Table View - Horizontal scrollbare Filter, sticky Header/Footer",
+        "User Search - Nur Freunde statt alle User (friendships table)",
+        "Storage Strategy - Signed URLs (1h cache) statt Public URLs",
+        "Admin Route Permissions - Granulare Moderator-Permissions System"
+      ],
+      removed: [
+        "Hardcoded Netlify URLs - Ersetzt durch window.location.origin",
+        "allowed_admin_routes - Vereinfachte Admin-Permission-Logik",
+        "Dark Mode Duplicate Styles - Jetzt über CSS Variables zentral"
+      ]
+    }
+  },
+  {
     version: "0.1.3",
     date: "2025-10-08",
     type: "patch",
