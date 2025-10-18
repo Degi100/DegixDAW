@@ -144,6 +144,82 @@ import { USER_ROLES, FEATURES } from '@degixdaw/constants';
 
 ## Wichtige Entwicklungsmuster
 
+### 🔥 Claude Code-Qualität Regeln (SEHR WICHTIG!)
+
+**1. Monolith vermeiden - Clean Code schreiben!**
+- Keine Files >400 Zeilen (Split in Components/Hooks/Utils)
+- DRY Prinzip: Config-Arrays statt Copy-Paste (siehe GrowthChart `CHART_METRICS`)
+- Component Extraction bei >2x Duplikation
+- Custom Hooks für Data/Actions trennen
+
+**2. Folder-Struktur strikt einhalten!**
+```
+✅ RICHTIG:
+web/frontend/src/
+  ├── components/
+  │   └── admin/analytics/GrowthChart.tsx
+  ├── styles/
+  │   └── components/admin/analytics/_growth-chart.scss  ← SCSS hier!
+  ├── hooks/
+  │   └── useAnalytics.ts
+  └── lib/
+      └── services/analytics/snapshotsService.ts
+
+❌ FALSCH:
+web/frontend/src/components/admin/analytics/
+  ├── GrowthChart.tsx
+  └── GrowthChart.scss  ← NICHT in /components/!
+```
+
+**3. SCSS verwenden - Inline-Styling nur wenn zwingend nötig!**
+```tsx
+// ✅ GOOD: CSS Variables für dynamische Werte
+<line stroke={`var(--metric-color)`} />
+
+// ✅ OK: Library-Props (Recharts hat keine className-API)
+<Line strokeWidth={2} dot={false} />
+
+// ❌ BAD: Inline-Styles ohne Grund
+<div style={{ color: 'red', fontSize: '14px' }}>...</div>
+```
+
+**4. Dev-Server NIEMALS manuell starten!**
+```bash
+# ❌ FALSCH - Claude startet NICHT:
+npm run dev
+npm run api
+
+# ✅ RICHTIG - Läuft bereits via npm run dev:all
+# Falls NICHT running → Claude fragt User ZUERST:
+# "Dev-Server läuft nicht. Soll ich `npm run dev:all` ausführen?"
+```
+
+**Warum wichtig:**
+- User hat Server bereits laufen (Standard-Workflow)
+- Claude's restart = Duplicate Processes (Port-Conflicts!)
+- **Vor Start:** Immer `BashOutput` checken oder User fragen!
+
+**5. 🚨 NIEMALS auf `main` Branch arbeiten!**
+```bash
+# ✅ VOR JEDER Code-Änderung: Branch prüfen!
+git branch --show-current
+
+# Wenn Output = "main":
+# ❌ STOPP! Keine Änderungen!
+# ✅ User fragen: "Du bist auf main. Soll ich einen Feature-Branch erstellen?"
+
+# ✅ RICHTIG: Immer auf Feature-Branch
+git checkout -b feat/mein-feature
+# Oder auf develop
+git checkout develop
+```
+
+**Regel:**
+- **KEINE Änderungen** auf `main` ohne explizite User-Bestätigung!
+- **VOR jedem Edit/Write:** `git branch --show-current` prüfen
+- **Falls `main`:** User fragen + Feature-Branch vorschlagen
+- **Exception:** User sagt explizit "mach auf main"
+
 ### Cross-Workspace Development
 
 **Frontend nutzt Backend API:**
@@ -322,6 +398,331 @@ SUPABASE_SERVICE_ROLE_KEY   # Supabase Service Role Key (NICHT Anon Key!)
 - ✅ **Daily Snapshot**: Läuft täglich um 00:00 UTC (1:00 CET / 2:00 CEST)
 - 📊 **Metrics**: LOC, Files, Commits, Users, Messages, Issues
 - 🔄 **Manual Trigger**: Via GitHub Actions UI möglich
+
+## 📊 Analytics System - Wie es funktioniert
+
+**WICHTIG:** Das Analytics-System hat **ZWEI verschiedene LOC-Quellen**!
+
+### 🔴 LIVE LOC (StatsGrid Kachel "📝 Lines of Code")
+
+**Was du siehst:**
+- Admin-Panel → Analytics → Kachel "Lines of Code"
+- Zeigt **LIVE** Zahlen (aktuell aus Git)
+
+**Wie es funktioniert:**
+```
+Frontend (AdminAnalytics.tsx)
+  ↓
+  useAnalytics() Hook
+  ↓
+  metricsService.getProjectMetrics()
+  ↓
+  codeMetricsService.getCodeMetrics()  ← Ruft Backend API!
+  ↓
+  fetch('http://localhost:3001/api/analytics/code-metrics')
+  ↓
+Backend (web/backend/src/index.ts)
+  ↓
+  Git Commands (git ls-files, git rev-list, etc.)
+  ↓
+  Zählt LOC, Files, Commits LIVE
+  ↓
+  Return JSON zu Frontend
+```
+
+**Code-Location:**
+- Frontend: `web/frontend/src/lib/services/analytics/codeMetricsService.browser.ts`
+- Backend: `web/backend/src/index.ts` (Zeile 38-194)
+
+**Fallback wenn Backend offline:**
+```typescript
+// codeMetricsService.browser.ts (Zeile 40-48)
+return {
+  loc: 46721,        // ← FAKE "Default" Wert!
+  files: 435,
+  commits: 234,
+  projectAge: { days: 17, startDate: '2025-09-24' }
+};
+```
+
+**Problem in Production:**
+- Backend läuft nur auf `localhost:3001` (Development)
+- In Production (Vercel/Netlify) → Backend nicht verfügbar
+- → Frontend zeigt **Fallback-Werte (46.721 LOC)** statt echte Zahlen!
+
+**Lösung:**
+1. Backend auf **Render.com** deployen (kostenlos, 750h/Monat)
+2. Frontend ENV updaten: `VITE_BACKEND_URL=https://degixdaw-backend.onrender.com`
+3. `codeMetricsService.browser.ts` nutzt Production-URL
+
+---
+
+### 🟢 CHART LOC (GrowthChart mit Snapshots)
+
+**Was du siehst:**
+- Admin-Panel → Analytics → Chart "📈 Growth Timeline"
+- Zeigt **historische** Snapshots (täglich von GitHub Actions)
+
+**Wie es funktioniert:**
+```
+GitHub Actions (täglich 00:00 UTC)
+  ↓
+  .github/workflows/daily-snapshot.yml
+  ↓
+  web/frontend/scripts/analytics/create-snapshot-github-actions.js
+  ↓
+  Git Commands (KOSTENLOS! Kein API!)
+  ↓
+  Zählt LOC, Files, Commits, Language-Breakdown
+  ↓
+  Schreibt in Supabase (project_snapshots Tabelle)
+  ↓
+Frontend (GrowthChart.tsx)
+  ↓
+  snapshotsService.getSnapshots(30)  ← Lädt letzte 30 Snapshots
+  ↓
+  Supabase Query (SELECT * FROM project_snapshots)
+  ↓
+  Chart zeigt historische Daten (z.B. 93.793 LOC am neuesten Tag)
+```
+
+**Code-Location:**
+- GitHub Actions: `.github/workflows/daily-snapshot.yml`
+- Snapshot-Script: `web/frontend/scripts/analytics/create-snapshot-github-actions.js`
+- Frontend Service: `web/frontend/src/lib/services/analytics/snapshotsService.ts`
+- Chart Component: `web/frontend/src/components/admin/analytics/GrowthChart.tsx`
+
+**Warum Chart andere LOC zeigt als Kachel:**
+
+| Quelle | LOC | Grund |
+|--------|-----|-------|
+| **LIVE Kachel** | 46.721 (Fallback) | Backend offline → Fake-Wert |
+| **Chart Snapshot** | 93.793 (echt) | GitHub Actions zählt **komplettes Repo** (inkl. `web/`, `desktop/`, `docs/`) |
+
+**Unterschied:**
+- **Lokales Backend**: Zählt nur ab `web/frontend/` + `web/backend/` (wegen Path-Logic)
+- **GitHub Actions**: Zählt **Root-Verzeichnis** (komplettes Repo)
+
+---
+
+### 🎯 "📸 Snapshot" Button im Admin-Panel
+
+**Was passiert aktuell:**
+```typescript
+// AdminAnalytics.tsx (Zeile 128)
+const handleCreateSnapshot = async () => {
+  const snapshot = await createSnapshot();  // ← snapshotsService.createSnapshot()
+}
+
+// snapshotsService.ts
+export async function createSnapshot() {
+  const metrics = await getProjectMetrics();  // ← Holt nur DB-Metrics (Users, Messages, Issues)
+  // LOC fehlt! (Kein Git im Browser)
+  await supabase.from('project_snapshots').insert({ ...metrics });
+}
+```
+
+**Problem:**
+- Frontend kann **KEINE Git-Commands** ausführen → LOC fehlt!
+- Snapshot enthält nur: Users, Messages, Issues (OHNE Code-Metriken)
+
+**Warum Backend gebraucht wird:**
+- Backend kann Git-Commands ausführen
+- "📸 Snapshot" Button soll **kompletten Snapshot** (inkl. LOC) erstellen
+- **ABER:** Backend läuft nur lokal → In Production nicht verfügbar!
+
+**Lösungen:**
+
+1. **Render.com Backend** (⭐ Empfohlen):
+   - Deploy Backend auf Render.com (kostenlos)
+   - Frontend ruft Render-URL statt localhost
+   - "📸 Snapshot" Button funktioniert in Production
+
+2. **GitHub Actions Workflow Dispatch**:
+   - "📸 Snapshot" Button triggert GitHub Actions via API
+   - Nutzt existierendes Script (kein Backend nötig!)
+   - 100% kostenlos
+
+3. **Supabase Edge Function** (Umbau erforderlich):
+   - Edge Function hat **kein Git** → Muss GitHub API nutzen statt Git-Commands
+   - Aufwendiger Umbau (~30min)
+
+---
+
+### 📋 Zusammenfassung (Für Claude!)
+
+**Wenn du Analytics-Zahlen siehst, beachte:**
+
+1. **Kachel LOC ≠ Chart LOC** ist NORMAL!
+   - Kachel = LIVE (Backend API oder Fallback)
+   - Chart = Snapshots (GitHub Actions)
+
+2. **Fallback-Wert 46.721** bedeutet:
+   - Backend nicht erreichbar
+   - In Development: `npm run dev:backend` fehlt
+   - In Production: Backend nicht deployed
+
+3. **Chart zeigt echte Zahlen** (z.B. 93.793):
+   - Kommt von GitHub Actions Snapshots
+   - Läuft täglich automatisch
+   - Zählt komplettes Repo (mehr Files als lokales Backend)
+
+4. **Backend ist WICHTIG für:**
+   - LIVE LOC in Kachel (ohne Fallback)
+   - "📸 Snapshot" Button (manueller Snapshot)
+
+5. **Deployment-Status:**
+   - ❌ Backend: Nur lokal (`localhost:3001`)
+   - ✅ Frontend: Vercel/Netlify
+   - ✅ GitHub Actions: Läuft täglich
+   - ✅ Supabase: Snapshots gespeichert
+
+**Dokumentation:**
+- Vollständige Doku: `web/frontend/docs/ANALYTICS_SYSTEM.md`
+- Backend Code: `web/backend/src/index.ts` (Analytics Endpoint)
+- GitHub Actions: `.github/workflows/daily-snapshot.yml`
+
+---
+
+## 🐛 Claude Issue Creation - Wie es funktioniert
+
+**WICHTIG:** Issues schnell und einfach erstellen via CLI!
+
+### ✅ **Single Issue erstellen (CLI)**
+
+```bash
+cd web/frontend
+node scripts/claude-create-issue.js "Titel" "Beschreibung" [category] [priority] [labels] [status]
+```
+
+**Beispiele:**
+```bash
+# Minimal (nutzt Defaults: category=feature, priority=medium, status=open)
+node scripts/claude-create-issue.js "🔊 Sound Toggle" "Toggle im Header"
+
+# Komplett
+node scripts/claude-create-issue.js "🔊 Sound Toggle" "Toggle im Header neben Darkmode" feature low "enhancement,ux" open
+```
+
+**Defaults:**
+- `category`: `feature`
+- `priority`: `medium`
+- `labels`: `` (leer)
+- `status`: `open`
+
+**Script-Location:** `web/frontend/scripts/claude-create-issue.js`
+
+---
+
+### 🔄 **Batch Issues erstellen**
+
+Für mehrere Issues auf einmal → Editiere `web/frontend/scripts/claude-create-issue-batch.js`:
+
+```javascript
+const issues = [
+  { title: '...', description: '...', category: 'refactoring', priority: 'high', labels: ['refactoring'], status: 'open' },
+  { title: '...', description: '...', category: 'feature', priority: 'medium', labels: ['enhancement'], status: 'open' }
+];
+```
+
+```bash
+cd web/frontend
+node scripts/claude-create-issue-batch.js
+```
+
+---
+
+### �� **Wie es technisch funktioniert**
+
+**1. RPC Function für User-ID Lookup:**
+```sql
+-- web/frontend/scripts/sql/get_user_id_by_email.sql
+CREATE OR REPLACE FUNCTION get_user_id_by_email(user_email TEXT)
+RETURNS UUID AS $$
+  SELECT p.id FROM auth.users u
+  JOIN profiles p ON p.id = u.id
+  WHERE u.email = user_email LIMIT 1;
+$$ LANGUAGE sql SECURITY DEFINER;
+```
+
+**2. Script nutzt Service Role Key:**
+```javascript
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY  // Bypasses RLS!
+);
+
+// Get User ID via RPC
+const { data: userId } = await supabase.rpc('get_user_id_by_email', {
+  user_email: process.env.VITE_SUPER_ADMIN_EMAIL
+});
+
+// Insert Issue
+await supabase.from('issues').insert({
+  title, description, category, priority, labels, status,
+  created_by: userId  // Required!
+});
+```
+
+**3. Environment Variables (Required):**
+```env
+# web/frontend/.env
+VITE_SUPABASE_URL=https://...
+VITE_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...  # Für Issue-Creation!
+VITE_SUPER_ADMIN_EMAIL=...     # Für User-ID Lookup
+```
+
+---
+
+### ⚠️ **Wichtige Regeln für Claude**
+
+**Issue-Text:** Kurz und knackig!
+```
+✅ GOOD: "688 Zeilen, 11x useState\nExtract: Components + Hooks + Utils"
+❌ BAD:  "This is a very long description explaining in detail what..."
+```
+
+**Titles:** Max 50 Zeichen, Emoji OK
+```
+✅ GOOD: "🔊 Sound Toggle Button im Header"
+❌ BAD:  "Implement a comprehensive sound notification toggle system..."
+```
+
+**Labels:** Komma-separiert
+```bash
+# Korrekt
+node scripts/claude-create-issue.js "Title" "Desc" feature low "enhancement,ux,public" open
+
+# NICHT mit Spaces!
+"enhancement, ux"  # ❌ Falsch → 3 Labels: "enhancement", " ux"
+```
+
+---
+
+### 📋 **Verfügbare Optionen**
+
+**Categories:**
+- `feature`, `bug`, `refactoring`, `docs`, `testing`, `enhancement`
+
+**Priorities:**
+- `low`, `medium`, `high`, `critical`
+
+**Status:**
+- `open`, `in_progress`, `done`, `closed`
+
+**Labels (Beispiele):**
+- `bug`, `feature`, `urgent`, `docs`, `enhancement`, `question`, `refactoring`, `ux`, `public`
+
+---
+
+### 🎯 **Nächstes Mal wenn du Issues willst:**
+
+1. **Ein Issue:** One-Liner ausführen
+2. **Mehrere Issues:** Batch-Script editieren + ausführen
+3. **Kein manuelles Kopieren** mehr nötig!
+
+**Fertig in 5 Sekunden!** 🎉
 
 ## 🎯 DegixDAW Vision & Alleinstellungsmerkmale
 

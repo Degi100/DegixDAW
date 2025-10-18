@@ -1,73 +1,33 @@
 #!/usr/bin/env node
-// Claude creates an issue directly via issuesService
+/**
+ * Claude Single Issue Creator - CLI Version
+ *
+ * Usage:
+ *   node scripts/claude-create-issue.js "Title" "Description" [category] [priority] [labels] [status]
+ */
+
 import { createClient } from '@supabase/supabase-js';
 import { config } from 'dotenv';
 
 config();
 
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,
-  process.env.VITE_SUPABASE_ANON_KEY
-);
+const [title, description, category = 'feature', priority = 'medium', labelsStr = '', status = 'open'] = process.argv.slice(2);
 
-console.log('🤖 Claude is creating an issue...\n');
-
-// Get current user (you need to be logged in!)
-const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-if (authError || !user) {
-  console.error('❌ Not authenticated! Please login first.');
-  console.log('   Tip: Open http://localhost:5173 and login as admin\n');
+if (!title || !description) {
+  console.error('❌ Usage: node scripts/claude-create-issue.js "Title" "Description" [category] [priority] [labels] [status]\n');
   process.exit(1);
 }
 
-console.log(`✅ Authenticated as: ${user.email}\n`);
+const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const { data: userId } = await supabase.rpc('get_user_id_by_email', { user_email: process.env.VITE_SUPER_ADMIN_EMAIL });
 
-// Create test issue
-const issueData = {
-  title: '🤖 Test Issue created by Claude',
-  description: `This is a test issue created directly by Claude AI via issuesService.
-
-**Purpose:** Testing Claude ↔ Issues Integration
-
-**Next Steps:**
-- Verify issue appears in Admin Panel
-- Test Claude can read this issue
-- Test Claude can update/comment on it
-
-**Technical Details:**
-- Created via: issuesService.createIssue()
-- Created by: ${user.email}
-- Timestamp: ${new Date().toISOString()}`,
-  priority: 'high',
-  category: 'Testing',
-  labels: ['feature', 'urgent'],
-  status: 'open'
-};
-
-const { data: issue, error: createError } = await supabase
-  .from('issues')
-  .insert({
-    ...issueData,
-    created_by: user.id,
-    labels: issueData.labels,
-  })
-  .select()
-  .single();
-
-if (createError) {
-  console.error('❌ Failed to create issue:', createError.message);
+if (!userId) {
+  console.error('❌ User not found');
   process.exit(1);
 }
 
-console.log('✅ Issue created successfully!\n');
-console.log('📋 Issue Details:');
-console.log(`   ID: ${issue.id}`);
-console.log(`   Title: ${issue.title}`);
-console.log(`   Status: ${issue.status}`);
-console.log(`   Priority: ${issue.priority}`);
-console.log(`   Labels: ${issue.labels.join(', ')}`);
-console.log(`\n🌐 View in Admin Panel:`);
-console.log(`   http://localhost:5173/admin/issues\n`);
+const labels = labelsStr ? labelsStr.split(',').map(l => l.trim()) : [];
+const issue = { title, description, category, priority, labels, status, created_by: userId };
 
-console.log('💬 Now respond with your feedback!\n');
+const { error } = await supabase.from('issues').insert(issue);
+console.log(error ? `❌ ${error.message}` : `✅ ${title}\n🌐 http://localhost:5173/admin/issues`);
