@@ -76,6 +76,9 @@ export async function createTrack(data: CreateTrackRequest): Promise<Track | nul
       trackNumber = existingTracks.length + 1;
     }
 
+    // Get current user for created_by
+    const { data: { user } } = await supabase.auth.getUser();
+
     const trackData = {
       project_id: data.project_id,
       name: data.name,
@@ -88,11 +91,11 @@ export async function createTrack(data: CreateTrackRequest): Promise<Track | nul
       file_size: data.file_size || null,
       waveform_data: data.waveform_data || null,
       color: data.color || null,
-      is_muted: false,
-      is_soloed: false,
-      volume: 100,
-      pan: 0,
-      metadata: data.metadata || {},
+      muted: false, // DB column is 'muted', not 'is_muted'
+      soloed: false, // DB column is 'soloed', not 'is_soloed'
+      volume_db: 0.0, // DB uses volume_db (float), not volume (0-100)
+      pan: 0.0, // DB uses float -1 to 1, not -100 to 100
+      created_by: user?.id || null,
     };
 
     const { data: track, error } = await supabase

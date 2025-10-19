@@ -18,19 +18,23 @@ export interface Track {
   track_number: number;
   track_type: TrackType;
   file_path?: string | null;
+  file_url?: string | null;
   duration_ms?: number | null;
   sample_rate?: number | null;
+  bit_depth?: number | null;
   channels?: number | null;
   file_size?: number | null;
   waveform_data?: WaveformData | null;
-  is_muted: boolean;
-  is_soloed: boolean;
-  volume: number; // 0-100
-  pan: number; // -100 to 100 (L to R)
+  midi_data?: Record<string, any> | null;
+  muted: boolean; // DB column name
+  soloed: boolean; // DB column name
+  volume_db: number; // DB uses dB (-60 to +12)
+  pan: number; // DB uses float (-1.0 to 1.0)
   color?: string | null;
+  effects?: any[] | null;
   created_at: string;
   updated_at: string;
-  metadata?: Record<string, any>;
+  created_by?: string | null;
 }
 
 // ============================================
@@ -56,17 +60,19 @@ export interface UpdateTrackRequest {
   name?: string;
   track_number?: number;
   file_path?: string;
+  file_url?: string;
   duration_ms?: number;
   sample_rate?: number;
+  bit_depth?: number;
   channels?: number;
   file_size?: number;
   waveform_data?: WaveformData;
-  is_muted?: boolean;
-  is_soloed?: boolean;
-  volume?: number;
-  pan?: number;
+  muted?: boolean; // DB column name
+  soloed?: boolean; // DB column name
+  volume_db?: number; // DB uses dB
+  pan?: number; // DB uses float
   color?: string;
-  metadata?: Record<string, any>;
+  effects?: any[];
 }
 
 // ============================================

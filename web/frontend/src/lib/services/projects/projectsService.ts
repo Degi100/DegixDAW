@@ -72,8 +72,8 @@ export async function getProjects(
       .from('projects')
       .select('*');
 
-    // Filter: Only projects user owns or collaborates on
-    query = query.or(`creator_id.eq.${user.id},id.in.(select project_id from project_collaborators where user_id='${user.id}')`);
+    // Filter: Only projects user owns (for now, collaborators feature comes later)
+    query = query.eq('creator_id', user.id);
 
     // Apply additional filters
     if (options?.filter) {
