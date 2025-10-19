@@ -5,7 +5,12 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import WaveformCanvas from './WaveformCanvas';
+import CommentMarkers from './CommentMarkers';
+import CommentsList from './CommentsList';
+import AddCommentModal from './AddCommentModal';
 import Button from '../ui/Button';
+import { useTrackComments } from '../../hooks/useTrackComments';
+import { supabase } from '../../lib/supabase';
 import type { Track } from '../../types/tracks';
 
 interface AudioPlayerProps {
@@ -24,8 +29,32 @@ export default function AudioPlayer({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
+  const [pan, setPan] = useState(track.pan); // -1.0 (L) to 1.0 (R)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showComments, setShowComments] = useState(false);
+  const [showAddComment, setShowAddComment] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Comments hook
+  const {
+    comments,
+    create: createComment,
+    update: updateComment,
+    remove: deleteComment,
+    toggleResolved,
+    unresolvedCount,
+  } = useTrackComments(track.id);
+
+  // ============================================
+  // Get Current User
+  // ============================================
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUserId(data.user?.id || null);
+    });
+  }, []);
 
   // ============================================
   // Audio URL (from track.file_url or fetch signed URL)
@@ -131,6 +160,13 @@ export default function AudioPlayer({
     setVolume(vol);
   }, []);
 
+  const handlePanChange = useCallback((newPan: number) => {
+    const p = Math.max(-1, Math.min(1, newPan));
+    setPan(p);
+    // Note: HTML5 audio doesn't support pan directly
+    // Pan will be saved to DB but not applied in playback (would need Web Audio API)
+  }, []);
+
   const handleSkip = useCallback((seconds: number) => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -138,6 +174,38 @@ export default function AudioPlayer({
     const newTime = Math.max(0, Math.min(duration, currentTime + seconds));
     audio.currentTime = newTime;
   }, [currentTime, duration]);
+
+  // ============================================
+  // Comment Handlers
+  // ============================================
+
+  const handleAddComment = useCallback(() => {
+    // Pause playback to freeze timestamp
+    if (isPlaying) {
+      togglePlayPause();
+    }
+    setShowAddComment(true);
+  }, [isPlaying, togglePlayPause]);
+
+  const handleSubmitComment = useCallback(async (content: string) => {
+    const timestampMs = Math.round(currentTime * 1000);
+    await createComment({ timestamp_ms: timestampMs, content });
+    setShowAddComment(false);
+
+    // Resume playback after adding comment
+    if (!isPlaying && audioRef.current) {
+      togglePlayPause();
+    }
+  }, [currentTime, createComment, isPlaying, togglePlayPause]);
+
+  const handleCommentClick = useCallback((comment: any) => {
+    // Jump to comment timestamp
+    handleSeek(comment.timestamp_ms / 1000);
+  }, [handleSeek]);
+
+  const handleEditComment = useCallback(async (commentId: string, newContent: string) => {
+    await updateComment(commentId, { content: newContent });
+  }, [updateComment]);
 
   // ============================================
   // Format Helpers
@@ -186,21 +254,31 @@ export default function AudioPlayer({
             {track.track_type.toUpperCase()}
             {track.duration_ms && ` • ${formatTime(track.duration_ms / 1000)}`}
             {track.sample_rate && ` • ${(track.sample_rate / 1000).toFixed(1)}kHz`}
+            {track.bpm && ` • ${track.bpm} BPM`}
           </p>
         </div>
       </div>
 
-      {/* Waveform */}
+      {/* Waveform with Comment Markers */}
       {track.waveform_data && (
-        <div className="audio-player-waveform">
-          <WaveformCanvas
-            waveformData={track.waveform_data}
-            currentTime={currentTime}
-            duration={duration || (track.duration_ms ? track.duration_ms / 1000 : 0)}
-            onSeek={handleSeek}
-            color={track.color || '#4a90e2'}
-            progressColor={track.color ? adjustBrightness(track.color, -20) : '#357abd'}
-          />
+        <div className="audio-player-waveform-container">
+          <div className="audio-player-waveform">
+            <WaveformCanvas
+              waveformData={track.waveform_data}
+              currentTime={currentTime}
+              duration={duration || (track.duration_ms ? track.duration_ms / 1000 : 0)}
+              onSeek={handleSeek}
+              color={track.color || '#4a90e2'}
+              progressColor={track.color ? adjustBrightness(track.color, -20) : '#357abd'}
+            />
+            <CommentMarkers
+              comments={comments}
+              duration={duration || (track.duration_ms ? track.duration_ms / 1000 : 0)}
+              width={800}
+              height={120}
+              onMarkerClick={handleCommentClick}
+            />
+          </div>
         </div>
       )}
 
@@ -269,7 +347,63 @@ export default function AudioPlayer({
           />
           <span className="volume-percentage">{Math.round(volume * 100)}%</span>
         </div>
+
+        {/* Pan Control */}
+        <div className="pan-control">
+          <span className="pan-label">Pan:</span>
+          <input
+            type="range"
+            min="-1"
+            max="1"
+            step="0.01"
+            value={pan}
+            onChange={(e) => handlePanChange(parseFloat(e.target.value))}
+            className="pan-slider"
+            title={`Pan: ${pan === 0 ? 'Center' : pan < 0 ? `${Math.abs(pan * 100).toFixed(0)}% L` : `${(pan * 100).toFixed(0)}% R`}`}
+          />
+          <span className="pan-value">
+            {pan === 0 ? 'C' : pan < 0 ? `${Math.abs(pan * 100).toFixed(0)}L` : `${(pan * 100).toFixed(0)}R`}
+          </span>
+        </div>
       </div>
+
+      {/* Comments Section */}
+      <div className="audio-player-comments-section">
+        <div className="comments-header">
+          <button
+            className="comments-toggle"
+            onClick={() => setShowComments(!showComments)}
+          >
+            💬 Comments ({comments.length})
+            {unresolvedCount > 0 && (
+              <span className="unresolved-badge">{unresolvedCount} unresolved</span>
+            )}
+          </button>
+          <Button variant="secondary" onClick={handleAddComment}>
+            ➕ Add Comment at {formatTime(currentTime)}
+          </Button>
+        </div>
+
+        {showComments && (
+          <CommentsList
+            comments={comments}
+            onCommentClick={handleCommentClick}
+            onToggleResolved={toggleResolved}
+            onDelete={deleteComment}
+            onEdit={handleEditComment}
+            currentUserId={currentUserId || undefined}
+          />
+        )}
+      </div>
+
+      {/* Add Comment Modal */}
+      {showAddComment && (
+        <AddCommentModal
+          timestampMs={Math.round(currentTime * 1000)}
+          onSubmit={handleSubmitComment}
+          onCancel={() => setShowAddComment(false)}
+        />
+      )}
 
       {/* Loading State */}
       {loading && (

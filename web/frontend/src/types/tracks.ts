@@ -27,6 +27,7 @@ export interface Track {
   bit_depth?: number | null;
   channels?: number | null;
   file_size?: number | null;
+  bpm?: number | null; // Detected BPM
   waveform_data?: WaveformData | null;
   midi_data?: Record<string, any> | null;
   muted: boolean; // DB column name
@@ -54,6 +55,7 @@ export interface CreateTrackRequest {
   sample_rate?: number | undefined;
   channels?: number | undefined;
   file_size?: number | undefined;
+  bpm?: number | undefined;
   waveform_data?: WaveformData | undefined;
   color?: string | undefined;
   metadata?: Record<string, any> | undefined;
@@ -103,18 +105,26 @@ export interface TrackUploadResult {
 export interface TrackComment {
   id: string;
   track_id: string;
-  user_id: string;
+  author_id: string; // DB column name (references auth.users)
   timestamp_ms: number;
   content: string;
   is_resolved: boolean;
   created_at: string;
   updated_at: string;
+  // Populated fields (not in DB)
+  username?: string;
+  avatar_url?: string;
 }
 
 export interface CreateTrackCommentRequest {
   track_id: string;
   timestamp_ms: number;
   content: string;
+}
+
+export interface UpdateTrackCommentRequest {
+  content?: string | undefined;
+  is_resolved?: boolean | undefined;
 }
 
 // ============================================

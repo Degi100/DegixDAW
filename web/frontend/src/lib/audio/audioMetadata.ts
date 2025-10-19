@@ -3,14 +3,17 @@
 // Extract metadata from audio files using Web Audio API
 // ============================================
 
+import * as detector from 'web-audio-beat-detector';
+
 export interface AudioMetadata {
   duration: number; // in seconds
   sampleRate: number; // e.g., 44100, 48000
   numberOfChannels: number; // 1 = mono, 2 = stereo
-  bitDepth?: number; // Not available in Web Audio API
-  format?: string; // e.g., 'audio/mpeg', 'audio/wav'
+  bitDepth?: number | undefined; // Not available in Web Audio API
+  format?: string | undefined; // e.g., 'audio/mpeg', 'audio/wav'
   fileName: string;
   fileSize: number; // in bytes
+  bpm?: number | undefined; // Beats per minute (detected)
 }
 
 export interface WaveformData {
@@ -32,6 +35,19 @@ export async function extractAudioMetadata(file: File): Promise<AudioMetadata> {
         const arrayBuffer = e.target?.result as ArrayBuffer;
         const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
+        // Detect BPM
+        let bpm: number | undefined = undefined;
+        try {
+          const result = await detector.analyze(audioBuffer);
+          // Library returns number (BPM) directly
+          if (typeof result === 'number') {
+            bpm = Math.round(result);
+          }
+        } catch (error) {
+          console.warn('BPM detection failed:', error);
+          // Continue without BPM
+        }
+
         const metadata: AudioMetadata = {
           duration: audioBuffer.duration,
           sampleRate: audioBuffer.sampleRate,
@@ -39,6 +55,7 @@ export async function extractAudioMetadata(file: File): Promise<AudioMetadata> {
           format: file.type,
           fileName: file.name,
           fileSize: file.size,
+          bpm,
         };
 
         // Close context to free resources

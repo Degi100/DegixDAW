@@ -125,6 +125,7 @@ export async function createTrack(data: CreateTrackRequest): Promise<Track | nul
       sample_rate: data.sample_rate || null,
       channels: data.channels || null,
       file_size: data.file_size || null,
+      bpm: data.bpm || null, // BPM from web-audio-beat-detector
       waveform_data: data.waveform_data || null,
       color: data.color || null,
       muted: false, // DB column is 'muted', not 'is_muted'
@@ -178,11 +179,13 @@ export async function uploadAudioTrack(
       sample_rate: metadata.sampleRate,
       channels: metadata.numberOfChannels,
       file_size: metadata.fileSize,
+      bpm: metadata.bpm, // BPM from detection
       waveform_data: waveform,
       color,
       metadata: {
         originalFileName: metadata.fileName,
         format: metadata.format,
+        bpm: metadata.bpm, // Also store in metadata
       },
     });
 

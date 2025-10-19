@@ -10,16 +10,19 @@ import { useTracks } from '../../hooks/useTracks';
 import Button from '../../components/ui/Button';
 import TrackUploadZone from '../../components/tracks/TrackUploadZone';
 import AudioPlayer from '../../components/audio/AudioPlayer';
+import TrackSettingsModal from '../../components/tracks/TrackSettingsModal';
+import type { Track, UpdateTrackRequest } from '../../types/tracks';
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { project, loading, error } = useProject(id || null);
-  const { tracks, uploading, upload, remove } = useTracks(id || null);
+  const { tracks, uploading, upload, remove, update } = useTracks(id || null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedTrackIds, setSelectedTrackIds] = useState<Set<string>>(new Set());
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [settingsTrack, setSettingsTrack] = useState<Track | null>(null);
 
   useEffect(() => {
     if (!id) {
@@ -57,6 +60,20 @@ export default function ProjectDetailPage() {
     }
     setSelectedTrackIds(new Set());
     setShowDeleteConfirm(false);
+  };
+
+  // ============================================
+  // Track Settings Handler
+  // ============================================
+
+  const handleTrackSettings = (track: Track) => {
+    setSettingsTrack(track);
+  };
+
+  const handleSaveTrackSettings = async (updates: UpdateTrackRequest) => {
+    if (!settingsTrack) return;
+    // Convert UpdateTrackRequest to Partial<Track> for the hook
+    await update(settingsTrack.id, updates as Partial<Track>);
   };
 
   if (loading) {
@@ -233,6 +250,7 @@ export default function ProjectDetailPage() {
                     <div className="track-actions">
                       <button
                         className="track-action-btn"
+                        onClick={() => handleTrackSettings(track)}
                         title="Track settings"
                       >
                         ⚙️
@@ -322,6 +340,15 @@ export default function ProjectDetailPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Track Settings Modal */}
+        {settingsTrack && (
+          <TrackSettingsModal
+            track={settingsTrack}
+            onClose={() => setSettingsTrack(null)}
+            onSave={handleSaveTrackSettings}
+          />
         )}
       </div>
 

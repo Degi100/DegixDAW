@@ -47,5 +47,8 @@
     "supabase"
   ],
   "author": "DegixDAW Team",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "web-audio-beat-detector": "^8.2.31"
+  }
 }

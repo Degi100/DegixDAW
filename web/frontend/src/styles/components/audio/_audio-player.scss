@@ -223,6 +223,80 @@
   }
 
   // ============================================
+  // PAN CONTROL
+  // ============================================
+  .pan-control {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 160px;
+
+    @media (max-width: 768px) {
+      min-width: auto;
+    }
+
+    .pan-label {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+
+    .pan-slider {
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--bg-tertiary);
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+
+      &::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          transform: scale(1.2);
+          background: var(--primary-color-hover);
+        }
+      }
+
+      &::-moz-range-thumb {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s ease;
+
+        &:hover {
+          transform: scale(1.2);
+          background: var(--primary-color-hover);
+        }
+      }
+    }
+
+    .pan-value {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-family: 'Courier New', monospace;
+      min-width: 35px;
+      text-align: right;
+      flex-shrink: 0;
+
+      @media (max-width: 768px) {
+        display: none;
+      }
+    }
+  }
+
+  // ============================================
   // LOADING STATE
   // ============================================
   .audio-player-loading {
@@ -269,6 +343,92 @@
       margin: 0;
       font-size: 0.875rem;
     }
+  }
+
+  // ============================================
+  // COMMENTS SECTION
+  // ============================================
+  .audio-player-comments-section {
+    border-top: 1px solid var(--border-color);
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+
+    .comments-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+      }
+
+      .comments-toggle {
+        background: none;
+        border: none;
+        color: var(--text-primary);
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: color 0.2s ease;
+
+        &:hover {
+          color: var(--primary-color);
+        }
+
+        .unresolved-badge {
+          background: var(--error-color);
+          color: white;
+          padding: 0.25rem 0.5rem;
+          border-radius: var(--radius-full);
+          font-size: 0.75rem;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+}
+
+// ============================================
+// ADD COMMENT MODAL
+// ============================================
+.add-comment-modal {
+  max-width: 600px;
+
+  .comment-input {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.6;
+    resize: vertical;
+    margin-bottom: 1.5rem;
+
+    &:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px var(--primary-color-alpha-10);
+    }
+
+    &::placeholder {
+      color: var(--text-tertiary);
+    }
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
   }
 }
 
