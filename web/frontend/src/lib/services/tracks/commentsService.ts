@@ -16,7 +16,8 @@ import type {
 
 export async function getTrackComments(trackId: string): Promise<TrackComment[]> {
   try {
-    const { data, error } = await supabase
+    // Step 1: Get comments
+    const { data: comments, error } = await supabase
       .from('track_comments')
       .select(`
         id,
@@ -36,9 +37,33 @@ export async function getTrackComments(trackId: string): Promise<TrackComment[]>
       throw error;
     }
 
-    // Note: auth.users is not publicly accessible, so username/avatar_url
-    // will be fetched separately via profiles table (TODO: add RPC function)
-    return data || [];
+    if (!comments || comments.length === 0) return [];
+
+    // Step 2: Get unique author IDs
+    const authorIds = [...new Set(comments.map((c) => c.author_id))];
+
+    // Step 3: Fetch profiles for all authors
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, username, avatar_url')
+      .in('id', authorIds);
+
+    if (profilesError) {
+      console.error('Error fetching profiles:', profilesError);
+      // Continue without profiles
+    }
+
+    // Step 4: Map profiles to comments
+    const profilesMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+
+    return comments.map((comment) => {
+      const profile = profilesMap.get(comment.author_id);
+      return {
+        ...comment,
+        username: profile?.username || null,
+        avatar_url: profile?.avatar_url || null,
+      };
+    });
   } catch (error) {
     console.error('getTrackComments failed:', error);
     return [];

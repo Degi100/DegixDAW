@@ -1,0 +1,27 @@
+--- a/projectsService.ts
++++ b/projectsService.ts
+@@ -46,6 +46,26 @@ export async function createProject(data: CreateProjectRequest): Promise<Projec
+       throw error;
+     }
+ 
++    // Auto-add creator as ADMIN collaborator
++    await supabase
++      .from('project_collaborators')
++      .insert({
++        project_id: project.id,
++        user_id: user.id,
++        role: 'admin',
++        can_edit: true,
++        can_download: true,
++        can_upload_audio: true,
++        can_upload_mixdown: true,
++        can_comment: true,
++        can_invite_others: true,
++        invited_by: user.id,
++        invited_at: new Date().toISOString(),
++        accepted_at: new Date().toISOString(), // Auto-accept for creator
++      });
++
+     return project;
+   } catch (error) {
+     console.error('createProject failed:', error);
