@@ -16,7 +16,7 @@ interface TrackUploadZoneProps {
 }
 
 export default function TrackUploadZone({
-  projectId,
+  projectId: _projectId,
   onUploadStart,
   onUploadComplete,
   onUploadError,
@@ -179,9 +179,8 @@ export default function TrackUploadZone({
             variant="secondary"
             onClick={handleBrowseClick}
             disabled={disabled}
-            icon="📁"
           >
-            Browse Files
+            📁 Browse Files
           </Button>
         )}
       </div>

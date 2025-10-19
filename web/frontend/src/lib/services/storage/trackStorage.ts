@@ -15,8 +15,8 @@ export interface UploadProgress {
 
 export interface UploadResult {
   path: string;
-  publicUrl?: string;
-  signedUrl?: string;
+  publicUrl?: string | undefined;
+  signedUrl?: string | undefined;
 }
 
 // ============================================
@@ -27,7 +27,7 @@ export async function uploadTrackFile(
   projectId: string,
   trackId: string,
   file: File,
-  onProgress?: (progress: UploadProgress) => void
+  _onProgress?: (progress: UploadProgress) => void
 ): Promise<UploadResult> {
   try {
     // Generate file path: projects/{projectId}/tracks/{trackId}/{filename}

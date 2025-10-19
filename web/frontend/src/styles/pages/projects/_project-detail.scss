@@ -247,40 +247,256 @@
     }
   }
 
-  // Tracks List (Simple view until we build proper TrackList component)
-  .tracks-list {
-    h3 {
-      margin: 0 0 1.5rem 0;
-      font-size: 1.25rem;
-      color: var(--text-primary);
-    }
-
-    .track-item {
+  // ============================================
+  // TRACKS SECTION (With Audio Players)
+  // ============================================
+  .tracks-section {
+    .tracks-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+
+      h2 {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .tracks-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        .selection-count {
+          font-size: 0.875rem;
+          color: var(--primary-color);
+          font-weight: 600;
+        }
+      }
+    }
+
+    // ============================================
+    // BULK ACTION BAR
+    // ============================================
+    .bulk-action-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      background: var(--primary-color-alpha-10);
+      border: 1px solid var(--primary-color);
+      border-radius: var(--radius-md);
+      margin-bottom: 1.5rem;
+
+      .bulk-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        .btn-link {
+          background: none;
+          border: none;
+          color: var(--primary-color);
+          font-weight: 600;
+          cursor: pointer;
+          font-size: 0.875rem;
+          text-decoration: underline;
+          transition: opacity 0.2s ease;
+
+          &:hover {
+            opacity: 0.8;
+          }
+        }
+      }
+
+      .bulk-actions {
+        display: flex;
+        gap: 0.75rem;
+      }
+    }
+
+    .tracks-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .track-card {
       background: var(--bg-primary);
       border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      margin-bottom: 0.75rem;
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
       transition: all 0.2s ease;
 
       &:hover {
         border-color: var(--primary-color);
+        box-shadow: var(--shadow-md);
+      }
+
+      &.selected {
+        border-color: var(--primary-color);
         background: var(--primary-color-alpha-5);
       }
 
-      span:first-child {
-        font-weight: 500;
+      .track-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+
+        .track-header-left {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+
+          .track-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--primary-color);
+          }
+
+          .track-number {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            padding: 0.25rem 0.75rem;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-full);
+          }
+        }
+
+        .track-actions {
+          display: flex;
+          gap: 0.5rem;
+
+          .track-action-btn {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            opacity: 0.6;
+            transition: all 0.2s ease;
+
+            &:hover {
+              opacity: 1;
+              transform: scale(1.1);
+            }
+          }
+        }
+      }
+    }
+
+  }
+
+  // ============================================
+  // UPLOAD MODAL
+  // ============================================
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+  }
+
+  .track-upload-modal {
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: auto;
+    box-shadow: var(--shadow-xl);
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+
+      h2 {
+        margin: 0;
+        font-size: 1.5rem;
         color: var(--text-primary);
       }
 
-      span:last-child {
+      .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
         color: var(--text-secondary);
-        font-size: 0.9rem;
+        padding: 0.25rem;
+        transition: all 0.2s ease;
+
+        &:hover {
+          color: var(--text-primary);
+          transform: scale(1.1);
+        }
       }
     }
+
+    .modal-body {
+      padding: 2rem;
+
+      .warning-text {
+        margin: 0 0 2rem 0;
+        font-size: 1rem;
+        color: var(--text-primary);
+        line-height: 1.6;
+
+        strong {
+          color: var(--error-color);
+        }
+      }
+
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+      }
+
+      .upload-status {
+        margin-top: 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+
+        .upload-spinner {
+          width: 40px;
+          height: 40px;
+          border: 3px solid var(--border-color);
+          border-top-color: var(--primary-color);
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+        }
+
+        p {
+          margin: 0;
+          color: var(--text-secondary);
+          font-size: 0.95rem;
+        }
+      }
+    }
+  }
+
+  .delete-confirm-modal {
+    max-width: 500px;
   }
 
   // ============================================

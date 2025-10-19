@@ -38,9 +38,8 @@ export default function ProjectsListPage() {
         <Button
           variant="primary"
           onClick={() => setIsCreateModalOpen(true)}
-          icon="+"
         >
-          New Project
+          + New Project
         </Button>
       </div>
 

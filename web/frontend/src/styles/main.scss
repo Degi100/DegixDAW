@@ -32,6 +32,8 @@
 @use 'file-browser';
 @use 'components/projects/project-modal';
 @use 'components/tracks/track-upload-zone';
+@use 'components/audio/waveform-canvas';
+@use 'components/audio/audio-player';
 
 // 4. Pages
 @use 'pages/auth/auth-landing/index' as auth-landing;

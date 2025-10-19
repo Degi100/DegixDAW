@@ -9,19 +9,55 @@ import { useProject } from '../../hooks/useProjects';
 import { useTracks } from '../../hooks/useTracks';
 import Button from '../../components/ui/Button';
 import TrackUploadZone from '../../components/tracks/TrackUploadZone';
+import AudioPlayer from '../../components/audio/AudioPlayer';
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { project, loading, error } = useProject(id || null);
-  const { tracks, uploading, upload } = useTracks(id || null);
+  const { tracks, uploading, upload, remove } = useTracks(id || null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [selectedTrackIds, setSelectedTrackIds] = useState<Set<string>>(new Set());
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (!id) {
       navigate('/projects');
     }
   }, [id, navigate]);
+
+  // ============================================
+  // Track Selection Handlers
+  // ============================================
+
+  const toggleTrackSelection = (trackId: string) => {
+    setSelectedTrackIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(trackId)) {
+        next.delete(trackId);
+      } else {
+        next.add(trackId);
+      }
+      return next;
+    });
+  };
+
+  const selectAllTracks = () => {
+    setSelectedTrackIds(new Set(tracks.map((t) => t.id)));
+  };
+
+  const deselectAllTracks = () => {
+    setSelectedTrackIds(new Set());
+  };
+
+  const handleDeleteSelected = async () => {
+    for (const trackId of selectedTrackIds) {
+      await remove(trackId);
+    }
+    setSelectedTrackIds(new Set());
+    setShowDeleteConfirm(false);
+  };
 
   if (loading) {
     return (
@@ -57,17 +93,16 @@ export default function ProjectDetailPage() {
           <Button
             variant="secondary"
             onClick={() => navigate('/projects')}
-            icon="←"
           >
-            Back
+            ← Back
           </Button>
 
           <div className="header-actions">
             <span className="project-status" data-status={project.status}>
               {project.status}
             </span>
-            <Button variant="secondary" icon="⚙️">
-              Settings
+            <Button variant="secondary">
+              ⚙️ Settings
             </Button>
           </div>
         </div>
@@ -136,15 +171,156 @@ export default function ProjectDetailPage() {
             )}
           </div>
         ) : (
-          /* Track List - TODO: Create TrackList component */
-          <div className="tracks-list">
-            <h3>Tracks ({tracks.length})</h3>
-            {tracks.map((track) => (
-              <div key={track.id} className="track-item">
-                <span>{track.track_number}. {track.name}</span>
-                <span>{track.duration_ms ? `${Math.round(track.duration_ms / 1000)}s` : 'N/A'}</span>
+          /* Track List with Audio Players */
+          <div className="tracks-section">
+            <div className="tracks-header">
+              <h2>Tracks ({tracks.length})</h2>
+              <div className="tracks-header-actions">
+                {selectedTrackIds.size > 0 && (
+                  <span className="selection-count">
+                    {selectedTrackIds.size} selected
+                  </span>
+                )}
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowUploadModal(true)}
+                >
+                  ➕ Add Track
+                </Button>
               </div>
-            ))}
+            </div>
+
+            {/* Bulk Action Bar */}
+            {selectedTrackIds.size > 0 && (
+              <div className="bulk-action-bar">
+                <div className="bulk-info">
+                  <button className="btn-link" onClick={deselectAllTracks}>
+                    Deselect All
+                  </button>
+                  {selectedTrackIds.size < tracks.length && (
+                    <button className="btn-link" onClick={selectAllTracks}>
+                      Select All ({tracks.length})
+                    </button>
+                  )}
+                </div>
+                <div className="bulk-actions">
+                  <Button
+                    variant="error"
+                    onClick={() => setShowDeleteConfirm(true)}
+                  >
+                    🗑️ Delete ({selectedTrackIds.size})
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <div className="tracks-grid">
+              {tracks.map((track) => (
+                <div
+                  key={track.id}
+                  className={`track-card ${selectedTrackIds.has(track.id) ? 'selected' : ''}`}
+                >
+                  <div className="track-card-header">
+                    <div className="track-header-left">
+                      <input
+                        type="checkbox"
+                        className="track-checkbox"
+                        checked={selectedTrackIds.has(track.id)}
+                        onChange={() => toggleTrackSelection(track.id)}
+                      />
+                      <div className="track-number">#{track.track_number}</div>
+                    </div>
+                    <div className="track-actions">
+                      <button
+                        className="track-action-btn"
+                        title="Track settings"
+                      >
+                        ⚙️
+                      </button>
+                    </div>
+                  </div>
+
+                  <AudioPlayer track={track} />
+                </div>
+              ))}
+            </div>
+
+          </div>
+        )}
+
+        {/* Upload Modal */}
+        {showUploadModal && (
+          <div className="modal-overlay" onClick={() => setShowUploadModal(false)}>
+            <div className="modal-content track-upload-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>Upload Track</h2>
+                <button className="modal-close" onClick={() => setShowUploadModal(false)}>
+                  ✕
+                </button>
+              </div>
+
+              <div className="modal-body">
+                <TrackUploadZone
+                  projectId={project.id}
+                  onUploadStart={(file) => setSelectedFile(file)}
+                  onUploadComplete={async () => {
+                    if (selectedFile && id) {
+                      await upload(selectedFile);
+                      setSelectedFile(null);
+                      setShowUploadModal(false);
+                    }
+                  }}
+                  onUploadError={(error) => {
+                    console.error('Upload error:', error);
+                    setSelectedFile(null);
+                  }}
+                  disabled={uploading}
+                />
+
+                {uploading && (
+                  <div className="upload-status">
+                    <div className="upload-spinner"></div>
+                    <p>Uploading track...</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div className="modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
+            <div className="modal-content delete-confirm-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>Delete Tracks?</h2>
+                <button className="modal-close" onClick={() => setShowDeleteConfirm(false)}>
+                  ✕
+                </button>
+              </div>
+
+              <div className="modal-body">
+                <p className="warning-text">
+                  Are you sure you want to delete <strong>{selectedTrackIds.size}</strong> track(s)?
+                  This action cannot be undone.
+                </p>
+
+                <div className="modal-actions">
+                  <Button
+                    variant="secondary"
+                    onClick={() => setShowDeleteConfirm(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="error"
+                    onClick={handleDeleteSelected}
+                  >
+                    Delete {selectedTrackIds.size} Track(s)
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

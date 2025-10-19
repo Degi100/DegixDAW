@@ -1,0 +1,283 @@
+// ============================================
+// AUDIO PLAYER STYLES
+// Full-featured audio player component
+// ============================================
+
+.audio-player {
+  width: 100%;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  position: relative;
+
+  &.loading {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  // ============================================
+  // HEADER (Track Info)
+  // ============================================
+  .audio-player-header {
+    margin-bottom: 1rem;
+
+    .track-info {
+      .track-name {
+        margin: 0 0 0.25rem 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .track-meta {
+        margin: 0;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        font-family: 'Courier New', monospace;
+      }
+    }
+  }
+
+  // ============================================
+  // WAVEFORM
+  // ============================================
+  .audio-player-waveform {
+    margin-bottom: 1.5rem;
+  }
+
+  // ============================================
+  // CONTROLS
+  // ============================================
+  .audio-player-controls {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1.5rem;
+    align-items: center;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+
+  // ============================================
+  // TIME DISPLAY
+  // ============================================
+  .time-display {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-family: 'Courier New', monospace;
+    color: var(--text-secondary);
+    white-space: nowrap;
+
+    .current-time {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .separator {
+      opacity: 0.5;
+    }
+
+    .total-time {
+      opacity: 0.8;
+    }
+
+    @media (max-width: 768px) {
+      justify-content: center;
+    }
+  }
+
+  // ============================================
+  // TRANSPORT CONTROLS
+  // ============================================
+  .transport-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+
+    .play-pause-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: scale(1.05);
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+
+    button {
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: scale(1.1);
+      }
+    }
+  }
+
+  // ============================================
+  // VOLUME CONTROL
+  // ============================================
+  .volume-control {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 180px;
+
+    @media (max-width: 768px) {
+      justify-content: center;
+      min-width: auto;
+    }
+
+    .volume-icon {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      cursor: pointer;
+      padding: 0.25rem;
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+
+      &:hover {
+        transform: scale(1.1);
+      }
+    }
+
+    .volume-slider {
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--bg-tertiary);
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+
+      &::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          transform: scale(1.2);
+          background: var(--primary-color-hover);
+        }
+      }
+
+      &::-moz-range-thumb {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s ease;
+
+        &:hover {
+          transform: scale(1.2);
+          background: var(--primary-color-hover);
+        }
+      }
+
+      &::-webkit-slider-runnable-track {
+        height: 4px;
+        border-radius: 2px;
+        background: linear-gradient(
+          to right,
+          var(--primary-color) 0%,
+          var(--primary-color) var(--volume-percent, 100%),
+          var(--bg-tertiary) var(--volume-percent, 100%),
+          var(--bg-tertiary) 100%
+        );
+      }
+    }
+
+    .volume-percentage {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-family: 'Courier New', monospace;
+      min-width: 40px;
+      text-align: right;
+      flex-shrink: 0;
+
+      @media (max-width: 768px) {
+        display: none;
+      }
+    }
+  }
+
+  // ============================================
+  // LOADING STATE
+  // ============================================
+  .audio-player-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--bg-primary-rgb), 0.9);
+    backdrop-filter: blur(4px);
+    border-radius: var(--radius-lg);
+    z-index: 10;
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border-color);
+      border-top-color: var(--primary-color);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 0.75rem;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+  }
+
+  // ============================================
+  // ERROR STATE
+  // ============================================
+  .audio-player-error {
+    padding: 2rem;
+    text-align: center;
+    color: var(--error-color);
+
+    p {
+      margin: 0;
+      font-size: 0.875rem;
+    }
+  }
+}
+
+// ============================================
+// ANIMATIONS
+// ============================================
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

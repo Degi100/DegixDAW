@@ -5,6 +5,9 @@
 
 import type { WaveformData } from '../lib/audio/audioMetadata';
 
+// Re-export WaveformData for convenience
+export type { WaveformData };
+
 // ============================================
 // Track Types
 // ============================================
@@ -44,35 +47,35 @@ export interface Track {
 export interface CreateTrackRequest {
   project_id: string;
   name: string;
-  track_number?: number;
+  track_number?: number | undefined;
   track_type: TrackType;
-  file_path?: string;
-  duration_ms?: number;
-  sample_rate?: number;
-  channels?: number;
-  file_size?: number;
-  waveform_data?: WaveformData;
-  color?: string;
-  metadata?: Record<string, any>;
+  file_path?: string | undefined;
+  duration_ms?: number | undefined;
+  sample_rate?: number | undefined;
+  channels?: number | undefined;
+  file_size?: number | undefined;
+  waveform_data?: WaveformData | undefined;
+  color?: string | undefined;
+  metadata?: Record<string, any> | undefined;
 }
 
 export interface UpdateTrackRequest {
-  name?: string;
-  track_number?: number;
-  file_path?: string;
-  file_url?: string;
-  duration_ms?: number;
-  sample_rate?: number;
-  bit_depth?: number;
-  channels?: number;
-  file_size?: number;
-  waveform_data?: WaveformData;
-  muted?: boolean; // DB column name
-  soloed?: boolean; // DB column name
-  volume_db?: number; // DB uses dB
-  pan?: number; // DB uses float
-  color?: string;
-  effects?: any[];
+  name?: string | undefined;
+  track_number?: number | undefined;
+  file_path?: string | null | undefined;
+  file_url?: string | null | undefined;
+  duration_ms?: number | null | undefined;
+  sample_rate?: number | null | undefined;
+  bit_depth?: number | null | undefined;
+  channels?: number | null | undefined;
+  file_size?: number | null | undefined;
+  waveform_data?: WaveformData | null | undefined;
+  muted?: boolean | undefined;
+  soloed?: boolean | undefined;
+  volume_db?: number | undefined;
+  pan?: number | undefined;
+  color?: string | null | undefined;
+  effects?: any[] | null | undefined;
 }
 
 // ============================================
@@ -82,15 +85,15 @@ export interface UpdateTrackRequest {
 export interface TrackUploadOptions {
   file: File;
   project_id: string;
-  track_name?: string;
-  track_number?: number;
-  color?: string;
-  onProgress?: (progress: number) => void;
+  track_name?: string | undefined;
+  track_number?: number | undefined;
+  color?: string | undefined;
+  onProgress?: ((progress: number) => void) | undefined;
 }
 
 export interface TrackUploadResult {
   track: Track;
-  signedUrl?: string;
+  signedUrl?: string | undefined;
 }
 
 // ============================================

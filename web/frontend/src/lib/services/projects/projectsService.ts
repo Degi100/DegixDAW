@@ -9,7 +9,6 @@ import type {
   ProjectWithCreator,
   CreateProjectRequest,
   UpdateProjectRequest,
-  ProjectsFilter,
   ProjectsQueryOptions,
 } from '../../../types/projects';
 

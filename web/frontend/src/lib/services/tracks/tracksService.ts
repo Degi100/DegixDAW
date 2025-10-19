@@ -31,7 +31,28 @@ export async function getProjectTracks(projectId: string): Promise<Track[]> {
       throw error;
     }
 
-    return data || [];
+    if (!data) return [];
+
+    // Generate signed URLs for all tracks with file_path
+    const tracksWithUrls = await Promise.all(
+      data.map(async (track) => {
+        if (track.file_path) {
+          try {
+            const { data: urlData } = await supabase.storage
+              .from('project-tracks')
+              .createSignedUrl(track.file_path, 3600); // 1 hour expiry
+
+            return { ...track, file_url: urlData?.signedUrl || null };
+          } catch (err) {
+            console.warn(`Failed to get signed URL for track ${track.id}:`, err);
+            return track; // Return track without URL
+          }
+        }
+        return track;
+      })
+    );
+
+    return tracksWithUrls;
   } catch (error) {
     console.error('getProjectTracks failed:', error);
     return [];
@@ -53,6 +74,21 @@ export async function getTrack(trackId: string): Promise<Track | null> {
     if (error) {
       console.error('Error fetching track:', error);
       throw error;
+    }
+
+    if (!data) return null;
+
+    // Generate signed URL if track has file_path
+    if (data.file_path) {
+      try {
+        const { data: urlData } = await supabase.storage
+          .from('project-tracks')
+          .createSignedUrl(data.file_path, 3600); // 1 hour expiry
+
+        return { ...data, file_url: urlData?.signedUrl || null };
+      } catch (err) {
+        console.warn(`Failed to get signed URL for track ${trackId}:`, err);
+      }
     }
 
     return data;
@@ -244,7 +280,7 @@ export async function deleteTrack(trackId: string): Promise<boolean> {
 // ============================================
 
 export async function reorderTracks(
-  projectId: string,
+  _projectId: string,
   trackIds: string[]
 ): Promise<boolean> {
   try {
