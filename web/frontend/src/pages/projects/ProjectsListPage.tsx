@@ -11,9 +11,10 @@ import Button from '../../components/ui/Button';
 
 export default function ProjectsListPage() {
   const navigate = useNavigate();
-  const { projects, loading, fetchMyProjects, fetchCollaboratedProjects } = useProjects();
+  const { projects, loading, fetchMyProjects, fetchCollaboratedProjects, remove } = useProjects();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'owned' | 'collaborated'>('all');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Filter projects based on active tab
   const handleTabChange = async (tab: typeof activeTab) => {
@@ -27,6 +28,19 @@ export default function ProjectsListPage() {
     // 'all' is default behavior
   };
 
+
+  // Delete project with confirmation
+  const handleDeleteProject = async (e: React.MouseEvent, projectId: string, projectTitle: string) => {
+    e.stopPropagation(); // Don't navigate to project detail
+
+    if (!window.confirm(`🗑️ Delete project "${projectTitle}"?\n\nThis will delete ALL tracks, comments, and collaborators!\n\nThis action CANNOT be undone!`)) {
+      return;
+    }
+
+    setDeletingId(projectId);
+    await remove(projectId);
+    setDeletingId(null);
+  };
   return (
     <div className="projects-list-page">
       {/* Header */}
@@ -112,8 +126,17 @@ export default function ProjectsListPage() {
               </div>
 
               {/* Project Info */}
-              <div className="project-info">
-                <h3 className="project-title">{project.title}</h3>
+              <div className="project-info">                <div className="project-header-row">
+                  <h3 className="project-title">{project.title}</h3>
+                  <button
+                    className="delete-project-btn"
+                    onClick={(e) => handleDeleteProject(e, project.id, project.title)}
+                    disabled={deletingId === project.id}
+                    title="Delete project"
+                  >
+                    {deletingId === project.id ? '⏳' : '🗑️'}
+                  </button>
+                </div>
                 {project.description && (
                   <p className="project-description">{project.description}</p>
                 )}
