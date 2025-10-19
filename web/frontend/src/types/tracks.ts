@@ -111,9 +111,9 @@ export interface TrackComment {
   is_resolved: boolean;
   created_at: string;
   updated_at: string;
-  // Populated fields (not in DB)
-  username?: string;
-  avatar_url?: string;
+  // Populated fields (joined from profiles table)
+  username?: string | null;
+  avatar_url?: string | null;
 }
 
 export interface CreateTrackCommentRequest {
