@@ -4,13 +4,16 @@
 // ============================================
 
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getUserPendingInvites, acceptInvite, removeCollaborator } from '../../lib/services/projects/collaboratorsService';
 import Button from '../ui/Button';
 import type { ProjectCollaborator } from '../../types/projects';
 
 export default function PendingInvites() {
+  const navigate = useNavigate();
   const [invites, setInvites] = useState<ProjectCollaborator[]>([]);
   const [loading, setLoading] = useState(true);
+  const [accepting, setAccepting] = useState<string | null>(null);
 
   useEffect(() => {
     loadInvites();
@@ -23,11 +26,17 @@ export default function PendingInvites() {
     setLoading(false);
   };
 
-  const handleAccept = async (inviteId: string) => {
+  const handleAccept = async (inviteId: string, projectId: string) => {
+    setAccepting(inviteId);
     const success = await acceptInvite(inviteId);
     if (success) {
       setInvites((prev) => prev.filter((inv) => inv.id !== inviteId));
+      // Navigate to the project after accepting
+      setTimeout(() => {
+        navigate(`/projects/${projectId}`);
+      }, 500); // Small delay for UX
     }
+    setAccepting(null);
   };
 
   const handleReject = async (inviteId: string) => {
@@ -76,14 +85,16 @@ export default function PendingInvites() {
               <Button
                 variant="success"
                 size="small"
-                onClick={() => handleAccept(invite.id)}
+                onClick={() => handleAccept(invite.id, invite.project_id)}
+                disabled={accepting === invite.id}
               >
-                ✓ Accept
+                {accepting === invite.id ? 'Accepting...' : '✓ Accept'}
               </Button>
               <Button
                 variant="secondary"
                 size="small"
                 onClick={() => handleReject(invite.id)}
+                disabled={accepting === invite.id}
               >
                 ✕ Reject
               </Button>
