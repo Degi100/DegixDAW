@@ -139,7 +139,7 @@ const SUPPORTED_AUDIO_FORMATS = [
   'audio/webm', // WebM
 ];
 
-const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500 MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 export interface ValidationResult {
   valid: boolean;

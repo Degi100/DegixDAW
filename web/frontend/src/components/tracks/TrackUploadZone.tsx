@@ -139,7 +139,7 @@ export default function TrackUploadZone({
               Supported: MP3, WAV, FLAC, M4A, AAC, OGG, WebM
             </p>
             <p className="upload-limit">
-              Maximum file size: 500 MB
+              Maximum file size: 5 MB
             </p>
           </div>
         )}
