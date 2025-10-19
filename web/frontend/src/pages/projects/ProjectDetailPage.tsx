@@ -95,11 +95,19 @@ export default function ProjectDetailPage() {
   // Collaborator Handlers
   // ============================================
 
-  const handleInviteCollaborator = async (_data: InviteCollaboratorData) => {
+  const handleInviteCollaborator = async (data: InviteCollaboratorData) => {
     try {
-      // TODO: Implement invite functionality
-      // Needs getUserIdByEmail RPC function in Supabase
-      throw new Error('Invite functionality not yet implemented - needs email lookup RPC');
+      // InviteCollaboratorModal already looked up user_id via getUserIdByEmail
+      // So we can directly use inviteByEmail hook (even though we have user_id now)
+      // But since modal passes user_id, we need to import inviteCollaborator directly
+      const { inviteCollaborator } = await import('../../lib/services/projects/collaboratorsService');
+
+      if (!id) throw new Error('No project ID');
+
+      await inviteCollaborator(id, data);
+
+      // Refresh collaborators list
+      window.location.reload(); // Simple refresh for now
     } catch (error) {
       console.error('Failed to invite collaborator:', error);
       throw error;

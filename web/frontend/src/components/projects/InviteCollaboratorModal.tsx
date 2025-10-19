@@ -4,6 +4,7 @@
 // ============================================
 
 import { useState } from 'react';
+import { getUserIdByEmail } from '../../lib/services/projects/collaboratorsService';
 import Button from '../ui/Button';
 
 interface InviteCollaboratorModalProps {
@@ -99,9 +100,14 @@ export default function InviteCollaboratorModal({
     setLoading(true);
 
     try {
-      // TODO: Lookup user_id by email (needs backend endpoint or RPC function)
-      // For now, we'll need to implement a lookup service
-      const userId = 'temp-user-id'; // Placeholder
+      // Lookup user_id by email using Supabase RPC
+      const userId = await getUserIdByEmail(email.trim());
+
+      if (!userId) {
+        setError('User not found with that email address');
+        setLoading(false);
+        return;
+      }
 
       await onInvite({
         user_id: userId,
