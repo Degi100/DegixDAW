@@ -35,10 +35,18 @@ export async function getProjectCollaborators(
     const userIds = collaborators.map((c) => c.user_id);
 
     // Step 3: Fetch profiles for all users (email is NOT in profiles table)
-    const { data: profiles, error: profilesError } = await supabase
+    let profilesQuery = supabase
       .from('profiles')
-      .select('id, username, avatar_url')
-      .in('id', userIds);
+      .select('id, username, avatar_url');
+
+    // Use .eq() for single user, .in() for multiple (avoids encoding issues)
+    if (userIds.length === 1) {
+      profilesQuery = profilesQuery.eq('id', userIds[0]);
+    } else {
+      profilesQuery = profilesQuery.in('id', userIds);
+    }
+
+    const { data: profiles, error: profilesError } = await profilesQuery;
 
     if (profilesError) {
       console.error('Error fetching profiles:', profilesError);

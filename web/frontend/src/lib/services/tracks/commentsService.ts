@@ -43,10 +43,18 @@ export async function getTrackComments(trackId: string): Promise<TrackComment[]>
     const authorIds = [...new Set(comments.map((c) => c.author_id))];
 
     // Step 3: Fetch profiles for all authors
-    const { data: profiles, error: profilesError } = await supabase
+    let profilesQuery = supabase
       .from('profiles')
-      .select('id, username, avatar_url')
-      .in('id', authorIds);
+      .select('id, username, avatar_url');
+
+    // Use .eq() for single author, .in() for multiple (avoids encoding issues)
+    if (authorIds.length === 1) {
+      profilesQuery = profilesQuery.eq('id', authorIds[0]);
+    } else {
+      profilesQuery = profilesQuery.in('id', authorIds);
+    }
+
+    const { data: profiles, error: profilesError } = await profilesQuery;
 
     if (profilesError) {
       console.error('Error fetching profiles:', profilesError);
