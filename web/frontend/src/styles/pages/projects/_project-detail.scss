@@ -203,11 +203,11 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 4rem 2rem;
+    padding: 2rem;
 
     .empty-icon {
-      font-size: 5rem;
-      margin-bottom: 1.5rem;
+      font-size: 3rem;
+      margin-bottom: 1rem;
       opacity: 0.3;
     }
 
@@ -223,30 +223,62 @@
       max-width: 500px;
     }
 
-    .empty-actions {
+    .upload-status {
+      margin-top: 2rem;
       display: flex;
+      flex-direction: column;
+      align-items: center;
       gap: 1rem;
-      margin-bottom: 2rem;
 
-      @media (max-width: 600px) {
-        flex-direction: column;
-        width: 100%;
+      .upload-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid var(--border-color);
+        border-top-color: var(--primary-color);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      p {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
       }
     }
+  }
 
-    .coming-soon-notice {
+  // Tracks List (Simple view until we build proper TrackList component)
+  .tracks-list {
+    h3 {
+      margin: 0 0 1.5rem 0;
+      font-size: 1.25rem;
+      color: var(--text-primary);
+    }
+
+    .track-item {
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 0.5rem;
-      padding: 0.75rem 1.5rem;
-      background: var(--warning-color-alpha-10);
-      color: var(--warning-color);
-      border-radius: var(--radius-full);
-      font-size: 0.9rem;
-      font-weight: 500;
+      padding: 1rem;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin-bottom: 0.75rem;
+      transition: all 0.2s ease;
 
-      .notice-icon {
-        font-size: 1.2rem;
+      &:hover {
+        border-color: var(--primary-color);
+        background: var(--primary-color-alpha-5);
+      }
+
+      span:first-child {
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+
+      span:last-child {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
       }
     }
   }

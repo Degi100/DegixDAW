@@ -3,15 +3,19 @@
 // View and manage a single project
 // ============================================
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProject } from '../../hooks/useProjects';
+import { useTracks } from '../../hooks/useTracks';
 import Button from '../../components/ui/Button';
+import TrackUploadZone from '../../components/tracks/TrackUploadZone';
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { project, loading, error } = useProject(id || null);
+  const { tracks, uploading, upload } = useTracks(id || null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (!id) {
@@ -101,24 +105,48 @@ export default function ProjectDetailPage() {
 
       {/* Content */}
       <div className="project-content">
-        {/* Empty State - Track Upload will come in Week 3-4 */}
-        <div className="empty-tracks">
-          <div className="empty-icon">🎵</div>
-          <h3>No Tracks Yet</h3>
-          <p>Start building your project by uploading audio files or recording tracks.</p>
-          <div className="empty-actions">
-            <Button variant="primary" icon="📤">
-              Upload Track
-            </Button>
-            <Button variant="secondary" icon="🎤">
-              Record Track
-            </Button>
+        {tracks.length === 0 ? (
+          /* Empty State with Upload Zone */
+          <div className="empty-tracks">
+            <div className="empty-icon">🎵</div>
+            <h3>No Tracks Yet</h3>
+            <p>Start building your project by uploading audio files.</p>
+
+            <TrackUploadZone
+              projectId={project.id}
+              onUploadStart={(file) => setSelectedFile(file)}
+              onUploadComplete={async () => {
+                if (selectedFile && id) {
+                  await upload(selectedFile);
+                  setSelectedFile(null);
+                }
+              }}
+              onUploadError={(error) => {
+                console.error('Upload error:', error);
+                setSelectedFile(null);
+              }}
+              disabled={uploading}
+            />
+
+            {uploading && (
+              <div className="upload-status">
+                <div className="upload-spinner"></div>
+                <p>Uploading track...</p>
+              </div>
+            )}
           </div>
-          <div className="coming-soon-notice">
-            <span className="notice-icon">🚧</span>
-            <span>Track upload coming in Week 3-4 (Phase 1 Roadmap)</span>
+        ) : (
+          /* Track List - TODO: Create TrackList component */
+          <div className="tracks-list">
+            <h3>Tracks ({tracks.length})</h3>
+            {tracks.map((track) => (
+              <div key={track.id} className="track-item">
+                <span>{track.track_number}. {track.name}</span>
+                <span>{track.duration_ms ? `${Math.round(track.duration_ms / 1000)}s` : 'N/A'}</span>
+              </div>
+            ))}
           </div>
-        </div>
+        )}
       </div>
 
       {/* Project Info Sidebar */}
