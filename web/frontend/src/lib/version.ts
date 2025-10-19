@@ -19,6 +19,34 @@ export interface VersionInfo {
 
 export const VERSION_HISTORY: VersionInfo[] = [
   {
+    version: "0.1.5",
+    date: "2025-10-19",
+    type: "patch",
+    changes: {
+      added: [
+        "Project Collaborators System - Invite users with granular permissions (Viewer/Contributor/Mixer/Admin)",
+        "Track Comments with Timestamps - Add comments to specific track positions with resolve status",
+        "BPM Detection - Automatic BPM detection for audio tracks using web-audio-beat-detector",
+        "Pan Control - Audio panning control (-1.0 Left to 1.0 Right) with visual slider",
+        "Pending Invites Dashboard - Accept/Reject project invitations from Dashboard",
+        "Auto-add Project Owner - Creator automatically added as ADMIN collaborator"
+      ],
+      fixed: [
+        "Unknown User Display - Profile mapping for collaborators and track comments",
+        "Supabase .in() Query Bug - Single-element arrays now use .eq() instead of .in()",
+        "avatar_url Column Error - Removed non-existent avatar_url from profiles queries",
+        "New Comments Missing Username - Fetch profile after creating comment",
+        "Project Owner Not Listed - Auto-insert creator into project_collaborators table",
+        "RLS Policy Infinite Recursion - Simplified collaborator read policies"
+      ],
+      changed: [
+        "Collaborators Display - Color-coded role badges (ADMIN=red, MIXER=purple, CONTRIBUTOR=blue, VIEWER=gray)",
+        "Profile Queries - Use .eq() for single user, .in() for multiple users",
+        "Comment Creation Flow - Return username with newly created comments"
+      ]
+    }
+  },
+  {
     version: "0.1.4",
     date: "2025-10-18",
     type: "patch",
