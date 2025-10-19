@@ -17,49 +17,59 @@ export async function getProjectCollaborators(
   projectId: string
 ): Promise<ProjectCollaborator[]> {
   try {
-    const { data, error } = await supabase
+    // Step 1: Get collaborators
+    const { data: collaborators, error: collabError } = await supabase
       .from('project_collaborators')
-      .select(`
-        *,
-        profiles!project_collaborators_user_id_fkey (
-          username,
-          email,
-          avatar_url
-        )
-      `)
+      .select('*')
       .eq('project_id', projectId)
       .order('created_at', { ascending: true });
 
-    if (error) {
-      console.error('Error fetching collaborators:', error);
-      throw error;
+    if (collabError) {
+      console.error('Error fetching collaborators:', collabError);
+      throw collabError;
     }
 
-    if (!data) return [];
+    if (!collaborators || collaborators.length === 0) return [];
 
-    // Flatten profiles into collaborator object
-    return data.map((collab) => ({
-      id: collab.id,
-      project_id: collab.project_id,
-      user_id: collab.user_id,
-      role: collab.role,
-      can_edit: collab.can_edit,
-      can_download: collab.can_download,
-      can_upload_audio: collab.can_upload_audio,
-      can_upload_mixdown: collab.can_upload_mixdown,
-      can_comment: collab.can_comment,
-      can_invite_others: collab.can_invite_others,
-      invited_by: collab.invited_by,
-      invited_at: collab.invited_at,
-      accepted_at: collab.accepted_at,
-      created_at: collab.created_at,
-      // @ts-ignore - Supabase JOIN result
-      username: collab.profiles?.username || null,
-      // @ts-ignore
-      email: collab.profiles?.email || null,
-      // @ts-ignore
-      avatar_url: collab.profiles?.avatar_url || null,
-    }));
+    // Step 2: Get user IDs
+    const userIds = collaborators.map((c) => c.user_id);
+
+    // Step 3: Fetch profiles for all users
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, username, email, avatar_url')
+      .in('id', userIds);
+
+    if (profilesError) {
+      console.error('Error fetching profiles:', profilesError);
+      // Continue without profiles
+    }
+
+    // Step 4: Map profiles to collaborators
+    const profilesMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+
+    return collaborators.map((collab) => {
+      const profile = profilesMap.get(collab.user_id);
+      return {
+        id: collab.id,
+        project_id: collab.project_id,
+        user_id: collab.user_id,
+        role: collab.role,
+        can_edit: collab.can_edit,
+        can_download: collab.can_download,
+        can_upload_audio: collab.can_upload_audio,
+        can_upload_mixdown: collab.can_upload_mixdown,
+        can_comment: collab.can_comment,
+        can_invite_others: collab.can_invite_others,
+        invited_by: collab.invited_by,
+        invited_at: collab.invited_at,
+        accepted_at: collab.accepted_at,
+        created_at: collab.created_at,
+        username: profile?.username || null,
+        email: profile?.email || null,
+        avatar_url: profile?.avatar_url || null,
+      };
+    });
   } catch (error) {
     console.error('getProjectCollaborators failed:', error);
     return [];
