@@ -34,10 +34,10 @@ export async function getProjectCollaborators(
     // Step 2: Get user IDs
     const userIds = collaborators.map((c) => c.user_id);
 
-    // Step 3: Fetch profiles for all users
+    // Step 3: Fetch profiles for all users (email is NOT in profiles table)
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, username, email, avatar_url')
+      .select('id, username, avatar_url')
       .in('id', userIds);
 
     if (profilesError) {
@@ -66,7 +66,7 @@ export async function getProjectCollaborators(
         accepted_at: collab.accepted_at,
         created_at: collab.created_at,
         username: profile?.username || null,
-        email: profile?.email || null,
+        email: null, // Email is in auth.users, not profiles (not accessible via API)
         avatar_url: profile?.avatar_url || null,
       };
     });
