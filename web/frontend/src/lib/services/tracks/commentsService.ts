@@ -109,7 +109,18 @@ export async function createTrackComment(
       throw error;
     }
 
-    return comment;
+    // Fetch author profile to include username
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', user.id)
+      .single();
+
+    return {
+      ...comment,
+      username: profile?.username || null,
+      avatar_url: null,
+    };
   } catch (error) {
     console.error('createTrackComment failed:', error);
     return null;
