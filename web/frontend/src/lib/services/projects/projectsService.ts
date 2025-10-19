@@ -179,6 +179,50 @@ export async function updateProject(
 
 export async function deleteProject(projectId: string): Promise<boolean> {
   try {
+    // Step 1: Delete all storage files BEFORE deleting DB records
+    // (DB cascade will delete tracks/comments/etc, but Storage files stay!)
+
+    // Define all storage paths for this project
+    const storagePaths = [
+      { bucket: 'music-projects', prefix: `midi/${projectId}` },
+      { bucket: 'music-projects', prefix: `audio/${projectId}` },
+      { bucket: 'music-projects', prefix: `mixdowns/${projectId}` },
+      { bucket: 'project-thumbnails', prefix: `${projectId}` },
+    ];
+
+    // Delete files from each storage path
+    for (const { bucket, prefix } of storagePaths) {
+      try {
+        // List all files in this folder
+        const { data: files, error: listError } = await supabase.storage
+          .from(bucket)
+          .list(prefix);
+
+        if (listError) {
+          console.warn(`Failed to list files in ${bucket}/${prefix}:`, listError);
+          continue; // Continue cleanup even if one folder fails
+        }
+
+        if (files && files.length > 0) {
+          // Build full paths for deletion
+          const filePaths = files.map(f => `${prefix}/${f.name}`);
+
+          // Delete all files in this folder
+          const { error: deleteError } = await supabase.storage
+            .from(bucket)
+            .remove(filePaths);
+
+          if (deleteError) {
+            console.warn(`Failed to delete files in ${bucket}/${prefix}:`, deleteError);
+          }
+        }
+      } catch (storageError) {
+        console.warn(`Storage cleanup error for ${bucket}/${prefix}:`, storageError);
+        // Continue cleanup even if one bucket fails
+      }
+    }
+
+    // Step 2: Delete DB record (CASCADE will delete tracks, comments, collaborators, etc.)
     const { error } = await supabase
       .from('projects')
       .delete()
