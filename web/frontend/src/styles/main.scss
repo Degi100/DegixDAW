@@ -30,6 +30,7 @@
 @use 'components/message-bubble';
 @use 'components/message-input';
 @use 'file-browser';
+@use 'components/projects/project-modal';
 
 // 4. Pages
 @use 'pages/auth/auth-landing/index' as auth-landing;
@@ -40,6 +41,8 @@
 @use 'pages/chat-page';
 @use 'pages/settings/user-settings/index' as user-settings;
 @use 'pages/social';
+@use 'pages/projects/projects-list';
+@use 'pages/projects/project-detail';
 
 // 5. Themes
 @use 'themes/dark';

@@ -39,10 +39,11 @@ interface HeaderProps {
 const navigationItems: NavigationItem[] = [
   { path: '/', label: 'Dashboard', icon: '🏠', requiresAuth: true, featureFlag: 'dashboard' },
   { path: '/social', label: 'Social', icon: '👥', requiresAuth: true, featureFlag: 'social_features' },
-  { 
-    path: '/files', 
-    label: 'Dateien', 
-    icon: '📂', 
+  { path: '/projects', label: 'Projects', icon: '🎵', requiresAuth: true },
+  {
+    path: '/files',
+    label: 'Dateien',
+    icon: '📂',
     requiresAuth: true,
     featureFlag: 'file_browser' // 🔒 Admin-only Feature
   },

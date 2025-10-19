@@ -42,6 +42,10 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 // File Browser Pages
 const FileBrowserPage = lazy(() => import('./pages/files/FileBrowserPage'));
 
+// Project Pages
+const ProjectsListPage = lazy(() => import('./pages/projects/ProjectsListPage'));
+const ProjectDetailPage = lazy(() => import('./pages/projects/ProjectDetailPage'));
+
 // Admin Components
 import AdminRoute from './components/admin/AdminRoute';
 import ProtectedAdminRoute from './components/admin/ProtectedAdminRoute';
@@ -111,6 +115,22 @@ const router = createBrowserRouter([
             <FeatureFlagRoute featureFlag="file_browser">
               <FileBrowserPage />
             </FeatureFlagRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: 'projects',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <ProjectsListPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'projects/:id',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <ProjectDetailPage />
           </Suspense>
         ),
       },
