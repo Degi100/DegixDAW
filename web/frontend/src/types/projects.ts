@@ -58,6 +58,10 @@ export interface ProjectCollaborator {
   invited_at: string;
   accepted_at?: string | null;
   created_at: string;
+  // Joined from profiles (for UI display)
+  username?: string | null;
+  email?: string | null;
+  avatar_url?: string | null;
 }
 
 // Collaborator with user profile

@@ -7,19 +7,27 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProject } from '../../hooks/useProjects';
 import { useTracks } from '../../hooks/useTracks';
+import { useCollaborators } from '../../hooks/useCollaborators';
+import { supabase } from '../../lib/supabase';
 import Button from '../../components/ui/Button';
 import TrackUploadZone from '../../components/tracks/TrackUploadZone';
 import AudioPlayer from '../../components/audio/AudioPlayer';
 import TrackSettingsModal from '../../components/tracks/TrackSettingsModal';
+import InviteCollaboratorModal from '../../components/projects/InviteCollaboratorModal';
+import CollaboratorsList from '../../components/projects/CollaboratorsList';
 import type { Track, UpdateTrackRequest } from '../../types/tracks';
+import type { InviteCollaboratorData } from '../../components/projects/InviteCollaboratorModal';
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { project, loading, error } = useProject(id || null);
   const { tracks, uploading, upload, remove, update } = useTracks(id || null);
+  const { collaborators, remove: removeCollaborator, updatePermissions } = useCollaborators(id || '');
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [selectedTrackIds, setSelectedTrackIds] = useState<Set<string>>(new Set());
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [settingsTrack, setSettingsTrack] = useState<Track | null>(null);
@@ -29,6 +37,13 @@ export default function ProjectDetailPage() {
       navigate('/projects');
     }
   }, [id, navigate]);
+
+  // Get current user ID
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUserId(data.user?.id || null);
+    });
+  }, []);
 
   // ============================================
   // Track Selection Handlers
@@ -74,6 +89,26 @@ export default function ProjectDetailPage() {
     if (!settingsTrack) return;
     // Convert UpdateTrackRequest to Partial<Track> for the hook
     await update(settingsTrack.id, updates as Partial<Track>);
+  };
+
+  // ============================================
+  // Collaborator Handlers
+  // ============================================
+
+  const handleInviteCollaborator = async (_data: InviteCollaboratorData) => {
+    try {
+      // TODO: Implement invite functionality
+      // Needs getUserIdByEmail RPC function in Supabase
+      throw new Error('Invite functionality not yet implemented - needs email lookup RPC');
+    } catch (error) {
+      console.error('Failed to invite collaborator:', error);
+      throw error;
+    }
+  };
+
+  const handleRemoveCollaborator = async (collaboratorId: string) => {
+    if (!confirm('Remove this collaborator from the project?')) return;
+    await removeCollaborator(collaboratorId);
   };
 
   if (loading) {
@@ -153,6 +188,29 @@ export default function ProjectDetailPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Collaborators Section */}
+      <div className="project-collaborators">
+        <div className="collaborators-section-header">
+          <h2>Team</h2>
+          <Button
+            variant="primary"
+            onClick={() => setShowInviteModal(true)}
+          >
+            👥 Invite Collaborator
+          </Button>
+        </div>
+
+        {currentUserId && (
+          <CollaboratorsList
+            collaborators={collaborators}
+            currentUserId={currentUserId}
+            projectOwnerId={project.creator_id}
+            onRemove={handleRemoveCollaborator}
+            onUpdatePermissions={updatePermissions}
+          />
+        )}
       </div>
 
       {/* Content */}
@@ -397,6 +455,15 @@ export default function ProjectDetailPage() {
           </div>
         </div>
       </aside>
+
+      {/* Modals */}
+      {showInviteModal && (
+        <InviteCollaboratorModal
+          projectId={project.id}
+          onClose={() => setShowInviteModal(false)}
+          onInvite={handleInviteCollaborator}
+        />
+      )}
     </div>
   );
 }

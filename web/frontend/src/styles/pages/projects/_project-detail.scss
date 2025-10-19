@@ -602,4 +602,28 @@
       }
     }
   }
+
+  // ============================================
+  // COLLABORATORS SECTION
+  // ============================================
+  .project-collaborators {
+    grid-column: 1 / -1;
+    padding: 2rem;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+
+    .collaborators-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+
+      h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+    }
+  }
 }

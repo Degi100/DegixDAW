@@ -31,6 +31,9 @@
 @use 'components/message-input';
 @use 'file-browser';
 @use 'components/projects/project-modal';
+@use 'components/projects/invite-collaborator-modal';
+@use 'components/projects/collaborators-list';
+@use 'components/projects/pending-invites';
 @use 'components/tracks/track-upload-zone';
 @use 'components/tracks/track-settings-modal';
 @use 'components/audio/waveform-canvas';
