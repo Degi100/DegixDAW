@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase';
 import { useFriends } from '../../hooks/useFriends';
 import { useFollowers } from '../../hooks/useFollowers';
 import Avatar from '../ui/Avatar';
+import UserProfileModal from '../profile/UserProfileModal';
 import type { SearchUser } from '../../hooks/useUserSearch';
 
 interface UserCardProps {
@@ -16,10 +17,11 @@ interface UserCardProps {
 export default function UserCard({ user, showActions = true }: UserCardProps) {
   const { sendFriendRequest, getFriendshipStatus } = useFriends();
   const { followUser, unfollowUser, isFollowing: checkFollowing } = useFollowers();
-  
+
   const [friendshipStatus, setFriendshipStatus] = useState<'none' | 'pending_sent' | 'pending_received' | 'friends'>('none');
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const loadStatus = async () => {
     const [friendship, following] = await Promise.all([
@@ -92,19 +94,28 @@ export default function UserCard({ user, showActions = true }: UserCardProps) {
   };
 
   return (
-    <div className="user-card">
-      <Avatar
-        avatarUrl={user.avatar_url || null}
-        initial={getInitials()}
-        fullName={user.full_name}
-        size="large"
-        shape="rounded"
-        className="user-card__avatar"
-      />
-      <div className="user-card__info">
-        <div className="user-card__name">{user.full_name}</div>
-        <div className="user-card__username">@{user.username}</div>
-      </div>
+    <>
+      <div className="user-card">
+        <div onClick={() => setShowProfileModal(true)} style={{ cursor: 'pointer' }}>
+          <Avatar
+            avatarUrl={user.avatar_url || null}
+            initial={getInitials()}
+            fullName={user.full_name}
+            size="large"
+            shape="rounded"
+            className="user-card__avatar"
+          />
+        </div>
+        <div className="user-card__info">
+          <div
+            className="user-card__name"
+            onClick={() => setShowProfileModal(true)}
+            style={{ cursor: 'pointer' }}
+          >
+            {user.full_name}
+          </div>
+          <div className="user-card__username">@{user.username}</div>
+        </div>
 
       {showActions && (
         <div className="user-card__actions">
@@ -158,6 +169,14 @@ export default function UserCard({ user, showActions = true }: UserCardProps) {
           </button>
         </div>
       )}
-    </div>
+      </div>
+
+      {showProfileModal && (
+        <UserProfileModal
+          userId={user.id}
+          onClose={() => setShowProfileModal(false)}
+        />
+      )}
+    </>
   );
 }

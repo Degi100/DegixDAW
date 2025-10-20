@@ -8,6 +8,7 @@ import { useChat } from '../../contexts/ChatContext';
 import { useConversations } from '../../hooks/useConversations';
 import { supabase } from '../../lib/supabase';
 import Avatar from '../ui/Avatar';
+import UserProfileModal from '../profile/UserProfileModal';
 
 interface SocialPreviewProps {
   type: 'friends' | 'followers' | 'following' | 'requests';
@@ -20,6 +21,7 @@ export default function SocialPreview({ type }: SocialPreviewProps) {
   const { followers, following, removeFollower, unfollowUser } = useFollowers();
   const [showCount, setShowCount] = useState(5);
   const [showAll, setShowAll] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   // Get data based on type
   const getData = (): (Friendship | Follower)[] => {
@@ -110,6 +112,22 @@ export default function SocialPreview({ type }: SocialPreviewProps) {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
+  const getUserId = (item: Friendship | Follower): string => {
+    if (type === 'friends' && 'friend_id' in item) {
+      return item.friend_id;
+    }
+    if (type === 'followers' && 'follower_id' in item) {
+      return item.follower_id;
+    }
+    if (type === 'following' && 'following_id' in item) {
+      return item.following_id;
+    }
+    if (type === 'requests' && 'user_id' in item) {
+      return item.user_id;
+    }
+    return '';
+  };
+
   const handleRemove = (item: Friendship | Follower) => {
     if (type === 'friends' && 'friend_profile' in item) {
       removeFriend(item.id);
@@ -158,16 +176,24 @@ export default function SocialPreview({ type }: SocialPreviewProps) {
 
           return (
             <div key={item.id} className="social-preview-item">
-              <Avatar
-                avatarUrl={avatarUrl}
-                initial={getInitials(displayName)}
-                fullName={displayName}
-                size="medium"
-                shape="rounded"
-                className="preview-item-avatar"
-              />
+              <div onClick={() => setSelectedUserId(getUserId(item))} style={{ cursor: 'pointer' }}>
+                <Avatar
+                  avatarUrl={avatarUrl}
+                  initial={getInitials(displayName)}
+                  fullName={displayName}
+                  size="medium"
+                  shape="rounded"
+                  className="preview-item-avatar"
+                />
+              </div>
               <div className="preview-item-info">
-                <div className="preview-item-name">{displayName}</div>
+                <div
+                  className="preview-item-name"
+                  onClick={() => setSelectedUserId(getUserId(item))}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {displayName}
+                </div>
                 {username && (
                   <div className="preview-item-handle">@{username}</div>
                 )}
@@ -233,6 +259,13 @@ export default function SocialPreview({ type }: SocialPreviewProps) {
           </button>
         )}
       </div>
+
+      {selectedUserId && (
+        <UserProfileModal
+          userId={selectedUserId}
+          onClose={() => setSelectedUserId(null)}
+        />
+      )}
     </div>
   );
 }
