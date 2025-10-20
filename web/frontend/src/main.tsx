@@ -26,6 +26,7 @@ const Social = lazy(() => import('./pages/dashboard/Social'));
 
 // Settings Pages
 const UserSettings = lazy(() => import('./pages/settings/UserSettings.corporate'));
+const UserProfile = lazy(() => import('./pages/profile/UserProfile'));
 
 // Account Management Pages
 const AccountRecovery = lazy(() => import('./pages/account/AccountRecovery'));
@@ -105,6 +106,14 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<PageLoader />}>
             <UserSettings />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'profile/:userId',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <UserProfile />
           </Suspense>
         ),
       },
