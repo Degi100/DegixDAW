@@ -99,7 +99,7 @@ export default function UserCard({ user, showActions = true }: UserCardProps) {
   return (
     <div className="user-card">
       <Avatar
-        avatarUrl={user.avatar_url || null}
+        avatarUrl={null}
         initial={getInitials(user.full_name)}
         fullName={user.full_name}
         size="large"
