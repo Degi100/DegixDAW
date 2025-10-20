@@ -3,6 +3,7 @@ import Button from '../ui/Button';
 import type { ProfileSettingsProps } from './types/settings';
 import { uploadAvatar, removeAvatar } from '../../lib/services/avatarService';
 import { useToast } from '../../hooks/useToast';
+import ProfilePrivacyToggles from './ProfilePrivacyToggles';
 
 const ProfileSettingsSection: React.FC<ProfileSettingsProps> = ({ profileData, setProfileData, isUpdating, handleProfileSave }) => {
   const [uploading, setUploading] = useState(false);
@@ -183,6 +184,10 @@ const ProfileSettingsSection: React.FC<ProfileSettingsProps> = ({ profileData, s
           {isUpdating ? '⏳ Speichern...' : '✓ Profil speichern'}
         </Button>
       </div>
+
+      {/* Privacy Settings */}
+      <div className="privacy-section-divider" style={{ margin: '2rem 0', borderTop: '1px solid var(--border-color)' }}></div>
+      <ProfilePrivacyToggles />
     </form>
   </div>
   );
