@@ -69,31 +69,11 @@
   }
 }
 
+// UserCard avatar - uses Avatar component with custom sizing
 .user-card__avatar {
-  position: relative;
   width: 64px;
   height: 64px;
-  overflow: hidden;
   border-radius: var(--border-radius);
-
-  .user-card__avatar-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  .user-card__avatar-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--gradient-primary);
-    color: var(--color-white);
-    font-weight: 600;
-    font-size: 1.25rem;
-  }
 }
 
 // Avatar Upload UI (Settings)

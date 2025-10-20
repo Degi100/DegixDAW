@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useFriends } from '../../hooks/useFriends';
 import { useFollowers } from '../../hooks/useFollowers';
+import Avatar from '../ui/Avatar';
 import type { SearchUser } from '../../hooks/useUserSearch';
 
 interface UserCardProps {
@@ -97,24 +98,14 @@ export default function UserCard({ user, showActions = true }: UserCardProps) {
 
   return (
     <div className="user-card">
-      <div className="user-card__avatar">
-        {user.avatar_url ? (
-          <img
-            src={user.avatar_url}
-            alt={user.full_name}
-            className="user-card__avatar-image"
-            onError={(e) => {
-              // Fallback to initials if image fails
-              e.currentTarget.style.display = 'none';
-              const placeholder = e.currentTarget.nextElementSibling as HTMLElement;
-              if (placeholder) placeholder.style.display = 'flex';
-            }}
-          />
-        ) : null}
-        <div className="user-card__avatar-placeholder" style={{ display: user.avatar_url ? 'none' : 'flex' }}>
-          {getInitials(user.full_name)}
-        </div>
-      </div>
+      <Avatar
+        avatarUrl={user.avatar_url || null}
+        initial={getInitials(user.full_name)}
+        fullName={user.full_name}
+        size="large"
+        shape="rounded"
+        className="user-card__avatar"
+      />
 
       <div className="user-card__info">
         <div className="user-card__name">{user.full_name}</div>
