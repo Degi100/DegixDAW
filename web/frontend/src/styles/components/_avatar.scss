@@ -69,13 +69,6 @@
   }
 }
 
-// UserCard avatar - uses Avatar component with custom sizing
-.user-card__avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: var(--border-radius);
-}
-
 // Avatar Upload UI (Settings)
 .avatar-upload {
   display: flex;
