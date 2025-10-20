@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useFriends } from '../../hooks/useFriends';
 import { useFollowers } from '../../hooks/useFollowers';
+import Avatar from '../ui/Avatar';
 import type { SearchUser } from '../../hooks/useUserSearch';
 
 interface UserCardProps {
@@ -86,8 +87,20 @@ export default function UserCard({ user, showActions = true }: UserCardProps) {
     setLoading(false);
   };
 
+  const getInitials = () => {
+    return user.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
   return (
     <div className="user-card">
+      <Avatar
+        avatarUrl={user.avatar_url || null}
+        initial={getInitials()}
+        fullName={user.full_name}
+        size="large"
+        shape="rounded"
+        className="user-card__avatar"
+      />
       <div className="user-card__info">
         <div className="user-card__name">{user.full_name}</div>
         <div className="user-card__username">@{user.username}</div>
