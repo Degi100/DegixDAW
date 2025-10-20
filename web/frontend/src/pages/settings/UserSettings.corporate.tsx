@@ -6,6 +6,7 @@ import { LoadingOverlay } from '../../components/ui/Loading';
 import ProfileSettingsSection from '../../components/settings/ProfileSettingsSection';
 import SecuritySettingsSection from '../../components/settings/SecuritySettingsSection';
 import AccountSettingsSection from '../../components/settings/AccountSettingsSection';
+import PrivacySettingsSection from '../../components/settings/PrivacySettingsSection';
 import DeleteAccountModal from '../../components/settings/DeleteAccountModal';
 import EmailChangeInfoModal from '../../components/settings/EmailChangeInfoModal';
 import { useAuth } from '../../hooks/useAuth';
@@ -17,7 +18,7 @@ import Avatar from '../../components/ui/Avatar';
 
 export default function UserSettingsCorporate() {
   const { user } = useAuth();
-  const [activeSection, setActiveSection] = useState<'profile' | 'security' | 'account'>('profile');
+  const [activeSection, setActiveSection] = useState<'profile' | 'security' | 'account' | 'privacy'>('profile');
 
   // Section hooks
   const profileSection = useProfileSection(user);
@@ -71,6 +72,14 @@ export default function UserSettingsCorporate() {
                   <span className="nav-icon">⚙️</span>
                   <span className="nav-text">Konto</span>
                 </button>
+
+                <button
+                  className={`nav-item ${activeSection === 'privacy' ? 'active' : ''}`}
+                  onClick={() => setActiveSection('privacy')}
+                >
+                  <span className="nav-icon">🔒</span>
+                  <span className="nav-text">Privacy</span>
+                </button>
               </nav>
             </div>
           </aside>
@@ -97,6 +106,9 @@ export default function UserSettingsCorporate() {
             )}
             {activeSection === 'account' && (
               <AccountSettingsSection handleLogout={accountSection.handleLogout} />
+            )}
+            {activeSection === 'privacy' && (
+              <PrivacySettingsSection />
             )}
           </div>
         </div>
