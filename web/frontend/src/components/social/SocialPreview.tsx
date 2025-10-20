@@ -7,6 +7,7 @@ import { useFollowers, type Follower } from '../../hooks/useFollowers';
 import { useChat } from '../../contexts/ChatContext';
 import { useConversations } from '../../hooks/useConversations';
 import { supabase } from '../../lib/supabase';
+import Avatar from '../ui/Avatar';
 
 interface SocialPreviewProps {
   type: 'friends' | 'followers' | 'following' | 'requests';
@@ -95,6 +96,20 @@ export default function SocialPreview({ type }: SocialPreviewProps) {
     return null;
   };
 
+  const getAvatarUrl = (item: Friendship | Follower) => {
+    if ('friend_profile' in item) {
+      return item.friend_profile?.avatar_url || null;
+    }
+    if ('profile' in item) {
+      return item.profile?.avatar_url || null;
+    }
+    return null;
+  };
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
   const handleRemove = (item: Friendship | Follower) => {
     if (type === 'friends' && 'friend_profile' in item) {
       removeFriend(item.id);
@@ -139,12 +154,18 @@ export default function SocialPreview({ type }: SocialPreviewProps) {
         {data.map((item) => {
           const displayName = getDisplayName(item);
           const username = getUsername(item);
-          
+          const avatarUrl = getAvatarUrl(item);
+
           return (
             <div key={item.id} className="social-preview-item">
-              <div className="preview-item-avatar">
-                {displayName.charAt(0).toUpperCase()}
-              </div>
+              <Avatar
+                avatarUrl={avatarUrl}
+                initial={getInitials(displayName)}
+                fullName={displayName}
+                size="medium"
+                shape="rounded"
+                className="preview-item-avatar"
+              />
               <div className="preview-item-info">
                 <div className="preview-item-name">{displayName}</div>
                 {username && (

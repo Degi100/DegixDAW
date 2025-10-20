@@ -14,6 +14,7 @@ export interface Follower {
   profile?: {
     full_name: string;
     username: string;
+    avatar_url?: string | null;
   };
 }
 
@@ -65,9 +66,9 @@ export function useFollowers(userId?: string) {
       if (allUserIds.size > 0) {
         const { data: profilesData } = await supabase
           .from('profiles')
-          .select('id, full_name, username')
+          .select('id, full_name, username, avatar_url')
           .in('id', Array.from(allUserIds));
-        
+
         profilesData?.forEach(p => profilesMap.set(p.id, p));
       }
 
