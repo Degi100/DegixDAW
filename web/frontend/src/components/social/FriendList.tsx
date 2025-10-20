@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useFriends } from '../../hooks/useFriends';
 import { useConversations } from '../../hooks/useConversations';
 import { Spinner } from '../ui/Loading';
+import Avatar from '../ui/Avatar';
 
 export default function FriendList() {
   const navigate = useNavigate();
@@ -35,6 +36,11 @@ export default function FriendList() {
     }
   };
 
+  const getInitials = (name?: string) => {
+    if (!name) return '?';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
   if (loading) {
     return (
       <div className="friend-list__loading">
@@ -55,9 +61,14 @@ export default function FriendList() {
             {pendingRequests.map(request => (
               <div key={request.id} className="friend-card friend-card--pending">
                 <div className="friend-card__info">
-                  <div className="friend-card__avatar">
-                    {request.friend_profile?.full_name?.[0] || '?'}
-                  </div>
+                  <Avatar
+                    avatarUrl={request.friend_profile?.avatar_url || null}
+                    initial={getInitials(request.friend_profile?.full_name)}
+                    fullName={request.friend_profile?.full_name || 'Unbekannt'}
+                    size="medium"
+                    shape="rounded"
+                    className="friend-card__avatar"
+                  />
                   <div>
                     <div className="friend-card__name">
                       {request.friend_profile?.full_name || 'Unbekannt'}
@@ -97,9 +108,14 @@ export default function FriendList() {
             {sentRequests.map(request => (
               <div key={request.id} className="friend-card friend-card--sent">
                 <div className="friend-card__info">
-                  <div className="friend-card__avatar">
-                    {request.friend_profile?.full_name?.[0] || '?'}
-                  </div>
+                  <Avatar
+                    avatarUrl={request.friend_profile?.avatar_url || null}
+                    initial={getInitials(request.friend_profile?.full_name)}
+                    fullName={request.friend_profile?.full_name || 'Unbekannt'}
+                    size="medium"
+                    shape="rounded"
+                    className="friend-card__avatar"
+                  />
                   <div>
                     <div className="friend-card__name">
                       {request.friend_profile?.full_name || 'Unbekannt'}
@@ -132,9 +148,14 @@ export default function FriendList() {
             {friends.map(friendship => (
               <div key={friendship.id} className="friend-card">
                 <div className="friend-card__info">
-                  <div className="friend-card__avatar">
-                    {friendship.friend_profile?.full_name?.[0] || '?'}
-                  </div>
+                  <Avatar
+                    avatarUrl={friendship.friend_profile?.avatar_url || null}
+                    initial={getInitials(friendship.friend_profile?.full_name)}
+                    fullName={friendship.friend_profile?.full_name || 'Unbekannt'}
+                    size="medium"
+                    shape="rounded"
+                    className="friend-card__avatar"
+                  />
                   <div>
                     <div className="friend-card__name">
                       {friendship.friend_profile?.full_name || 'Unbekannt'}

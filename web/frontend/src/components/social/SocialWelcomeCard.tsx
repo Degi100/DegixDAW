@@ -30,12 +30,10 @@ export default function SocialWelcomeCard({
 }: SocialWelcomeCardProps) {
   const [expandedView, setExpandedView] = useState<ExpandedView>(null);
   
-  const displayName = user.user_metadata?.display_name || 
-                     user.user_metadata?.full_name || 
-                     user.user_metadata?.username || 
+  const displayName = user.user_metadata?.display_name ||
+                     user.user_metadata?.full_name ||
+                     user.user_metadata?.username ||
                      'Benutzer';
-  
-  const avatarLetter = displayName.charAt(0).toUpperCase();
 
   const handleStatToggle = (view: ExpandedView) => {
     // Simply toggle - no confirm needed
@@ -47,10 +45,6 @@ export default function SocialWelcomeCard({
       <div className="welcome-card-corporate">
         {/* Profile Section - Same as Dashboard */}
         <div className="profile-section">
-          <div className="profile-avatar">
-            {avatarLetter}
-          </div>
-          
           <div className="profile-info">
             <div className="greeting">
               <h2 className="user-display-name">{displayName}</h2>
