@@ -38,13 +38,11 @@ export default function UserProfile() {
 
   useEffect(() => {
     if (!userId) return;
-    if (isOwnProfile) {
-      navigate('/settings');
-      return;
-    }
     loadProfile();
     loadStats();
-    loadSocialStatus();
+    if (!isOwnProfile) {
+      loadSocialStatus();
+    }
   }, [userId, isOwnProfile]);
 
   const loadProfile = async () => {
@@ -218,52 +216,67 @@ export default function UserProfile() {
 
               {/* Actions */}
               <div className="actions-section">
-                <div className="primary-actions">
-                  {friendshipStatus === 'none' && (
-                    <button
-                      className="btn btn-primary"
-                      onClick={async () => {
-                        await sendFriendRequest(userId!);
-                        loadSocialStatus();
-                      }}
-                    >
-                      👥 Add Friend
+                {isOwnProfile ? (
+                  // Own Profile Actions
+                  <div className="primary-actions">
+                    <button className="btn btn-primary" onClick={() => navigate('/settings')}>
+                      ⚙️ Profil bearbeiten
                     </button>
-                  )}
-                  {friendshipStatus === 'pending' && (
-                    <button className="btn btn-secondary" disabled>
-                      ⏳ Request Sent
+                    <button className="btn btn-outline" onClick={() => navigate(-1)}>
+                      ← Zurück
                     </button>
-                  )}
-                  {friendshipStatus === 'friends' && (
-                    <button className="btn btn-success" disabled>
-                      ✅ Friends
-                    </button>
-                  )}
+                  </div>
+                ) : (
+                  // Other User Actions
+                  <>
+                    <div className="primary-actions">
+                      {friendshipStatus === 'none' && (
+                        <button
+                          className="btn btn-primary"
+                          onClick={async () => {
+                            await sendFriendRequest(userId!);
+                            loadSocialStatus();
+                          }}
+                        >
+                          👥 Add Friend
+                        </button>
+                      )}
+                      {friendshipStatus === 'pending' && (
+                        <button className="btn btn-secondary" disabled>
+                          ⏳ Request Sent
+                        </button>
+                      )}
+                      {friendshipStatus === 'friends' && (
+                        <button className="btn btn-success" disabled>
+                          ✅ Friends
+                        </button>
+                      )}
 
-                  <button
-                    className="btn btn-outline"
-                    onClick={async () => {
-                      if (isFollowing) {
-                        await unfollowUser(userId!);
-                      } else {
-                        await followUser(userId!);
-                      }
-                      loadSocialStatus();
-                    }}
-                  >
-                    {isFollowing ? '✓ Following' : '➕ Follow'}
-                  </button>
-                </div>
+                      <button
+                        className="btn btn-outline"
+                        onClick={async () => {
+                          if (isFollowing) {
+                            await unfollowUser(userId!);
+                          } else {
+                            await followUser(userId!);
+                          }
+                          loadSocialStatus();
+                        }}
+                      >
+                        {isFollowing ? '✓ Following' : '➕ Follow'}
+                      </button>
+                    </div>
 
-                <div className="secondary-actions">
-                  <button className="btn btn-outline btn-small">
-                    💬 Send Message
-                  </button>
-                  <button className="btn btn-outline btn-small" onClick={() => navigate(-1)}>
-                    ← Back
-                  </button>
-                </div>
+                    <div className="secondary-actions">
+                      <button className="btn btn-outline btn-small">
+                        💬 Send Message
+                      </button>
+                      <button className="btn btn-outline btn-small" onClick={() => navigate(-1)}>
+                        ← Back
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </section>

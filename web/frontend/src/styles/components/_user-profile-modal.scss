@@ -3,6 +3,8 @@
 // Quick view popup for user profiles
 // ============================================
 
+@use '../abstracts/index' as *;
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -10,21 +12,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: $z-modal-backdrop; // 1040 - Above header (1030)
   backdrop-filter: blur(4px);
 }
 
 .user-profile-modal {
   background: var(--bg-primary);
-  border-radius: var(--border-radius-lg);
-  padding: 2rem;
+  border-radius: $radius-lg;
+  padding: $spacing-8;
   max-width: 500px;
   width: 90%;
   max-height: 85vh;
   overflow-y: auto;
   position: relative;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: $shadow-xl;
   border: 1px solid var(--border-color);
+  z-index: $z-modal; // 1050 - Above backdrop (1040)
 
   .modal-close {
     position: absolute;

@@ -9,6 +9,7 @@ import AccountSettingsSection from '../../components/settings/AccountSettingsSec
 import PrivacySettingsSection from '../../components/settings/PrivacySettingsSection';
 import DeleteAccountModal from '../../components/settings/DeleteAccountModal';
 import EmailChangeInfoModal from '../../components/settings/EmailChangeInfoModal';
+import UserProfileModal from '../../components/profile/UserProfileModal';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfileSection } from '../../hooks/settings/useProfileSection';
 import { useSecuritySection } from '../../hooks/settings/useSecuritySection';
@@ -18,7 +19,8 @@ import Avatar from '../../components/ui/Avatar';
 
 export default function UserSettingsCorporate() {
   const { user } = useAuth();
-  const [activeSection, setActiveSection] = useState<'profile' | 'security' | 'account' | 'privacy'>('profile');
+  const [activeSection, setActiveSection] = useState<'profile' | 'security' | 'account'>('profile');
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Section hooks
   const profileSection = useProfileSection(user);
@@ -38,7 +40,10 @@ export default function UserSettingsCorporate() {
           {/* Navigation Sidebar */}
           <aside className="settings-sidebar">
             <div className="sidebar-card">
-              <div className="user-preview">
+              <button
+                className="user-preview"
+                onClick={() => setShowProfileModal(true)}
+              >
                 <Avatar {...avatar} size="large" shape="rounded" className="user-avatar" />
                 <div className="user-info">
                   <div className="user-name">
@@ -46,7 +51,7 @@ export default function UserSettingsCorporate() {
                   </div>
                   <div className="user-email">{user.email}</div>
                 </div>
-              </div>
+              </button>
 
               <nav className="settings-nav">
                 <button
@@ -72,14 +77,6 @@ export default function UserSettingsCorporate() {
                   <span className="nav-icon">⚙️</span>
                   <span className="nav-text">Konto</span>
                 </button>
-
-                <button
-                  className={`nav-item ${activeSection === 'privacy' ? 'active' : ''}`}
-                  onClick={() => setActiveSection('privacy')}
-                >
-                  <span className="nav-icon">🔒</span>
-                  <span className="nav-text">Privacy</span>
-                </button>
               </nav>
             </div>
           </aside>
@@ -95,20 +92,20 @@ export default function UserSettingsCorporate() {
               />
             )}
             {activeSection === 'security' && (
-              <SecuritySettingsSection
-                securityData={securitySection.securityData}
-                setSecurityData={securitySection.setSecurityData}
-                isUpdating={securitySection.isUpdating}
-                handlePasswordChange={securitySection.handlePasswordChange}
-                handleEmailChange={securitySection.handleEmailChange}
-                userEmail={user.email || ''}
-              />
+              <>
+                <SecuritySettingsSection
+                  securityData={securitySection.securityData}
+                  setSecurityData={securitySection.setSecurityData}
+                  isUpdating={securitySection.isUpdating}
+                  handlePasswordChange={securitySection.handlePasswordChange}
+                  handleEmailChange={securitySection.handleEmailChange}
+                  userEmail={user.email || ''}
+                />
+                <PrivacySettingsSection />
+              </>
             )}
             {activeSection === 'account' && (
               <AccountSettingsSection handleLogout={accountSection.handleLogout} />
-            )}
-            {activeSection === 'privacy' && (
-              <PrivacySettingsSection />
             )}
           </div>
         </div>
@@ -128,6 +125,14 @@ export default function UserSettingsCorporate() {
           securitySection.setEmailChangeInfo(null);
         }}
       />
+
+      {/* Profile Modal */}
+      {showProfileModal && (
+        <UserProfileModal
+          userId={user.id}
+          onClose={() => setShowProfileModal(false)}
+        />
+      )}
     </div>
   );
 }

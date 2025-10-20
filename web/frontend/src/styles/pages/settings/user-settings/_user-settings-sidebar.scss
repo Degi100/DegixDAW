@@ -28,7 +28,7 @@
 }
 
 // ============================================
-// USER PREVIEW
+// USER PREVIEW (Clickable)
 // ============================================
 
 .user-preview {
@@ -36,8 +36,24 @@
   align-items: center;
   gap: $spacing-4;
   margin-bottom: $spacing-6;
+  padding: $spacing-3;
   padding-bottom: $spacing-4;
+  border: none;
   border-bottom: 1px solid var(--color-border);
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: $radius-md $radius-md 0 0;
+
+  &:hover {
+    background: var(--color-bg-hover);
+
+    .user-name {
+      color: $primary-600;
+    }
+  }
 
   @media (max-width: 768px) {
     margin-bottom: $spacing-4;

@@ -61,70 +61,36 @@ export default function PrivacySettingsSection() {
   };
 
   return (
-    <div className="settings-section">
-      <h3>🔒 Privacy Settings</h3>
-      <p className="section-description">Control what others can see on your profile</p>
+    <div className="settings-section privacy-settings-section">
+      <div className="section-header">
+        <h3>🔒 Privacy Settings</h3>
+        <p className="section-description">Control what others can see on your profile</p>
+      </div>
 
       <div className="privacy-toggles">
-        <div className="privacy-item">
-          <label>
-            <input
-              type="checkbox"
-              checked={settings.show_email}
-              onChange={() => handleToggle('show_email')}
-              disabled={saving}
-            />
-            <span>Show Email Address</span>
-          </label>
-        </div>
-
-        <div className="privacy-item">
-          <label>
-            <input
-              type="checkbox"
-              checked={settings.show_bio}
-              onChange={() => handleToggle('show_bio')}
-              disabled={saving}
-            />
-            <span>Show Bio</span>
-          </label>
-        </div>
-
-        <div className="privacy-item">
-          <label>
-            <input
-              type="checkbox"
-              checked={settings.show_instruments}
-              onChange={() => handleToggle('show_instruments')}
-              disabled={saving}
-            />
-            <span>Show Skills & Instruments</span>
-          </label>
-        </div>
-
-        <div className="privacy-item">
-          <label>
-            <input
-              type="checkbox"
-              checked={settings.show_projects}
-              onChange={() => handleToggle('show_projects')}
-              disabled={saving}
-            />
-            <span>Show Projects</span>
-          </label>
-        </div>
-
-        <div className="privacy-item">
-          <label>
-            <input
-              type="checkbox"
-              checked={settings.show_followers}
-              onChange={() => handleToggle('show_followers')}
-              disabled={saving}
-            />
-            <span>Show Followers & Following</span>
-          </label>
-        </div>
+        {[
+          { key: 'show_email' as const, label: 'Email Address', description: 'Show your email to other users' },
+          { key: 'show_bio' as const, label: 'Bio', description: 'Display your bio on your profile' },
+          { key: 'show_instruments' as const, label: 'Skills & Instruments', description: 'Show your musical skills' },
+          { key: 'show_projects' as const, label: 'Projects', description: 'Display your project list' },
+          { key: 'show_followers' as const, label: 'Followers & Following', description: 'Show your social connections' },
+        ].map(({ key, label, description }) => (
+          <div key={key} className="privacy-toggle-item">
+            <div className="toggle-info">
+              <span className="toggle-label">{label}</span>
+              <span className="toggle-description">{description}</span>
+            </div>
+            <label className="toggle-switch">
+              <input
+                type="checkbox"
+                checked={settings[key]}
+                onChange={() => handleToggle(key)}
+                disabled={saving}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
+        ))}
       </div>
     </div>
   );

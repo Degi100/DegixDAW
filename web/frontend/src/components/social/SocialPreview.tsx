@@ -1,7 +1,7 @@
 // src/components/social/SocialPreview.tsx
 // Preview component for Friends/Followers - Scroll + Load More
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFriends, type Friendship } from '../../hooks/useFriends';
 import { useFollowers, type Follower } from '../../hooks/useFollowers';
 import { useChat } from '../../contexts/ChatContext';
@@ -22,6 +22,13 @@ export default function SocialPreview({ type }: SocialPreviewProps) {
   const [showCount, setShowCount] = useState(5);
   const [showAll, setShowAll] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUserId(data.user?.id || null);
+    });
+  }, []);
 
   // Get data based on type
   const getData = (): (Friendship | Follower)[] => {
@@ -114,7 +121,9 @@ export default function SocialPreview({ type }: SocialPreviewProps) {
 
   const getUserId = (item: Friendship | Follower): string => {
     if (type === 'friends' && 'friend_id' in item) {
-      return item.friend_id;
+      // For friends: Return the OTHER person's ID (not mine!)
+      if (!currentUserId) return '';
+      return item.user_id === currentUserId ? item.friend_id : item.user_id;
     }
     if (type === 'followers' && 'follower_id' in item) {
       return item.follower_id;

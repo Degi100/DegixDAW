@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js';
 import { useAvatar } from '../../hooks/useAvatar';
 import Avatar from '../ui/Avatar';
+import UserProfileModal from '../profile/UserProfileModal';
 
 interface UserDropdownProps {
   user: User;
@@ -19,14 +20,18 @@ interface UserDropdownProps {
 export default function UserDropdown({ user, isAdmin, isModerator = false, onLogout }: UserDropdownProps) {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
 
-  const handleItemClick = (action: 'settings' | 'admin' | 'logout') => {
+  const handleItemClick = (action: 'profile' | 'settings' | 'admin' | 'logout') => {
     setIsOpen(false);
     switch (action) {
+      case 'profile':
+        setShowProfileModal(true);
+        break;
       case 'settings':
         navigate('/settings');
         break;
@@ -71,22 +76,33 @@ export default function UserDropdown({ user, isAdmin, isModerator = false, onLog
 
       {isOpen && (
         <div className="user-dropdown">
-          <div className="dropdown-header">
+          <button
+            className="dropdown-header"
+            onClick={() => handleItemClick('profile')}
+          >
             <div className="dropdown-user-info">
               <div className="dropdown-user-name">
                 {getUserDisplayName(user)}
               </div>
               <div className="dropdown-user-email">{user.email}</div>
             </div>
-          </div>
+          </button>
 
           <div className="dropdown-menu">
+            <button
+              onClick={() => handleItemClick('profile')}
+              className="dropdown-item"
+            >
+              <span className="dropdown-icon">👤</span>
+              <span>Profil anzeigen</span>
+            </button>
+
             <button
               onClick={() => handleItemClick('settings')}
               className="dropdown-item"
             >
               <span className="dropdown-icon">⚙️</span>
-              <span>Settings</span>
+              <span>Einstellungen</span>
             </button>
 
             {(isAdmin || isModerator) && (
@@ -106,10 +122,18 @@ export default function UserDropdown({ user, isAdmin, isModerator = false, onLog
               className="dropdown-item logout-item"
             >
               <span className="dropdown-icon">🚪</span>
-              <span>Logout</span>
+              <span>Abmelden</span>
             </button>
           </div>
         </div>
+      )}
+
+      {/* Profile Modal */}
+      {showProfileModal && (
+        <UserProfileModal
+          userId={user.id}
+          onClose={() => setShowProfileModal(false)}
+        />
       )}
     </div>
   );

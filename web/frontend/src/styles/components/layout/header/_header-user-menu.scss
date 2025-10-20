@@ -93,9 +93,29 @@
 }
 
 .dropdown-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
   padding: $spacing-4;
+  border: none;
   border-bottom: 1px solid $gray-100;
   background: $gray-50;
+  cursor: pointer;
+  transition: all $transition-fast;
+  text-align: left;
+
+  &:hover {
+    background: $gray-100;
+
+    .dropdown-user-name {
+      color: $primary-600;
+    }
+  }
+
+  &:focus {
+    outline: 2px solid $primary-500;
+    outline-offset: -2px;
+  }
 }
 
 .dropdown-user-info {
