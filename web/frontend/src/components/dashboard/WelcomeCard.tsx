@@ -4,6 +4,8 @@
 import type { User } from '@supabase/supabase-js';
 import Button from '../ui/Button';
 import RoleBadge from './RoleBadge';
+import { useAvatar } from '../../hooks/useAvatar';
+import Avatar from '../ui/Avatar';
 
 interface WelcomeCardProps {
   user: User;
@@ -11,15 +13,14 @@ interface WelcomeCardProps {
 
 export default function WelcomeCard({ user }: WelcomeCardProps) {
   // All navigation now handled in main dashboard header
+  const avatar = useAvatar(user);
 
   return (
     <section className="welcome-section-corporate">
       <div className="welcome-card-corporate">
         {/* User Profile Section */}
         <div className="profile-section">
-          <div className="profile-avatar">
-            {(user.user_metadata?.first_name || user.user_metadata?.full_name || user.user_metadata?.username || user.email).charAt(0).toUpperCase()}
-          </div>
+          <Avatar {...avatar} size="xlarge" shape="rounded" className="profile-avatar" />
           
           <div className="profile-info">
             <div className="greeting">

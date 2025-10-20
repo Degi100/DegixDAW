@@ -45,7 +45,7 @@ export async function getTrackComments(trackId: string): Promise<TrackComment[]>
     // Step 3: Fetch profiles for all authors
     let profilesQuery = supabase
       .from('profiles')
-      .select('id, username');
+      .select('id, username, avatar_url');
 
     // Use .eq() for single author, .in() for multiple (avoids encoding issues)
     if (authorIds.length === 1) {
@@ -69,7 +69,7 @@ export async function getTrackComments(trackId: string): Promise<TrackComment[]>
       return {
         ...comment,
         username: profile?.username || null,
-        avatar_url: null, // avatar_url does not exist in profiles table
+        avatar_url: profile?.avatar_url || null
       };
     });
   } catch (error) {
@@ -109,17 +109,17 @@ export async function createTrackComment(
       throw error;
     }
 
-    // Fetch author profile to include username
+    // Fetch author profile to include username and avatar
     const { data: profile } = await supabase
       .from('profiles')
-      .select('username')
+      .select('username, avatar_url')
       .eq('id', user.id)
       .single();
 
     return {
       ...comment,
       username: profile?.username || null,
-      avatar_url: null,
+      avatar_url: profile?.avatar_url || null
     };
   } catch (error) {
     console.error('createTrackComment failed:', error);

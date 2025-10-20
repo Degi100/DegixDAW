@@ -98,7 +98,20 @@ export default function UserCard({ user, showActions = true }: UserCardProps) {
   return (
     <div className="user-card">
       <div className="user-card__avatar">
-        <div className="user-card__avatar-placeholder">
+        {user.avatar_url ? (
+          <img
+            src={user.avatar_url}
+            alt={user.full_name}
+            className="user-card__avatar-image"
+            onError={(e) => {
+              // Fallback to initials if image fails
+              e.currentTarget.style.display = 'none';
+              const placeholder = e.currentTarget.nextElementSibling as HTMLElement;
+              if (placeholder) placeholder.style.display = 'flex';
+            }}
+          />
+        ) : null}
+        <div className="user-card__avatar-placeholder" style={{ display: user.avatar_url ? 'none' : 'flex' }}>
           {getInitials(user.full_name)}
         </div>
       </div>

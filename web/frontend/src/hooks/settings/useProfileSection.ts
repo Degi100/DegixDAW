@@ -15,7 +15,8 @@ export function useProfileSection(user: User | null) {
     fullName: user?.user_metadata?.full_name || '',
     username: user?.user_metadata?.username || '',
     displayName: user?.user_metadata?.display_name || user?.user_metadata?.full_name || '',
-    bio: user?.user_metadata?.bio || ''
+    bio: user?.user_metadata?.bio || '',
+    avatarUrl: user?.user_metadata?.avatar_url || ''
   });
 
   // Load profile data from database on mount
@@ -26,7 +27,7 @@ export function useProfileSection(user: User | null) {
       try {
         const { data: profile, error } = await supabase
           .from('profiles')
-          .select('*')
+          .select('full_name, username, bio, avatar_url')
           .eq('id', user.id)
           .single();
 
@@ -42,7 +43,8 @@ export function useProfileSection(user: User | null) {
             fullName: profile.full_name || user?.user_metadata?.full_name || '',
             username: profile.username || user?.user_metadata?.username || '',
             displayName: user?.user_metadata?.display_name || user?.user_metadata?.full_name || '',
-            bio: profile.bio || user?.user_metadata?.bio || ''
+            bio: profile.bio || user?.user_metadata?.bio || '',
+            avatarUrl: profile.avatar_url || user?.user_metadata?.avatar_url || ''
           });
         }
       } catch (err) {

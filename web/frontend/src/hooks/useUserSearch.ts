@@ -9,6 +9,7 @@ export interface SearchUser {
   full_name: string;
   username: string;
   created_at: string;
+  avatar_url?: string | null;
 }
 
 export function useUserSearch() {
@@ -29,7 +30,7 @@ export function useUserSearch() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, username, created_at')
+        .select('id, full_name, username, created_at, avatar_url')
         .or(`full_name.ilike.%${query}%,username.ilike.%${query}%`)
         .limit(20);
 

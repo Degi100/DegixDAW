@@ -6,6 +6,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js';
+import { useAvatar } from '../../hooks/useAvatar';
+import Avatar from '../ui/Avatar';
 
 interface UserDropdownProps {
   user: User;
@@ -48,10 +50,7 @@ export default function UserDropdown({ user, isAdmin, isModerator = false, onLog
     );
   };
 
-  const getUserInitial = (user: User): string => {
-    const name = getUserDisplayName(user);
-    return name.charAt(0).toUpperCase();
-  };
+  const avatar = useAvatar(user);
 
   return (
     <div className="user-menu-container">
@@ -61,9 +60,7 @@ export default function UserDropdown({ user, isAdmin, isModerator = false, onLog
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
-        <div className="user-avatar">
-          {getUserInitial(user)}
-        </div>
+        <Avatar {...avatar} size="medium" shape="circle" />
         <span className="user-name">
           {getUserDisplayName(user)}
         </span>

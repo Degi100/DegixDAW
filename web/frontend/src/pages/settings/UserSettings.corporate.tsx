@@ -12,6 +12,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { useProfileSection } from '../../hooks/settings/useProfileSection';
 import { useSecuritySection } from '../../hooks/settings/useSecuritySection';
 import { useAccountSection } from '../../hooks/settings/useAccountSection';
+import { useAvatar } from '../../hooks/useAvatar';
+import Avatar from '../../components/ui/Avatar';
 
 export default function UserSettingsCorporate() {
   const { user } = useAuth();
@@ -21,6 +23,7 @@ export default function UserSettingsCorporate() {
   const profileSection = useProfileSection(user);
   const securitySection = useSecuritySection(user);
   const accountSection = useAccountSection(user);
+  const avatar = useAvatar(user);
 
   if (!user) {
     return <LoadingOverlay message="Lade Benutzereinstellungen..." />;
@@ -35,9 +38,7 @@ export default function UserSettingsCorporate() {
           <aside className="settings-sidebar">
             <div className="sidebar-card">
               <div className="user-preview">
-                <div className="user-avatar">
-                  {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0) || '?'}
-                </div>
+                <Avatar {...avatar} size="large" shape="rounded" className="user-avatar" />
                 <div className="user-info">
                   <div className="user-name">
                     {user.user_metadata?.full_name || 'Unbekannt'}

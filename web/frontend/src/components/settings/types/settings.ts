@@ -11,6 +11,7 @@ export interface ProfileDataState {
   username: string;
   displayName: string;
   bio: string;
+  avatarUrl?: string;
 }
 
 export interface SecurityDataState {
