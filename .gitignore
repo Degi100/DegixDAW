@@ -80,6 +80,11 @@ desktop/out
 desktop/dist
 desktop/.next
 desktop/.turbo
+desktop/debug.log
+desktop/*.dat
+desktop/*.pdb
+desktop/*.exe
+desktop/build/
 
 # VST plugins (vst)
 vst/Builds/
