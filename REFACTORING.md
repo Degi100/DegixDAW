@@ -261,27 +261,29 @@
 
 ### Root-Level Docs (12 Files)
 
-**Review & Decide:**
-- [ ] `ANALYTICS_DEBUG_SESSION.md` - Debug Session Log (DELETE?)
-- [ ] `CHANGELOG.md` - Changelog (KEEP + UPDATE)
-- [ ] `CHAT_SIDEBAR_IMPROVEMENTS.md` - Feature Doc (DELETE/ARCHIVE?)
-- [ ] `CLAUDE.md` - ✅ **KEEP** (Project Instructions)
-- [ ] `ISSUES.md` - Veraltet (2025-10-08) → **DELETE** (Supabase is source)
-- [ ] `KNOWN_ISSUES.md` - Aktuell? (CHECK + UPDATE/DELETE)
-- [ ] `MONOREPO_MIGRATION.md` - Migration Done → **ARCHIVE**
-- [ ] `PR_TEMPLATE_CHAT_SIDEBAR.md` - Specific PR → **DELETE**
-- [ ] `README.md` - ✅ **KEEP** (Main Readme)
-- [ ] `REFACTORING.md` - ✅ **KEEP** (This File!)
-- [ ] `STORAGE_SECURITY_MIGRATION.md` - Migration Done → **ARCHIVE**
-- [ ] `VERCEL_DEPLOYMENT.md` - Deployment Doc (KEEP or MERGE into CLAUDE.md?)
+**✅ Deleted (6 Files):**
+- [x] `ANALYTICS_DEBUG_SESSION.md` ✅
+- [x] `CHAT_SIDEBAR_IMPROVEMENTS.md` ✅
+- [x] `ISSUES.md` ✅
+- [x] `MONOREPO_MIGRATION.md` ✅
+- [x] `PR_TEMPLATE_CHAT_SIDEBAR.md` ✅
+- [x] `STORAGE_SECURITY_MIGRATION.md` ✅
 
-**Priorität:** 🔵 MEDIUM
+**✅ Keep (6 Files):**
+- [x] `CHANGELOG.md` - Changelog (KEEP + UPDATE)
+- [x] `CLAUDE.md` - ✅ **KEEP** (Project Instructions)
+- [x] `KNOWN_ISSUES.md` - ✅ **KEEP** (Review later)
+- [x] `README.md` - ✅ **KEEP** (Main Readme)
+- [x] `REFACTORING.md` - ✅ **KEEP** (This File!)
+- [x] `VERCEL_DEPLOYMENT.md` - ✅ **KEEP** (Deployment Doc)
+
+**Priorität:** 🔵 MEDIUM ✅ **DONE!**
 
 ---
 
-### docs/ Folder (4 Files)
+### docs/ Folder (11 Files)
 
-**Architecture Docs:**
+**Architecture Docs (Review in Vision Phase):**
 - [ ] `docs/architecture/00_BIG_PICTURE.md` - Vision (UPDATE für neue Wendung!)
 - [ ] `docs/architecture/01_SYSTEM_OVERVIEW.md` - Components (UPDATE)
 - [ ] `docs/architecture/02_DATABASE_SCHEMA.md` - SQL Schema (KEEP + UPDATE)
@@ -290,37 +292,43 @@
 - [ ] `docs/architecture/05_VST_PLUGIN.md` - JUCE (DELETE wenn nicht geplant!)
 - [ ] `docs/architecture/06_DEPLOYMENT.md` - CI/CD (KEEP)
 
-**Session Summaries:**
-- [ ] `docs/DATABASE_STATUS_REPORT.md` - Status Report → **ARCHIVE**
-- [ ] `docs/DEGIXDAW_MASTERPLAN.md` - Masterplan (UPDATE oder DELETE?)
-- [ ] `docs/SESSION_SUMMARY_2025-10-18.md` - Session Log → **ARCHIVE**
-- [ ] `docs/SESSION_SUMMARY_FILE_UPLOAD_FIX_2025-10-18.md` - Session Log → **ARCHIVE**
+**Masterplan (Keep for Vision):**
+- [x] `docs/DEGIXDAW_MASTERPLAN.md` - ✅ **KEEP** (33K - für neue Wendung reviewen!)
+
+**✅ Deleted Session Logs (3 Files):**
+- [x] `docs/DATABASE_STATUS_REPORT.md` ✅
+- [x] `docs/SESSION_SUMMARY_2025-10-18.md` ✅
+- [x] `docs/SESSION_SUMMARY_FILE_UPLOAD_FIX_2025-10-18.md` ✅
 
 **Priorität:** 🟡 HIGH (Vision definieren!)
 
 ---
 
-### web/frontend/ Docs (10 Files)
+### web/frontend/ Docs (13 Files)
 
-**Feature Docs:**
-- [ ] `web/frontend/ANALYTICS_FEATURES.md` - Analytics Features (ARCHIVE/DELETE?)
-- [ ] `web/frontend/CHANGELOG.md` - Frontend Changelog (DELETE/MERGE?)
-- [ ] `web/frontend/CHAT_SIDEBAR_IMPROVEMENTS.md` - Duplicate! (DELETE)
-- [ ] `web/frontend/CLAUDE.md` - ✅ **KEEP** (Frontend Instructions)
-- [ ] `web/frontend/ISSUES.md` - Duplicate! (DELETE)
-- [ ] `web/frontend/KNOWN_ISSUES.md` - Duplicate! (DELETE)
+**✅ Deleted Duplicates/Old (5 Files):**
+- [x] `web/frontend/ANALYTICS_FEATURES.md` ✅
+- [x] `web/frontend/CHAT_SIDEBAR_IMPROVEMENTS.md` ✅
+- [x] `web/frontend/ISSUES.md` ✅
+- [x] `web/frontend/KNOWN_ISSUES.md` ✅
+- [x] `web/frontend/PR_TEMPLATE_CHAT_SIDEBAR.md` ✅
+
+**✅ Keep Root Docs (3 Files):**
+- [x] `web/frontend/CHANGELOG.md` - ✅ **KEEP**
+- [x] `web/frontend/CLAUDE.md` - ✅ **KEEP** (Frontend Instructions)
+- [x] `web/frontend/README.md` - ✅ **KEEP**
 
 **web/frontend/docs/ (7 Files):**
-- [ ] `web/frontend/docs/README.md` - ✅ **KEEP**
-- [ ] `web/frontend/docs/ANALYTICS_REDESIGN.md` - Old Design? (DELETE/ARCHIVE)
-- [ ] `web/frontend/docs/ANALYTICS_SYSTEM.md` - ✅ **KEEP** (System Doku)
-- [ ] `web/frontend/docs/FEATURE_FLAGS.md` - ✅ **KEEP**
-- [ ] `web/frontend/docs/FILE_BROWSER.md` - ✅ **KEEP**
-- [ ] `web/frontend/docs/FILE_UPLOAD_SIZE_LIMIT.md` - ✅ **KEEP**
-- [ ] `web/frontend/docs/SUPABASE_SETUP.md` - ✅ **KEEP**
-- [ ] `web/frontend/docs/TOKEN_MANAGEMENT.md` - ✅ **KEEP**
+- [x] `web/frontend/docs/README.md` - ✅ **KEEP**
+- [ ] `web/frontend/docs/ANALYTICS_REDESIGN.md` - Old Design? (Review later)
+- [x] `web/frontend/docs/ANALYTICS_SYSTEM.md` - ✅ **KEEP**
+- [x] `web/frontend/docs/FEATURE_FLAGS.md` - ✅ **KEEP**
+- [x] `web/frontend/docs/FILE_BROWSER.md` - ✅ **KEEP**
+- [x] `web/frontend/docs/FILE_UPLOAD_SIZE_LIMIT.md` - ✅ **KEEP**
+- [x] `web/frontend/docs/SUPABASE_SETUP.md` - ✅ **KEEP**
+- [x] `web/frontend/docs/TOKEN_MANAGEMENT.md` - ✅ **KEEP**
 
-**Priorität:** 🔵 MEDIUM
+**Priorität:** 🔵 MEDIUM ✅ **MOSTLY DONE!**
 
 ---
 
