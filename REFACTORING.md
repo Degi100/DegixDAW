@@ -347,17 +347,16 @@
 
 ### 🖼️ Screenshots & Binary Files
 
-**Desktop:**
-- [ ] `desktop/screen.JPG` (104 KB) - Screenshot (KEEP or DELETE?)
-- [ ] `desktop/debug.log` (430 KB) - Debug Log → **.gitignore!**
-- [ ] `desktop/vc140.pdb` (1.5 MB) - PDB File → **.gitignore!**
+**✅ Deleted Screenshots (3 Files):**
+- [x] `desktop/screen.JPG` (102 KB) ✅
+- [x] `web/screen1.JPG` (83 KB) ✅
+- [x] `web/screen2.JPG` (51 KB) ✅
 
-**Web:**
-- [ ] `web/screen1.JPG` - Screenshot (DELETE?)
-- [ ] `web/screen2.JPG` (51 KB) - Screenshot (DELETE?)
-
-**Aktion:** `.gitignore` updaten:
-- [x] ✅ **DONE!** (Commit a8026ba)
+**✅ Binary Files (.gitignore):**
+- [x] `desktop/debug.log` - ✅ Ignored (Commit a8026ba)
+- [x] `desktop/*.pdb` - ✅ Ignored (Commit a8026ba)
+- [x] `desktop/*.dat` - ✅ Ignored (Commit a8026ba)
+- [x] `desktop/*.exe` - ✅ Ignored (Commit a8026ba)
 
 **Priorität:** 🟡 HIGH ✅ **DONE!**
 
