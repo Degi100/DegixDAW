@@ -1,39 +1,44 @@
 # DegixDAW - The Big Picture
 
 **Erstellt:** 2025-10-17
-**Version:** 1.0
-**Status:** Architecture Design Phase
+**Updated:** 2025-10-21
+**Version:** 2.0 - Neue Vision: Fokus auf eigene Kreativität
+**Status:** Ready for Implementation (Phase 1)
 
 ---
 
 ## 🎯 Vision
 
-**DegixDAW ist ein All-in-One Musik-Kollaborations-Ökosystem.**
+**DegixDAW ist die Bridge für eigene kreative Arbeit - eine Collaboration-Platform die Musiker, Producer und Songwriter verbindet.**
 
 ### Was macht DegixDAW einzigartig?
 
 ```
+❌ NICHT noch ein BandLab (keine 20 Mio Stock-Samples)
 ❌ Kein Slack/Discord für Chat
 ❌ Kein Dropbox/Drive für Files
-❌ Kein Splice nur für Samples
 ❌ Keine separaten Tools
 
-✅ ALLES in einem System:
-   ├─ Browser-Based MIDI/Audio Editor
-   ├─ VST Plugin für DAW-Integration
-   ├─ Real-time Chat & Social Features
-   ├─ File Sharing & Projekt-Management
-   └─ Preset & Mixdown Workflow
+✅ Fokus auf EIGENE Kreativität:
+   ├─ Track Upload/Versioning (eigene Aufnahmen)
+   ├─ VST Plugin (DAW ↔ Cloud Bridge)
+   ├─ Timestamp-Comments (Feedback direkt im Audio)
+   ├─ Personal Sample-Sharing (eigene Presets/Kits)
+   ├─ Real-time Chat & Social
+   └─ All-in-One Workflow
+
+= Keine Stock-Library, sondern Platform für EIGENE Musik!
 ```
 
 ### Alleinstellungsmerkmale
 
 | Feature | Splice | BandLab | Soundtrap | **DegixDAW** |
 |---------|--------|---------|-----------|--------------|
-| VST Plugin für Projekte | ❌ | ❌ | ❌ | ✅ |
-| Preset/Mixdown Workflow | ❌ | ❌ | ❌ | ✅ |
-| Chat + DAW Integration | ❌ | ❌ | ❌ | ✅ |
-| All-in-One Lösung | ❌ | 🟡 | 🟡 | ✅ |
+| VST Plugin für DAW-Integration | ❌ | ❌ | ❌ | ✅ |
+| Fokus auf eigene Kreativität | ❌ | ❌ | ❌ | ✅ |
+| Timestamp-Comments im Audio | ❌ | 🟡 | ❌ | ✅ |
+| Track-Versioning (wie Git) | ❌ | ❌ | ❌ | ✅ |
+| Chat + DAW nahtlos integriert | ❌ | ❌ | ❌ | ✅ |
 
 ---
 
@@ -49,12 +54,12 @@
 │   (React 19)     │◄───────►│   (Backend)      │◄───────►│   (JUCE/C++)     │
 ├──────────────────┤         ├──────────────────┤         ├──────────────────┤
 │                  │         │                  │         │                  │
-│ • MIDI Editor    │         │ • PostgreSQL     │         │ • Auth Login     │
-│ • Audio Timeline │  HTTPS  │ • Storage        │  HTTPS  │ • Project List   │
-│ • Chat/Social    │◄───────►│ • Realtime       │◄───────►│ • MIDI Download  │
-│ • Project Mgmt   │         │ • Auth           │         │ • Audio Download │
-│ • User Profile   │         │ • RLS Policies   │         │ • Mixdown Upload │
-│                  │         │                  │         │ • Preset Mgmt    │
+│ • Track Upload   │         │ • PostgreSQL     │         │ • Auth Login     │
+│ • Comments       │  HTTPS  │ • Storage        │  HTTPS  │ • Project List   │
+│ • Chat/Social    │◄───────►│ • Realtime       │◄───────►│ • Track Download │
+│ • Project Mgmt   │         │ • Auth           │         │ • Mixdown Upload │
+│ • User Profile   │         │ • RLS Policies   │         │ • Preset Mgmt    │
+│ • MIDI (später)  │         │                  │         │                  │
 └──────────────────┘         └──────────────────┘         └──────────────────┘
         │                            │                              │
         │                            │                              │
@@ -73,34 +78,44 @@
 
 ## 🎵 Der typische Workflow
 
-### Scenario: Producer + Mix Engineer Collaboration
+### Scenario: Singer + Songwriter + Producer Collaboration
 
 ```
-STEP 1: Producer erstellt Beat (Browser)
+STEP 1: Singer nimmt Demo auf (eigene Aufnahme)
 ├─ Öffnet DegixDAW im Browser
-├─ Erstellt Drum Pattern im MIDI-Editor
-├─ Lädt Bassline (WAV) hoch
-├─ Arranged 8-Bar Loop
-├─ Speichert Projekt in Cloud
-└─ Teilt Link mit Mix Engineer
+├─ Lädt vocals_demo.wav hoch
+├─ Erstellt Projekt "Summer Song"
+├─ Invited Songwriter + Producer
+└─ Wartet auf Feedback
 
-STEP 2: Mix Engineer lädt Projekt in DAW (VST Plugin)
+STEP 2: Songwriter hört Demo
 ├─ Bekommt Notification im Chat
-├─ Öffnet VST Plugin in Cubase
-├─ Lädt Projekt: Drums + Bass
-├─ Importiert MIDI & Audio in DAW
-├─ Legt Effekte drauf (EQ, Compressor)
-├─ Rendert Mixdown
-└─ Uploaded Mixdown zurück (via VST Plugin)
+├─ Streamt Demo im Browser
+├─ Klickt auf Waveform bei 1:23
+├─ Kommentiert: "Text hier ändern?"
+└─ Singer sieht Comment-Marker im Waveform
 
-STEP 3: Producer hört Mixdown
-├─ Sieht Notification "Mixdown fertig!"
-├─ Streamt Mixdown im Browser
-├─ Lädt Preset runter ("Club Mix Chain")
-└─ Nutzt Preset für nächsten Track
+STEP 3: Producer lädt Track in DAW (VST Plugin)
+├─ Öffnet VST Plugin in Cubase
+├─ Lädt vocals_demo.wav direkt in DAW
+├─ Nimmt Gitarre + Bass auf
+├─ Uploaded instrumentals.wav zurück
+└─ Alle sehen neue Version
+
+STEP 4: Singer nimmt neue Vocals auf
+├─ Hört Instrumental im Browser
+├─ Nimmt vocals_final.wav auf
+├─ Uploaded v2 mit Commit: "Text geändert bei 1:23"
+└─ Producer bekommt Notification
+
+STEP 5: Producer erstellt Mixdown
+├─ Lädt alle Tracks via VST
+├─ Mischt in Cubase
+├─ Uploaded mixdown_v1.wav zurück
+└─ Team hört Ergebnis im Browser
 ```
 
-**Das alles ohne Tools zu wechseln!**
+**Das alles ohne Tool-Switching! Alles eigene Kreativität!**
 
 ---
 
@@ -132,75 +147,80 @@ STEP 3: Producer hört Mixdown
 ### Was FEHLT (80%):
 
 ```
-❌ MIDI Editor im Browser (0%)
-❌ Audio Timeline/Arrangement (0%)
-❌ VST Plugin v1 (Login + Project List) (5%)
-❌ Projekt-Management System (20%)
-❌ Preset Library (0%)
+❌ Track Upload System (20% - DB Schema exists!)
+❌ Track Versioning (Git-style) (0%)
+❌ Timestamp-Comments (0%)
+❌ VST Plugin v1 (Login + Downloads) (5%)
+❌ Projekt-Management (20%)
+❌ Personal Preset-Sharing (0%)
 ❌ Mixdown Workflow (0%)
-❌ Track Comments (0%)
-❌ Version Control (0%)
+❌ MIDI Editor (0% - kommt später!)
 ```
 
 ---
 
 ## 🗺️ Roadmap
 
-### Phase 1: Proof of Concept (8 Wochen)
+### Phase 1: Core Collaboration Features (6-8 Wochen)
 
-**Ziel:** Beweise dass das Konzept funktioniert!
+**Ziel:** Singer + Producer können zusammen an eigenem Song arbeiten!
 
 ```
-Week 1-2: MIDI Editor (Browser)
-├─ Piano Roll mit Tone.js
-├─ Play/Stop/Export
-└─ Save to Supabase
+Week 1-2: Project System + Track Upload
+├─ Create Project (Title, BPM, Collaborators)
+├─ Upload WAV/MP3 Files
+├─ Waveform Display
+└─ Download Tracks
 
-Week 3-4: VST Plugin Minimal
+Week 3-4: Timestamp Comments
+├─ Click auf Waveform → Comment
+├─ Comment-Marker im Timeline
+├─ Reply to Comments
+└─ Resolve/Unresolve
+
+Week 5-6: Track Versioning
+├─ Upload neue Version
+├─ Version History (v1, v2, v3)
+├─ Commit Messages (Git-style)
+└─ Restore old Version
+
+Week 7-8: VST Plugin v1
 ├─ Login mit Supabase
 ├─ Liste User-Projekte
-└─ Download MIDI zu DAW
+├─ Download Tracks zu DAW
+└─ Upload Mixdown zurück
 
-Week 5-6: Audio Timeline
-├─ Upload WAV/MP3
-├─ Waveform Display
-└─ 2-Track Layout
-
-Week 7-8: Mixdown Workflow
-├─ Audio aus Projekt laden
-├─ Upload Mixdown via VST
-└─ Anzeige im Browser
-
-= Kompletter Workflow funktioniert! ✅
+= Kompletter eigener Workflow funktioniert! ✅
 ```
 
-### Phase 2: MVP (12 Wochen)
+### Phase 2: Advanced Features (8-12 Wochen)
 
 ```
-├─ Multi-Track Timeline (4+ Tracks)
+├─ Personal Preset-Sharing (eigene Kits/Chains)
+├─ Desktop App (für Nicht-DAW-User)
+├─ Multi-Track Timeline (4+ Tracks gleichzeitig)
 ├─ VST Plugin UI verbessern
-├─ Projekt-Versionierung
-├─ Preset Upload/Download
-├─ Comments auf Tracks
-└─ Social Integration
+├─ Voice Chat (WebRTC für Sessions)
+└─ Social Integration erweitern
 
-= 10-20 Beta-User können testen
+= 10-20 Beta-User testen mit eigenen Projekten
 ```
 
-### Phase 3: Production (12+ Wochen)
+### Phase 3: Pro Features (12+ Wochen)
 
 ```
+├─ MIDI Editor (Songwriter skizziert Melodien)
+├─ Waveform Editing (Trim, Fade)
+├─ Mobile App (React Native)
+├─ AI Features (BPM/Key Detection)
 ├─ Polish UI/UX
-├─ Performance-Optimierung
-├─ Mobile-Responsive
-├─ Desktop App (optional)
-├─ Sample Library (optional)
 └─ Marketing & Growth
 
 = Public Launch! 🚀
 ```
 
-**Timeline:** ~32 Wochen = 8 Monate (bei 20h/Woche)
+**Timeline:** ~28 Wochen = 7 Monate (bei 20h/Woche)
+**Fokus:** Eigene Kreativität, nicht Stock-Library!
 
 ---
 
@@ -219,7 +239,7 @@ Week 7-8: Mixdown Workflow
    └─ Hochladen zurück
 ```
 
-### MIDI im Browser
+### MIDI im Browser (Phase 3)
 
 ```
 ✅ Bereits getestet (vor 5 Jahren)
@@ -227,7 +247,8 @@ Week 7-8: Mixdown Workflow
    ├─ React Refactoring
    └─ Funktioniert!
 
-Jetzt: Tone.js für moderne Implementierung
+Später: Tone.js für Songwriter (Melodie skizzieren)
+ABER: Nicht Core-Feature! Kommt nach Track-Upload/VST.
 ```
 
 ### VST Plugin (JUCE)
@@ -296,26 +317,38 @@ Diese Architektur ist aufgeteilt in:
 
 ### ❌ Was NICHT funktioniert:
 
-- Real-time Audio Streaming (Latenz zu hoch)
-- Einfach "Chat fertig machen" ohne Musik-Features
+- Real-time Audio Jamming (Latenz zu hoch)
+- Noch ein BandLab clone (20 Mio Stock-Samples)
+- MIDI Editor zuerst (kommt später!)
 - Desktop App bei 3% weiter bauen
-- 11 Urgent Issues parallel bearbeiten
+- Chat/Admin ohne Musik-Features fertig machen
 
 ### ✅ Was FUNKTIONIERT:
 
-- Async Collaboration (wie GitHub für Musiker)
+- Async Collaboration (GitHub für eigene Musik)
+- Track Upload/Versioning (eigene Aufnahmen!)
+- Timestamp-Comments (Feedback direkt im Audio)
 - VST Plugin als DAW-Bridge
-- Browser-based MIDI/Audio Editor
-- Preset & Mixdown Sharing
-- All-in-One ohne 2. Tools
+- Personal Preset-Sharing (eigene Kits, nicht Stock!)
+- All-in-One ohne Tool-Switching
 
 ### 🎯 Der Fokus muss sein:
 
 ```
-80% Zeit: Musik-Features (MIDI, VST, Projekte)
-20% Zeit: Social Features (Chat, Admin)
+Phase 1 (NOW):
+├─ 80% Track Upload/Comments/Versioning
+├─ 15% VST Plugin (DAW-Bridge)
+└─ 5% Social Features
 
-NICHT umgekehrt!
+Phase 2 (Later):
+├─ Personal Presets
+├─ Desktop App
+└─ Voice Chat
+
+Phase 3 (Much Later):
+└─ MIDI Editor (optional für Songwriter)
+
+= Eigene Kreativität im Fokus!
 ```
 
 ---

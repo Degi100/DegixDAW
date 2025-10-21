@@ -726,40 +726,69 @@ node scripts/claude-create-issue.js "Title" "Desc" feature low "enhancement,ux,p
 
 ## 🎯 DegixDAW Vision & Alleinstellungsmerkmale
 
+**Updated:** 2025-10-21 - Neue Vision: Fokus auf eigene Kreativität
+
 **Was macht DegixDAW einzigartig?**
 
-DegixDAW ist eine **All-in-One Musikerplattform** für asynchrone Kollaboration. NICHT für Real-time Jamming (technisch unmöglich wegen Latency), sondern für **Producer-Workflow mit DAW-Integration**.
+DegixDAW ist die **Bridge für eigene kreative Arbeit** - eine Collaboration-Platform die Musiker, Producer und Songwriter verbindet.
 
-### Core Features (Unique Selling Points)
+**NICHT noch ein BandLab** (keine 20 Mio Stock-Samples), sondern **Fokus auf EIGENE Musik:**
+- Singer uploaded eigene Demo
+- Songwriter kommentiert Text (Timestamp-Comments)
+- Producer lädt Track via VST in DAW
+- Musiker uploaded eigene Gitarre dazu
+- = Alles eigene Kreativität, keine Generic Loops!
 
-1. **VST3 Plugin** (JUCE) - Bridge zwischen DAW und Cloud
+### Core Features (Phase 1 - NOW!)
+
+1. **Track Upload & Versioning** (GitHub für Audio)
+   - Upload eigene WAV/MP3 Files
+   - Version History (v1, v2, v3...)
+   - Commit Messages (Git-style)
+   - Waveform Display
+   - Download Tracks
+
+2. **Timestamp-Comments** (Feedback direkt im Audio)
+   - Click auf Waveform → Comment
+   - Comment-Marker im Timeline
+   - Reply to Comments
+   - Resolve/Unresolve
+
+3. **VST3 Plugin** (JUCE) - DAW ↔ Cloud Bridge
    - Login im Plugin (OAuth2)
-   - Projekte aus Cloud laden → direkt in Cubase/Ableton/Logic
-   - Mixdowns aus DAW hochladen
-   - Preset-Management
+   - Projekte aus Cloud laden → direkt in Cubase/Ableton
+   - Track Download zu DAW
+   - Mixdown Upload zurück
 
-2. **Browser-basierter MIDI/Audio Editor** (Tone.js + Web MIDI API)
-   - Piano Roll im Browser
-   - MIDI-Events editieren
-   - Playback mit Tone.js
-   - Speichern in Supabase
+4. **Integrierte Plattform** (kein Tool-Switching)
+   - Chat + Social + Track-Upload in einem
+   - Kein Dropbox/Slack/Discord nötig
+   - All-in-One für eigene Projekte
 
-3. **Preset & Mixdown Sharing**
-   - Producer teilt Preset mit Mix Engineer
-   - Mix Engineer lädt in DAW (via VST Plugin)
-   - Mixdown zurück hochladen
-   - Producer streamed finales Ergebnis
+### Later Features (Phase 2+)
 
-4. **Integrierte Plattform** (kein Slack, Discord, Dropbox nötig)
-   - Chat + Social + Musik-Features in einem
-   - Kein Context-Switching zwischen Tools
+5. **Personal Sample-Sharing** (eigene Kits, nicht Stock!)
+   - Producer teilt eigenes Drum-Kit mit Team
+   - Bassist teilt eigene Bass-Presets
+   - = Personal Libraries, keine Mega-Stock-Library
+
+6. **Desktop App** (für Nicht-DAW-User)
+   - Singer kann Tracks runterladen ohne Browser
+   - Notifications
+   - File Management
+
+7. **MIDI Editor** (optional - Phase 3)
+   - Songwriter skizziert Melodie
+   - Piano Roll im Browser (Tone.js)
+   - ABER: Nicht Core-Feature!
 
 ### Tech Stack
 
 **Frontend:**
 - React 19 + TypeScript + Vite
-- Tone.js (MIDI Playback & Synthesis)
-- Web MIDI API (Keyboard Input)
+- Waveform Display (Web Audio API)
+- Track Upload/Versioning
+- Tone.js (MIDI - später!)
 
 **Backend:**
 - Supabase (PostgreSQL + Storage + Auth + Realtime)
@@ -801,56 +830,75 @@ DegixDAW ist eine **All-in-One Musikerplattform** für asynchrone Kollaboration.
 
 **Gesamt: ~20%**
 
+**Phase 1 Features (Core - NOW!):**
+- ✅ Database Schema: 100% (Migration done!)
 - ✅ Chat & Auth: 60%
+- Projects System: 5% (DB Schema exists, Frontend fehlt!)
+- Track Upload: 0%
+- Track Versioning: 0%
+- Timestamp Comments: 0%
+- VST Plugin: 5% (JUCE "Hello World" getestet)
+
+**Phase 2 Features (Later):**
 - ✅ Social Features: 40%
 - ✅ Admin Panel: 80%
-- ✅ Database Schema: 100% (Migration done!)
 - Desktop App: 3%
-- MIDI Editor: 0% (User hat 5 Jahre alte Erfahrung damit)
-- VST Plugin: 5% (User hat JUCE "Hello World" getestet)
 
-### Roadmap
+**Phase 3 Features (Much Later):**
+- MIDI Editor: 0% (kommt später!)
 
-**PoC Phase (8 Wochen):**
-1. MIDI Editor v1 (Piano Roll + Tone.js)
-2. VST Plugin v1 (Login + Project List)
-3. Projekt Download (Cloud → DAW)
-4. Mixdown Upload (DAW → Cloud)
+### Roadmap (Updated 2025-10-21)
 
-**MVP Phase (12 Wochen):**
-- Multi-Track Editor
-- Audio Recording im Browser
-- Preset Browser + Search
-- Collaboration Features
+**Phase 1: Core Collaboration (6-8 Wochen) - NOW!**
+1. Week 1-2: Projects + Track Upload
+2. Week 3-4: Timestamp Comments
+3. Week 5-6: Track Versioning (Git-style)
+4. Week 7-8: VST Plugin v1 (Download Tracks zu DAW)
 
-**Production (12+ Wochen):**
+**Phase 2: Advanced Features (8-12 Wochen):**
+- Personal Preset-Sharing (eigene Kits!)
+- Desktop App (für Nicht-DAW-User)
+- Multi-Track Timeline
+- Voice Chat (WebRTC)
+
+**Phase 3: Pro Features (12+ Wochen):**
+- MIDI Editor (Songwriter Melodie-Skizzen)
 - Mobile App (React Native)
 - macOS VST Build
-- Monetization (Pro Features)
+- AI Features (BPM/Key Detection)
 
-## Nächste Schritte
+## Nächste Schritte (Updated 2025-10-21)
 
-### Sofort (Nach diesem Commit)
+### ✅ Phase 2 DONE: Quick Wins (Cleanup)
 
-1. ⏳ Branch erstellen: `feat/music-database-schema`
-2. ⏳ Commit: Architecture docs + Database migrations
-3. ⏳ `nul` File löschen (Windows-Bug)
+**Completed:**
+- ✅ Security Fix (credentials removed)
+- ✅ SQL Cleanup (19 obsolete files)
+- ✅ Docs Cleanup (14 obsolete files)
+- ✅ Scripts Cleanup (12 debug scripts)
+- ✅ Screenshots removed (3 files)
+- ✅ Vision Updated (BIG_PICTURE.md + CLAUDE.md)
 
-### Entwicklungsphase
+**Total:** 49 Files gelöscht, ~7200 lines removed! 🎉
 
-**Option A: MIDI Editor zuerst** (empfohlen)
-- User hat bereits Erfahrung damit (5 Jahre alt)
-- Tone.js Integration
-- Piano Roll UI
-- Speichern in neue `projects` Tabelle
+### 🎯 Phase 3: Vision Defined!
 
-**Option B: VST Plugin zuerst**
-- User hat JUCE bereits getestet
-- SupabaseClient bauen
-- OAuth2 Flow implementieren
-- Project List laden
+**Neue Wendung:**
+- NICHT noch ein BandLab (keine Stock-Library!)
+- Fokus auf EIGENE Kreativität
+- Bridge zwischen Musikern (Singer + Producer + Songwriter)
+- Track Upload/Comments/Versioning (Git für Audio)
+- VST Plugin als DAW-Bridge
 
-**Entscheidung:** Nutzer wählt!
+### 🚀 Next: Phase 1 Implementation
+
+**Start Week 1-2: Projects + Track Upload**
+- Frontend: Project Creation Page
+- Frontend: Track Upload Component
+- Waveform Display
+- Backend: Upload to Supabase Storage
+
+**Siehe:** `docs/DEGIXDAW_MASTERPLAN.md` für Details!
 
 ## Weitere Dokumentation
 
