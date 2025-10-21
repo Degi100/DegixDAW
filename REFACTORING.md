@@ -283,14 +283,14 @@
 
 ### docs/ Folder (11 Files)
 
-**Architecture Docs (Review in Vision Phase):**
-- [ ] `docs/architecture/00_BIG_PICTURE.md` - Vision (UPDATE für neue Wendung!)
-- [ ] `docs/architecture/01_SYSTEM_OVERVIEW.md` - Components (UPDATE)
-- [ ] `docs/architecture/02_DATABASE_SCHEMA.md` - SQL Schema (KEEP + UPDATE)
-- [ ] `docs/architecture/03_DATA_FLOW.md` - User Journeys (UPDATE)
-- [ ] `docs/architecture/04_STORAGE_STRATEGY.md` - File Storage (KEEP)
-- [ ] `docs/architecture/05_VST_PLUGIN.md` - JUCE (DELETE wenn nicht geplant!)
-- [ ] `docs/architecture/06_DEPLOYMENT.md` - CI/CD (KEEP)
+**Architecture Docs:**
+- [x] `docs/architecture/00_BIG_PICTURE.md` - ✅ **UPDATED** (Version 2.0 - neue Vision!)
+- [ ] `docs/architecture/01_SYSTEM_OVERVIEW.md` - Components (UPDATE später)
+- [ ] `docs/architecture/02_DATABASE_SCHEMA.md` - SQL Schema (KEEP - OK)
+- [ ] `docs/architecture/03_DATA_FLOW.md` - User Journeys (UPDATE später)
+- [ ] `docs/architecture/04_STORAGE_STRATEGY.md` - File Storage (KEEP - OK)
+- [x] `docs/architecture/05_VST_PLUGIN.md` - ✅ **KEEP** (VST = Core Feature!)
+- [ ] `docs/architecture/06_DEPLOYMENT.md` - CI/CD (KEEP - OK)
 
 **Masterplan (Keep for Vision):**
 - [x] `docs/DEGIXDAW_MASTERPLAN.md` - ✅ **KEEP** (33K - für neue Wendung reviewen!)
