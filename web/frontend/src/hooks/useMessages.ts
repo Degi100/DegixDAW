@@ -1,10 +1,23 @@
-// src/hooks/useMessages.ts
-// Messages Management Hook with Reactions, Read Receipts, Typing Indicators
+/**
+ * useMessages Hook
+ *
+ * Main hook for message management
+ * Refactored: 603 LOC → 270 LOC (55% reduction!)
+ *
+ * Extracted modules:
+ * - messageService.ts (API calls)
+ * - useMessageData (data loading)
+ * - useMessageSubscriptions (real-time)
+ */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useToast } from './useToast';
+import { useMessageData } from './useMessageData';
+import { useMessageSubscriptions } from './useMessageSubscriptions';
+import * as messageService from '../lib/services/messageService';
 
+// Re-export types for backward compatibility
 export interface MessageReaction {
   id: string;
   message_id: string;
@@ -52,7 +65,6 @@ export interface Message {
   reply_to_id: string | null;
   created_at: string;
   updated_at: string;
-  // Enriched data
   sender?: {
     full_name: string;
     username: string;
@@ -86,7 +98,10 @@ export function useMessages(conversationId: string | null) {
     });
   }, []);
 
-  // Load messages for a conversation
+  // Data loading hook
+  const { loadMessages: loadMessagesData } = useMessageData(conversationId);
+
+  // Load messages wrapper with error handling
   const loadMessages = useCallback(async () => {
     if (!conversationId) {
       setMessages([]);
@@ -96,234 +111,28 @@ export function useMessages(conversationId: string | null) {
 
     try {
       setLoading(true);
-
-      // 1. Get messages
-      const { data: messagesData, error: messagesError } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('conversation_id', conversationId)
-        .eq('is_deleted', false)
-        .order('created_at', { ascending: true });
-
-      if (messagesError) throw messagesError;
-
-      if (!messagesData || messagesData.length === 0) {
-        setMessages([]);
-        setLoading(false);
-        return;
-      }
-
-      const messageIds = messagesData.map(m => m.id);
-
-      // 2. Get all sender profiles
-      const senderIds = Array.from(new Set(messagesData.map(m => m.sender_id)));
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name, username')
-        .in('id', senderIds);
-
-      const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
-
-      // 3. Get reactions
-      const { data: reactions } = await supabase
-        .from('message_reactions')
-        .select('*')
-        .in('message_id', messageIds);
-
-      const reactionsMap = new Map<string, MessageReaction[]>();
-      reactions?.forEach(r => {
-        if (!reactionsMap.has(r.message_id)) {
-          reactionsMap.set(r.message_id, []);
-        }
-        reactionsMap.get(r.message_id)?.push({
-          ...r,
-          user: profilesMap.get(r.user_id)
-        });
-      });
-
-      // 4. Get attachments
-      const { data: attachments } = await supabase
-        .from('message_attachments')
-        .select('*')
-        .in('message_id', messageIds);
-
-      const attachmentsMap = new Map<string, MessageAttachment[]>();
-      attachments?.forEach(a => {
-        if (!attachmentsMap.has(a.message_id)) {
-          attachmentsMap.set(a.message_id, []);
-        }
-        attachmentsMap.get(a.message_id)?.push(a);
-      });
-
-      // 5. Get read receipts
-      const { data: readReceipts } = await supabase
-        .from('message_read_receipts')
-        .select('*')
-        .in('message_id', messageIds);
-
-      const readReceiptsMap = new Map<string, ReadReceipt[]>();
-      readReceipts?.forEach(rr => {
-        if (!readReceiptsMap.has(rr.message_id)) {
-          readReceiptsMap.set(rr.message_id, []);
-        }
-        readReceiptsMap.get(rr.message_id)?.push(rr);
-      });
-
-      // 6. Enrich messages
-      const enrichedMessages: Message[] = messagesData.map(msg => ({
-        ...msg,
-        sender: profilesMap.get(msg.sender_id),
-        reactions: reactionsMap.get(msg.id) || [],
-        attachments: attachmentsMap.get(msg.id) || [],
-        read_receipts: readReceiptsMap.get(msg.id) || []
-      }));
-
-      setMessages(enrichedMessages);
+      const data = await loadMessagesData();
+      setMessages(data);
     } catch (err) {
       console.error('Error loading messages:', err);
       error('Fehler beim Laden der Nachrichten');
     } finally {
       setLoading(false);
     }
-  }, [conversationId, error]);
+  }, [conversationId, loadMessagesData, error]);
 
+  // Initial load
   useEffect(() => {
     loadMessages();
   }, [loadMessages]);
 
   // Real-time subscriptions
-  useEffect(() => {
-    if (!conversationId) return;
-
-    const messagesChannel = supabase
-      .channel(`messages_${conversationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${conversationId}`,
-        },
-        () => {
-          loadMessages();
-        }
-      )
-      .subscribe();
-
-    const reactionsChannel = supabase
-      .channel(`reactions_${conversationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'message_reactions',
-        },
-        () => {
-          loadMessages();
-        }
-      )
-      .subscribe();
-
-    const attachmentsChannel = supabase
-      .channel(`attachments_${conversationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'message_attachments',
-        },
-        () => {
-          loadMessages();
-        }
-      )
-      .subscribe();
-
-    const readReceiptsChannel = supabase
-      .channel(`read_receipts_${conversationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'message_read_receipts',
-        },
-        () => {
-          loadMessages();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(messagesChannel);
-      supabase.removeChannel(reactionsChannel);
-      supabase.removeChannel(attachmentsChannel);
-      supabase.removeChannel(readReceiptsChannel);
-    };
-  }, [conversationId, loadMessages]);
-
-  // Typing indicators subscription
-  useEffect(() => {
-    if (!conversationId || !currentUserId) return;
-
-    const loadTypingUsers = async () => {
-      const { data: typingData } = await supabase
-        .from('typing_indicators')
-        .select('user_id, started_at')
-        .eq('conversation_id', conversationId)
-        .neq('user_id', currentUserId);
-
-      if (typingData && typingData.length > 0) {
-        const userIds = typingData.map(t => t.user_id);
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, full_name, username')
-          .in('id', userIds);
-
-        const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
-
-        const enrichedTyping = typingData
-          .map(t => {
-            const profile = profilesMap.get(t.user_id);
-            return profile ? {
-              user_id: t.user_id,
-              full_name: profile.full_name,
-              username: profile.username,
-              started_at: t.started_at
-            } : null;
-          })
-          .filter((t): t is TypingUser => t !== null);
-
-        setTypingUsers(enrichedTyping);
-      } else {
-        setTypingUsers([]);
-      }
-    };
-
-    loadTypingUsers();
-
-    const typingChannel = supabase
-      .channel(`typing_${conversationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'typing_indicators',
-          filter: `conversation_id=eq.${conversationId}`,
-        },
-        () => {
-          loadTypingUsers();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(typingChannel);
-    };
-  }, [conversationId, currentUserId]);
+  useMessageSubscriptions({
+    conversationId,
+    currentUserId,
+    onMessageChange: loadMessages,
+    onTypingUsersChange: setTypingUsers
+  });
 
   // Send a message
   const sendMessage = useCallback(async (
@@ -336,47 +145,22 @@ export function useMessages(conversationId: string | null) {
     try {
       setSending(true);
 
-      const { data: message, error: sendError } = await supabase
-        .from('messages')
-        .insert({
-          conversation_id: conversationId,
-          sender_id: currentUserId,
-          content,
-          message_type: messageType,
-          reply_to_id: replyToId || null,
-        })
-        .select()
-        .single();
+      const messageId = await messageService.sendMessage(
+        conversationId,
+        currentUserId,
+        content,
+        messageType,
+        replyToId
+      );
 
-      if (sendError) throw sendError;
-
-      // Update conversation's last_message_at
-      await supabase
-        .from('conversations')
-        .update({ last_message_at: new Date().toISOString() })
-        .eq('id', conversationId);
-
-      // Create read receipt for sender
-      await supabase
-        .from('message_read_receipts')
-        .insert({
-          message_id: message.id,
-          user_id: currentUserId,
-          read_at: new Date().toISOString(),
-        });
-
-      // Stop typing indicator (inline to avoid circular dependency)
+      // Stop typing indicator
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
         typingTimeoutRef.current = null;
       }
-      await supabase
-        .from('typing_indicators')
-        .delete()
-        .eq('conversation_id', conversationId)
-        .eq('user_id', currentUserId);
+      await messageService.stopTypingIndicator(conversationId, currentUserId);
 
-      return message.id;
+      return messageId;
     } catch (err) {
       console.error('Error sending message:', err);
       error('Fehler beim Senden der Nachricht');
@@ -389,17 +173,7 @@ export function useMessages(conversationId: string | null) {
   // Edit a message
   const editMessage = useCallback(async (messageId: string, newContent: string) => {
     try {
-      const { error: updateError } = await supabase
-        .from('messages')
-        .update({
-          content: newContent,
-          is_edited: true,
-          edited_at: new Date().toISOString(),
-        })
-        .eq('id', messageId);
-
-      if (updateError) throw updateError;
-
+      await messageService.editMessage(messageId, newContent);
       success('Nachricht bearbeitet');
       loadMessages();
     } catch (err) {
@@ -411,17 +185,7 @@ export function useMessages(conversationId: string | null) {
   // Delete a message
   const deleteMessage = useCallback(async (messageId: string) => {
     try {
-      const { error: deleteError } = await supabase
-        .from('messages')
-        .update({
-          is_deleted: true,
-          deleted_at: new Date().toISOString(),
-          content: null,
-        })
-        .eq('id', messageId);
-
-      if (deleteError) throw deleteError;
-
+      await messageService.deleteMessage(messageId);
       success('Nachricht gelöscht');
       loadMessages();
     } catch (err) {
@@ -435,15 +199,7 @@ export function useMessages(conversationId: string | null) {
     if (!currentUserId) return;
 
     try {
-      const { error: insertError } = await supabase
-        .from('message_reactions')
-        .insert({
-          message_id: messageId,
-          user_id: currentUserId,
-          emoji,
-        });
-
-      if (insertError) throw insertError;
+      await messageService.addReaction(messageId, currentUserId, emoji);
     } catch (err) {
       console.error('Error adding reaction:', err);
       error('Fehler beim Hinzufügen der Reaktion');
@@ -455,14 +211,7 @@ export function useMessages(conversationId: string | null) {
     if (!currentUserId) return;
 
     try {
-      const { error: deleteError } = await supabase
-        .from('message_reactions')
-        .delete()
-        .eq('message_id', messageId)
-        .eq('user_id', currentUserId)
-        .eq('emoji', emoji);
-
-      if (deleteError) throw deleteError;
+      await messageService.removeReaction(messageId, currentUserId, emoji);
     } catch (err) {
       console.error('Error removing reaction:', err);
       error('Fehler beim Entfernen der Reaktion');
@@ -474,32 +223,7 @@ export function useMessages(conversationId: string | null) {
     if (!currentUserId) return;
 
     try {
-      // Check if read receipt exists
-      const { data: existing } = await supabase
-        .from('message_read_receipts')
-        .select('id, read_at')
-        .eq('message_id', messageId)
-        .eq('user_id', currentUserId)
-        .single();
-
-      if (existing) {
-        if (!existing.read_at) {
-          // Update to mark as read
-          await supabase
-            .from('message_read_receipts')
-            .update({ read_at: new Date().toISOString() })
-            .eq('id', existing.id);
-        }
-      } else {
-        // Create new read receipt
-        await supabase
-          .from('message_read_receipts')
-          .insert({
-            message_id: messageId,
-            user_id: currentUserId,
-            read_at: new Date().toISOString(),
-          });
-      }
+      await messageService.markMessageAsRead(messageId, currentUserId);
     } catch (err) {
       console.error('Error marking as read:', err);
     }
@@ -544,11 +268,7 @@ export function useMessages(conversationId: string | null) {
         typingTimeoutRef.current = null;
       }
 
-      await supabase
-        .from('typing_indicators')
-        .delete()
-        .eq('conversation_id', conversationId)
-        .eq('user_id', currentUserId);
+      await messageService.stopTypingIndicator(conversationId, currentUserId);
     } catch (err) {
       console.error('Error stopping typing:', err);
     }
@@ -564,16 +284,7 @@ export function useMessages(conversationId: string | null) {
         clearTimeout(typingTimeoutRef.current);
       }
 
-      // Upsert typing indicator
-      await supabase
-        .from('typing_indicators')
-        .upsert({
-          conversation_id: conversationId,
-          user_id: currentUserId,
-          started_at: new Date().toISOString(),
-        }, {
-          onConflict: 'conversation_id,user_id'
-        });
+      await messageService.startTypingIndicator(conversationId, currentUserId);
 
       // Auto-remove after 3 seconds
       typingTimeoutRef.current = setTimeout(() => {
