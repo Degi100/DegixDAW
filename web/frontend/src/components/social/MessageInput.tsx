@@ -3,7 +3,7 @@ import { useMessageAttachments } from '../../hooks/useMessageAttachments';
 
 interface MessageInputProps {
   conversationId: string;
-  onSend: (content: string, messageType: 'text' | 'image' | 'video' | 'voice' | 'file') => Promise<void>;
+  onSend: (content: string, messageType: 'text' | 'image' | 'video' | 'voice' | 'file') => Promise<string | null>;
   onTyping: () => void;
   onStopTyping: () => void;
   disabled?: boolean;

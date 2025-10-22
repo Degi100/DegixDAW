@@ -32,7 +32,7 @@ export function useChatCoordination({
   loadConversations: () => Promise<void>;
   messageText: string;
   setMessageText: (text: string) => void;
-  expandedChatHandleSend: (text: string) => Promise<void>;
+  expandedChatHandleSend: (text: string) => Promise<string | null>;
   setShowAttachMenu: (show: boolean) => void;
   expandedChatHandleUpload: (chatId: string, file: File) => Promise<void>;
   currentUserId: string | null;
