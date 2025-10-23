@@ -75,9 +75,11 @@ export default function PendingInvites() {
               </h4>
               <div className="invite-details">
                 <span className="role-badge badge-blue">{invite.role}</span>
-                <span className="invite-date">
-                  Invited {new Date(invite.invited_at).toLocaleDateString()}
-                </span>
+                {invite.invited_at && (
+                  <span className="invite-date">
+                    Invited {new Date(invite.invited_at).toLocaleDateString()}
+                  </span>
+                )}
               </div>
             </div>
 

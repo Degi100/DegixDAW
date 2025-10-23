@@ -135,8 +135,31 @@
   --text-primary: var(--theme-text-primary);
   --text-secondary: var(--theme-text-secondary);
   --text-muted: var(--theme-text-tertiary);
+  --text-tertiary: var(--theme-text-tertiary);
   --border-color: var(--theme-border);
+  --border-hover: var(--gray-300);
   --primary-color-dark: var(--primary-dark);
+  --primary-color-alpha-10: rgba(30, 64, 175, 0.1);
+  --primary-color-alpha-20: rgba(30, 64, 175, 0.2);
+}
+
+/* Dark Mode Theme Override */
+[data-theme="dark"] {
+  --theme-bg-primary: var(--dark-bg-primary);
+  --theme-bg-secondary: var(--dark-bg-secondary);
+  --theme-bg-tertiary: var(--dark-bg-tertiary);
+  --theme-text-primary: var(--dark-text-primary);
+  --theme-text-secondary: var(--dark-text-secondary);
+  --theme-text-tertiary: var(--dark-text-tertiary);
+  --theme-border: var(--dark-border);
+  --theme-border-light: var(--dark-border-light);
+  --theme-shadow: var(--dark-shadow);
+  --theme-shadow-lg: var(--dark-shadow-lg);
+
+  /* Override hover/active states for dark mode */
+  --bg-hover: var(--dark-bg-tertiary);
+  --bg-active: rgba(30, 64, 175, 0.2);
+  --border-hover: var(--dark-border-light);
 }
 
 /* Global Reset */

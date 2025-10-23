@@ -27,6 +27,7 @@ export default function CollaboratorsList({
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
+      case 'owner': return 'badge-gold';
       case 'admin': return 'badge-red';
       case 'mixer': return 'badge-purple';
       case 'contributor': return 'badge-blue';
@@ -122,10 +123,12 @@ export default function CollaboratorsList({
 
                   {/* Metadata */}
                   <div className="collaborator-meta">
-                    <p className="meta-item">
-                      <span className="meta-label">Invited:</span>
-                      {new Date(collab.invited_at).toLocaleDateString()}
-                    </p>
+                    {collab.role !== 'owner' && collab.invited_at && (
+                      <p className="meta-item">
+                        <span className="meta-label">Invited:</span>
+                        {new Date(collab.invited_at).toLocaleDateString()}
+                      </p>
+                    )}
                     {collab.accepted_at && (
                       <p className="meta-item">
                         <span className="meta-label">Joined:</span>

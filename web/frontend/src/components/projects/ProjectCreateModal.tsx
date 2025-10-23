@@ -88,18 +88,15 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
 
   // Handle template selection
   const handleTemplateSelect = (templateId: string) => {
+    // Ignore selection of coming-soon templates
+    if (templateId === 'band') return;
+
     setSelectedTemplate(templateId);
 
     // Pre-fill BPM based on template
     switch (templateId) {
-      case 'electronic':
-        setFormData(prev => ({ ...prev, bpm: 128, time_signature: '4/4' }));
-        break;
-      case 'band':
+      case 'empty':
         setFormData(prev => ({ ...prev, bpm: 120, time_signature: '4/4' }));
-        break;
-      case 'podcast':
-        setFormData(prev => ({ ...prev, bpm: 0, time_signature: '4/4' }));
         break;
       default:
         setFormData(prev => ({ ...prev, bpm: 120, time_signature: '4/4' }));
@@ -124,18 +121,22 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
           <section className="modal-section">
             <h3>1. Choose Template</h3>
             <div className="template-grid">
-              {PROJECT_TEMPLATES.map((template) => (
-                <button
-                  key={template.id}
-                  type="button"
-                  className={`template-card ${selectedTemplate === template.id ? 'selected' : ''}`}
-                  onClick={() => handleTemplateSelect(template.id)}
-                >
-                  <div className="template-icon">{template.icon}</div>
-                  <div className="template-title">{template.title}</div>
-                  <div className="template-description">{template.description}</div>
-                </button>
-              ))}
+              {PROJECT_TEMPLATES.map((template) => {
+                const isComingSoon = template.tags.includes('coming-soon');
+                return (
+                  <button
+                    key={template.id}
+                    type="button"
+                    className={`template-card ${selectedTemplate === template.id ? 'selected' : ''} ${isComingSoon ? 'coming-soon' : ''}`}
+                    onClick={() => handleTemplateSelect(template.id)}
+                    disabled={isComingSoon}
+                  >
+                    <div className="template-icon">{template.icon}</div>
+                    <div className="template-title">{template.title}</div>
+                    <div className="template-description">{template.description}</div>
+                  </button>
+                );
+              })}
             </div>
           </section>
 

@@ -17,7 +17,19 @@ export async function getProjectCollaborators(
   projectId: string
 ): Promise<ProjectCollaborator[]> {
   try {
-    // Step 1: Get collaborators
+    // Step 1: Get project owner/creator
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .select('creator_id')
+      .eq('id', projectId)
+      .single();
+
+    if (projectError) {
+      console.error('Error fetching project:', projectError);
+      throw projectError;
+    }
+
+    // Step 2: Get collaborators
     const { data: collaborators, error: collabError } = await supabase
       .from('project_collaborators')
       .select('*')
@@ -29,10 +41,11 @@ export async function getProjectCollaborators(
       throw collabError;
     }
 
-    if (!collaborators || collaborators.length === 0) return [];
-
-    // Step 2: Get user IDs
-    const userIds = collaborators.map((c) => c.user_id);
+    // Step 3: Get all user IDs (owner + collaborators)
+    const userIds = [project.creator_id];
+    if (collaborators && collaborators.length > 0) {
+      userIds.push(...collaborators.map((c) => c.user_id));
+    }
 
     // Step 3: Fetch profiles for all users (email is NOT in profiles table)
     let profilesQuery = supabase
@@ -56,28 +69,58 @@ export async function getProjectCollaborators(
     // Step 4: Map profiles to collaborators
     const profilesMap = new Map(profiles?.map((p) => [p.id, p]) || []);
 
-    return collaborators.map((collab) => {
-      const profile = profilesMap.get(collab.user_id);
-      return {
-        id: collab.id,
-        project_id: collab.project_id,
-        user_id: collab.user_id,
-        role: collab.role,
-        can_edit: collab.can_edit,
-        can_download: collab.can_download,
-        can_upload_audio: collab.can_upload_audio,
-        can_upload_mixdown: collab.can_upload_mixdown,
-        can_comment: collab.can_comment,
-        can_invite_others: collab.can_invite_others,
-        invited_by: collab.invited_by,
-        invited_at: collab.invited_at,
-        accepted_at: collab.accepted_at,
-        created_at: collab.created_at,
-        username: profile?.username || null,
-        email: null, // Email is in auth.users, not accessible via API
-        avatar_url: profile?.avatar_url || null
-      };
+    // Step 5: Build result list (owner first, then collaborators)
+    const result: ProjectCollaborator[] = [];
+
+    // Add owner as first collaborator with 'owner' role and full permissions
+    const ownerProfile = profilesMap.get(project.creator_id);
+    result.push({
+      id: `owner-${project.creator_id}`, // Synthetic ID for owner
+      project_id: projectId,
+      user_id: project.creator_id,
+      role: 'owner',
+      can_edit: true,
+      can_download: true,
+      can_upload_audio: true,
+      can_upload_mixdown: true,
+      can_comment: true,
+      can_invite_others: true,
+      invited_by: null,
+      invited_at: null,
+      accepted_at: null,
+      created_at: new Date().toISOString(), // Use current time or project creation time
+      username: ownerProfile?.username || null,
+      email: null,
+      avatar_url: ownerProfile?.avatar_url || null
     });
+
+    // Add invited collaborators
+    if (collaborators && collaborators.length > 0) {
+      result.push(...collaborators.map((collab) => {
+        const profile = profilesMap.get(collab.user_id);
+        return {
+          id: collab.id,
+          project_id: collab.project_id,
+          user_id: collab.user_id,
+          role: collab.role,
+          can_edit: collab.can_edit,
+          can_download: collab.can_download,
+          can_upload_audio: collab.can_upload_audio,
+          can_upload_mixdown: collab.can_upload_mixdown,
+          can_comment: collab.can_comment,
+          can_invite_others: collab.can_invite_others,
+          invited_by: collab.invited_by,
+          invited_at: collab.invited_at,
+          accepted_at: collab.accepted_at,
+          created_at: collab.created_at,
+          username: profile?.username || null,
+          email: null,
+          avatar_url: profile?.avatar_url || null
+        };
+      }));
+    }
+
+    return result;
   } catch (error) {
     console.error('getProjectCollaborators failed:', error);
     return [];
