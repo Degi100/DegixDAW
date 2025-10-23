@@ -29,6 +29,7 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
   });
 
   const [selectedTemplate, setSelectedTemplate] = useState<string>('empty');
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -101,25 +102,87 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
       default:
         setFormData(prev => ({ ...prev, bpm: 120, time_signature: '4/4' }));
     }
+
+    // Auto-advance to next step
+    setCurrentStep(2);
+  };
+
+  // Handle next/back navigation
+  const handleNext = () => {
+    // Validate current step before advancing
+    if (currentStep === 2) {
+      // Validate project details
+      if (!formData.title.trim()) {
+        setErrors({ title: 'Project title is required' });
+        return;
+      }
+      if (formData.title.length < 3) {
+        setErrors({ title: 'Title must be at least 3 characters' });
+        return;
+      }
+      setErrors({});
+    }
+
+    setCurrentStep((prev) => Math.min(prev + 1, 3) as 1 | 2 | 3);
+  };
+
+  const handleBack = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1) as 1 | 2 | 3);
+    setErrors({});
+  };
+
+  // Reset modal state on close
+  const handleClose = () => {
+    setCurrentStep(1);
+    setSelectedTemplate('empty');
+    setFormData({
+      title: '',
+      description: '',
+      bpm: 120,
+      time_signature: '4/4',
+      key: 'C',
+      is_public: false,
+    });
+    setErrors({});
+    onClose();
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={handleClose}>
       <div className="modal-content project-create-modal" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="modal-header">
           <h2>🎵 Create New Project</h2>
-          <button className="modal-close" onClick={onClose} aria-label="Close">
+          <button className="modal-close" onClick={handleClose} aria-label="Close">
             ✕
           </button>
         </div>
 
+        {/* Step Indicator */}
+        <div className="step-indicator">
+          <div className={`step ${currentStep >= 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}>
+            <div className="step-number">1</div>
+            <div className="step-label">Template</div>
+          </div>
+          <div className="step-line"></div>
+          <div className={`step ${currentStep >= 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}>
+            <div className="step-number">2</div>
+            <div className="step-label">Details</div>
+          </div>
+          <div className="step-line"></div>
+          <div className={`step ${currentStep >= 3 ? 'active' : ''}`}>
+            <div className="step-number">3</div>
+            <div className="step-label">Visibility</div>
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit}>
           {/* Step 1: Template Selection */}
+          {currentStep === 1 && (
           <section className="modal-section">
-            <h3>1. Choose Template</h3>
+            <h3>Choose Template</h3>
             <div className="template-grid">
               {PROJECT_TEMPLATES.map((template) => {
                 const isComingSoon = template.tags.includes('coming-soon');
@@ -139,10 +202,12 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
               })}
             </div>
           </section>
+          )}
 
           {/* Step 2: Project Details */}
+          {currentStep === 2 && (
           <section className="modal-section">
-            <h3>2. Project Details</h3>
+            <h3>Project Details</h3>
 
             {/* Title */}
             <div className="form-group">
@@ -247,10 +312,12 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
               </select>
             </div>
           </section>
+          )}
 
           {/* Step 3: Visibility */}
+          {currentStep === 3 && (
           <section className="modal-section">
-            <h3>3. Visibility</h3>
+            <h3>Visibility</h3>
 
             <div className="form-group">
               <label className="checkbox-label">
@@ -268,24 +335,56 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
               </p>
             </div>
           </section>
+          )}
 
           {/* Actions */}
           <div className="modal-actions">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={loading || !formData.title.trim()}
-            >
-              {loading ? 'Creating...' : '✨ Create Project'}
-            </Button>
+            {/* Back Button (show on step 2 and 3) */}
+            {currentStep > 1 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleBack}
+                disabled={loading}
+              >
+                ← Back
+              </Button>
+            )}
+
+            {/* Cancel Button (show on step 1 only) */}
+            {currentStep === 1 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+            )}
+
+            {/* Next Button (show on step 2) */}
+            {currentStep === 2 && (
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handleNext}
+                disabled={loading || !formData.title.trim()}
+              >
+                Next →
+              </Button>
+            )}
+
+            {/* Create Button (show on step 3) */}
+            {currentStep === 3 && (
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={loading}
+              >
+                {loading ? 'Creating...' : '✨ Create Project'}
+              </Button>
+            )}
           </div>
         </form>
       </div>

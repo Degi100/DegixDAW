@@ -8,6 +8,71 @@
   width: 90vw;
 
   // ============================================
+  // STEP INDICATOR
+  // ============================================
+  .step-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    gap: 0.5rem;
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      opacity: 0.4;
+      transition: opacity 0.2s ease;
+
+      &.active {
+        opacity: 1;
+      }
+
+      &.completed .step-number {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+      }
+
+      .step-number {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 2px solid var(--border-color);
+        background: var(--bg-secondary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--text-primary);
+        transition: all 0.2s ease;
+      }
+
+      .step-label {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        text-align: center;
+      }
+    }
+
+    .step-line {
+      width: 60px;
+      height: 2px;
+      background: var(--border-color);
+      margin: 0 0.5rem;
+      margin-bottom: 1.5rem; // Align with step numbers
+
+      @media (max-width: 600px) {
+        width: 30px;
+      }
+    }
+  }
+
+  // ============================================
   // TEMPLATE SELECTION
   // ============================================
   .template-grid {
