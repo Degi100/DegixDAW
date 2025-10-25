@@ -19,6 +19,29 @@ export interface VersionInfo {
 
 export const VERSION_HISTORY: VersionInfo[] = [
   {
+    version: "0.1.6",
+    date: "2025-10-25",
+    type: "minor",
+    changes: {
+      added: [
+        "Email-Einladungssystem - Kollaboratoren per Email einladen (4-Schritt Wizard)",
+        "Supabase Edge Function - Serverless Magic-Link Versand via Deno",
+        "Database Trigger - Automatische Projekt-Zuweisung nach Registrierung",
+        "pending_email_invitations - Neue Tabelle mit RLS Policies",
+        "Purple Badge - Styling für Email-Einladungen in Projekt-Liste"
+      ],
+      fixed: [
+        "Critical: handle_new_user Trigger - Verhinderte User-Registrierung (user_id statt id)",
+        "Edge Function - User-Existenz-Check vor inviteUserByEmail Aufruf",
+        "TypeScript Build - Unused variable warnings behoben"
+      ],
+      changed: [
+        "Projekt-Erstellung - Von 3-Schritt zu 4-Schritt Wizard erweitert",
+        "Collaborators Service - inviteByEmail() mit Edge Function Integration"
+      ]
+    }
+  },
+  {
     version: "0.1.5",
     date: "2025-10-19",
     type: "patch",
