@@ -182,6 +182,95 @@ export async function inviteCollaborator(
 }
 
 // ============================================
+// Invite Non-Registered User by Email (via Edge Function)
+// Sends email with magic link + stores in DB for auto-add after signup
+// ============================================
+
+export interface InviteByEmailData {
+  email: string;
+  projectId: string;
+  projectName: string;
+  role: CollaboratorRole;
+  permissions: Omit<InviteCollaboratorData, 'user_id'>;
+}
+
+export async function inviteByEmail(data: InviteByEmailData): Promise<{ success: boolean; message: string }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    // Step 1: Store pending invitation in database (for auto-add trigger)
+    const { error: insertError } = await supabase
+      .from('pending_email_invitations')
+      .insert({
+        email: data.email.toLowerCase().trim(),
+        project_id: data.projectId,
+        invited_by: user.id,
+        role: data.role,
+        permissions: data.permissions,
+        status: 'pending'
+      });
+
+    if (insertError) {
+      console.error('Failed to create pending invitation:', insertError);
+
+      // Check if it's a duplicate
+      if (insertError.code === '23505') {
+        return {
+          success: false,
+          message: 'This email has already been invited to this project'
+        };
+      }
+
+      throw new Error('Failed to create invitation');
+    }
+
+    console.log(`✅ Pending invitation stored in DB for ${data.email}`);
+
+    // Step 2: Call Edge Function to send email with magic link
+    const { data: { session } } = await supabase.auth.getSession();
+    const EDGE_FUNCTION_URL = 'https://xcdzugnjzrkngzmtzeip.supabase.co/functions/v1/invite-user';
+
+    const response = await fetch(EDGE_FUNCTION_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.access_token}`,
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({
+        email: data.email.toLowerCase().trim(),
+        projectId: data.projectId,
+        projectName: data.projectName,
+        role: data.role,
+        permissions: data.permissions,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Edge Function error:', errorData);
+      throw new Error(errorData.error || 'Failed to send invitation email');
+    }
+
+    const result = await response.json();
+    console.log(`✅ Invitation email sent to ${data.email}`);
+    console.log(`📧 User will receive magic link → redirects to /welcome`);
+
+    return {
+      success: true,
+      message: `Invitation sent to ${data.email}! They will receive an email with a signup link.`,
+    };
+  } catch (error: any) {
+    console.error('inviteByEmail failed:', error);
+    return {
+      success: false,
+      message: error.message || 'Failed to send invitation',
+    };
+  }
+}
+
+// ============================================
 // Accept Collaboration Invite
 // ============================================
 

@@ -6,8 +6,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProjects } from '../../hooks/useProjects';
+import { useUserSearch, type SearchUser } from '../../hooks/useUserSearch';
+import { inviteCollaborator, inviteByEmail } from '../../lib/services/projects/collaboratorsService';
 import { PROJECT_TEMPLATES } from '../../lib/constants/content';
 import type { CreateProjectRequest } from '../../types/projects';
+import type { InviteCollaboratorData } from './InviteCollaboratorModal';
 import Button from '../ui/Button';
 
 interface ProjectCreateModalProps {
@@ -29,9 +32,163 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
   });
 
   const [selectedTemplate, setSelectedTemplate] = useState<string>('empty');
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Step 3: Invite collaborators state
+  const [activeTab, setActiveTab] = useState<'search' | 'email'>('search');
+  const [selectedUser, setSelectedUser] = useState<SearchUser | null>(null);
+  const [email, setEmail] = useState('');
+  const [selectedRole, setSelectedRole] = useState<'viewer' | 'contributor' | 'mixer' | 'admin'>('viewer');
+  const [permissions, setPermissions] = useState<Omit<InviteCollaboratorData, 'user_id'>>({
+    role: 'viewer',
+    can_edit: false,
+    can_download: true,
+    can_upload_audio: false,
+    can_upload_mixdown: false,
+    can_comment: true,
+    can_invite_others: false,
+  });
+  const [invitedUsers, setInvitedUsers] = useState<Array<{ user_id: string; username: string; permissions: Omit<InviteCollaboratorData, 'user_id'> }>>([]);
+  const [invitedEmails, setInvitedEmails] = useState<Array<{ email: string; permissions: Omit<InviteCollaboratorData, 'user_id'> }>>([]);
+
+  // useUserSearch hook for auto-complete
+  const { results, loading: searchLoading, debouncedSearch, clearSearch } = useUserSearch();
+
+  // Role presets for quick selection
+  const ROLE_PRESETS: Record<string, Omit<InviteCollaboratorData, 'user_id'>> = {
+    viewer: {
+      role: 'viewer',
+      can_edit: false,
+      can_download: true,
+      can_upload_audio: false,
+      can_upload_mixdown: false,
+      can_comment: true,
+      can_invite_others: false,
+    },
+    contributor: {
+      role: 'contributor',
+      can_edit: true,
+      can_download: true,
+      can_upload_audio: true,
+      can_upload_mixdown: false,
+      can_comment: true,
+      can_invite_others: false,
+    },
+    mixer: {
+      role: 'mixer',
+      can_edit: true,
+      can_download: true,
+      can_upload_audio: true,
+      can_upload_mixdown: true,
+      can_comment: true,
+      can_invite_others: false,
+    },
+    admin: {
+      role: 'admin',
+      can_edit: true,
+      can_download: true,
+      can_upload_audio: true,
+      can_upload_mixdown: true,
+      can_comment: true,
+      can_invite_others: true,
+    },
+  };
+
+  // Handle role change
+  const handleRoleChange = (role: 'viewer' | 'contributor' | 'mixer' | 'admin') => {
+    setSelectedRole(role);
+    setPermissions(ROLE_PRESETS[role]);
+  };
+
+  // Toggle individual permission
+  const togglePermission = (key: keyof Omit<InviteCollaboratorData, 'user_id' | 'role'>) => {
+    setPermissions((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  // Handle user selection from search results
+  const handleSelectUser = (user: SearchUser) => {
+    setSelectedUser(user);
+    clearSearch();
+    setErrors({});
+  };
+
+  // Handle search input change
+  const handleSearchChange = (value: string) => {
+    setSelectedUser(null);
+    if (value.trim()) {
+      debouncedSearch(value);
+    } else {
+      clearSearch();
+    }
+  };
+
+  // Add user to invited list
+  const handleAddInvite = () => {
+    if (activeTab === 'search') {
+      if (!selectedUser) {
+        setErrors({ invite: 'Please select a user from the search results' });
+        return;
+      }
+
+      // Check if already invited
+      if (invitedUsers.find(u => u.user_id === selectedUser.id)) {
+        setErrors({ invite: 'User already invited' });
+        return;
+      }
+
+      setInvitedUsers(prev => [...prev, {
+        user_id: selectedUser.id,
+        username: selectedUser.username,
+        permissions: { ...permissions }
+      }]);
+
+      // Reset selection
+      setSelectedUser(null);
+      clearSearch();
+      setErrors({});
+    } else {
+      // Email tab - Invite by email
+      if (!email.trim()) {
+        setErrors({ invite: 'Email is required' });
+        return;
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        setErrors({ invite: 'Please enter a valid email address' });
+        return;
+      }
+
+      // Check if already invited
+      if (invitedEmails.find(e => e.email === email)) {
+        setErrors({ invite: 'Email already invited' });
+        return;
+      }
+
+      setInvitedEmails(prev => [...prev, {
+        email: email,
+        permissions: { ...permissions }
+      }]);
+
+      // Reset email input
+      setEmail('');
+      setErrors({});
+    }
+  };
+
+  // Remove user from invited list
+  const handleRemoveInvite = (userId: string) => {
+    setInvitedUsers(prev => prev.filter(u => u.user_id !== userId));
+  };
+
+  // Remove email from invited list
+  const handleRemoveEmailInvite = (emailToRemove: string) => {
+    setInvitedEmails(prev => prev.filter(e => e.email !== emailToRemove));
+  };
 
   // Validate form
   const validateForm = (): boolean => {
@@ -63,6 +220,46 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
       const project = await create(formData);
 
       if (project) {
+        // Send invitations to registered users
+        if (invitedUsers.length > 0) {
+          const userInvitePromises = invitedUsers.map(invite =>
+            inviteCollaborator(project.id, {
+              user_id: invite.user_id,
+              ...invite.permissions
+            })
+          );
+
+          try {
+            await Promise.all(userInvitePromises);
+            console.log(`✅ Sent ${invitedUsers.length} user invitations`);
+          } catch (inviteError) {
+            console.error('Failed to send some user invitations:', inviteError);
+            // Continue anyway - project created successfully
+          }
+        }
+
+        // Send email invitations to non-registered users
+        if (invitedEmails.length > 0) {
+          const emailInvitePromises = invitedEmails.map(invite =>
+            inviteByEmail({
+              email: invite.email,
+              projectId: project.id,
+              projectName: formData.title,
+              role: invite.permissions.role,
+              permissions: invite.permissions
+            })
+          );
+
+          try {
+            const results = await Promise.all(emailInvitePromises);
+            const successCount = results.filter(r => r.success).length;
+            console.log(`✅ Sent ${successCount}/${invitedEmails.length} email invitations`);
+          } catch (emailError) {
+            console.error('Failed to send some email invitations:', emailError);
+            // Continue anyway - project created successfully
+          }
+        }
+
         // Close modal
         onClose();
 
@@ -79,6 +276,9 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
           is_public: false,
         });
         setSelectedTemplate('empty');
+        setInvitedUsers([]);
+        setInvitedEmails([]);
+        setCurrentStep(1);
       }
     } catch (error) {
       console.error('Failed to create project:', error);
@@ -123,11 +323,17 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
       setErrors({});
     }
 
-    setCurrentStep((prev) => Math.min(prev + 1, 3) as 1 | 2 | 3);
+    setCurrentStep((prev) => Math.min(prev + 1, 4) as 1 | 2 | 3 | 4);
   };
 
   const handleBack = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1) as 1 | 2 | 3);
+    setCurrentStep((prev) => Math.max(prev - 1, 1) as 1 | 2 | 3 | 4);
+    setErrors({});
+  };
+
+  // Skip Step 3 (Invite) - optional step
+  const handleSkipInvite = () => {
+    setCurrentStep(4);
     setErrors({});
   };
 
@@ -172,8 +378,13 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
             <div className="step-label">Details</div>
           </div>
           <div className="step-line"></div>
-          <div className={`step ${currentStep >= 3 ? 'active' : ''}`}>
+          <div className={`step ${currentStep >= 3 ? 'active' : ''} ${currentStep > 3 ? 'completed' : ''}`}>
             <div className="step-number">3</div>
+            <div className="step-label">Invite</div>
+          </div>
+          <div className="step-line"></div>
+          <div className={`step ${currentStep >= 4 ? 'active' : ''}`}>
+            <div className="step-number">4</div>
             <div className="step-label">Visibility</div>
           </div>
         </div>
@@ -314,8 +525,260 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
           </section>
           )}
 
-          {/* Step 3: Visibility */}
+          {/* Step 3: Invite Collaborators (Optional) */}
           {currentStep === 3 && (
+          <section className="modal-section">
+            <h3>Invite Collaborators (Optional)</h3>
+            <p className="form-hint" style={{ marginBottom: '1rem' }}>
+              You can invite team members now or later from the project page
+            </p>
+
+            {/* Tabs */}
+            <div className="invite-tabs">
+              <button
+                type="button"
+                className={`invite-tab ${activeTab === 'search' ? 'active' : ''}`}
+                onClick={() => setActiveTab('search')}
+              >
+                🔍 Search Users
+              </button>
+              <button
+                type="button"
+                className={`invite-tab ${activeTab === 'email' ? 'active' : ''}`}
+                onClick={() => setActiveTab('email')}
+              >
+                ✉️ Invite by Email
+              </button>
+            </div>
+
+            {/* Tab 1: Search Users */}
+            {activeTab === 'search' && (
+              <>
+                <div className="form-group">
+                  <label htmlFor="search">Search by name or username</label>
+                  <input
+                    type="text"
+                    id="search"
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    placeholder="Type to search..."
+                    className="form-input"
+                    autoComplete="off"
+                  />
+                </div>
+
+                {/* Search Results Dropdown */}
+                {results.length > 0 && (
+                  <div className="user-search-results">
+                    {results.map((user) => (
+                      <div
+                        key={user.id}
+                        className="user-result-item"
+                        onClick={() => handleSelectUser(user)}
+                      >
+                        <div className="user-avatar">
+                          {user.avatar_url ? (
+                            <img src={user.avatar_url} alt={user.username} />
+                          ) : (
+                            <div className="avatar-placeholder">
+                              {user.full_name?.[0]?.toUpperCase() || user.username[0].toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <div className="user-info">
+                          <div className="user-name">{user.full_name || 'Unknown'}</div>
+                          <div className="user-username">@{user.username}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {searchLoading && <p className="search-loading">Searching...</p>}
+
+                {/* Selected User */}
+                {selectedUser && (
+                  <div className="selected-user">
+                    <p className="selected-label">Selected:</p>
+                    <div className="user-result-item selected">
+                      <div className="user-avatar">
+                        {selectedUser.avatar_url ? (
+                          <img src={selectedUser.avatar_url} alt={selectedUser.username} />
+                        ) : (
+                          <div className="avatar-placeholder">
+                            {selectedUser.full_name?.[0]?.toUpperCase() || selectedUser.username[0].toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="user-info">
+                        <div className="user-name">{selectedUser.full_name || 'Unknown'}</div>
+                        <div className="user-username">@{selectedUser.username}</div>
+                      </div>
+                      <button
+                        type="button"
+                        className="clear-selection"
+                        onClick={() => setSelectedUser(null)}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Tab 2: Invite by Email */}
+            {activeTab === 'email' && (
+              <>
+                <div className="form-group">
+                  <label htmlFor="email">Email Address</label>
+                  <input
+                    type="email"
+                    id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="user@example.com"
+                    className="form-input"
+                  />
+                  <p className="form-hint">
+                    Invite someone who doesn't have an account yet
+                  </p>
+                </div>
+
+                <div className="email-invite-info">
+                  <p>📧 They will receive an email with instructions to join DegixDAW</p>
+                  <p>✅ Once they sign up, they'll automatically be added to this project</p>
+                </div>
+              </>
+            )}
+
+            {/* Invited Users List - Show BEFORE role/permissions */}
+            {(invitedUsers.length > 0 || invitedEmails.length > 0) && (
+              <div className="invited-users-list" style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+                <h4>Invited ({invitedUsers.length + invitedEmails.length})</h4>
+
+                {/* Registered Users */}
+                {invitedUsers.map((invite) => (
+                  <div key={invite.user_id} className="invited-user-item">
+                    <span>@{invite.username}</span>
+                    <span className="badge badge-blue">{invite.permissions.role}</span>
+                    <button
+                      type="button"
+                      className="remove-invite-btn"
+                      onClick={() => handleRemoveInvite(invite.user_id)}
+                      aria-label="Remove invite"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+
+                {/* Email Invites */}
+                {invitedEmails.map((invite) => (
+                  <div key={invite.email} className="invited-user-item">
+                    <span>✉️ {invite.email}</span>
+                    <span className="badge badge-purple">{invite.permissions.role}</span>
+                    <button
+                      type="button"
+                      className="remove-invite-btn"
+                      onClick={() => handleRemoveEmailInvite(invite.email)}
+                      aria-label="Remove invite"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Role Selection (both tabs) */}
+            <div className="form-group">
+              <label>Role</label>
+              <div className="role-buttons">
+                {Object.keys(ROLE_PRESETS).map((role) => (
+                  <button
+                    key={role}
+                    type="button"
+                    className={`role-button ${selectedRole === role ? 'active' : ''}`}
+                    onClick={() => handleRoleChange(role as 'viewer' | 'contributor' | 'mixer' | 'admin')}
+                  >
+                    {role.charAt(0).toUpperCase() + role.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Permissions */}
+            <div className="form-group">
+              <label>Permissions</label>
+              <div className="permissions-list">
+                <label className="permission-item">
+                  <input
+                    type="checkbox"
+                    checked={permissions.can_edit}
+                    onChange={() => togglePermission('can_edit')}
+                  />
+                  <span>Edit Tracks</span>
+                </label>
+                <label className="permission-item">
+                  <input
+                    type="checkbox"
+                    checked={permissions.can_download}
+                    onChange={() => togglePermission('can_download')}
+                  />
+                  <span>Download</span>
+                </label>
+                <label className="permission-item">
+                  <input
+                    type="checkbox"
+                    checked={permissions.can_upload_audio}
+                    onChange={() => togglePermission('can_upload_audio')}
+                  />
+                  <span>Upload Audio</span>
+                </label>
+                <label className="permission-item">
+                  <input
+                    type="checkbox"
+                    checked={permissions.can_upload_mixdown}
+                    onChange={() => togglePermission('can_upload_mixdown')}
+                  />
+                  <span>Upload Mixdown</span>
+                </label>
+                <label className="permission-item">
+                  <input
+                    type="checkbox"
+                    checked={permissions.can_comment}
+                    onChange={() => togglePermission('can_comment')}
+                  />
+                  <span>Comment</span>
+                </label>
+                <label className="permission-item">
+                  <input
+                    type="checkbox"
+                    checked={permissions.can_invite_others}
+                    onChange={() => togglePermission('can_invite_others')}
+                  />
+                  <span>Invite Others</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Add Invite Button */}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleAddInvite}
+              disabled={activeTab === 'search' && !selectedUser}
+              style={{ marginTop: '1rem' }}
+            >
+              ➕ Add to Invite List
+            </Button>
+
+            {errors.invite && <div className="error-message">{errors.invite}</div>}
+          </section>
+          )}
+
+          {/* Step 4: Visibility */}
+          {currentStep === 4 && (
           <section className="modal-section">
             <h3>Visibility</h3>
 
@@ -339,7 +802,7 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
 
           {/* Actions */}
           <div className="modal-actions">
-            {/* Back Button (show on step 2 and 3) */}
+            {/* Back Button (show on step 2, 3, and 4) */}
             {currentStep > 1 && (
               <Button
                 type="button"
@@ -375,8 +838,32 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
               </Button>
             )}
 
-            {/* Create Button (show on step 3) */}
+            {/* Skip Button (show on step 3 - Invite is optional) */}
             {currentStep === 3 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSkipInvite}
+                disabled={loading}
+              >
+                Skip
+              </Button>
+            )}
+
+            {/* Next Button (show on step 3) */}
+            {currentStep === 3 && (
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handleNext}
+                disabled={loading}
+              >
+                Next →
+              </Button>
+            )}
+
+            {/* Create Button (show on step 4) */}
+            {currentStep === 4 && (
               <Button
                 type="submit"
                 variant="primary"

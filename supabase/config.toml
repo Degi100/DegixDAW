@@ -1,0 +1,15 @@
+# Supabase Local Development Config
+
+[api]
+enabled = true
+port = 54321
+
+[db]
+port = 54322
+
+[studio]
+enabled = true
+port = 54323
+
+[functions.invite-user]
+verify_jwt = true
