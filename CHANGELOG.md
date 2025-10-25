@@ -2,6 +2,34 @@
 
 Alle Änderungen an DegixDAW werden hier dokumentiert.
 
+## [0.1.6] - 2025-10-25
+
+### Added
+- **Email-Einladungssystem** - Kollaboratoren können jetzt per Email eingeladen werden
+  - 4-Schritt Projekt-Erstellungs-Wizard (Template → Details → Einladen → Sichtbarkeit)
+  - Supabase Edge Function für Magic-Link Versand
+  - Automatische Projekt-Zuweisung nach Registrierung via Database Trigger
+  - Unterstützung für registrierte User und Email-Einladungen
+  - Purple Badge-Styling für Email-Einladungen
+
+### Changed
+- **Projekt-Erstellung modernisiert** - Von 3-Schritt zu 4-Schritt Wizard erweitert
+- **Collaborators Service erweitert** - `inviteByEmail()` mit Edge Function Integration
+- **Database Trigger optimiert** - `handle_new_user()` schreibt jetzt korrekt in `user_id` Spalte
+
+### Fixed
+- **Critical Bug**: Database Trigger verhinderte User-Registrierung
+- **Edge Function**: User-Existenz-Check vor `inviteUserByEmail()` Aufruf
+- TypeScript: Unused variable warnings behoben
+
+### Technical Details
+- Neue Supabase Edge Function: `invite-user` (Deno/TypeScript)
+- Neue DB-Tabelle: `pending_email_invitations` mit RLS Policies
+- Neuer Trigger: `auto_add_invited_users` für automatische Kollaborator-Zuweisung
+- SQL Migrations: `invite_user_by_email.sql`, `auto_add_invited_users_trigger.sql`
+
+---
+
 ## [0.1.2] - 2025-10-05
 
 ### Fixed
