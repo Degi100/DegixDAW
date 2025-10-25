@@ -39,7 +39,7 @@ export interface ProjectWithCreator extends Project {
 // Project Collaborators
 // ============================================
 
-export type CollaboratorRole = 'viewer' | 'contributor' | 'mixer' | 'admin';
+export type CollaboratorRole = 'owner' | 'viewer' | 'contributor' | 'mixer' | 'admin';
 export type InviteMethod = 'username' | 'link' | 'chat';
 
 export interface ProjectCollaborator {
@@ -55,7 +55,7 @@ export interface ProjectCollaborator {
   can_invite_others: boolean;
   invited_by?: string | null;
   invite_method?: InviteMethod | null;
-  invited_at: string;
+  invited_at: string | null;
   accepted_at?: string | null;
   created_at: string;
   // Joined from profiles (for UI display)

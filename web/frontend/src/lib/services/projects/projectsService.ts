@@ -67,44 +67,73 @@ export async function getProjects(
       throw new Error('User not authenticated');
     }
 
-    let query = supabase
+    // Get owned projects
+    let ownedQuery = supabase
       .from('projects')
-      .select('*');
+      .select('*')
+      .eq('creator_id', user.id);
 
-    // Filter: Only projects user owns (for now, collaborators feature comes later)
-    query = query.eq('creator_id', user.id);
+    // Get collaborated projects
+    const { data: collaborations } = await supabase
+      .from('project_collaborators')
+      .select('project_id')
+      .eq('user_id', user.id)
+      .not('accepted_at', 'is', null);
 
-    // Apply additional filters
+    const collaboratedProjectIds = collaborations?.map(c => c.project_id) || [];
+
+    let collaboratedQuery = collaboratedProjectIds.length > 0
+      ? supabase.from('projects').select('*').in('id', collaboratedProjectIds)
+      : null;
+
+    // Apply additional filters to both queries
     if (options?.filter) {
       const { status, is_public, search } = options.filter;
 
       if (status) {
-        query = query.eq('status', status);
+        ownedQuery = ownedQuery.eq('status', status);
+        if (collaboratedQuery) collaboratedQuery = collaboratedQuery.eq('status', status);
       }
 
       if (is_public !== undefined) {
-        query = query.eq('is_public', is_public);
+        ownedQuery = ownedQuery.eq('is_public', is_public);
+        if (collaboratedQuery) collaboratedQuery = collaboratedQuery.eq('is_public', is_public);
       }
 
       if (search) {
-        query = query.ilike('title', `%${search}%`);
+        ownedQuery = ownedQuery.ilike('title', `%${search}%`);
+        if (collaboratedQuery) collaboratedQuery = collaboratedQuery.ilike('title', `%${search}%`);
       }
     }
+
+    // Fetch both
+    const { data: ownedProjects, error: ownedError } = await ownedQuery;
+    if (ownedError) throw ownedError;
+
+    const { data: collaboratedProjects, error: collaboratedError } = collaboratedQuery
+      ? await collaboratedQuery
+      : { data: [], error: null };
+    if (collaboratedError) throw collaboratedError;
+
+    // Combine and remove duplicates (in case user is both creator and collaborator)
+    const allProjects = [...(ownedProjects || []), ...(collaboratedProjects || [])];
+    const uniqueProjects = Array.from(
+      new Map(allProjects.map(p => [p.id, p])).values()
+    );
 
     // Apply sorting
     const sortBy = options?.sortBy || 'updated_at';
     const order = options?.order || 'desc';
-    query = query.order(sortBy, { ascending: order === 'asc' });
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Error fetching projects:', error);
-      throw error;
-    }
+    uniqueProjects.sort((a, b) => {
+      const aVal = a[sortBy] || '';
+      const bVal = b[sortBy] || '';
+      return order === 'asc'
+        ? aVal > bVal ? 1 : -1
+        : aVal < bVal ? 1 : -1;
+    });
 
     // Map to include creator (will be null for now, can be enhanced later)
-    return (data || []).map(project => ({
+    return uniqueProjects.map(project => ({
       ...project,
       creator: null,
     }));

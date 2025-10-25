@@ -1,0 +1,70 @@
+refactor(frontend): FileBrowser von 688 LOC auf 214 LOC reduziert
+
+Monolithische FileBrowser Component komplett refactored für bessere
+Wartbarkeit, Testbarkeit und Wiederverwendbarkeit.
+
+**Reduktion: 688 LOC → 214 LOC (69% reduction)**
+
+# Neue Struktur:
+
+## Custom Hook (322 LOC):
+- useFileBrowserActions.ts
+  - 11 State Variables (activeTab, view, filter, sort, search, etc.)
+  - Filtering Logic (tab, type, search, user)
+  - Sorting Logic (name, user, date, size)
+  - Alle Handlers (sort, delete, toggle, cleanup)
+  - Helper Functions (getFileIcon, formatSize, formatTime)
+
+## Neue Components:
+- FileBrowserTabs.tsx (49 LOC)
+  - 4 Tabs mit Counts (All, Received, Sent, My Files)
+  - Config-Array statt Copy-Paste
+
+- FileTypeFilters.tsx (31 LOC)
+  - Filter Buttons (Images, Videos, Audio, Documents)
+  - Config-Array für DRY Code
+
+- FileBrowserTableView.tsx (201 LOC)
+  - Table Header mit Sort Indicators
+  - Search Row mit Batch Delete
+  - Table Body mit File Rows
+
+- FileBrowserGridView.tsx (115 LOC)
+  - Grid Cards mit Image Previews
+  - Responsive Layout
+
+## Main Component (214 LOC):
+- FileBrowser.tsx
+  - Nur noch Orchestration + Layout
+  - Delegiert Logic an useFileBrowserActions Hook
+  - Nutzt Sub-Components für UI
+
+# Vorteile:
+
+✅ Separation of Concerns (Logic vs. UI getrennt)
+✅ Reusability (Components wiederverwendbar)
+✅ Testability (Jeder Component isoliert testbar)
+✅ Maintainability (Bugs nur in einem Component fixen)
+✅ DRY Principle (Config-Arrays statt Duplikation)
+✅ Clean Architecture (6 kleine Files statt 1 Monolith)
+
+# Alle Features erhalten:
+
+- 4 Tabs (All/Received/Sent/MyFiles) mit Counts
+- Type Filters (Images/Videos/Audio/Documents)
+- User Filter Dropdown
+- Search by Filename
+- Sorting (Name/User/Date/Size) mit Direction Toggle
+- Multi-Select mit Checkboxes
+- Batch Delete Selected Files
+- Cleanup Broken Files
+- Table View + Grid View Toggle
+- Upload Modal
+- Loading States + Empty States
+
+Teil der Refactoring Initiative (#REFACTORING.md)
+Nächstes Ziel: CodeGrowthChart.tsx (641 LOC)
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>

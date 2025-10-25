@@ -110,6 +110,8 @@ export default function TrackUploadZone({
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
+        onClick={!selectedFile && !disabled ? handleBrowseClick : undefined}
+        style={{ cursor: !selectedFile && !disabled ? 'pointer' : 'default' }}
       >
         {selectedFile ? (
           // File Selected
@@ -131,9 +133,9 @@ export default function TrackUploadZone({
           // Empty State
           <div className="upload-prompt">
             <div className="upload-icon">📤</div>
-            <h3>Drop Audio Files Here</h3>
+            <h3>Click or Drop Audio Files Here</h3>
             <p className="upload-description">
-              Or click to browse your files
+              Drag & drop or click anywhere to browse
             </p>
             <p className="upload-formats">
               Supported: MP3, WAV, FLAC, M4A, AAC, OGG, WebM

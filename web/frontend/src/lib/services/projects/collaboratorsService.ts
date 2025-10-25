@@ -17,7 +17,19 @@ export async function getProjectCollaborators(
   projectId: string
 ): Promise<ProjectCollaborator[]> {
   try {
-    // Step 1: Get collaborators
+    // Step 1: Get project owner/creator
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .select('creator_id')
+      .eq('id', projectId)
+      .single();
+
+    if (projectError) {
+      console.error('Error fetching project:', projectError);
+      throw projectError;
+    }
+
+    // Step 2: Get collaborators
     const { data: collaborators, error: collabError } = await supabase
       .from('project_collaborators')
       .select('*')
@@ -29,10 +41,11 @@ export async function getProjectCollaborators(
       throw collabError;
     }
 
-    if (!collaborators || collaborators.length === 0) return [];
-
-    // Step 2: Get user IDs
-    const userIds = collaborators.map((c) => c.user_id);
+    // Step 3: Get all user IDs (owner + collaborators)
+    const userIds = [project.creator_id];
+    if (collaborators && collaborators.length > 0) {
+      userIds.push(...collaborators.map((c) => c.user_id));
+    }
 
     // Step 3: Fetch profiles for all users (email is NOT in profiles table)
     let profilesQuery = supabase
@@ -56,28 +69,58 @@ export async function getProjectCollaborators(
     // Step 4: Map profiles to collaborators
     const profilesMap = new Map(profiles?.map((p) => [p.id, p]) || []);
 
-    return collaborators.map((collab) => {
-      const profile = profilesMap.get(collab.user_id);
-      return {
-        id: collab.id,
-        project_id: collab.project_id,
-        user_id: collab.user_id,
-        role: collab.role,
-        can_edit: collab.can_edit,
-        can_download: collab.can_download,
-        can_upload_audio: collab.can_upload_audio,
-        can_upload_mixdown: collab.can_upload_mixdown,
-        can_comment: collab.can_comment,
-        can_invite_others: collab.can_invite_others,
-        invited_by: collab.invited_by,
-        invited_at: collab.invited_at,
-        accepted_at: collab.accepted_at,
-        created_at: collab.created_at,
-        username: profile?.username || null,
-        email: null, // Email is in auth.users, not accessible via API
-        avatar_url: profile?.avatar_url || null
-      };
+    // Step 5: Build result list (owner first, then collaborators)
+    const result: ProjectCollaborator[] = [];
+
+    // Add owner as first collaborator with 'owner' role and full permissions
+    const ownerProfile = profilesMap.get(project.creator_id);
+    result.push({
+      id: `owner-${project.creator_id}`, // Synthetic ID for owner
+      project_id: projectId,
+      user_id: project.creator_id,
+      role: 'owner',
+      can_edit: true,
+      can_download: true,
+      can_upload_audio: true,
+      can_upload_mixdown: true,
+      can_comment: true,
+      can_invite_others: true,
+      invited_by: null,
+      invited_at: null,
+      accepted_at: null,
+      created_at: new Date().toISOString(), // Use current time or project creation time
+      username: ownerProfile?.username || null,
+      email: null,
+      avatar_url: ownerProfile?.avatar_url || null
     });
+
+    // Add invited collaborators
+    if (collaborators && collaborators.length > 0) {
+      result.push(...collaborators.map((collab) => {
+        const profile = profilesMap.get(collab.user_id);
+        return {
+          id: collab.id,
+          project_id: collab.project_id,
+          user_id: collab.user_id,
+          role: collab.role,
+          can_edit: collab.can_edit,
+          can_download: collab.can_download,
+          can_upload_audio: collab.can_upload_audio,
+          can_upload_mixdown: collab.can_upload_mixdown,
+          can_comment: collab.can_comment,
+          can_invite_others: collab.can_invite_others,
+          invited_by: collab.invited_by,
+          invited_at: collab.invited_at,
+          accepted_at: collab.accepted_at,
+          created_at: collab.created_at,
+          username: profile?.username || null,
+          email: null,
+          avatar_url: profile?.avatar_url || null
+        };
+      }));
+    }
+
+    return result;
   } catch (error) {
     console.error('getProjectCollaborators failed:', error);
     return [];
@@ -135,6 +178,95 @@ export async function inviteCollaborator(
   } catch (error) {
     console.error('inviteCollaborator failed:', error);
     return null;
+  }
+}
+
+// ============================================
+// Invite Non-Registered User by Email (via Edge Function)
+// Sends email with magic link + stores in DB for auto-add after signup
+// ============================================
+
+export interface InviteByEmailData {
+  email: string;
+  projectId: string;
+  projectName: string;
+  role: CollaboratorRole;
+  permissions: Omit<InviteCollaboratorData, 'user_id'>;
+}
+
+export async function inviteByEmail(data: InviteByEmailData): Promise<{ success: boolean; message: string }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    // Step 1: Store pending invitation in database (for auto-add trigger)
+    const { error: insertError } = await supabase
+      .from('pending_email_invitations')
+      .insert({
+        email: data.email.toLowerCase().trim(),
+        project_id: data.projectId,
+        invited_by: user.id,
+        role: data.role,
+        permissions: data.permissions,
+        status: 'pending'
+      });
+
+    if (insertError) {
+      console.error('Failed to create pending invitation:', insertError);
+
+      // Check if it's a duplicate
+      if (insertError.code === '23505') {
+        return {
+          success: false,
+          message: 'This email has already been invited to this project'
+        };
+      }
+
+      throw new Error('Failed to create invitation');
+    }
+
+    console.log(`✅ Pending invitation stored in DB for ${data.email}`);
+
+    // Step 2: Call Edge Function to send email with magic link
+    const { data: { session } } = await supabase.auth.getSession();
+    const EDGE_FUNCTION_URL = 'https://xcdzugnjzrkngzmtzeip.supabase.co/functions/v1/invite-user';
+
+    const response = await fetch(EDGE_FUNCTION_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.access_token}`,
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({
+        email: data.email.toLowerCase().trim(),
+        projectId: data.projectId,
+        projectName: data.projectName,
+        role: data.role,
+        permissions: data.permissions,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Edge Function error:', errorData);
+      throw new Error(errorData.error || 'Failed to send invitation email');
+    }
+
+    await response.json(); // Consume response
+    console.log(`✅ Invitation email sent to ${data.email}`);
+    console.log(`📧 User will receive magic link → redirects to /welcome`);
+
+    return {
+      success: true,
+      message: `Invitation sent to ${data.email}! They will receive an email with a signup link.`,
+    };
+  } catch (error: any) {
+    console.error('inviteByEmail failed:', error);
+    return {
+      success: false,
+      message: error.message || 'Failed to send invitation',
+    };
   }
 }
 

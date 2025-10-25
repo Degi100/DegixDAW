@@ -109,26 +109,10 @@ export const PROJECT_TEMPLATES: readonly ProjectTemplate[] = [
   {
     id: 'band',
     title: 'Band Setup',
-    description: 'Vollständiges Multi-Track Setup für Bandaufnahmen',
+    description: 'Coming Soon - Vollständiges Multi-Track Setup für Bandaufnahmen',
     category: 'recording',
     icon: '🎸',
-    tags: ['band', 'recording', 'multitrack']
-  },
-  {
-    id: 'electronic',
-    title: 'Electronic Music',
-    description: 'Template für elektronische Musikproduktion',
-    category: 'electronic',
-    icon: '🎛️',
-    tags: ['electronic', 'synth', 'drum machine']
-  },
-  {
-    id: 'podcast',
-    title: 'Podcast Setup',
-    description: 'Optimiert für Podcast-Aufnahmen und -Bearbeitung',
-    category: 'spoken',
-    icon: '🎙️',
-    tags: ['podcast', 'voice', 'interview']
+    tags: ['band', 'recording', 'multitrack', 'coming-soon']
   }
 ] as const;
 
