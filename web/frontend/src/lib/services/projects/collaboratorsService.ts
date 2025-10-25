@@ -253,7 +253,7 @@ export async function inviteByEmail(data: InviteByEmailData): Promise<{ success:
       throw new Error(errorData.error || 'Failed to send invitation email');
     }
 
-    const result = await response.json();
+    await response.json(); // Consume response
     console.log(`✅ Invitation email sent to ${data.email}`);
     console.log(`📧 User will receive magic link → redirects to /welcome`);
 

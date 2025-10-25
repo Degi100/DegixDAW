@@ -5,6 +5,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
 import fs from 'fs/promises';
+import { createClient } from '@supabase/supabase-js';
 
 // Load environment variables
 dotenv.config();
@@ -12,6 +13,12 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 const execAsync = promisify(exec);
+
+// Initialize Supabase Admin Client (with Service Role Key for admin operations)
+const supabaseAdmin = createClient(
+  process.env.SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+);
 
 // Middleware
 app.use(cors());
@@ -193,8 +200,63 @@ app.get('/api/analytics/code-metrics', async (req: Request, res: Response) => {
   }
 });
 
+// ============================================================================
+// INVITATIONS - Email Invite for Non-Registered Users
+// ============================================================================
+
+/**
+ * POST /api/invitations/email
+ * Sends email invitation to non-registered user
+ * Body: { email, projectId, projectName, inviterName, role, permissions }
+ */
+app.post('/api/invitations/email', async (req: Request, res: Response) => {
+  try {
+    const { email, projectId, projectName, inviterName, role, permissions } = req.body;
+
+    console.log(`📧 [Invitations] Sending email invite to ${email} for project ${projectName}`);
+
+    // Validate required fields
+    if (!email || !projectId || !projectName || !inviterName) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Use Supabase Auth Admin API to invite user
+    // This will send them a signup email with a magic link
+    // User will be redirected to /welcome after clicking the link
+    const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      // Redirect URL after signup - /welcome page for invited users
+      redirectTo: `${process.env.FRONTEND_URL}/welcome?invited=true&project_id=${projectId}`,
+      data: {
+        // Store metadata about the invitation
+        invited_to_project: projectId,
+        invited_by: inviterName,
+        project_name: projectName,
+        role: role,
+        permissions: permissions,
+      }
+    });
+
+    if (error) {
+      console.error('❌ [Invitations] Supabase invite error:', error.message);
+      return res.status(500).json({ error: error.message });
+    }
+
+    console.log(`✅ [Invitations] Email sent successfully to ${email}`);
+    res.json({
+      success: true,
+      message: `Invitation sent to ${email}`,
+      userId: data.user?.id
+    });
+
+  } catch (error: any) {
+    console.error('❌ [Invitations] Error sending email invite:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 DegixDAW Backend running on http://localhost:${PORT}`);
   console.log(`📊 Analytics API: http://localhost:${PORT}/api/analytics/code-metrics`);
+  console.log(`📧 Invitations API: http://localhost:${PORT}/api/invitations/email`);
 });
