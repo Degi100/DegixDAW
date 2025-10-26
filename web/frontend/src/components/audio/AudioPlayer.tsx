@@ -128,6 +128,7 @@ export default function AudioPlayer({
 
     const handleLoadedMetadata = () => {
       setDuration(audio.duration);
+      console.log('[AudioPlayer] 📂 Metadata loaded - duration:', audio.duration, 'src:', audio.src);
       setLoading(false);
     };
 
@@ -137,9 +138,11 @@ export default function AudioPlayer({
 
     const handlePlay = () => {
       setIsPlaying(true);
+      console.log('[AudioPlayer] ▶️ Play event fired');
     };
 
     const handlePause = () => {
+      console.log('[AudioPlayer] ⏸️ Pause event fired');
       setIsPlaying(false);
     };
 
@@ -148,6 +151,7 @@ export default function AudioPlayer({
       setCurrentTime(0);
     };
 
+      console.log('[AudioPlayer] ❌ Error loading audio');
     const handleError = () => {
       setError('Failed to load audio file');
       setLoading(false);
@@ -189,6 +193,7 @@ export default function AudioPlayer({
   const togglePlayPause = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
+    console.log('[AudioPlayer] togglePlayPause called - isPlaying:', isPlaying, 'audio:', audio, 'src:', audio?.src);
 
     if (isPlaying) {
       audio.pause();
@@ -197,7 +202,11 @@ export default function AudioPlayer({
         broadcastPause(audio.currentTime * 1000);
       }
     } else {
-      audio.play().catch((err) => {
+      console.log('[AudioPlayer] ▶️ Calling audio.play()...');
+      audio.play().then(() => {
+        console.log('[AudioPlayer] ✅ Play succeeded!');
+      }).catch((err) => {
+        console.error('[AudioPlayer] ❌ Play failed:', err);
         setError('Playback failed: ' + err.message);
       });
       // Broadcast play if in host mode
@@ -288,6 +297,7 @@ export default function AudioPlayer({
 
   // ============================================
   // Render
+  console.log('[AudioPlayer] 🎵 Render - audioUrl:', audioUrl, 'track.file_url:', track.file_url);
   // ============================================
 
   if (!audioUrl) {
