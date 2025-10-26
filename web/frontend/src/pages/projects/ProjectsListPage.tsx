@@ -46,9 +46,10 @@ export default function ProjectsListPage() {
   };
 
   // Confirm delete from modal
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = async (deleteMyTracks: boolean) => {
     if (!deletingProject) return;
 
+    // Delete project (tracks are already handled by DeleteProjectModal)
     await remove(deletingProject.id);
     setDeletingProject(null);
   };

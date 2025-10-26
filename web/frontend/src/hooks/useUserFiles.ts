@@ -3,7 +3,7 @@
 // State management for File Browser
 // ============================================
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { getUserFiles, deleteUserFile } from '../lib/services/files/userFilesService';
 import type { UserFile, UserFileSource } from '../types/userFiles';
@@ -79,12 +79,18 @@ export function useUserFiles(userId?: string): UseUserFilesReturn {
     }
   }, [currentUserId]);
 
+  // Store loadFiles in ref to avoid stale closures
+  const loadFilesRef = useRef(loadFiles);
+  useEffect(() => {
+    loadFilesRef.current = loadFiles;
+  }, [loadFiles]);
+
   // Initial load
   useEffect(() => {
     loadFiles();
   }, [loadFiles]);
 
-  // Realtime subscription
+  // Realtime subscription (user_files AND tracks changes)
   useEffect(() => {
     if (!currentUserId) return;
 
@@ -99,8 +105,18 @@ export function useUserFiles(userId?: string): UseUserFilesReturn {
           filter: `user_id=eq.${currentUserId}`,
         },
         () => {
-          // Reload files on any change
-          loadFiles();
+          loadFilesRef.current();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tracks',
+        },
+        () => {
+          loadFilesRef.current();
         }
       )
       .subscribe();
@@ -108,7 +124,7 @@ export function useUserFiles(userId?: string): UseUserFilesReturn {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUserId, loadFiles]);
+  }, [currentUserId]);
 
   // Filter files based on current filter
   const filteredFiles = useCallback(() => {

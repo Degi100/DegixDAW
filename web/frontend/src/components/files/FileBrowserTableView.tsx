@@ -1,4 +1,5 @@
 import type { FileBrowserTab, AttachmentItem } from '../../hooks/useAllAttachments';
+import AddToProjectButton from './AddToProjectButton';
 
 interface FileBrowserTableViewProps {
 	userId: string;
@@ -20,6 +21,7 @@ interface FileBrowserTableViewProps {
 	getFileIcon: (type: string) => string;
 	formatSize: (bytes: number) => string;
 	formatTime: (timestamp: string) => string;
+	onRefreshProjects?: () => void; // Refresh callback for projects tab
 }
 
 export default function FileBrowserTableView({
@@ -42,6 +44,7 @@ export default function FileBrowserTableView({
 	getFileIcon,
 	formatSize,
 	formatTime,
+	onRefreshProjects,
 }: FileBrowserTableViewProps) {
 	return (
 		<div className="file-browser-table">
@@ -147,6 +150,7 @@ export default function FileBrowserTableView({
 								{activeTab === 'sent' && file.recipientName}
 								{activeTab === 'all' && (file.senderId === userId ? `→ ${file.recipientName}` : `← ${file.senderName}`)}
 								{activeTab === 'my_files' && 'Ich'}
+								{activeTab === 'projects' && file.senderName}
 							</div>
 
 							{/* Date */}
@@ -161,7 +165,25 @@ export default function FileBrowserTableView({
 
 							{/* Actions */}
 							<div className="table-cell table-col-actions">
-								{file.signedUrl ? (
+								{activeTab === 'projects' ? (
+									<>
+										<button
+											className="table-action-btn"
+											title="Öffnen"
+											onClick={() => alert('Preview coming soon!')}
+										>
+											👁️
+										</button>
+										<button
+											onClick={() => onDelete(file)}
+											className="table-action-btn table-action-btn--delete"
+											title="Löschen"
+											disabled={deleting === file.id}
+										>
+											{deleting === file.id ? '⏳' : '🗑️'}
+										</button>
+									</>
+								) : file.signedUrl ? (
 									<>
 										<a
 											href={file.signedUrl}
@@ -180,6 +202,17 @@ export default function FileBrowserTableView({
 										>
 											⬇️
 										</a>
+										{/* Add to Project button for audio files */}
+										{file.fileType.startsWith('audio/') && (
+											<AddToProjectButton
+												messageId={file.messageId}
+												chatFilePath={file.fileUrl}
+												fileName={file.fileName}
+												fileType={file.fileType}
+												fileSize={file.fileSize}
+												compact={true}
+											/>
+										)}
 										<button
 											onClick={() => onDelete(file)}
 											className="table-action-btn table-action-btn--delete"

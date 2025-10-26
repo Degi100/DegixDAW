@@ -3,7 +3,7 @@
 // Fetch and filter chat attachments for FileBrowser
 // ============================================
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useToast } from './useToast';
 import { getSignedUrl } from './useSignedUrl';
@@ -29,6 +29,8 @@ export interface AttachmentItem {
   recipientId: string;
   recipientName: string;
   messageContent: string | null | undefined;
+  // Project info (for Projekte tab)
+  sourceProjectIds?: string[];
 }
 
 export type FileTypeFilter = 'all' | 'images' | 'videos' | 'audio' | 'documents';
@@ -265,6 +267,12 @@ export function useAllAttachments({ userId, autoRefresh = true }: UseAllAttachme
     }
   }, []);
 
+  // Store fetchAttachments in ref to avoid stale closures
+  const fetchAttachmentsRef = useRef(fetchAttachments);
+  useEffect(() => {
+    fetchAttachmentsRef.current = fetchAttachments;
+  }, [fetchAttachments]);
+
   // Initial load
   useEffect(() => {
     fetchAttachments();
@@ -276,6 +284,8 @@ export function useAllAttachments({ userId, autoRefresh = true }: UseAllAttachme
   useEffect(() => {
     if (!autoRefresh) return;
 
+    console.log('🔌 Setting up message_attachments realtime subscription');
+
     const channel = supabase
       .channel('message_attachments_changes')
       .on(
@@ -286,21 +296,20 @@ export function useAllAttachments({ userId, autoRefresh = true }: UseAllAttachme
           table: 'message_attachments',
         },
         (payload) => {
-          // For DELETE events, remove from state
-          if (payload.eventType === 'DELETE' && payload.old) {
-            setAllAttachments(prev => prev.filter(att => att.id !== (payload.old as any).id));
-          } else {
-            // For INSERT/UPDATE, silent background refresh
-            fetchAttachments(false);
-          }
+          console.log('🔄 message_attachments changed:', payload.eventType, payload);
+          // Always refresh on any change (INSERT/UPDATE/DELETE)
+          fetchAttachmentsRef.current(false);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 message_attachments subscription status:', status);
+      });
 
     return () => {
+      console.log('🔌 Cleaning up message_attachments subscription');
       supabase.removeChannel(channel);
     };
-  }, [autoRefresh, fetchAttachments]);
+  }, [autoRefresh]);
 
   return {
     allAttachments,

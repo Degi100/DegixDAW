@@ -274,13 +274,37 @@ export async function removeFileFromProject(
 
 export async function moveFileFromChatToShared(
   messageId: string,
-  chatFilePath: string,  // message-attachments/user-A/file.wav
+  chatFilePath: string,  // Could be full URL or storage path
   fileName: string,
   fileType: string
 ): Promise<UserFile | null> {
   try {
+    console.log('📦 moveFileFromChatToShared called with:', { messageId, chatFilePath, fileName, fileType });
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
+
+    console.log('✅ User authenticated:', user.id);
+
+    // Get the actual storage path AND file_size from the attachment record
+    const { data: attachment, error: attachError } = await supabase
+      .from('message_attachments')
+      .select('storage_path, file_size')
+      .eq('message_id', messageId)
+      .eq('file_name', fileName)
+      .maybeSingle();
+
+    let actualStoragePath = chatFilePath;
+
+    if (attachment && attachment.storage_path) {
+      actualStoragePath = attachment.storage_path;
+      console.log('✅ Found storage_path in DB:', actualStoragePath);
+    } else {
+      // Fallback: Files are stored as {conversationId}/{messageId}/{timestamp}.{ext}
+      // The chatFilePath already contains this full path!
+      actualStoragePath = chatFilePath;
+      console.log('⚠️ No storage_path in DB, using chatFilePath directly:', actualStoragePath);
+    }
 
     // Generate new file path in shared_files
     const fileExt = fileName.split('.').pop();
@@ -288,17 +312,23 @@ export async function moveFileFromChatToShared(
     const newFileName = `${timestamp}.${fileExt}`;
     const newFilePath = `${user.id}/${newFileName}`;
 
-    // Copy file from message-attachments to shared_files
+    console.log('📁 New file path will be:', newFilePath);
+
+    // Copy file from chat-attachments to shared_files
     // Note: Supabase doesn't have a copy API, so we download and re-upload
+    console.log('⬇️ Downloading from chat-attachments bucket, path:', actualStoragePath);
     const { data: fileBlob, error: downloadError } = await supabase.storage
-      .from('message-attachments')
-      .download(chatFilePath);
+      .from('chat-attachments')
+      .download(actualStoragePath);
 
     if (downloadError) {
-      console.error('Download error:', downloadError);
-      throw downloadError;
+      console.error('❌ Download error:', downloadError);
+      throw new Error(`Download failed: ${downloadError.message}`);
     }
 
+    console.log('✅ File downloaded, size:', fileBlob?.size);
+
+    console.log('⬆️ Uploading to shared_files bucket, path:', newFilePath);
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('shared_files')
       .upload(newFilePath, fileBlob, {
@@ -307,15 +337,21 @@ export async function moveFileFromChatToShared(
       });
 
     if (uploadError) {
-      console.error('Upload error:', uploadError);
-      throw uploadError;
+      console.error('❌ Upload error:', uploadError);
+      throw new Error(`Upload failed: ${uploadError.message}`);
     }
 
-    // Create user_files entry
+    console.log('✅ File uploaded successfully:', uploadData);
+
+    // Create user_files entry with file_size from attachment or blob
+    const fileSize = attachment?.file_size || fileBlob.size;
+    console.log('📊 Using file_size:', fileSize, '(from', attachment?.file_size ? 'DB' : 'blob', ')');
+
     const userFile = await createUserFile({
       file_name: fileName,
       file_path: uploadData.path,
       file_type: fileType,
+      file_size: fileSize,
       source: 'chat',
       source_message_id: messageId,
     });

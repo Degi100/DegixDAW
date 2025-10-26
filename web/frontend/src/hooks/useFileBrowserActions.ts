@@ -103,22 +103,43 @@ export function useFileBrowserActions({ userId, filterByTab, filterByType, refre
 	};
 
 	const handleDelete = async (file: AttachmentItem) => {
-		if (!confirm(`Möchtest du "${file.fileName}" für dich löschen?\n\n(Die Datei bleibt für andere User erhalten)`)) {
+		if (!confirm(`"${file.fileName}" KOMPLETT löschen?\n\n⚠️ Datei wird aus Chat + Storage + DB gelöscht!`)) {
 			return;
 		}
 
 		setDeleting(file.id);
 
 		try {
-			const { error } = await supabase.rpc('soft_delete_attachment', {
-				p_attachment_id: file.id
-			});
+			console.log('🗑️ Hard deleting attachment:', file.id, file.fileUrl);
 
-			if (error) throw error;
-			refresh();
+			// 1. Delete from storage (chat-attachments bucket)
+			const { error: storageError } = await supabase.storage
+				.from('chat-attachments')
+				.remove([file.fileUrl]);
+
+			if (storageError) {
+				console.warn('⚠️ Storage delete failed (file may not exist):', storageError);
+			} else {
+				console.log('✅ File deleted from storage');
+			}
+
+			// 2. Delete from message_attachments table (hard delete)
+			const { error: dbError } = await supabase
+				.from('message_attachments')
+				.delete()
+				.eq('id', file.id);
+
+			if (dbError) {
+				console.error('❌ DB delete failed:', dbError);
+				throw dbError;
+			}
+
+			console.log('✅ Attachment deleted from DB');
+			// Refresh will happen via realtime subscription
 		} catch (err) {
 			console.error('Failed to delete file:', err);
 			alert('Fehler beim Löschen der Datei');
+		} finally {
 			setDeleting(null);
 		}
 	};
@@ -150,28 +171,43 @@ export function useFileBrowserActions({ userId, filterByTab, filterByType, refre
 			return;
 		}
 
-		if (!confirm(`Möchtest du wirklich ${count} ausgewählte Datei${count > 1 ? 'en' : ''} für dich löschen?\n\n(Die Dateien bleiben für andere User erhalten)`)) {
+		if (!confirm(`${count} Datei${count > 1 ? 'en' : ''} KOMPLETT löschen?\n\n⚠️ Dateien werden aus Chat + Storage + DB gelöscht!`)) {
 			return;
 		}
 
 		setDeletingSelected(true);
 
 		try {
-			const deletePromises = Array.from(selectedFiles).map(async (fileId) => {
+			// Get all selected files details for storage paths
+			const filesToDelete = sortedFiles.filter(f => selectedFiles.has(f.id));
+
+			const deletePromises = filesToDelete.map(async (file) => {
 				try {
-					const { error } = await supabase.rpc('soft_delete_attachment', {
-						p_attachment_id: fileId
-					});
-					if (error) throw error;
+					// Delete from storage
+					const { error: storageError } = await supabase.storage
+						.from('chat-attachments')
+						.remove([file.fileUrl]);
+
+					if (storageError) {
+						console.warn('Storage delete failed for', file.id, storageError);
+					}
+
+					// Delete from DB
+					const { error: dbError } = await supabase
+						.from('message_attachments')
+						.delete()
+						.eq('id', file.id);
+
+					if (dbError) throw dbError;
 				} catch (err) {
-					console.error('Failed to delete file:', fileId, err);
+					console.error('Failed to delete file:', file.id, err);
 				}
 			});
 
 			await Promise.all(deletePromises);
 
 			setSelectedFiles(new Set());
-			alert(`${count} Datei${count > 1 ? 'en' : ''} wurde${count > 1 ? 'n' : ''} für dich gelöscht.`);
+			alert(`${count} Datei${count > 1 ? 'en' : ''} wurde${count > 1 ? 'n' : ''} gelöscht.`);
 		} catch (err) {
 			console.error('Delete selected error:', err);
 			alert('Fehler beim Löschen der Dateien');

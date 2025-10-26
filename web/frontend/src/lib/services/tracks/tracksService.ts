@@ -286,14 +286,44 @@ export async function updateTrack(
 
 export async function deleteTrack(trackId: string): Promise<boolean> {
   try {
-    const { error } = await supabase
+    console.log('🗑️ Deleting track:', trackId);
+
+    // First, get the track to find user_file_id and project_id
+    const { data: track, error: fetchError } = await supabase
+      .from('tracks')
+      .select('user_file_id, project_id')
+      .eq('id', trackId)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching track for deletion:', fetchError);
+      throw fetchError;
+    }
+
+    console.log('📋 Track info:', { user_file_id: track?.user_file_id, project_id: track?.project_id });
+
+    // Delete the track
+    const { error: deleteError } = await supabase
       .from('tracks')
       .delete()
       .eq('id', trackId);
 
-    if (error) {
-      console.error('Error deleting track:', error);
-      throw error;
+    if (deleteError) {
+      console.error('Error deleting track:', deleteError);
+      throw deleteError;
+    }
+
+    console.log('✅ Track deleted from DB');
+
+    // If track has user_file_id, remove project_id from source_project_ids
+    if (track?.user_file_id && track?.project_id) {
+      console.log('🔄 Updating user_files, removing project_id from source_project_ids...');
+
+      // Import removeFileFromProject to handle the update
+      const { removeFileFromProject } = await import('../files/userFilesService');
+      await removeFileFromProject(track.user_file_id, track.project_id);
+
+      console.log('✅ user_files updated');
     }
 
     return true;

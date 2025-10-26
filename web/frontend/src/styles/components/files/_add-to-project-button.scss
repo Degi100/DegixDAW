@@ -6,6 +6,11 @@
   position: relative;
   display: inline-block;
 
+  // Ensure proper stacking context in tables
+  .table-col-actions & {
+    position: static;
+  }
+
   // Dropdown Backdrop
   .dropdown-backdrop {
     position: fixed;
@@ -19,9 +24,8 @@
 
   // Dropdown Menu
   .dropdown-menu {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0; // Align to right instead of left
+    position: fixed; // Changed from absolute to fixed
+    transform: translateY(8px); // Offset from button
     min-width: 250px;
     max-height: 400px;
     background: var(--surface-elevated);
