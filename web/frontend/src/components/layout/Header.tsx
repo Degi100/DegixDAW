@@ -10,6 +10,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { useToast } from '../../hooks/useToast';
 import { useAdmin } from '../../hooks/useAdmin';
 import { useFeatureFlags } from '../../hooks/useFeatureFlags';
+import { useChatSounds } from '../../lib/sounds/chatSounds';
 import Button from '../ui/Button';
 import UserDropdown from './UserDropdown';
 import HeaderNav from './HeaderNav';
@@ -64,10 +65,21 @@ export default function Header(props: HeaderProps) {
   const { user, signOut } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const { features } = useFeatureFlags(); // Load features for navigation
+  const { setEnabled: setSoundsEnabled } = useChatSounds();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [soundsEnabled, setSoundsEnabledState] = useState(() => {
+    // Load from localStorage on init
+    const saved = localStorage.getItem('soundsEnabled');
+    return saved !== null ? saved === 'true' : false; // Default: OFF
+  });
   // Animation-Flag für neue ungelesene Nachrichten im Header
   const [isBadgeNew, setIsBadgeNew] = useState(false);
   const prevUnread = useRef(0);
+
+  // Sync sound state with chatSounds on mount
+  useEffect(() => {
+    setSoundsEnabled(soundsEnabled);
+  }, [setSoundsEnabled, soundsEnabled]);
 
   // Trigger Animation nur bei echter neuer Nachricht und wenn Chat nicht offen
   useEffect(() => {
@@ -84,6 +96,14 @@ export default function Header(props: HeaderProps) {
   const handleThemeToggle = useCallback(() => {
     toggleTheme();
   }, [toggleTheme]);
+
+  const handleSoundToggle = useCallback(() => {
+    const newState = !soundsEnabled;
+    setSoundsEnabledState(newState);
+    setSoundsEnabled(newState);
+    // Persist to localStorage
+    localStorage.setItem('soundsEnabled', String(newState));
+  }, [soundsEnabled, setSoundsEnabled]);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -155,6 +175,7 @@ export default function Header(props: HeaderProps) {
               onClick={onChatToggle}
               className="chat-toggle-btn"
               aria-label="Chat öffnen"
+              title={unreadChatCount > 0 ? `${unreadChatCount} ungelesene Nachricht${unreadChatCount > 1 ? 'en' : ''}` : 'Chat öffnen'}
             >
               <span className="chat-icon">💬</span>
               {unreadChatCount > 0 && !expandedChatId && (
@@ -193,9 +214,21 @@ export default function Header(props: HeaderProps) {
         </div>
 
         <button
+          onClick={handleSoundToggle}
+          className="sound-toggle"
+          aria-label={`${soundsEnabled ? 'Disable' : 'Enable'} sounds`}
+          title={`Sounds ${soundsEnabled ? 'aus' : 'ein'}schalten`}
+        >
+          <span className="sound-icon">
+            {soundsEnabled ? '🔊' : '🔇'}
+          </span>
+        </button>
+
+        <button
           onClick={handleThemeToggle}
           className="theme-toggle"
           aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+          title={`${isDark ? 'Light' : 'Dark'} Mode aktivieren`}
         >
           <span className="theme-icon">
             {isDark ? '☀️' : '🌙'}

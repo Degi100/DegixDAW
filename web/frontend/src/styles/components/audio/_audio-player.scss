@@ -40,10 +40,26 @@
   }
 
   // ============================================
-  // WAVEFORM
+  // WAVEFORM WITH PEAK METERS - NO REFLOW!
   // ============================================
-  .audio-player-waveform {
+  .audio-player-waveform-container {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;  // NO CENTER - prevents reflow!
     margin-bottom: 1.5rem;
+
+    // Prevent container reflow
+    contain: layout;
+    will-change: contents;
+  }
+
+  .audio-player-waveform {
+    flex: 1 1 auto;  // Waveform nimmt verfügbaren Platz
+    min-width: 0;    // Prevent flex overflow
+  }
+
+  .audio-player-peak-meters {
+    flex: 0 0 auto;  // Fixed size - NO shrink/grow
   }
 
   // ============================================

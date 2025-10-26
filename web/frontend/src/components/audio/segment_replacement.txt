@@ -1,0 +1,5 @@
+          {/* LED Segments: Green → Yellow → Orange → Red */}
+          <div className="segment segment-green" style={{ width: `${segmentsL.green}%` }} />
+          <div className="segment segment-yellow" style={{ width: `${segmentsL.yellow}%` }} />
+          <div className="segment segment-orange" style={{ width: `${segmentsL.orange}%` }} />
+          <div className="segment segment-red" style={{ width: `${segmentsL.red}%` }} />

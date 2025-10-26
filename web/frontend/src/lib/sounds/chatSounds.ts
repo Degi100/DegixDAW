@@ -5,7 +5,7 @@
 
 class ChatSoundManager {
   private audioContext: AudioContext | null = null;
-  private isEnabled: boolean = true;
+  private isEnabled: boolean = false; // Default: OFF
 
   constructor() {
     // Initialize audio context on first user interaction

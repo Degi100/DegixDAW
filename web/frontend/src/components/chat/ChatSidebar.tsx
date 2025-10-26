@@ -11,7 +11,6 @@ import ChatList from './ChatList';
 import ExpandedChat from './ExpandedChat';
 import SidebarHeader from './SidebarHeader';
 import { ResizeHandles } from './ResizeHandles';
-import { ChatFooter } from './ChatFooter';
 
 // Hooks
 import { useConversations, type Conversation } from '../../hooks/useConversations';
@@ -110,7 +109,6 @@ function ChatSidebar({
     setIsResizingBottom,
     setIsDragging,
     setDragStart,
-    handleViewAllChats,
     handleToggleGradient,
     handleTogglePin,
     handleResetPosition,
@@ -353,8 +351,6 @@ function ChatSidebar({
             )}
           </ChatList>
 
-          {/* Footer - now inside content for absolute positioning */}
-          <ChatFooter onViewAllChats={handleViewAllChats} />
         </div>
       </div>
     </>

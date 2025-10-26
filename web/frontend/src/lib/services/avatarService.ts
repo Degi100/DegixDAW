@@ -80,10 +80,10 @@ export async function resizeImage(
 }
 
 // ============================================
-// Upload Avatar
+// Upload Avatar (from cropped Blob)
 // ============================================
 
-export async function uploadAvatar(file: File): Promise<AvatarUploadResult> {
+export async function uploadAvatar(fileOrBlob: File | Blob): Promise<AvatarUploadResult> {
   try {
     // 1. Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -91,18 +91,18 @@ export async function uploadAvatar(file: File): Promise<AvatarUploadResult> {
       return { success: false, error: 'User not authenticated' };
     }
 
-    // 2. Validate file type
-    if (!file.type.startsWith('image/')) {
+    // 2. Validate file type (only for File, not Blob)
+    if (fileOrBlob instanceof File && !fileOrBlob.type.startsWith('image/')) {
       return { success: false, error: 'File must be an image' };
     }
 
-    // 3. Validate file size (max 5MB before resize)
-    if (file.size > 5 * 1024 * 1024) {
+    // 3. Validate file size (max 5MB - only for File before crop)
+    if (fileOrBlob instanceof File && fileOrBlob.size > 5 * 1024 * 1024) {
       return { success: false, error: 'Image too large (max 5MB)' };
     }
 
-    // 4. Resize image (512x512, JPEG)
-    const resizedBlob = await resizeImage(file, 512, 512);
+    // 4. Use cropped Blob directly (already 512x512 from ImageCropperModal)
+    const uploadBlob = fileOrBlob instanceof Blob ? fileOrBlob : await resizeImage(fileOrBlob, 512, 512);
 
     // 5. Generate unique filename
     const timestamp = Date.now();
@@ -128,7 +128,7 @@ export async function uploadAvatar(file: File): Promise<AvatarUploadResult> {
     // 7. Upload new avatar to Supabase Storage
     const { error: uploadError } = await supabase.storage
       .from('avatars')
-      .upload(filename, resizedBlob, {
+      .upload(filename, uploadBlob, {
         contentType: 'image/jpeg',
         cacheControl: '3600',
         upsert: false,

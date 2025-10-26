@@ -7,13 +7,17 @@
 
 .modal-overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: $z-modal-backdrop; // 1040 - Above header (1030)
+  z-index: 9999;
   backdrop-filter: blur(4px);
+  padding: 2rem; // Padding for breathing room
 }
 
 .user-profile-modal {
@@ -23,11 +27,10 @@
   max-width: 500px;
   width: 90%;
   max-height: 85vh;
-  overflow-y: auto;
-  position: relative;
+  overflow-y: auto; // Scrollbar INSIDE modal, not on overlay
+  position: relative; // For absolute positioned close button
   box-shadow: $shadow-xl;
   border: 1px solid var(--border-color);
-  z-index: $z-modal; // 1050 - Above backdrop (1040)
 
   .modal-close {
     position: absolute;

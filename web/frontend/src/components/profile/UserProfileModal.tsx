@@ -2,6 +2,7 @@
 // User Profile Modal - Quick View Popup
 
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
@@ -108,12 +109,13 @@ export default function UserProfileModal({ userId, onClose }: UserProfileModalPr
   };
 
   if (loading || !profile) {
-    return (
+    return createPortal(
       <div className="modal-overlay" onClick={onClose}>
         <div className="user-profile-modal" onClick={(e) => e.stopPropagation()}>
           <div className="loading">Loading...</div>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
@@ -141,7 +143,7 @@ export default function UserProfileModal({ userId, onClose }: UserProfileModalPr
     return labels[profile.artist_type || 'listener'];
   };
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="user-profile-modal" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>✕</button>
@@ -240,6 +242,7 @@ export default function UserProfileModal({ userId, onClose }: UserProfileModalPr
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

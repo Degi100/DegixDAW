@@ -39,7 +39,6 @@ export interface SidebarActions {
   setIsGradientEnabled: React.Dispatch<React.SetStateAction<boolean>>;
   setIsPinned: React.Dispatch<React.SetStateAction<boolean>>;
   resetPosition: () => void;
-  handleViewAllChats: () => void;
   handleToggleGradient: () => void;
   handleTogglePin: () => void;
   handleResetPosition: () => void;
@@ -70,10 +69,6 @@ export function useSidebarState(): SidebarState & SidebarActions {
     setSidebarWidth(DEFAULT_SIDEBAR_WIDTH);
     setSidebarHeight(window.innerHeight - DEFAULT_SIDEBAR_HEIGHT_OFFSET);
     setSidebarPosition({ top: DEFAULT_SIDEBAR_TOP, right: DEFAULT_SIDEBAR_RIGHT });
-  };
-
-  const handleViewAllChats = () => {
-    window.location.href = '/chat';
   };
 
   const handleToggleGradient = useCallback(() => {
@@ -114,7 +109,6 @@ export function useSidebarState(): SidebarState & SidebarActions {
     setIsGradientEnabled,
     setIsPinned,
     resetPosition,
-    handleViewAllChats,
     handleToggleGradient,
     handleTogglePin,
     handleResetPosition,

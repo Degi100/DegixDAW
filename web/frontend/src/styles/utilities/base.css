@@ -1,6 +1,11 @@
 /* src/styles/utilities/base.css */
 /* Foundation utilities - Core layout patterns, containers, and basic typography */
 
+/* Global HTML/Body - Prevent layout shift from scrollbar */
+html {
+  scrollbar-gutter: stable; /* Reserve space for scrollbar to prevent layout shift */
+}
+
 /* Layout Utilities */
 .center {
   text-align: center;

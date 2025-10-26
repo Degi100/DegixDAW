@@ -5,8 +5,47 @@
 @use '../../../abstracts/index' as *;
 
 // ============================================
-// THEME TOGGLE - Always positioned consistently
+// SOUND TOGGLE & THEME TOGGLE - Side by side
 // ============================================
+
+.sound-toggle {
+  position: absolute;
+  top: 50%;
+  right: calc($spacing-4 + 3rem); // Position left of theme toggle
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: none;
+  border: none;
+  border-radius: $radius-full;
+  cursor: pointer;
+  transition: all $transition-fast;
+  z-index: 10; // Ensure it's always on top
+
+  &:hover {
+    background-color: $gray-100;
+  }
+
+  &:focus {
+    outline: 2px solid $primary-500;
+    outline-offset: 2px;
+  }
+
+  @media (max-width: $breakpoint-md) {
+    position: static;
+    margin-left: $spacing-2;
+    width: 2rem;
+    height: 2rem;
+  }
+}
+
+.sound-icon {
+  font-size: $font-size-lg;
+  line-height: 1;
+}
 
 .theme-toggle {
   position: absolute;
@@ -80,6 +119,11 @@
       background-color: rgba($primary-500, 0.1);
       color: $primary-300;
     }
+  }
+
+  // Sound Toggle
+  .sound-toggle:hover {
+    background-color: $dark-bg-tertiary;
   }
 
   // Theme Toggle

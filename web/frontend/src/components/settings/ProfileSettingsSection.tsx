@@ -4,32 +4,68 @@ import type { ProfileSettingsProps } from './types/settings';
 import { uploadAvatar, removeAvatar } from '../../lib/services/avatarService';
 import { useToast } from '../../hooks/useToast';
 import ProfilePrivacyToggles from './ProfilePrivacyToggles';
+import ImageCropperModal from './ImageCropperModal';
 
 const ProfileSettingsSection: React.FC<ProfileSettingsProps> = ({ profileData, setProfileData, isUpdating, handleProfileSave }) => {
   const [uploading, setUploading] = useState(false);
+  const [showCropper, setShowCropper] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { success, error } = useToast();
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      error('❌ Bitte wähle ein Bild aus');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      error('❌ Bild zu groß (max 5MB)');
+      return;
+    }
+
+    // Create preview URL and show cropper
+    const imageUrl = URL.createObjectURL(file);
+    setSelectedImage(imageUrl);
+    setShowCropper(true);
+
+    // Clear input
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    setShowCropper(false);
     setUploading(true);
-    const result = await uploadAvatar(file);
+
+    const result = await uploadAvatar(croppedBlob);
     setUploading(false);
 
     if (result.success && result.avatarUrl) {
       setProfileData(prev => ({ ...prev, avatarUrl: result.avatarUrl! }));
       success('✅ Profilbild erfolgreich hochgeladen!');
 
+      // Cleanup
+      if (selectedImage) URL.revokeObjectURL(selectedImage);
+      setSelectedImage(null);
+
       // Trigger page reload to update avatar everywhere
       setTimeout(() => window.location.reload(), 1000);
     } else {
       error(`❌ Upload fehlgeschlagen: ${result.error}`);
     }
+  };
 
-    // Clear input
-    if (fileInputRef.current) fileInputRef.current.value = '';
+  const handleCropCancel = () => {
+    setShowCropper(false);
+    if (selectedImage) {
+      URL.revokeObjectURL(selectedImage);
+      setSelectedImage(null);
+    }
   };
 
   const handleAvatarRemove = async () => {
@@ -75,7 +111,7 @@ const ProfileSettingsSection: React.FC<ProfileSettingsProps> = ({ profileData, s
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
-                onChange={handleAvatarUpload}
+                onChange={handleFileSelect}
                 disabled={uploading}
                 className="avatar-upload-input"
               />
@@ -189,6 +225,15 @@ const ProfileSettingsSection: React.FC<ProfileSettingsProps> = ({ profileData, s
       <div className="privacy-section-divider" style={{ margin: '2rem 0', borderTop: '1px solid var(--border-color)' }}></div>
       <ProfilePrivacyToggles />
     </form>
+
+    {/* Image Cropper Modal */}
+    {showCropper && selectedImage && (
+      <ImageCropperModal
+        imageSrc={selectedImage}
+        onComplete={handleCropComplete}
+        onCancel={handleCropCancel}
+      />
+    )}
   </div>
   );
 };
