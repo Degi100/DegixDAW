@@ -470,7 +470,15 @@ export default function AudioPlayer({
         </div>
       </div>
 
-{/* Peak Meter */}      <PeakMeter        audioElement={audioRef.current}        mode="stereo"        size="full"        showNumeric={true}        showClipIndicator={true}        showScale={true}      />
+      {/* Peak Meter */}
+      <PeakMeter
+        audioElement={audioRef.current}
+        mode="stereo"
+        size="full"
+        showNumeric={true}
+        showClipIndicator={true}
+        showScale={true}
+      />
       {/* Comments Section */}
       <div className="audio-player-comments-section">
         <div className="comments-header">

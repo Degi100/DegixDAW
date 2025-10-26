@@ -105,8 +105,13 @@ export function usePeakMeter(
       splitter.connect(analyserL, 0);  // Left channel
       splitter.connect(analyserR, 1);  // Right channel
 
+      // Connect analysers to destination for audio output
+      analyserL.connect(audioContext.destination);
+      analyserR.connect(audioContext.destination);
+
       // IMPORTANT: Reconnect to destination for audio output
-      source.connect(audioContext.destination);
+      // DEPRECATED: Direct source connection (use analyser connections instead)
+      //       source.connect(audioContext.destination);
 
       const bufferLength = analyserL.fftSize;
       const dataArrayL = new Float32Array(bufferLength);
