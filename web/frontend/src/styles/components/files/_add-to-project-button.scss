@@ -21,7 +21,7 @@
   .dropdown-menu {
     position: absolute;
     top: calc(100% + 8px);
-    left: 0;
+    right: 0; // Align to right instead of left
     min-width: 250px;
     max-height: 400px;
     background: var(--surface-elevated);

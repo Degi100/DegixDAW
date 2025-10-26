@@ -13,6 +13,7 @@ interface FileBrowserTabsProps {
 	receivedFilesCount: number;
 	sentFilesCount: number;
 	myFilesCount: number;
+	projectFilesCount: number;
 	onTabChangeWithReset: (tab: FileBrowserTab) => void;
 }
 
@@ -22,6 +23,7 @@ export default function FileBrowserTabs({
 	receivedFilesCount,
 	sentFilesCount,
 	myFilesCount,
+	projectFilesCount,
 	onTabChangeWithReset,
 }: FileBrowserTabsProps) {
 	const tabs: TabConfig[] = [
@@ -29,6 +31,7 @@ export default function FileBrowserTabs({
 		{ key: 'received', label: 'Empfangen', icon: '📥', count: receivedFilesCount },
 		{ key: 'sent', label: 'Gesendet', icon: '📤', count: sentFilesCount },
 		{ key: 'my_files', label: 'Meine', icon: '📁', count: myFilesCount },
+		{ key: 'projects', label: 'Projekte', icon: '🎵', count: projectFilesCount },
 	];
 
 	return (

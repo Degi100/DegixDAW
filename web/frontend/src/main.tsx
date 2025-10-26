@@ -42,6 +42,7 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 
 // File Browser Pages
 const FileBrowserPage = lazy(() => import('./pages/files/FileBrowserPage'));
+const ProjectFilesPage = lazy(() => import('./pages/files/ProjectFilesPage'));
 
 // Project Pages
 const ProjectsListPage = lazy(() => import('./pages/projects/ProjectsListPage'));
@@ -124,6 +125,14 @@ const router = createBrowserRouter([
             <FeatureFlagRoute featureFlag="file_browser">
               <FileBrowserPage />
             </FeatureFlagRoute>
+          </Suspense>
+        ),
+      },
+      {
+        path: 'project-files',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <ProjectFilesPage />
           </Suspense>
         ),
       },

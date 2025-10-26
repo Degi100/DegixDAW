@@ -6,6 +6,7 @@
 import { supabase } from '../../supabase';
 
 const TRACKS_BUCKET = 'project-tracks';
+const SHARED_FILES_BUCKET = 'shared_files';
 
 export interface UploadProgress {
   loaded: number;
@@ -20,7 +21,56 @@ export interface UploadResult {
 }
 
 // ============================================
-// Upload Track File
+// Upload User File to Shared Storage
+// New flow: Files go to shared_files/{user_id}/ for multi-project usage
+// ============================================
+
+export async function uploadUserFile(
+  userId: string,
+  file: File,
+  _onProgress?: (progress: UploadProgress) => void
+): Promise<UploadResult> {
+  try {
+    // Generate file path: {user_id}/{filename}
+    const timestamp = Date.now();
+    const fileExtension = file.name.split('.').pop();
+    const sanitizedName = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const filePath = `${userId}/${sanitizedName}_${timestamp}.${fileExtension}`;
+
+    // Upload file to shared_files bucket
+    const { data, error } = await supabase.storage
+      .from(SHARED_FILES_BUCKET)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false, // Don't overwrite (each upload is unique with timestamp)
+      });
+
+    if (error) {
+      console.error('Upload error:', error);
+      throw error;
+    }
+
+    // Get signed URL (expires in 1 hour)
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+      .from(SHARED_FILES_BUCKET)
+      .createSignedUrl(filePath, 3600);
+
+    if (signedUrlError) {
+      console.error('Signed URL error:', signedUrlError);
+    }
+
+    return {
+      path: data.path,
+      signedUrl: signedUrlData?.signedUrl,
+    };
+  } catch (error) {
+    console.error('uploadUserFile failed:', error);
+    throw error;
+  }
+}
+
+// ============================================
+// Upload Track File (LEGACY - for backward compatibility)
 // ============================================
 
 export async function uploadTrackFile(

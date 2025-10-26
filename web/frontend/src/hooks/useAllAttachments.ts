@@ -32,7 +32,7 @@ export interface AttachmentItem {
 }
 
 export type FileTypeFilter = 'all' | 'images' | 'videos' | 'audio' | 'documents';
-export type FileBrowserTab = 'all' | 'received' | 'sent' | 'my_files';
+export type FileBrowserTab = 'all' | 'received' | 'sent' | 'my_files' | 'projects';
 
 interface UseAllAttachmentsOptions {
   userId: string;
