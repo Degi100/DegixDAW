@@ -101,7 +101,8 @@ export default function ProjectDetailPage() {
   const handleSaveProjectSettings = async (updates: Partial<Project>) => {
     if (!id) return;
     const { updateProject } = await import('../../lib/services/projects/projectsService');
-    await updateProject(id, updates);
+    // Cast to any to bypass exactOptionalPropertyTypes
+    await updateProject(id, updates as any);
     refresh(); // Refresh project data
   };
 

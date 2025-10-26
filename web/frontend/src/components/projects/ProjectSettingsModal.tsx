@@ -144,10 +144,13 @@ export default function ProjectSettingsModal({
                 <select
                   id="project-status"
                   value={status}
-                  onChange={(e) => setStatus(e.target.value as 'draft' | 'active' | 'archived')}
+                  onChange={(e) => setStatus(e.target.value as any)}
                 >
                   <option value="draft">Draft</option>
-                  <option value="active">Active</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="mixing">Mixing</option>
+                  <option value="mastered">Mastered</option>
+                  <option value="published">Published</option>
                   <option value="archived">Archived</option>
                 </select>
               </div>
