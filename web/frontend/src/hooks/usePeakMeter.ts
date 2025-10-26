@@ -100,18 +100,17 @@ export function usePeakMeter(
       analyserR.fftSize = 2048;
       analyserR.smoothingTimeConstant = smoothingFactor;
 
-      // Connect nodes: source → splitter → analysers
+      // Connect nodes for peak metering WITHOUT affecting audio output
+      // Strategy: Use analysers as "taps" (monitoring only, no audio routing)
+
+      // Route 1: Audio output (bypasses analysers completely)
+      source.connect(audioContext.destination);
+
+      
+      // Route 2: Peak metering (split stereo for L/R analysis)
       source.connect(splitter);
       splitter.connect(analyserL, 0);  // Left channel
       splitter.connect(analyserR, 1);  // Right channel
-
-      // Connect analysers to destination for audio output
-      analyserL.connect(audioContext.destination);
-      analyserR.connect(audioContext.destination);
-
-      // IMPORTANT: Reconnect to destination for audio output
-      // DEPRECATED: Direct source connection (use analyser connections instead)
-      //       source.connect(audioContext.destination);
 
       const bufferLength = analyserL.fftSize;
       const dataArrayL = new Float32Array(bufferLength);

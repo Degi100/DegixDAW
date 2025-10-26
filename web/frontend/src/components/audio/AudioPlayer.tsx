@@ -9,6 +9,7 @@ import CommentMarkers from './CommentMarkers';
 import CommentsList from './CommentsList';
 import AddCommentModal from './AddCommentModal';
 import Button from '../ui/Button';
+import PeakMeter from './PeakMeter';
 import { useTrackComments } from '../../hooks/useTrackComments';
 import { supabase } from '../../lib/supabase';
 import { useSyncPlayback } from '../../hooks/useSyncPlayback';
@@ -468,6 +469,16 @@ export default function AudioPlayer({
           </span>
         </div>
       </div>
+
+      {/* Peak Meter */}
+      <PeakMeter
+        audioElement={audioRef.current}
+        mode="stereo"
+        size="full"
+        showNumeric={true}
+        showClipIndicator={true}
+        showScale={true}
+      />
 
       {/* Comments Section */}
       <div className="audio-player-comments-section">
