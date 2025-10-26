@@ -343,7 +343,6 @@ export default function AudioPlayer({
           </div>
         )}
       </div>
-n        {/* Join Sync Button */}
         {syncState.mode === 'off' && syncState.hostUserId && (
           <button className="sync-join-btn" onClick={joinAsListener}>
             🔗 Join {syncState.hostUsername}'s sync session
