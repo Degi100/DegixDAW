@@ -260,7 +260,7 @@ export async function removeFileFromProject(
 
     return await updateUserFile(fileId, {
       source: newSource,
-      source_project_ids: updatedProjects.length > 0 ? updatedProjects : null,
+      source_project_ids: updatedProjects.length > 0 ? updatedProjects : [],
     });
   } catch (error) {
     console.error('removeFileFromProject failed:', error);
@@ -287,7 +287,7 @@ export async function moveFileFromChatToShared(
     console.log('✅ User authenticated:', user.id);
 
     // Get the actual storage path AND file_size from the attachment record
-    const { data: attachment, error: attachError } = await supabase
+    const { data: attachment, error: _attachError } = await supabase
       .from('message_attachments')
       .select('storage_path, file_size')
       .eq('message_id', messageId)

@@ -42,6 +42,7 @@ export interface UserFile {
 }
 
 export interface CreateUserFileRequest {
+  uploaded_by?: string;
   file_name: string;
   file_path: string;
   file_type: string;

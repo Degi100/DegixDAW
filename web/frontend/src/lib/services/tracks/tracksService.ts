@@ -192,7 +192,6 @@ export async function uploadAudioTrack(
 
     // Step 4: Create user_files entry (central registry)
     const userFile = await createUserFile({
-      user_id: user.id,
       uploaded_by: user.id,
       file_name: file.name,
       file_path: uploadResult.path,

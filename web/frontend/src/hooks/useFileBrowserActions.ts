@@ -10,10 +10,10 @@ interface UseFileBrowserActionsProps {
 	userId: string;
 	filterByTab: (tab: FileBrowserTab) => AttachmentItem[];
 	filterByType: (files: AttachmentItem[], type: FileTypeFilter) => AttachmentItem[];
-	refresh: () => void;
+	refresh?: () => void;
 }
 
-export function useFileBrowserActions({ userId, filterByTab, filterByType, refresh }: UseFileBrowserActionsProps) {
+export function useFileBrowserActions({ userId, filterByTab, filterByType }: UseFileBrowserActionsProps) {
 	// UI State
 	const [activeTab, setActiveTab] = useState<FileBrowserTab>('all');
 	const [view, setView] = useState<ViewMode>('table');

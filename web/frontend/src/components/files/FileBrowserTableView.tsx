@@ -44,7 +44,6 @@ export default function FileBrowserTableView({
 	getFileIcon,
 	formatSize,
 	formatTime,
-	onRefreshProjects,
 }: FileBrowserTableViewProps) {
 	return (
 		<div className="file-browser-table">

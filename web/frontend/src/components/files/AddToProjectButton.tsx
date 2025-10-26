@@ -4,9 +4,8 @@
 // ============================================
 
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../hooks/useToast';
-import { moveFileFromChatToShared, addFileToProject, createUserFile } from '../../lib/services/files/userFilesService';
+import { moveFileFromChatToShared, addFileToProject } from '../../lib/services/files/userFilesService';
 import { createTrack } from '../../lib/services/tracks/tracksService';
 import { generateWaveform } from '../../lib/audio/audioMetadata';
 import Button from '../ui/Button';
@@ -40,7 +39,6 @@ export default function AddToProjectButton({
   const [loading, setLoading] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const navigate = useNavigate();
   const { success, error: showError } = useToast();
 
   // Calculate dropdown position when it opens
@@ -240,8 +238,11 @@ export default function AddToProjectButton({
             const response = await fetch(signedUrlData.signedUrl);
             const blob = await response.blob();
 
+            // Convert blob to File (generateWaveform expects File)
+            const file = new File([blob], fileName, { type: fileType });
+
             // Generate waveform
-            waveformData = await generateWaveform(blob, 1000);
+            waveformData = await generateWaveform(file, 1000);
             console.log('✅ Waveform generated:', waveformData.length, 'points');
           }
         } catch (err) {
@@ -261,11 +262,11 @@ export default function AddToProjectButton({
         file_path: updatedFile.file_path,
         user_file_id: fileId,
         file_size: fileSize,
-        duration_ms: durationMs,
-        waveform_data: waveformData,
-        bpm: bpm,
-        sample_rate: sampleRate,
-        channels: channels,
+        duration_ms: durationMs || undefined,
+        waveform_data: waveformData || undefined,
+        bpm: bpm || undefined,
+        sample_rate: sampleRate || undefined,
+        channels: channels || undefined,
       });
 
       success(`Added "${fileName}" to "${projectTitle}"! 🎵`);

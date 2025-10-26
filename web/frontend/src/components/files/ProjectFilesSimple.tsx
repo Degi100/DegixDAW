@@ -6,7 +6,6 @@
 
 import { useState } from 'react';
 import { useUserFiles } from '../../hooks/useUserFiles';
-import AddToProjectButton from './AddToProjectButton';
 
 interface ProjectFilesSimpleProps {
   userId: string;

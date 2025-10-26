@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { getUserFiles, deleteUserFile } from '../lib/services/files/userFilesService';
-import type { UserFile, UserFileSource } from '../types/userFiles';
+import type { UserFile } from '../types/userFiles';
 
 export type FileFilter = 'all' | 'received' | 'sent' | 'mine' | 'projects';
 
