@@ -55,6 +55,7 @@ export function usePeakMeter(
   const animationFrameId = useRef<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
 
+  const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
   useEffect(() => {
     if (!audioElement) {
       return;
@@ -81,8 +82,14 @@ export function usePeakMeter(
         audioContext = audioContextRef.current;
       }
 
-      // Create nodes
-      source = audioContext.createMediaElementSource(audioElement);
+      // Create or reuse source node (can only create once per element!)
+      if (!sourceNodeRef.current) {
+        source = audioContext.createMediaElementSource(audioElement);
+        sourceNodeRef.current = source;
+      } else {
+        source = sourceNodeRef.current;
+      }
+      
       splitter = audioContext.createChannelSplitter(2);
       analyserL = audioContext.createAnalyser();
       analyserR = audioContext.createAnalyser();
