@@ -14,20 +14,23 @@ import TrackUploadZone from '../../components/tracks/TrackUploadZone';
 import AudioPlayer from '../../components/audio/AudioPlayer';
 import TrackSettingsModal from '../../components/tracks/TrackSettingsModal';
 import InviteCollaboratorModal from '../../components/projects/InviteCollaboratorModal';
+import ProjectSettingsModal from '../../components/projects/ProjectSettingsModal';
 import CollaboratorsList from '../../components/projects/CollaboratorsList';
 import type { Track, UpdateTrackRequest } from '../../types/tracks';
 import type { InviteCollaboratorData } from '../../components/projects/InviteCollaboratorModal';
+import type { Project } from '../../types/projects';
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { project, loading, error } = useProject(id || null);
+  const { project, loading, error, refresh } = useProject(id || null);
   const { tracks, uploading, upload, remove, update } = useTracks(id || null);
   const { collaborators, remove: removeCollaborator, updatePermissions } = useCollaborators(id || '');
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showProjectSettings, setShowProjectSettings] = useState(false);
   const [selectedTrackIds, setSelectedTrackIds] = useState<Set<string>>(new Set());
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [settingsTrack, setSettingsTrack] = useState<Track | null>(null);
@@ -89,6 +92,17 @@ export default function ProjectDetailPage() {
     if (!settingsTrack) return;
     // Convert UpdateTrackRequest to Partial<Track> for the hook
     await update(settingsTrack.id, updates as Partial<Track>);
+  };
+
+  // ============================================
+  // Project Settings Handler
+  // ============================================
+
+  const handleSaveProjectSettings = async (updates: Partial<Project>) => {
+    if (!id) return;
+    const { updateProject } = await import('../../lib/services/projects/projectsService');
+    await updateProject(id, updates);
+    refresh(); // Refresh project data
   };
 
   // ============================================
@@ -161,7 +175,7 @@ export default function ProjectDetailPage() {
             <span className="project-status" data-status={project.status}>
               {project.status}
             </span>
-            <Button variant="secondary">
+            <Button variant="secondary" onClick={() => setShowProjectSettings(true)}>
               ⚙️ Settings
             </Button>
           </div>
@@ -470,6 +484,15 @@ export default function ProjectDetailPage() {
           projectId={project.id}
           onClose={() => setShowInviteModal(false)}
           onInvite={handleInviteCollaborator}
+        />
+      )}
+
+      {/* Project Settings Modal */}
+      {showProjectSettings && project && (
+        <ProjectSettingsModal
+          project={project}
+          onClose={() => setShowProjectSettings(false)}
+          onSave={handleSaveProjectSettings}
         />
       )}
     </div>
