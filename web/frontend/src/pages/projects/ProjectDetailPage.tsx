@@ -16,6 +16,7 @@ import TrackSettingsModal from '../../components/tracks/TrackSettingsModal';
 import InviteCollaboratorModal from '../../components/projects/InviteCollaboratorModal';
 import ProjectSettingsModal from '../../components/projects/ProjectSettingsModal';
 import CollaboratorsList from '../../components/projects/CollaboratorsList';
+import MasterPeakMeter from '../../components/audio/MasterPeakMeter';
 import type { Track, UpdateTrackRequest } from '../../types/tracks';
 import type { InviteCollaboratorData } from '../../components/projects/InviteCollaboratorModal';
 import type { Project } from '../../types/projects';
@@ -211,6 +212,7 @@ export default function ProjectDetailPage() {
             </div>
           </div>
         </div>
+{/* Master Peak Meter - Shows combined levels when tracks are playing */}      <MasterPeakMeter audioElements={[]} />
       </div>
 
       {/* Collaborators Section */}
