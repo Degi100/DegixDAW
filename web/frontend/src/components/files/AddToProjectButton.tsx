@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../hooks/useToast';
 import { moveFileFromChatToShared, addFileToProject, createUserFile } from '../../lib/services/files/userFilesService';
 import { createTrack } from '../../lib/services/tracks/tracksService';
+import { generateWaveform } from '../../lib/audio/audioMetadata';
 import Button from '../ui/Button';
 import '../../../src/styles/components/files/_add-to-project-button.scss';
 
@@ -217,6 +218,40 @@ export default function AddToProjectButton({
 
       const nextTrackNumber = (tracks?.[0]?.track_number || 0) + 1;
 
+      // Get waveform data from user_file metadata (if exists)
+      let waveformData = updatedFile.metadata?.waveform || null;
+      const durationMs = updatedFile.duration_ms || null;
+      const bpm = updatedFile.metadata?.bpm || null;
+      const sampleRate = updatedFile.metadata?.sampleRate || null;
+      const channels = updatedFile.metadata?.channels || null;
+
+      // If no waveform data exists, generate it from the audio file
+      if (!waveformData && fileType.startsWith('audio/')) {
+        try {
+          console.log('🎵 No waveform found, generating from audio file...');
+
+          // Get signed URL for the file
+          const { data: signedUrlData } = await supabase.storage
+            .from('shared_files')
+            .createSignedUrl(updatedFile.file_path, 60); // 1 minute expiry
+
+          if (signedUrlData?.signedUrl) {
+            // Fetch audio file as blob
+            const response = await fetch(signedUrlData.signedUrl);
+            const blob = await response.blob();
+
+            // Generate waveform
+            waveformData = await generateWaveform(blob, 1000);
+            console.log('✅ Waveform generated:', waveformData.length, 'points');
+          }
+        } catch (err) {
+          console.warn('⚠️ Failed to generate waveform:', err);
+          // Continue without waveform
+        }
+      }
+
+      console.log('📊 Track metadata:', { waveformData: !!waveformData, durationMs, bpm, sampleRate, channels });
+
       // Create new track
       await createTrack({
         project_id: projectId,
@@ -226,6 +261,11 @@ export default function AddToProjectButton({
         file_path: updatedFile.file_path,
         user_file_id: fileId,
         file_size: fileSize,
+        duration_ms: durationMs,
+        waveform_data: waveformData,
+        bpm: bpm,
+        sample_rate: sampleRate,
+        channels: channels,
       });
 
       success(`Added "${fileName}" to "${projectTitle}"! 🎵`);

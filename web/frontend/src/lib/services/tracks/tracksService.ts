@@ -39,8 +39,9 @@ export async function getProjectTracks(projectId: string): Promise<Track[]> {
       data.map(async (track) => {
         if (track.file_path) {
           try {
+            // Tracks are now stored in shared_files bucket (via user_files)
             const { data: urlData } = await supabase.storage
-              .from('project-tracks')
+              .from('shared_files')
               .createSignedUrl(track.file_path, 3600); // 1 hour expiry
 
             return { ...track, file_url: urlData?.signedUrl || null };
@@ -82,8 +83,9 @@ export async function getTrack(trackId: string): Promise<Track | null> {
     // Generate signed URL if track has file_path
     if (data.file_path) {
       try {
+        // Tracks are now stored in shared_files bucket (via user_files)
         const { data: urlData } = await supabase.storage
-          .from('project-tracks')
+          .from('shared_files')
           .createSignedUrl(data.file_path, 3600); // 1 hour expiry
 
         return { ...data, file_url: urlData?.signedUrl || null };
