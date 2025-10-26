@@ -341,13 +341,14 @@ export default function AudioPlayer({
               <span className="sync-badge sync-listener">👂 Synced</span>
             )}
           </div>
-            {syncState.mode === 'off' && syncState.hostUserId && (
-              <button className="sync-join-btn" onClick={joinAsListener}>
-                🔗 Join {syncState.hostUsername}'s sync session
-              </button>
-            )}
         )}
       </div>
+n        {/* Join Sync Button */}
+        {syncState.mode === 'off' && syncState.hostUserId && (
+          <button className="sync-join-btn" onClick={joinAsListener}>
+            🔗 Join {syncState.hostUsername}'s sync session
+          </button>
+        )}
 
       {/* Waveform with Comment Markers */}
       {track.waveform_data && (
