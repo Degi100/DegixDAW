@@ -4,8 +4,9 @@
 // ============================================
 
 import { supabase } from '../../supabase';
-import { uploadTrackFile } from '../storage/trackStorage';
+import { uploadUserFile } from '../storage/trackStorage';
 import { extractAudioMetadata, generateWaveform } from '../../audio/audioMetadata';
+import { createUserFile } from '../files/userFilesService';
 import type {
   Track,
   CreateTrackRequest,
@@ -38,8 +39,9 @@ export async function getProjectTracks(projectId: string): Promise<Track[]> {
       data.map(async (track) => {
         if (track.file_path) {
           try {
+            // Tracks are now stored in shared_files bucket (via user_files)
             const { data: urlData } = await supabase.storage
-              .from('project-tracks')
+              .from('shared_files')
               .createSignedUrl(track.file_path, 3600); // 1 hour expiry
 
             return { ...track, file_url: urlData?.signedUrl || null };
@@ -81,8 +83,9 @@ export async function getTrack(trackId: string): Promise<Track | null> {
     // Generate signed URL if track has file_path
     if (data.file_path) {
       try {
+        // Tracks are now stored in shared_files bucket (via user_files)
         const { data: urlData } = await supabase.storage
-          .from('project-tracks')
+          .from('shared_files')
           .createSignedUrl(data.file_path, 3600); // 1 hour expiry
 
         return { ...data, file_url: urlData?.signedUrl || null };
@@ -121,6 +124,7 @@ export async function createTrack(data: CreateTrackRequest): Promise<Track | nul
       track_number: trackNumber,
       track_type: data.track_type,
       file_path: data.file_path || null,
+      user_file_id: data.user_file_id || null, // Link to user_files table
       duration_ms: data.duration_ms || null,
       sample_rate: data.sample_rate || null,
       channels: data.channels || null,
@@ -163,18 +167,61 @@ export async function uploadAudioTrack(
   const { file, project_id, track_name, track_number, color, onProgress } = options;
 
   try {
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
     // Step 1: Extract metadata
     const metadata = await extractAudioMetadata(file);
 
     // Step 2: Generate waveform
     const waveform = await generateWaveform(file, 1000);
 
-    // Step 3: Create track record in DB (without file_path yet)
+    // Step 3: Upload file to Supabase Storage (shared_files/{user_id}/)
+    const uploadResult = await uploadUserFile(
+      user.id,
+      file,
+      (progress) => {
+        if (onProgress) {
+          onProgress(progress.percentage);
+        }
+      }
+    );
+
+    // Step 4: Create user_files entry (central registry)
+    const userFile = await createUserFile({
+      uploaded_by: user.id,
+      file_name: file.name,
+      file_path: uploadResult.path,
+      file_type: file.type,
+      file_size: metadata.fileSize,
+      duration_ms: Math.round(metadata.duration * 1000),
+      source: 'project',
+      source_project_ids: [project_id],
+      metadata: {
+        originalFileName: metadata.fileName,
+        format: metadata.format,
+        bpm: metadata.bpm,
+        sampleRate: metadata.sampleRate,
+        channels: metadata.numberOfChannels,
+        waveform: waveform,
+      },
+    });
+
+    if (!userFile) {
+      throw new Error('Failed to create user_files entry');
+    }
+
+    // Step 5: Create track record in DB with user_file_id link
     const track = await createTrack({
       project_id,
       name: track_name || file.name.replace(/\.[^/.]+$/, ''), // Remove extension
       track_number,
       track_type: 'audio',
+      file_path: uploadResult.path,
+      user_file_id: userFile.id, // Link to user_files
       duration_ms: Math.round(metadata.duration * 1000),
       sample_rate: metadata.sampleRate,
       channels: metadata.numberOfChannels,
@@ -193,29 +240,8 @@ export async function uploadAudioTrack(
       throw new Error('Failed to create track record');
     }
 
-    // Step 4: Upload file to Supabase Storage
-    const uploadResult = await uploadTrackFile(
-      project_id,
-      track.id,
-      file,
-      (progress) => {
-        if (onProgress) {
-          onProgress(progress.percentage);
-        }
-      }
-    );
-
-    // Step 5: Update track with file_path
-    const updatedTrack = await updateTrack(track.id, {
-      file_path: uploadResult.path,
-    });
-
-    if (!updatedTrack) {
-      throw new Error('Failed to update track with file path');
-    }
-
     return {
-      track: updatedTrack,
+      track,
       signedUrl: uploadResult.signedUrl,
     };
   } catch (error) {
@@ -261,14 +287,44 @@ export async function updateTrack(
 
 export async function deleteTrack(trackId: string): Promise<boolean> {
   try {
-    const { error } = await supabase
+    console.log('🗑️ Deleting track:', trackId);
+
+    // First, get the track to find user_file_id and project_id
+    const { data: track, error: fetchError } = await supabase
+      .from('tracks')
+      .select('user_file_id, project_id')
+      .eq('id', trackId)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching track for deletion:', fetchError);
+      throw fetchError;
+    }
+
+    console.log('📋 Track info:', { user_file_id: track?.user_file_id, project_id: track?.project_id });
+
+    // Delete the track
+    const { error: deleteError } = await supabase
       .from('tracks')
       .delete()
       .eq('id', trackId);
 
-    if (error) {
-      console.error('Error deleting track:', error);
-      throw error;
+    if (deleteError) {
+      console.error('Error deleting track:', deleteError);
+      throw deleteError;
+    }
+
+    console.log('✅ Track deleted from DB');
+
+    // If track has user_file_id, remove project_id from source_project_ids
+    if (track?.user_file_id && track?.project_id) {
+      console.log('🔄 Updating user_files, removing project_id from source_project_ids...');
+
+      // Import removeFileFromProject to handle the update
+      const { removeFileFromProject } = await import('../files/userFilesService');
+      await removeFileFromProject(track.user_file_id, track.project_id);
+
+      console.log('✅ user_files updated');
     }
 
     return true;

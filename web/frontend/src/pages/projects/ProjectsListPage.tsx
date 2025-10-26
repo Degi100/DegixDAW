@@ -3,10 +3,12 @@
 // Overview page showing user's projects
 // ============================================
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProjects } from '../../hooks/useProjects';
+import { supabase } from '../../lib/supabase';
 import ProjectCreateModal from '../../components/projects/ProjectCreateModal';
+import DeleteProjectModal from '../../components/projects/DeleteProjectModal';
 import Button from '../../components/ui/Button';
 
 export default function ProjectsListPage() {
@@ -14,7 +16,15 @@ export default function ProjectsListPage() {
   const { projects, loading, fetchMyProjects, fetchCollaboratedProjects, remove } = useProjects();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'owned' | 'collaborated'>('all');
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingProject, setDeletingProject] = useState<{ id: string; title: string } | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Get current user ID
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUserId(data.user?.id || null);
+    });
+  }, []);
 
   // Filter projects based on active tab
   const handleTabChange = async (tab: typeof activeTab) => {
@@ -29,17 +39,19 @@ export default function ProjectsListPage() {
   };
 
 
-  // Delete project with confirmation
-  const handleDeleteProject = async (e: React.MouseEvent, projectId: string, projectTitle: string) => {
+  // Open delete modal
+  const handleDeleteClick = (e: React.MouseEvent, projectId: string, projectTitle: string) => {
     e.stopPropagation(); // Don't navigate to project detail
+    setDeletingProject({ id: projectId, title: projectTitle });
+  };
 
-    if (!window.confirm(`🗑️ Delete project "${projectTitle}"?\n\nThis will delete ALL tracks, comments, and collaborators!\n\nThis action CANNOT be undone!`)) {
-      return;
-    }
+  // Confirm delete from modal
+  const handleConfirmDelete = async (_deleteMyTracks: boolean) => {
+    if (!deletingProject) return;
 
-    setDeletingId(projectId);
-    await remove(projectId);
-    setDeletingId(null);
+    // Delete project (tracks are already handled by DeleteProjectModal)
+    await remove(deletingProject.id);
+    setDeletingProject(null);
   };
   return (
     <div className="projects-list-page">
@@ -130,11 +142,11 @@ export default function ProjectsListPage() {
                   <h3 className="project-title">{project.title}</h3>
                   <button
                     className="delete-project-btn"
-                    onClick={(e) => handleDeleteProject(e, project.id, project.title)}
-                    disabled={deletingId === project.id}
+                    onClick={(e) => handleDeleteClick(e, project.id, project.title)}
+                    disabled={deletingProject?.id === project.id}
                     title="Delete project"
                   >
-                    {deletingId === project.id ? '⏳' : '🗑️'}
+                    {deletingProject?.id === project.id ? '⏳' : '🗑️'}
                   </button>
                 </div>
                 {project.description && (
@@ -185,6 +197,17 @@ export default function ProjectsListPage() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
       />
+
+      {/* Delete Modal */}
+      {deletingProject && currentUserId && (
+        <DeleteProjectModal
+          projectId={deletingProject.id}
+          projectTitle={deletingProject.title}
+          currentUserId={currentUserId}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeletingProject(null)}
+        />
+      )}
     </div>
   );
 }

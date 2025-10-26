@@ -31,10 +31,14 @@
 @use 'components/message-bubble';
 @use 'components/message-input';
 @use 'file-browser';
+@use 'components/files/project-files-view';
+@use 'components/files/project-files-simple';
+@use 'components/files/add-to-project-button';
 @use 'components/projects/project-modal';
 @use 'components/projects/invite-collaborator-modal';
 @use 'components/projects/collaborators-list';
 @use 'components/projects/pending-invites';
+@use 'components/projects/delete-project-modal';
 @use 'components/tracks/track-upload-zone';
 @use 'components/tracks/track-settings-modal';
 @use 'components/settings/privacy-settings';

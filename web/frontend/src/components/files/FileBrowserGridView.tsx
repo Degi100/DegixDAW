@@ -1,4 +1,5 @@
 import type { FileBrowserTab, AttachmentItem } from '../../hooks/useAllAttachments';
+import AddToProjectButton from './AddToProjectButton';
 
 interface FileBrowserGridViewProps {
 	activeTab: FileBrowserTab;
@@ -77,7 +78,16 @@ export default function FileBrowserGridView({
 						</div>
 
 						<div className="grid-item-actions">
-							{file.signedUrl ? (
+							{activeTab === 'projects' ? (
+								<>
+									<button className="grid-action-btn" title="Öffnen" onClick={() => alert('Preview coming soon!')}>
+										👁️
+									</button>
+									<button onClick={() => onDelete(file)} className="grid-action-btn grid-action-btn--delete" title="Löschen" disabled={deleting === file.id}>
+										{deleting === file.id ? '⏳' : '🗑️'}
+									</button>
+								</>
+							) : file.signedUrl ? (
 								<>
 									<a href={file.signedUrl} target="_blank" rel="noopener noreferrer" className="grid-action-btn" title="Öffnen">
 										👁️
@@ -85,6 +95,17 @@ export default function FileBrowserGridView({
 									<a href={file.signedUrl} download={file.fileName} className="grid-action-btn" title="Download">
 										⬇️
 									</a>
+									{/* Add to Project button for audio files */}
+									{file.fileType.startsWith('audio/') && (
+										<AddToProjectButton
+											messageId={file.messageId}
+											chatFilePath={file.fileUrl}
+											fileName={file.fileName}
+											fileType={file.fileType}
+											fileSize={file.fileSize}
+											compact={true}
+										/>
+									)}
 									<button onClick={() => onDelete(file)} className="grid-action-btn grid-action-btn--delete" title="Löschen" disabled={deleting === file.id}>
 										{deleting === file.id ? '⏳' : '🗑️'}
 									</button>

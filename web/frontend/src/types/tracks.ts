@@ -22,6 +22,7 @@ export interface Track {
   track_type: TrackType;
   file_path?: string | null;
   file_url?: string | null;
+  user_file_id?: string | null; // Link to user_files table
   duration_ms?: number | null;
   sample_rate?: number | null;
   bit_depth?: number | null;
@@ -51,6 +52,7 @@ export interface CreateTrackRequest {
   track_number?: number | undefined;
   track_type: TrackType;
   file_path?: string | undefined;
+  user_file_id?: string | undefined; // Link to user_files table
   duration_ms?: number | undefined;
   sample_rate?: number | undefined;
   channels?: number | undefined;
@@ -66,6 +68,7 @@ export interface UpdateTrackRequest {
   track_number?: number | undefined;
   file_path?: string | null | undefined;
   file_url?: string | null | undefined;
+  user_file_id?: string | null | undefined; // Link to user_files table
   duration_ms?: number | null | undefined;
   sample_rate?: number | null | undefined;
   bit_depth?: number | null | undefined;

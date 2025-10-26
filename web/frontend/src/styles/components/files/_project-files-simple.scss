@@ -1,0 +1,160 @@
+// ============================================
+// PROJECT FILES SIMPLE STYLES
+// Simplified view matching FileBrowser layout
+// ============================================
+
+.project-files-simple {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 0;
+  overflow: visible;
+
+  // Loading & Error States
+  .loading,
+  .error {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-secondary);
+  }
+
+  .error {
+    color: var(--danger-color);
+  }
+
+  // Empty State
+  .empty-state {
+    padding: 3rem;
+    text-align: center;
+    color: var(--text-secondary);
+
+    p {
+      margin: 0.5rem 0;
+    }
+
+    .hint {
+      font-size: 0.9rem;
+      color: var(--text-tertiary);
+    }
+  }
+
+  // File Item - Matching FileBrowser style
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    transition: all 0.2s;
+    overflow: visible;
+    position: relative;
+
+    &:hover {
+      background: var(--bg-hover);
+      border-color: var(--primary-color);
+    }
+
+    .file-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .file-info {
+      flex: 1;
+      min-width: 0;
+
+      .file-name {
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .file-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+
+        .file-size,
+        .file-time {
+          white-space: nowrap;
+        }
+
+        .projects-count {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.25rem;
+          padding: 0.15rem 0.5rem;
+          background: var(--primary-color);
+          color: white;
+          border-radius: 4px;
+          font-size: 0.75rem;
+          font-weight: 500;
+        }
+      }
+    }
+
+    .file-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+
+      .btn-delete {
+        padding: 0.5rem;
+        background: transparent;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 1rem;
+
+        &:hover {
+          background: var(--danger-color);
+          border-color: var(--danger-color);
+          color: white;
+        }
+      }
+    }
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .project-files-simple {
+    .file-item {
+      &:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .project-files-simple {
+    .file-item {
+      flex-direction: column;
+      align-items: flex-start;
+
+      .file-info {
+        width: 100%;
+
+        .file-meta {
+          flex-wrap: wrap;
+        }
+      }
+
+      .file-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+    }
+  }
+}
