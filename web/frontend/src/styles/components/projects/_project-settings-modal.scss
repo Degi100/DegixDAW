@@ -1,0 +1,92 @@
+// ============================================
+// PROJECT SETTINGS MODAL
+// Edit project metadata (Key, BPM, Time Signature, etc.)
+// ============================================
+
+.project-settings-modal {
+  max-width: 600px;
+  width: 90vw;
+
+  .modal-body {
+    padding: 2rem;
+  }
+
+  .settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-primary);
+    }
+
+    input,
+    textarea,
+    select {
+      padding: 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+
+      &:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+      }
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+      font-family: inherit;
+    }
+
+    select {
+      cursor: pointer;
+    }
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+
+  .modal-footer {
+    padding: 1.5rem 2rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+  }
+}
+
+// Dark mode adjustments
+[data-theme='dark'] {
+  .project-settings-modal {
+    .form-group {
+      input,
+      textarea,
+      select {
+        background: var(--bg-tertiary);
+        border-color: var(--border-color-dark);
+
+        &:focus {
+          border-color: var(--accent-color);
+          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+      }
+    }
+  }
+}
