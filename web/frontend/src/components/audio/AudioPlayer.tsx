@@ -62,6 +62,17 @@ export default function AudioPlayer({
 
   const audioUrl = track.file_url;
 
+  // Debug log
+  useEffect(() => {
+    console.log('🎵 AudioPlayer track:', {
+      id: track.id,
+      name: track.name,
+      file_path: track.file_path,
+      file_url: track.file_url,
+      has_waveform: !!track.waveform_data
+    });
+  }, [track]);
+
   // ============================================
   // Audio Element Handlers
   // ============================================

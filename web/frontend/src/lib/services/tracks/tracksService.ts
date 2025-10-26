@@ -34,25 +34,18 @@ export async function getProjectTracks(projectId: string): Promise<Track[]> {
 
     if (!data) return [];
 
-    // Generate signed URLs for all tracks with file_path
-    const tracksWithUrls = await Promise.all(
-      data.map(async (track) => {
-        if (track.file_path) {
-          try {
-            // Tracks are now stored in shared_files bucket (via user_files)
-            const { data: urlData } = await supabase.storage
-              .from('shared_files')
-              .createSignedUrl(track.file_path, 3600); // 1 hour expiry
+    // Generate URLs for all tracks with file_path
+    const tracksWithUrls = data.map((track) => {
+      if (track.file_path) {
+        // Use public URL (bucket is set to public)
+        const { data: publicUrlData } = supabase.storage
+          .from('shared_files')
+          .getPublicUrl(track.file_path);
 
-            return { ...track, file_url: urlData?.signedUrl || null };
-          } catch (err) {
-            console.warn(`Failed to get signed URL for track ${track.id}:`, err);
-            return track; // Return track without URL
-          }
-        }
-        return track;
-      })
-    );
+        return { ...track, file_url: publicUrlData.publicUrl };
+      }
+      return track;
+    });
 
     return tracksWithUrls;
   } catch (error) {
