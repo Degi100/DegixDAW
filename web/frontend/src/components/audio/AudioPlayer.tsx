@@ -11,6 +11,7 @@ import AddCommentModal from './AddCommentModal';
 import Button from '../ui/Button';
 import { useTrackComments } from '../../hooks/useTrackComments';
 import { supabase } from '../../lib/supabase';
+import { useSyncPlayback } from '../../hooks/useSyncPlayback';
 import type { Track } from '../../types/tracks';
 
 interface AudioPlayerProps {
@@ -35,6 +36,7 @@ export default function AudioPlayer({
   const [showComments, setShowComments] = useState(false);
   const [showAddComment, setShowAddComment] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUsername, setCurrentUsername] = useState<string | null>(null);
 
   // Comments hook
   const {
@@ -46,13 +48,55 @@ export default function AudioPlayer({
     unresolvedCount,
   } = useTrackComments(track.id);
 
+  // Sync playback hook
+  const {
+    syncState,
+    toggleSync,
+    joinAsListener,
+    broadcastPlay,
+    broadcastPause,
+    broadcastSeek,
+  } = useSyncPlayback({
+    trackId: track.id,
+    currentUserId,
+    currentUsername,
+    onPlay: (timestamp) => {
+      const audio = audioRef.current;
+      if (!audio) return;
+      audio.currentTime = timestamp / 1000;
+      audio.play();
+    },
+    onPause: (timestamp) => {
+      const audio = audioRef.current;
+      if (!audio) return;
+      audio.currentTime = timestamp / 1000;
+      audio.pause();
+    },
+    onSeek: (timestamp) => {
+      const audio = audioRef.current;
+      if (!audio) return;
+      audio.currentTime = timestamp / 1000;
+    },
+  });
+
   // ============================================
   // Get Current User
   // ============================================
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setCurrentUserId(data.user?.id || null);
+    supabase.auth.getUser().then(async ({ data }) => {
+      const userId = data.user?.id || null;
+      setCurrentUserId(userId);
+      
+      if (userId) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', userId)
+          .single();
+        
+        setCurrentUsername(profile?.username || null);
+      }
     });
   }, []);
 
@@ -147,12 +191,20 @@ export default function AudioPlayer({
 
     if (isPlaying) {
       audio.pause();
+      // Broadcast pause if in host mode
+      if (syncState.mode === 'host') {
+        broadcastPause(audio.currentTime * 1000);
+      }
     } else {
       audio.play().catch((err) => {
         setError('Playback failed: ' + err.message);
       });
+      // Broadcast play if in host mode
+      if (syncState.mode === 'host') {
+        broadcastPlay(audio.currentTime * 1000);
+      }
     }
-  }, [isPlaying]);
+  }, [isPlaying, syncState.mode, broadcastPlay, broadcastPause]);
 
   const handleSeek = useCallback((time: number) => {
     const audio = audioRef.current;
@@ -160,7 +212,12 @@ export default function AudioPlayer({
 
     audio.currentTime = time;
     setCurrentTime(time);
-  }, []);
+    
+    // Broadcast seek if in host mode
+    if (syncState.mode === 'host') {
+      broadcastSeek(time * 1000);
+    }
+  }, [syncState.mode, broadcastSeek]);
 
   const handleVolumeChange = useCallback((newVolume: number) => {
     const audio = audioRef.current;
@@ -268,6 +325,28 @@ export default function AudioPlayer({
             {track.bpm && ` • ${track.bpm} BPM`}
           </p>
         </div>
+
+        {/* Sync State Indicator */}
+        {syncState.mode !== 'off' && (
+          <div className="sync-state-indicator">
+            {syncState.mode === 'host' && (
+              <span className="sync-badge sync-host">🎛️ Hosting sync session</span>
+            )}
+            {syncState.mode === 'listener' && syncState.hostUsername && (
+              <span className="sync-badge sync-listener">
+                👂 Listening to {syncState.hostUsername}
+              </span>
+            )}
+            {syncState.mode === 'listener' && !syncState.hostUsername && (
+              <span className="sync-badge sync-listener">👂 Synced</span>
+            )}
+          </div>
+            {syncState.mode === 'off' && syncState.hostUserId && (
+              <button className="sync-join-btn" onClick={joinAsListener}>
+                🔗 Join {syncState.hostUsername}'s sync session
+              </button>
+            )}
+        )}
       </div>
 
       {/* Waveform with Comment Markers */}
@@ -334,6 +413,18 @@ export default function AudioPlayer({
             title="Skip forward 10s"
           >
             ⏭️
+          </Button>
+            <Button
+            variant={syncState.mode === 'off' ? 'secondary' : syncState.mode === 'host' ? 'primary' : 'success'}
+            size="small"
+            onClick={toggleSync}
+            disabled={loading || !currentUserId}
+            title={syncState.mode === 'off' ? 'Enable sync playback' : syncState.mode === 'host' ? 'You are hosting' : 'Synced with host'}
+            className="sync-btn"
+          >
+            {syncState.mode === 'off' && '🔗'}
+            {syncState.mode === 'host' && '🎛️'}
+            {syncState.mode === 'listener' && '👂'}
           </Button>
         </div>
 

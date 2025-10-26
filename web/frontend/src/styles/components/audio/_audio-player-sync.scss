@@ -1,0 +1,87 @@
+// ============================================
+// AUDIO PLAYER - SYNC PLAYBACK STYLES
+// Styles for sync button, state indicator, and join button
+// ============================================
+
+.audio-player {
+  // Sync button in transport controls
+  .sync-btn {
+    font-size: 1.2rem;
+    min-width: 40px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+
+  // Sync state indicator (shows "Hosting" or "Listening to...")
+  .sync-state-indicator {
+    margin-top: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    border-left: 3px solid var(--accent-color);
+
+    .sync-badge {
+      font-size: 0.875rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      &.sync-host {
+        color: var(--accent-color);
+      }
+
+      &.sync-listener {
+        color: var(--success-color);
+      }
+    }
+  }
+
+  // Join sync button (when someone else is host)
+  .sync-join-btn {
+    margin-top: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--success-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &:hover {
+      background: var(--success-color-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+// Dark mode adjustments
+[data-theme='dark'] {
+  .audio-player {
+    .sync-state-indicator {
+      background: var(--bg-secondary);
+      border-left-color: var(--accent-color-light);
+    }
+
+    .sync-join-btn {
+      background: var(--success-color);
+
+      &:hover {
+        background: var(--success-color-light);
+      }
+    }
+  }
+}
