@@ -43,17 +43,15 @@ export default function PeakMeter({
   showNumeric = true,
   showClipIndicator = true,
   showScale = true,
-  clipThreshold = 0.99,
+  clipThreshold = 1.0,  // Only show clipping at exactly 1.0
   className = '',
 }: PeakMeterProps) {
-  const { peakL, peakR, peakLdB, peakRdB, peakHoldL, peakHoldR, isClipping } = usePeakMeter(
+  const { peakLdB, peakRdB, peakHoldL, peakHoldR, isClipping } = usePeakMeter(
     audioElement,
     { clipThreshold }
   );
 
-  // Convert linear (0-1) to percentage (0-100) for bar width
-  const peakLPercent = Math.min(peakL * 100, 100);
-  const peakRPercent = Math.min(peakR * 100, 100);
+  // Calculate peak hold percentages for indicators
   const peakHoldLPercent = Math.min(peakHoldL * 100, 100);
   const peakHoldRPercent = Math.min(peakHoldR * 100, 100);
 
@@ -72,6 +70,7 @@ export default function PeakMeter({
     return '#059669';                                // Green: Safe
   };
 
+
   return (
     <div className={`peak-meter peak-meter--${mode} peak-meter--${size} ${className}`}>
       {/* Left Channel (or Mono) */}
@@ -79,9 +78,13 @@ export default function PeakMeter({
         {mode === 'stereo' && <span className="channel-label">L</span>}
 
         <div className="peak-meter-bar">
+          {/* Single bar with dynamic color - scales horizontally */}
           <div
             className="peak-meter-fill"
-            style={{ width: `${peakLPercent}%` }}
+            style={{
+              width: `${peakLdB === -Infinity ? 0 : Math.min((peakLdB + 60) / 60 * 100, 100)}%`,
+              background: getPeakColor(peakLdB)
+            }}
           />
           {peakHoldLPercent > 0 && (
             <div
@@ -110,9 +113,13 @@ export default function PeakMeter({
           <span className="channel-label">R</span>
 
           <div className="peak-meter-bar">
+            {/* Single bar with dynamic color - scales horizontally */}
             <div
               className="peak-meter-fill"
-              style={{ width: `${peakRPercent}%` }}
+              style={{
+                width: `${peakRdB === -Infinity ? 0 : Math.min((peakRdB + 60) / 60 * 100, 100)}%`,
+                background: getPeakColor(peakRdB)
+              }}
             />
             {peakHoldRPercent > 0 && (
               <div
@@ -152,7 +159,9 @@ export default function PeakMeter({
           <span>-6</span>
           <span>-3</span>
           <span>-1</span>
-          <span className="zero-db">0</span>
+          <span className={`zero-db ${isClipping ? 'zero-db--clipping' : ''}`}>
+            {isClipping ? `+${Math.max(peakLdB, peakRdB).toFixed(1)}` : '0'}
+          </span>
         </div>
       )}
     </div>

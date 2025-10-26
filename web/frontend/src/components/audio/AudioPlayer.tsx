@@ -323,7 +323,7 @@ export default function AudioPlayer({
   return (
     <div className={`audio-player ${className} ${loading ? 'loading' : ''}`}>
       {/* Hidden Audio Element */}
-      <audio ref={audioRef} src={audioUrl} preload="metadata" />
+      <audio ref={audioRef} src={audioUrl} preload="metadata" crossOrigin="anonymous" />
 
       {/* Track Info */}
       <div className="audio-player-header">
@@ -382,6 +382,16 @@ export default function AudioPlayer({
           </div>
         </div>
       )}
+
+      {/* Peak Meter - HORIZONTAL unter Waveform */}
+      <PeakMeter
+        audioElement={audioRef.current}
+        mode="stereo"
+        size="full"
+        showNumeric={true}
+        showClipIndicator={true}
+        showScale={true}
+      />
 
       {/* Controls */}
       <div className="audio-player-controls">
@@ -479,16 +489,6 @@ export default function AudioPlayer({
           </span>
         </div>
       </div>
-
-      {/* Peak Meter */}
-      <PeakMeter
-        audioElement={audioRef.current}
-        mode="stereo"
-        size="full"
-        showNumeric={true}
-        showClipIndicator={true}
-        showScale={true}
-      />
 
       {/* Comments Section */}
       <div className="audio-player-comments-section">

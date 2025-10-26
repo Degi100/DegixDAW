@@ -52,6 +52,7 @@ export function usePeakMeter(
   const peakHoldTimeoutR = useRef<number | null>(null);
   const peakHoldLValue = useRef<number>(0);
   const peakHoldRValue = useRef<number>(0);
+  const clipHoldTimeout = useRef<number | null>(null);
   const animationFrameId = useRef<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
 
@@ -105,6 +106,7 @@ export function usePeakMeter(
 
       // Route 1: Audio output (bypasses analysers completely)
       source.connect(audioContext.destination);
+      console.log('[usePeakMeter] 🔊 Audio connected to destination - audioElement.volume:', audioElement.volume, 'muted:', audioElement.muted);
 
       
       // Route 2: Peak metering (split stereo for L/R analysis)
@@ -166,16 +168,40 @@ export function usePeakMeter(
         const isClipping = maxL >= clipThreshold || maxR >= clipThreshold;
 
         // Update state
-        setState((prev) => ({
-          peakL: maxL,
-          peakR: maxR,
-          peakLdB,
-          peakRdB,
-          peakHoldL: peakHoldLValue.current,
-          peakHoldR: peakHoldRValue.current,
-          isClipping,
-          clipCount: isClipping ? prev.clipCount + 1 : prev.clipCount,
-        }));
+        // Clip Hold: Keep isClipping true for 2 seconds after last clip
+        if (isClipping) {
+          // Clear existing timeout
+          if (clipHoldTimeout.current !== null) {
+            window.clearTimeout(clipHoldTimeout.current);
+          }
+
+          setState((prev) => ({
+            peakL: maxL,
+            peakR: maxR,
+            peakLdB,
+            peakRdB,
+            peakHoldL: peakHoldLValue.current,
+            peakHoldR: peakHoldRValue.current,
+            isClipping: true,
+            clipCount: prev.clipCount + 1,
+          }));
+
+          // Set timeout to clear clipping indicator after 2 seconds
+          clipHoldTimeout.current = window.setTimeout(() => {
+            setState((prev) => ({ ...prev, isClipping: false }));
+          }, 2000);
+        } else {
+          // Update without changing isClipping (let timeout handle it)
+          setState((prev) => ({
+            ...prev,
+            peakL: maxL,
+            peakR: maxR,
+            peakLdB,
+            peakRdB,
+            peakHoldL: peakHoldLValue.current,
+            peakHoldR: peakHoldRValue.current,
+          }));
+        }
 
         // Continue loop
         animationFrameId.current = requestAnimationFrame(detectPeaks);
@@ -200,6 +226,10 @@ export function usePeakMeter(
 
       if (peakHoldTimeoutR.current !== null) {
         window.clearTimeout(peakHoldTimeoutR.current);
+      }
+
+      if (clipHoldTimeout.current !== null) {
+        window.clearTimeout(clipHoldTimeout.current);
       }
 
       // Don't close audio context - reuse it to avoid "already connected" errors
