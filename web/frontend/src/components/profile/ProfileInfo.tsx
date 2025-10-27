@@ -10,7 +10,7 @@ interface ProfileInfoProps {
 export default function ProfileInfo({ user }: ProfileInfoProps) {
   const username = user.user_metadata?.username;
   const displayName = user.user_metadata?.full_name || username || 'Unbenannter Benutzer';
-  const avatar = useAvatar(user);
+  const avatar = useAvatar(user, user.id);
 
   return (
     <section className="card card-large">

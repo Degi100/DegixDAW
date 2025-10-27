@@ -55,7 +55,7 @@ export default function UserDropdown({ user, isAdmin, isModerator = false, onLog
     );
   };
 
-  const avatar = useAvatar(user);
+  const avatar = useAvatar(user, user.id);
 
   return (
     <div className="user-menu-container">

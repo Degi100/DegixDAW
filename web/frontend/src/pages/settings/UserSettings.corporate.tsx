@@ -26,7 +26,7 @@ export default function UserSettingsCorporate() {
   const profileSection = useProfileSection(user);
   const securitySection = useSecuritySection(user);
   const accountSection = useAccountSection(user);
-  const avatar = useAvatar(user);
+  const avatar = useAvatar(user, user?.id);
 
   if (!user) {
     return <LoadingOverlay message="Lade Benutzereinstellungen..." />;

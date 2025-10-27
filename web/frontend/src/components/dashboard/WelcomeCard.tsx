@@ -13,7 +13,7 @@ interface WelcomeCardProps {
 
 export default function WelcomeCard({ user }: WelcomeCardProps) {
   // All navigation now handled in main dashboard header
-  const avatar = useAvatar(user);
+  const avatar = useAvatar(user, user.id);
 
   return (
     <section className="welcome-section-corporate">
