@@ -14,13 +14,6 @@ export interface AvatarProps {
   shape?: 'circle' | 'rounded' | 'square';
 }
 
-const sizeClasses = {
-  small: { width: 32, height: 32, fontSize: '0.875rem' },
-  medium: { width: 48, height: 48, fontSize: '1rem' },
-  large: { width: 64, height: 64, fontSize: '1.25rem' },
-  xlarge: { width: 80, height: 80, fontSize: '1.75rem' },
-};
-
 const shapeClasses = {
   circle: 'rounded-full',
   rounded: 'rounded-lg',
@@ -35,8 +28,8 @@ export default function Avatar({
   className = '',
   shape = 'rounded',
 }: AvatarProps) {
-  const sizeStyle = sizeClasses[size];
   const shapeClass = shapeClasses[shape];
+  const sizeClass = `avatar-${size}`;
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     // Hide broken image and show fallback initial
@@ -50,12 +43,7 @@ export default function Avatar({
 
   return (
     <div
-      className={`avatar ${shapeClass} ${className}`}
-      style={{
-        width: sizeStyle.width,
-        height: sizeStyle.height,
-        fontSize: sizeStyle.fontSize,
-      }}
+      className={`avatar ${sizeClass} ${shapeClass} ${className}`}
       title={fullName}
     >
       {avatarUrl ? (

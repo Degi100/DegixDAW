@@ -2,6 +2,7 @@
 // AVATAR COMPONENT STYLES
 // Shared styles for avatar images across the app
 // ============================================
+@use '../abstracts/index' as *;
 
 // Generic Avatar Component (new!)
 .avatar {
@@ -10,10 +11,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-  color: var(--color-white);
+  background: linear-gradient(135deg, $primary-500, $primary-700);
+  color: $white;
   font-weight: 600;
   flex-shrink: 0;
+  border-radius: 100%;
+  border: 2px solid $white;
+
+  // Weiße Border für Bilder
+  &:has(img) {
+    background: $white;
+  }
 
   .avatar-image {
     width: 100%;
@@ -21,7 +29,7 @@
     object-fit: cover;
     display: block;
   }
-
+  
   .avatar-initial {
     display: flex;
     align-items: center;
@@ -32,8 +40,8 @@
 
   // Fallback state (when image fails)
   &.avatar-fallback {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-    color: var(--color-white);
+    background: linear-gradient(135deg, $primary-500, $primary-700);
+    color: $white;
     font-weight: 600;
   }
 
@@ -44,6 +52,31 @@
 
   img[style*="display: none"] {
     opacity: 0;
+  }
+
+  // Size modifiers
+  &.avatar-small {
+    width: 32px;
+    height: 32px;
+    font-size: 0.875rem;
+  }
+
+  &.avatar-medium {
+    width: 48px;
+    height: 48px;
+    font-size: 1rem;
+  }
+
+  &.avatar-large {
+    width: 64px;
+    height: 64px;
+    font-size: 1.25rem;
+  }
+
+  &.avatar-xlarge {
+    width: 80px;
+    height: 80px;
+    font-size: 1.75rem;
   }
 }
 
@@ -85,10 +118,10 @@
     position: relative;
     width: 120px;
     height: 120px;
-    border-radius: var(--border-radius-lg);
+    border-radius: 100%;
+    border: 2px solid $white;
     overflow: hidden;
-    border: 2px solid var(--border-color);
-    background: var(--bg-secondary);
+    background: $bg-secondary;
 
     img {
       width: 100%;
@@ -103,8 +136,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: var(--gradient-primary);
-      color: var(--color-white);
+      background: linear-gradient(135deg, $primary-500, $primary-700);
+      color: $white;
       font-size: 3rem;
       font-weight: 600;
     }
@@ -117,16 +150,16 @@
 
     .avatar-upload-btn {
       padding: 0.75rem 1.5rem;
-      background: var(--color-primary);
-      color: var(--color-white);
+      background: $primary-500;
+      color: $white;
       border: none;
-      border-radius: var(--border-radius);
+      border-radius: 8px;
       font-weight: 500;
       cursor: pointer;
       transition: all 0.2s ease;
 
       &:hover:not(:disabled) {
-        background: var(--color-primary-dark);
+        background: $primary-700;
         transform: translateY(-1px);
       }
 
@@ -139,16 +172,16 @@
     .avatar-remove-btn {
       padding: 0.5rem 1rem;
       background: transparent;
-      color: var(--color-danger);
-      border: 1px solid var(--color-danger);
-      border-radius: var(--border-radius);
+      color: $danger;
+      border: 1px solid $danger;
+      border-radius: 8px;
       font-size: 0.875rem;
       cursor: pointer;
       transition: all 0.2s ease;
 
       &:hover {
-        background: var(--color-danger);
-        color: var(--color-white);
+        background: $danger;
+        color: $white;
       }
     }
   }
@@ -159,11 +192,11 @@
 
   .avatar-upload-hint {
     font-size: 0.875rem;
-    color: var(--text-muted);
+    color: $text-muted;
     margin-top: -0.5rem;
 
     strong {
-      color: var(--text-primary);
+      color: $text-primary;
     }
   }
 }

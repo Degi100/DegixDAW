@@ -20,7 +20,7 @@ export default function WelcomeCard({ user }: WelcomeCardProps) {
       <div className="welcome-card-corporate">
         {/* User Profile Section */}
         <div className="profile-section">
-          <Avatar {...avatar} size="xlarge" shape="rounded" className="profile-avatar" />
+          <Avatar {...avatar} size="xlarge" shape="rounded" />
           
           <div className="profile-info">
             <div className="greeting">

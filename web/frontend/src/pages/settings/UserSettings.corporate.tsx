@@ -44,7 +44,7 @@ export default function UserSettingsCorporate() {
                 className="user-preview"
                 onClick={() => setShowProfileModal(true)}
               >
-                <Avatar {...avatar} size="large" shape="rounded" className="user-avatar" />
+                <Avatar {...avatar} size="large" shape="rounded" />
                 <div className="user-info">
                   <div className="user-name">
                     {user.user_metadata?.full_name || 'Unbekannt'}

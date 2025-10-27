@@ -386,7 +386,8 @@
 .preview-item-avatar {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: 100%;
+  border: 2px solid $white;
   background: linear-gradient(135deg, $corporate-blue-400, $corporate-blue-500);
   color: $white;
   display: flex;

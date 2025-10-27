@@ -33,9 +33,12 @@ export default function ImageCropperModal({ imageSrc, onComplete, onCancel }: Im
     };
   }, [imageSrc]);
 
-  // Redraw canvas when crop area or scale changes
+  // Redraw canvas when crop area or scale changes (with RAF for performance)
   useEffect(() => {
-    drawCanvas();
+    const rafId = requestAnimationFrame(() => {
+      drawCanvas();
+    });
+    return () => cancelAnimationFrame(rafId);
   }, [cropArea, scale]);
 
   const drawCanvas = () => {
@@ -46,8 +49,8 @@ export default function ImageCropperModal({ imageSrc, onComplete, onCancel }: Im
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Set canvas size
-    const maxSize = 500;
+    // Set canvas size (smaller for better performance)
+    const maxSize = 400;
     canvas.width = maxSize;
     canvas.height = maxSize;
 
@@ -104,8 +107,11 @@ export default function ImageCropperModal({ imageSrc, onComplete, onCancel }: Im
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
 
     // Check if click is inside crop area
     const dx = x - cropArea.x;
@@ -125,8 +131,11 @@ export default function ImageCropperModal({ imageSrc, onComplete, onCancel }: Im
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
 
     const newX = Math.max(cropArea.size / 2, Math.min(canvas.width - cropArea.size / 2, x - dragStart.x));
     const newY = Math.max(cropArea.size / 2, Math.min(canvas.height - cropArea.size / 2, y - dragStart.y));
@@ -156,7 +165,7 @@ export default function ImageCropperModal({ imageSrc, onComplete, onCancel }: Im
       tempCanvas.height = outputSize;
 
       // Calculate source coordinates from original image
-      const maxSize = 500;
+      const maxSize = 400;
       const imgRatio = img.width / img.height;
       let drawWidth = maxSize * scale;
       let drawHeight = maxSize * scale;

@@ -53,8 +53,12 @@ const ProfileSettingsSection: React.FC<ProfileSettingsProps> = ({ profileData, s
       if (selectedImage) URL.revokeObjectURL(selectedImage);
       setSelectedImage(null);
 
-      // Trigger page reload to update avatar everywhere
-      setTimeout(() => window.location.reload(), 1000);
+      // Force re-render of avatar by adding cache buster
+      const timestamp = Date.now();
+      setProfileData(prev => ({
+        ...prev,
+        avatarUrl: result.avatarUrl! + `?t=${timestamp}`
+      }));
     } else {
       error(`❌ Upload fehlgeschlagen: ${result.error}`);
     }
@@ -78,9 +82,6 @@ const ProfileSettingsSection: React.FC<ProfileSettingsProps> = ({ profileData, s
     if (result.success) {
       setProfileData(prev => ({ ...prev, avatarUrl: '' }));
       success('✅ Profilbild entfernt!');
-
-      // Trigger page reload to update avatar everywhere
-      setTimeout(() => window.location.reload(), 1000);
     } else {
       error(`❌ Entfernen fehlgeschlagen: ${result.error}`);
     }
