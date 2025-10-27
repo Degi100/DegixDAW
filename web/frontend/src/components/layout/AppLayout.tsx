@@ -7,7 +7,10 @@ import { useMemo } from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import ChatSidebar from '../chat/ChatSidebar';
+import FloatingFileBrowserContainer from '../files/FloatingFileBrowserContainer';
+import FileBrowser from '../files/FileBrowser';
 import { ChatProvider, useChat } from '../../contexts/ChatContext';
+import { FloatingFileBrowserProvider, useFloatingFileBrowserContext } from '../../contexts/FloatingFileBrowserContext';
 import { useConversations } from '../../hooks/useConversations';
 import { useOnlineStatus } from '../../hooks/useOnlineStatus';
 import { useAuth } from '../../hooks/useAuth';
@@ -18,6 +21,7 @@ import { canAccessFeature, getUserRole } from '../../lib/services/featureFlags';
 function AppLayoutContent() {
   const { conversations, loadConversations, createOrOpenDirectConversation } = useConversations();
   const { isChatOpen, closeChat, toggleChat } = useChat();
+  const floatingFileBrowser = useFloatingFileBrowserContext();
   const { isUserOnline } = useOnlineStatus();
   const { user } = useAuth();
   const { isAdmin, isModerator } = useAdmin();
@@ -70,6 +74,16 @@ function AppLayoutContent() {
           isUserOnline={isUserOnline}
         />
       )}
+
+      {/* Floating File Browser - Persists across all routes */}
+      {user && floatingFileBrowser.isFloating && (
+        <FloatingFileBrowserContainer
+          floatingState={floatingFileBrowser}
+          onClose={() => floatingFileBrowser.setIsFloating(false)}
+        >
+          <FileBrowser userId={user.id} />
+        </FloatingFileBrowserContainer>
+      )}
     </div>
   );
 }
@@ -77,7 +91,9 @@ function AppLayoutContent() {
 export default function AppLayout() {
   return (
     <ChatProvider>
-      <AppLayoutContent />
+      <FloatingFileBrowserProvider>
+        <AppLayoutContent />
+      </FloatingFileBrowserProvider>
     </ChatProvider>
   );
 }
