@@ -22,7 +22,7 @@ import VersionHistory from '../../components/projects/VersionHistory';
 import CreateVersionModal from '../../components/projects/CreateVersionModal';
 import type { Track, UpdateTrackRequest } from '../../types/tracks';
 import type { InviteCollaboratorData } from '../../components/projects/InviteCollaboratorModal';
-import type { Project } from '../../types/projects';
+import type { Project, CreateProjectVersionRequest } from '../../types/projects';
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -135,10 +135,11 @@ export default function ProjectDetailPage() {
 
   const handleCreateVersion = async (tag: string, changelog: string) => {
     if (!currentUserId) return;
-    await createVersion(currentUserId, {
-      version_tag: tag || undefined,
-      changes: changelog || undefined,
-    });
+    const versionData: CreateProjectVersionRequest = {};
+    if (tag) versionData.version_tag = tag;
+    if (changelog) versionData.changes = changelog;
+
+    await createVersion(currentUserId, versionData);
     setShowCreateVersionModal(false);
     // Refresh versions in modal if open
     if (showVersionsModal) {

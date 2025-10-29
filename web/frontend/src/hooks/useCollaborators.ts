@@ -77,10 +77,10 @@ export function useCollaborators(projectId: string) {
                   // Merge update but KEEP existing profile data (username, avatar_url, email)
                   return {
                     ...updatedCollab,
-                    username: c.username, // Keep existing username
-                    avatar_url: c.avatar_url, // Keep existing avatar
-                    email: c.email, // Keep existing email
-                  };
+                    username: c.username ?? null, // Keep existing username
+                    avatar_url: c.avatar_url ?? null, // Keep existing avatar
+                    email: c.email ?? null, // Keep existing email
+                  } as ProjectCollaborator;
                 }
                 return c;
               })

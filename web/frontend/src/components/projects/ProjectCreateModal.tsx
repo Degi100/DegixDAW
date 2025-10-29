@@ -12,6 +12,7 @@ import { PROJECT_TEMPLATES } from '../../lib/constants/content';
 import type { CreateProjectRequest } from '../../types/projects';
 import type { InviteCollaboratorData } from './InviteCollaboratorModal';
 import Button from '../ui/Button';
+import TrackUploadZone from '../tracks/TrackUploadZone';
 
 interface ProjectCreateModalProps {
   isOpen: boolean;
@@ -32,9 +33,11 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
   });
 
   const [selectedTemplate, setSelectedTemplate] = useState<string>('empty');
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
+  const [trackUploaded, setTrackUploaded] = useState(false);
 
   // Step 3: Invite collaborators state
   const [activeTab, setActiveTab] = useState<'search' | 'email'>('search');
@@ -260,25 +263,11 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
           }
         }
 
-        // Close modal
-        onClose();
+        // Store project ID for Step 5 (Track Upload)
+        setCreatedProjectId(project.id);
 
-        // Navigate to project detail page
-        navigate(`/projects/${project.id}`);
-
-        // Reset form
-        setFormData({
-          title: '',
-          description: '',
-          bpm: 120,
-          time_signature: '4/4',
-          key: 'C',
-          is_public: false,
-        });
-        setSelectedTemplate('empty');
-        setInvitedUsers([]);
-        setInvitedEmails([]);
-        setCurrentStep(1);
+        // Move to Step 5 (Track Upload) instead of closing
+        setCurrentStep(5);
       }
     } catch (error) {
       console.error('Failed to create project:', error);
@@ -323,11 +312,11 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
       setErrors({});
     }
 
-    setCurrentStep((prev) => Math.min(prev + 1, 4) as 1 | 2 | 3 | 4);
+    setCurrentStep((prev) => Math.min(prev + 1, 5) as 1 | 2 | 3 | 4 | 5);
   };
 
   const handleBack = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1) as 1 | 2 | 3 | 4);
+    setCurrentStep((prev) => Math.max(prev - 1, 1) as 1 | 2 | 3 | 4 | 5);
     setErrors({});
   };
 
@@ -335,6 +324,38 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
   const handleSkipInvite = () => {
     setCurrentStep(4);
     setErrors({});
+  };
+
+  // Handle track upload success
+  const handleTrackUploadSuccess = () => {
+    setTrackUploaded(true);
+  };
+
+  // Finish wizard (from Step 5)
+  const handleFinishWizard = () => {
+    if (createdProjectId) {
+      // Close modal
+      onClose();
+
+      // Navigate to project
+      navigate(`/projects/${createdProjectId}`);
+
+      // Reset form
+      setFormData({
+        title: '',
+        description: '',
+        bpm: 120,
+        time_signature: '4/4',
+        key: 'C',
+        is_public: false,
+      });
+      setSelectedTemplate('empty');
+      setInvitedUsers([]);
+      setInvitedEmails([]);
+      setCurrentStep(1);
+      setCreatedProjectId(null);
+      setTrackUploaded(false);
+    }
   };
 
   // Reset modal state on close
@@ -383,9 +404,14 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
             <div className="step-label">Invite</div>
           </div>
           <div className="step-line"></div>
-          <div className={`step ${currentStep >= 4 ? 'active' : ''}`}>
+          <div className={`step ${currentStep >= 4 ? 'active' : ''} ${currentStep > 4 ? 'completed' : ''}`}>
             <div className="step-number">4</div>
             <div className="step-label">Visibility</div>
+          </div>
+          <div className="step-line"></div>
+          <div className={`step ${currentStep >= 5 ? 'active' : ''}`}>
+            <div className="step-number">5</div>
+            <div className="step-label">Upload Track</div>
           </div>
         </div>
 
@@ -800,10 +826,76 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
           </section>
           )}
 
+          {/* Step 5: Upload Track (Optional) */}
+          {currentStep === 5 && (
+          <section className="modal-section">
+            <h3>🎉 Project Created!</h3>
+            <p className="success-message" style={{ marginBottom: '1.5rem' }}>
+              ✅ Your project "<strong>{formData.title}</strong>" has been created successfully!
+            </p>
+
+            {/* Invitations sent info */}
+            {(invitedUsers.length > 0 || invitedEmails.length > 0) && (
+              <div className="invitations-sent-info" style={{ marginBottom: '1.5rem', padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: '8px' }}>
+                <h4 style={{ marginBottom: '0.5rem' }}>📧 Invitations Sent</h4>
+                <p>
+                  {invitedUsers.length + invitedEmails.length} invitation{invitedUsers.length + invitedEmails.length > 1 ? 's' : ''} sent!
+                  Collaborators will see the invite on their dashboard.
+                </p>
+                {invitedUsers.length > 0 && (
+                  <ul style={{ marginTop: '0.5rem', marginBottom: 0 }}>
+                    {invitedUsers.map(u => (
+                      <li key={u.user_id}>@{u.username} ({u.permissions.role})</li>
+                    ))}
+                  </ul>
+                )}
+                {invitedEmails.length > 0 && (
+                  <ul style={{ marginTop: '0.5rem', marginBottom: 0 }}>
+                    {invitedEmails.map(e => (
+                      <li key={e.email}>✉️ {e.email} ({e.permissions.role})</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            <h4 style={{ marginBottom: '1rem' }}>Upload Your First Track (Optional)</h4>
+            <p className="form-hint" style={{ marginBottom: '1.5rem' }}>
+              Get started by uploading a track now, or skip and add tracks later from the project page.
+            </p>
+
+            {createdProjectId && (
+              <div className="track-upload-section">
+                <TrackUploadZone
+                  projectId={createdProjectId}
+                  onUploadComplete={() => {
+                    handleTrackUploadSuccess();
+                  }}
+                  onUploadError={(error: string) => {
+                    console.error('Track upload error:', error);
+                  }}
+                />
+
+                {trackUploaded && (
+                  <div className="upload-success-message" style={{ marginTop: '1rem', padding: '1rem', background: 'var(--success-bg, #d4edda)', borderRadius: '8px' }}>
+                    ✅ Track uploaded successfully! You can upload more tracks from the project page.
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="wizard-completion-hint" style={{ marginTop: '1.5rem', padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: '8px' }}>
+              <p style={{ marginBottom: 0 }}>
+                💡 <strong>What's next?</strong> Click "Go to Project" to start collaborating!
+              </p>
+            </div>
+          </section>
+          )}
+
           {/* Actions */}
           <div className="modal-actions">
-            {/* Back Button (show on step 2, 3, and 4) */}
-            {currentStep > 1 && (
+            {/* Back Button (show on step 2, 3, and 4, but NOT on step 5) */}
+            {currentStep > 1 && currentStep < 5 && (
               <Button
                 type="button"
                 variant="outline"
@@ -862,7 +954,7 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
               </Button>
             )}
 
-            {/* Create Button (show on step 4) */}
+            {/* Create Button (show on step 4) - This will trigger handleSubmit and move to step 5 */}
             {currentStep === 4 && (
               <Button
                 type="submit"
@@ -871,6 +963,28 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
               >
                 {loading ? 'Creating...' : '✨ Create Project'}
               </Button>
+            )}
+
+            {/* Skip & Go to Project (show on step 5) */}
+            {currentStep === 5 && (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleFinishWizard}
+                  disabled={loading}
+                >
+                  Skip Upload
+                </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={handleFinishWizard}
+                  disabled={loading}
+                >
+                  Go to Project →
+                </Button>
+              </>
             )}
           </div>
         </form>

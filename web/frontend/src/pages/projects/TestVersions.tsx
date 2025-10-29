@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useVersions } from '../../hooks/useVersions';
+import type { CreateProjectVersionRequest } from '../../types/projects';
 
 export default function TestVersions() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -28,10 +29,11 @@ export default function TestVersions() {
     if (!user) return;
 
     try {
-      await createVersion(user.id, {
-        version_tag: tag || undefined,
-        changes: changelog || undefined,
-      });
+      const versionData: CreateProjectVersionRequest = {};
+      if (tag) versionData.version_tag = tag;
+      if (changelog) versionData.changes = changelog;
+
+      await createVersion(user.id, versionData);
       setTag('');
       setChangelog('');
     } catch (err) {
