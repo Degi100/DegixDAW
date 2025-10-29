@@ -3,13 +3,14 @@
 // View and manage a single project
 // ============================================
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProject } from '../../hooks/useProjects';
 import { useTracks } from '../../hooks/useTracks';
 import { useCollaborators } from '../../hooks/useCollaborators';
 import { useVersions } from '../../hooks/useVersions';
 import { supabase } from '../../lib/supabase';
+import { getAllTracksVersionInfo } from '../../lib/services/projects/trackVersionUtils';
 import Button from '../../components/ui/Button';
 import TrackUploadZone from '../../components/tracks/TrackUploadZone';
 import AudioPlayer from '../../components/audio/AudioPlayer';
@@ -70,6 +71,11 @@ export default function ProjectDetailPage() {
       loadVersions();
     }
   }, [showVersionsModal, id, loadVersions]);
+
+  // Compute track version info
+  const tracksVersionInfo = useMemo(() => {
+    return getAllTracksVersionInfo(tracks, versions);
+  }, [tracks, versions]);
 
   // ============================================
   // Track Selection Handlers
@@ -414,7 +420,10 @@ export default function ProjectDetailPage() {
                     </div>
                   </div>
 
-                  <AudioPlayer track={track} />
+                  <AudioPlayer
+                    track={track}
+                    versionInfo={tracksVersionInfo.get(track.id) || null}
+                  />
                 </div>
               ))}
             </div>
