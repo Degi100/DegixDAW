@@ -114,6 +114,12 @@ function ChatSidebar({
     handleResetPosition,
   } = useSidebarState();
 
+  // Close handler: ALWAYS reset position when closing to prevent CSS conflicts
+  const handleClose = useCallback(() => {
+    handleResetPosition(); // Always reset position to default when closing
+    onClose();
+  }, [handleResetPosition, onClose]);
+
   // Lifecycle and side effects
   const { currentUserId, isMobile } = useSidebarLifecycle({
     isOpen,
@@ -280,8 +286,8 @@ function ChatSidebar({
       {isOpen && !isPinned && (
         <div
           className="chat-sidebar-overlay"
-          onClick={onClose}
-          onKeyDown={(e) => e.key === 'Escape' && onClose()}
+          onClick={handleClose}
+          onKeyDown={(e) => e.key === 'Escape' && handleClose()}
           role="button"
           tabIndex={0}
           aria-label="Chat schließen"
@@ -300,7 +306,7 @@ function ChatSidebar({
         role="complementary"
         aria-label="Chat Sidebar"
       >
-        {/* Resize handles - only when pinned */}
+        {/* Resize handles - available in both pinned and unpinned modes */}
         <ResizeHandles
           isMobile={isMobile}
           isPinned={isPinned}
@@ -318,7 +324,7 @@ function ChatSidebar({
           onToggleGradient={handleToggleGradient}
           onTogglePin={handleTogglePin}
           onResetPosition={handleResetPosition}
-          onClose={onClose}
+          onClose={handleClose}
           onDragStart={handleDragStart}
         />
 

@@ -70,9 +70,9 @@ export default function SidebarHeader({
 
   return (
     <div className="chat-sidebar-header">
-      {/* Dedicated drag handle area - only visible when pinned */}
-      {!isMobile && isPinned && (
-        <div 
+      {/* Dedicated drag handle area - only visible when NOT pinned (floating mode) */}
+      {!isMobile && !isPinned && (
+        <div
           className="chat-sidebar-drag-handle"
           onMouseDown={onDragStart}
           title="Sidebar verschieben"
@@ -91,10 +91,10 @@ export default function SidebarHeader({
       </div>
       
       <div className="chat-sidebar-actions">
-        {/* Primary Actions - Always visible */}
-        <button 
-          onClick={onClose} 
-          className="chat-close-btn" 
+        {/* Close Button - Always visible, always works */}
+        <button
+          onClick={onClose}
+          className="chat-close-btn"
           title="Chat schließen"
           aria-label="Chat schließen"
         >

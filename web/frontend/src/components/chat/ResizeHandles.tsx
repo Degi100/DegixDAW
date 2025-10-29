@@ -22,21 +22,20 @@ interface ResizeHandlesProps {
  * ResizeHandles component provides drag handles for resizing the sidebar
  *
  * Renders four invisible drag handles around the sidebar edges for resizing.
- * Only visible and interactive when the sidebar is pinned and not on mobile devices.
+ * Always visible and interactive (both pinned and unpinned modes) except on mobile devices.
  *
  * @param props - Component props
  * @returns JSX.Element or null
  */
 export function ResizeHandles({
   isMobile,
-  isPinned,
   onResizeLeftStart,
   onResizeRightStart,
   onResizeTopStart,
   onResizeBottomStart,
 }: ResizeHandlesProps) {
-  if (isMobile || !isPinned) {
-    return null;
+  if (isMobile) {
+    return null; // Only hide on mobile
   }
 
   return (

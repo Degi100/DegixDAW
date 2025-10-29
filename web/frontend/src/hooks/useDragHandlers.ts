@@ -32,7 +32,7 @@ export function useDragHandlers({
   setSidebarPosition,
 }: DragHandlersProps) {
   const handleDragStart = useCallback((e: React.MouseEvent) => {
-    if (isMobile || !isPinned) return;
+    if (isMobile || isPinned) return; // Can drag only when NOT pinned (floating mode)
     // Ignore clicks on interactive elements
     const target = e.target as HTMLElement;
     if (target.closest('button')) return;
@@ -50,12 +50,18 @@ export function useDragHandlers({
     const handleMouseMove = (e: MouseEvent) => {
       const deltaX = dragStart.x - e.clientX;
       const deltaY = e.clientY - dragStart.y;
-      
+
+      // Get header height from CSS variable or fallback to 70px
+      const headerHeight = parseInt(
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--header-height') || '70'
+      );
+
       setSidebarPosition(prev => ({
-        top: Math.max(0, prev.top + deltaY),
+        top: Math.max(headerHeight, prev.top + deltaY), // Can't go above header
         right: Math.max(0, prev.right + deltaX)
       }));
-      
+
       setDragStart({ x: e.clientX, y: e.clientY });
     };
 
