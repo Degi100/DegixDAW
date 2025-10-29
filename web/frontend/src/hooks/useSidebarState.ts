@@ -1,10 +1,12 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   DEFAULT_SIDEBAR_WIDTH,
   DEFAULT_SIDEBAR_HEIGHT_OFFSET,
   DEFAULT_SIDEBAR_TOP,
   DEFAULT_SIDEBAR_RIGHT,
 } from '../components/chat/constants';
+
+const STORAGE_KEY = 'chat-sidebar-state';
 
 /**
  * State interface for sidebar dimensions and interaction states
@@ -53,9 +55,29 @@ export interface SidebarActions {
  * @returns Object containing sidebar state and actions
  */
 export function useSidebarState(): SidebarState & SidebarActions {
-  const [sidebarWidth, setSidebarWidth] = useState<number>(DEFAULT_SIDEBAR_WIDTH);
-  const [sidebarHeight, setSidebarHeight] = useState<number>(window.innerHeight - DEFAULT_SIDEBAR_HEIGHT_OFFSET);
-  const [sidebarPosition, setSidebarPosition] = useState<{ top: number; right: number }>({ top: DEFAULT_SIDEBAR_TOP, right: DEFAULT_SIDEBAR_RIGHT });
+  // Load from localStorage on init
+  const loadState = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error('Failed to load sidebar state:', e);
+    }
+    return {
+      width: DEFAULT_SIDEBAR_WIDTH,
+      height: window.innerHeight - DEFAULT_SIDEBAR_HEIGHT_OFFSET,
+      position: { top: DEFAULT_SIDEBAR_TOP, right: DEFAULT_SIDEBAR_RIGHT },
+      isPinned: false,
+    };
+  };
+
+  const initialState = loadState();
+
+  const [sidebarWidth, setSidebarWidth] = useState<number>(initialState.width);
+  const [sidebarHeight, setSidebarHeight] = useState<number>(initialState.height);
+  const [sidebarPosition, setSidebarPosition] = useState<{ top: number; right: number }>(initialState.position);
   const [isResizingLeft, setIsResizingLeft] = useState<boolean>(false);
   const [isResizingRight, setIsResizingRight] = useState<boolean>(false);
   const [isResizingTop, setIsResizingTop] = useState<boolean>(false);
@@ -63,7 +85,18 @@ export function useSidebarState(): SidebarState & SidebarActions {
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   const [isGradientEnabled, setIsGradientEnabled] = useState<boolean>(true);
-  const [isPinned, setIsPinned] = useState<boolean>(false);
+  const [isPinned, setIsPinned] = useState<boolean>(initialState.isPinned);
+
+  // Save to localStorage whenever position/size/pin changes
+  useEffect(() => {
+    const state = {
+      width: sidebarWidth,
+      height: sidebarHeight,
+      position: sidebarPosition,
+      isPinned,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }, [sidebarWidth, sidebarHeight, sidebarPosition, isPinned]);
 
   const resetPosition = () => {
     setSidebarWidth(DEFAULT_SIDEBAR_WIDTH);

@@ -72,12 +72,24 @@
   &:not(.chat-sidebar--open) {
     transform: translateX(100%);
   }
-  
+
   &--open {
     transform: translateX(0);
   }
-  
-  
+
+  // Pinned state - stays on screen
+  &--pinned {
+    // Pinned sidebar is always visible and positioned
+    // Overlay is removed, so user can interact with page
+    transform: translateX(0);
+
+    // Optional: Different shadow when pinned to show it's "docked"
+    box-shadow:
+      -4px 0 16px rgba(0, 0, 0, 0.08),
+      -2px 0 8px rgba(0, 0, 0, 0.06),
+      inset 1px 0 0 rgba(255, 255, 255, 0.8);
+  }
+
   // Resizing state
   &--resizing {
     user-select: none;
