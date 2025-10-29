@@ -142,6 +142,183 @@ import { formatTimestamp, debounce } from '@degixdaw/utils';
 import { USER_ROLES, FEATURES } from '@degixdaw/constants';
 ```
 
+## 📚 Ausführliche Feature-Dokumentation
+
+**WICHTIG:** Alle Features haben eigene detaillierte Dokumentation! Bevor du Code schreibst, lies ZUERST die entsprechende Doku!
+
+### Core Features
+
+#### 🚩 Feature Flags System (v2.0 - Supabase Backend)
+**Datei:** [web/frontend/docs/FEATURE_FLAGS.md](web/frontend/docs/FEATURE_FLAGS.md) (540 Zeilen, 14 KB)
+
+**Was es ist:**
+- Supabase-Backend mit `feature_flags` Tabelle (NICHT mehr in-memory!)
+- Realtime Updates via Supabase Realtime
+- Role-Based Access mit JSONB `allowed_roles` Array
+- Admin Panel bei `/admin/features`
+
+**Key Points:**
+- DB Schema mit RLS Policies (Everyone read, Admins write)
+- Categories: core, chat, files, cloud, admin
+- Helper Function: `can_access_feature(p_feature_id TEXT, p_user_id UUID)`
+- Migration Guide v1.0 → v2.0 enthalten
+
+**Setup:**
+```bash
+cd web/frontend/scripts/sql
+# Execute feature_flags_setup.sql in Supabase SQL Editor
+```
+
+---
+
+#### 📂 File Browser (v2.0 - Floating Window + Projects Integration)
+**Datei:** [web/frontend/docs/FILE_BROWSER.md](web/frontend/docs/FILE_BROWSER.md) (730 Zeilen, 28 KB)
+
+**Was es ist:**
+- Floating Window Mode (draggable, pinnable, minimizable via React Portal)
+- Add-to-Project Button für Audio-Files
+- `user_files` Tabelle für zentrale Datei-Verwaltung
+- Automatische Waveform-Generation beim Add-to-Project
+
+**Key Components:**
+- `FloatingFileBrowserContainer.tsx` - Portal Wrapper + Drag Logic
+- `AddToProjectButton.tsx` - Projects Integration (Chat → shared_files → Tracks)
+- `useFloatingFileBrowser.ts` - State Management mit LocalStorage
+- `userFilesService.ts` - File Move + Project Add Logic
+
+**Key Points:**
+- Route Persistence (bleibt offen beim Page-Wechsel)
+- Code Refactoring: 688 LOC → 214 LOC
+- Realtime Sync via Supabase
+- `source_project_ids` JSONB Array für Multi-Project-Usage
+
+---
+
+#### 🐛 Issues System
+**Datei:** [web/frontend/docs/ISSUES_SYSTEM.md](web/frontend/docs/ISSUES_SYSTEM.md)
+
+**Was es ist:**
+- GitHub-style Issue Tracking im Admin Panel
+- Categories: feature, bug, refactoring, docs, testing, enhancement
+- Priorities: low, medium, high, critical
+- CLI Scripts für schnelles Erstellen (siehe "Claude Issue Creation" Abschnitt in CLAUDE.md)
+
+**CLI Usage:**
+```bash
+cd web/frontend
+node scripts/claude-create-issue.js "Titel" "Beschreibung" [category] [priority] [labels]
+```
+
+---
+
+#### 📊 Analytics System
+**Datei:** [web/frontend/docs/ANALYTICS_SYSTEM.md](web/frontend/docs/ANALYTICS_SYSTEM.md) (28 KB)
+
+**Was es ist:**
+- **LIVE LOC**: Backend API (Git Commands) → Admin-Panel Kachel
+- **Chart LOC**: GitHub Actions Snapshots (täglich 00:00 UTC) → GrowthChart
+- Daily Snapshots via `.github/workflows/daily-snapshot.yml`
+
+**WICHTIG:**
+- Kachel LOC ≠ Chart LOC ist NORMAL!
+- Fallback-Wert 46.721 = Backend offline
+- Chart zeigt echte Snapshots (z.B. 93.793 LOC)
+
+**Deployment:**
+- Backend: Nur lokal (`localhost:3001`) - Render.com empfohlen für Production
+- GitHub Actions: Läuft täglich automatisch
+- Supabase: `project_snapshots` Tabelle
+
+---
+
+#### 👥 Admin Role System
+**Datei:** [web/frontend/scripts/sql/ADMIN_ROLE_SYSTEM.md](web/frontend/scripts/sql/ADMIN_ROLE_SYSTEM.md)
+
+**Was es ist:**
+- Supabase `raw_user_meta_data->>'is_admin'` für Role-Check
+- Admin Panel bei `/admin` (Route-Guard)
+- User Management im Admin Panel
+
+**Setup:**
+```sql
+-- Set Super Admin
+UPDATE auth.users
+SET raw_user_meta_data = jsonb_set(raw_user_meta_data, '{is_admin}', 'true')
+WHERE email = 'your-email@example.com';
+```
+
+---
+
+#### 🗄️ Storage & RLS
+**Datei:** [web/frontend/scripts/sql/STORAGE_SETUP.md](web/frontend/scripts/sql/STORAGE_SETUP.md)
+
+**Was es ist:**
+- Supabase Storage Buckets mit RLS Policies
+- `chat-attachments`: 5 MB Limit, Authenticated Users
+- `shared_files`: Für Projects, User-Owned Files
+- Signed URLs (1h expiry) für private Files
+
+---
+
+#### 💬 Chat System (v1.0 - Realtime + Sounds + Presence)
+**Datei:** [web/frontend/docs/CHAT_SYSTEM.md](web/frontend/docs/CHAT_SYSTEM.md) (450+ Zeilen, 20 KB)
+
+**Was es ist:**
+- Vollständiges Realtime-Messaging-System mit Supabase Realtime
+- Direct Messages + Group Chats
+- Sound-Benachrichtigungen (Web Audio API, 5 Sounds)
+- Online Status Tracking (Supabase Presence)
+- Pinned Conversations (Sort Logic)
+
+**Key Features:**
+- ✅ **Sound System**: Toggle im Header (🔊/🔇), LocalStorage Persistence
+- ✅ **Online Status Hook**: `useOnlineStatus()` - Supabase Presence API
+- ✅ **Pinned Conversations**: `is_pinned` Column + Sort Logic
+- ✅ **File Attachments**: Images, Audio, Video, Docs (5 MB Limit)
+- ✅ **Speech-to-Text**: 🎤 Button, 40+ Sprachen
+- ❌ **Typing Indicator**: Hook fehlt (To-Do)
+- ❌ **Pinned Messages**: Nur Conversations, nicht Messages (To-Do)
+- ❌ **Online Badge UI**: Hook existiert, UI fehlt (To-Do)
+
+**Key Components:**
+- `ChatSidebar.tsx` - Main Sidebar (214 LOC - refactored!)
+- `useOnlineStatus.ts` - Online Status Hook
+- `chatSounds.ts` - Sound Manager (Web Audio API)
+- `ConversationList.tsx` - Pinned Sort Logic
+
+**Database:**
+- `messages` - Message Storage + Reply-to + Edit/Delete
+- `conversations` - Direct/Group Chats + is_pinned
+- `conversation_members` - Members + Roles + last_read_at
+- `message_attachments` - File Uploads
+
+---
+
+### 🎯 Wie du die Dokus nutzt (SEHR WICHTIG!)
+
+**REGEL:**
+1️⃣ **ZUERST**: Lies die Doku-Datei (z.B. FEATURE_FLAGS.md)
+2️⃣ **DANN**: Lies den Code (falls noch unklar)
+3️⃣ **NIEMALS**: Code schreiben ohne Doku zu lesen!
+
+**Warum?**
+- ⚡ **Schneller**: Doku lesen = 2 Minuten, Code scannen = 10 Minuten
+- 🧠 **Kontext**: Doku erklärt WIE und WARUM, Code nur WAS
+- ✅ **Korrekt**: Verhindert Duplicate Code, falsche Patterns, veraltete Ansätze
+
+**Beispiel:**
+```
+❌ FALSCH:
+User: "Add feature flag for new feature"
+Claude: *Scannt Code* → Schreibt in-memory Feature Flag (v1.0 - VERALTET!)
+
+✅ RICHTIG:
+User: "Add feature flag for new feature"
+Claude: *Liest FEATURE_FLAGS.md* → Nutzt Supabase Backend (v2.0!)
+```
+
+---
+
 ## Wichtige Entwicklungsmuster
 
 ### 🔥 Claude Code-Qualität Regeln (SEHR WICHTIG!)
@@ -219,6 +396,79 @@ git checkout develop
 - **VOR jedem Edit/Write:** `git branch --show-current` prüfen
 - **Falls `main`:** User fragen + Feature-Branch vorschlagen
 - **Exception:** User sagt explizit "mach auf main"
+
+**6. 📚 CLAUDE.md als primäre Wissensquelle nutzen!**
+
+**Die goldene Regel:**
+```
+Wenn du nach einem Feature/Code/Funktionalität suchst:
+1️⃣ ZUERST: CLAUDE.md lesen (Abschnitt "📚 Ausführliche Feature-Dokumentation")
+2️⃣ Link zu Doku-File gefunden? → Lese die Doku (z.B. FEATURE_FLAGS.md, CHAT_SYSTEM.md)
+3️⃣ Nicht gefunden? → Codebase durchsuchen (Grep, Read, Task Agent)
+4️⃣ Gefunden? → FRAGE USER: "Soll ich [Feature] in docs/ dokumentieren + CLAUDE.md updaten?"
+5️⃣ User sagt ja? → Erstelle docs/FEATURE_NAME.md + füge Link in CLAUDE.md hinzu!
+```
+
+**🔥 WICHTIG: Immer User fragen bevor du dokumentierst!**
+- ❌ **NICHT:** Automatisch CLAUDE.md oder docs/ updaten ohne zu fragen
+- ✅ **RICHTIG:** "Ich habe Feature X gefunden. Soll ich `docs/FEATURE_X.md` erstellen + in CLAUDE.md verlinken?"
+- **Warum?** User will wissen was dokumentiert wird & kann Input geben!
+
+**Warum wichtig:**
+- ⚡ **Performance**: CLAUDE.md lesen = 10 Sekunden, Codebase scannen = 2 Minuten
+- 🧠 **Kontext**: docs/ erklärt WIE und WARUM, Code zeigt nur WAS
+- 🔄 **Wachsende Wissensbasis**: Jede Session macht Dokumentation besser
+- 🎯 **Zusammenhänge**: CLAUDE.md zeigt Links zwischen Features
+- 📂 **Übersichtlich**: Detaillierte Dokus in eigenen Files (nicht alles in CLAUDE.md!)
+
+**Workflow:**
+1. User fragt: *"Was kann Feature X?"*
+2. Claude liest CLAUDE.md → Findet Link zu `docs/FEATURE_X.md` ✅
+3. Claude liest Doku-File → Antwortet mit Details
+4. Nicht dokumentiert? → Suche Code → Frage User → Erstelle Doku
+5. Nächste Session: Wissen ist bereits da! 🎉
+
+**Wo dokumentieren:**
+- ✅ **CLAUDE.md**: Kurze Übersicht + Link zu detaillierter Doku
+- ✅ **web/frontend/docs/**: Ausführliche Feature-Dokumentation (wie FEATURE_FLAGS.md, FILE_BROWSER.md, CHAT_SYSTEM.md)
+
+**Was dokumentieren:**
+- ✅ Feature-Funktionalität (Was kann es? Wie nutzt man es?)
+- ✅ Code-Locations (Wo liegt der Code? Components/Hooks/Services)
+- ✅ Database Schema (Tables, Columns, RLS Policies, Indexes)
+- ✅ Code Examples (TypeScript/React Snippets)
+- ✅ Use Cases (Wofür wird es genutzt? Beispiele)
+- ✅ Known Issues (Bugs, Limitationen, Workarounds)
+- ✅ What's Missing (To-Do Features)
+- ✅ Changelog (Version History)
+
+**Section für neue Feature-Links:**
+→ Ergänze in: `## 📚 Ausführliche Feature-Dokumentation`
+
+**Beispiel:**
+```markdown
+### 🎯 **[Feature Name]**
+
+**Was ist das?**
+Kurze Beschreibung (1-2 Sätze)
+
+**Hauptfunktionen:**
+- ✅ Feature 1
+- ✅ Feature 2
+- 🚧 Feature 3 (teilweise)
+
+**Location:**
+- Component: `components/[path]`
+- Hook: `hooks/[hook].ts`
+- Service: `lib/services/[service].ts`
+
+**Wichtige Hinweise:**
+- ⚠️ Caveat 1
+- 💡 Tipp 1
+
+**Use Case:**
+Beispiel-Szenario wie Feature genutzt wird
+```
 
 ### Cross-Workspace Development
 
@@ -739,166 +989,416 @@ DegixDAW ist die **Bridge für eigene kreative Arbeit** - eine Collaboration-Pla
 - Musiker uploaded eigene Gitarre dazu
 - = Alles eigene Kreativität, keine Generic Loops!
 
-### Core Features (Phase 1 - NOW!)
+### Entwicklungsstand (v0.1.6)
 
-1. **Track Upload & Versioning** (GitHub für Audio)
-   - Upload eigene WAV/MP3 Files
-   - Version History (v1, v2, v3...)
-   - Commit Messages (Git-style)
-   - Waveform Display
-   - Download Tracks
+**Updated:** 2025-10-28 - Komplettes Feature-Audit durchgeführt
 
-2. **Timestamp-Comments** (Feedback direkt im Audio)
-   - Click auf Waveform → Comment
-   - Comment-Marker im Timeline
-   - Reply to Comments
-   - Resolve/Unresolve
+**Gesamt: ~30-50%** (Realistisch - Features existieren, aber viele Bugs!)
 
-3. **VST3 Plugin** (JUCE) - DAW ↔ Cloud Bridge
-   - Login im Plugin (OAuth2)
-   - Projekte aus Cloud laden → direkt in Cubase/Ableton
-   - Track Download zu DAW
-   - Mixdown Upload zurück
+**WICHTIG:** Fokus = **Bug Fixing & Polishing**, NICHT neue Features bauen!
 
-4. **Integrierte Plattform** (kein Tool-Switching)
-   - Chat + Social + Track-Upload in einem
-   - Kein Dropbox/Slack/Discord nötig
-   - All-in-One für eigene Projekte
+---
 
-### Later Features (Phase 2+)
+## ✅ **Implementierte Features** (Was funktioniert)
 
-5. **Personal Sample-Sharing** (eigene Kits, nicht Stock!)
-   - Producer teilt eigenes Drum-Kit mit Team
-   - Bassist teilt eigene Bass-Presets
-   - = Personal Libraries, keine Mega-Stock-Library
+### 🔐 **Auth & Account** (90%)
+- ✅ Email/Password Login + OAuth (Google/GitHub)
+- ✅ Password Reset & Account Recovery (Multi-Step Wizard)
+- ✅ Email Confirmation + Change Email
+- ✅ Username Onboarding (für neue User)
+- ✅ Admin Recovery (Super Admin kann alle User recovern)
+- Location: `pages/auth/`, `pages/account/`, `components/auth/`
 
-6. **Desktop App** (für Nicht-DAW-User)
-   - Singer kann Tracks runterladen ohne Browser
-   - Notifications
-   - File Management
+### 👤 **User Features** (85%)
+- ✅ Public Profile Page (`/profile/:userId`)
+- ✅ Avatar System mit **Custom Canvas Image Cropper** (Zoom, Crop, Resize - eigene Implementierung!)
+- ✅ User Settings (4 Tabs: Profile, Security, Account, Privacy)
+- ✅ Dashboard (Welcome Card, Quick Links, Recent Projects)
+- ✅ Privacy Settings (Show Email, Online Status)
+- Location: `pages/profile/`, `pages/settings/`, `pages/dashboard/`
 
-7. **MIDI Editor** (optional - Phase 3)
-   - Songwriter skizziert Melodie
-   - Piano Roll im Browser (Tone.js)
-   - ABER: Nicht Core-Feature!
+### 👥 **Social Features** (75%)
+- ✅ Friends & Followers System
+- ✅ User Search (Name, Email, Username)
+- ✅ Send/Accept/Decline Friend Requests
+- ✅ Follow/Unfollow Users
+- ✅ Social Stats Display
+- Location: `pages/dashboard/Social.tsx`, `components/social/`
 
-### Tech Stack
+### 💬 **Chat System** (85%)
+- ✅ Realtime Messaging (Supabase Realtime)
+- ✅ Direct Messages + Group Chats
+- ✅ File Attachments (Images, Audio, Docs)
+- ✅ Unread Count + Read Receipts
+- ✅ Chat Sidebar (Collapsible, Feature Flag)
+- ✅ Chat Sounds (Toggle on/off)
+- ✅ Speech-to-Text Input (🎤 Button, 40+ Languages)
+- Location: `pages/chat/`, `components/chat/`, `components/social/`
 
-**Frontend:**
-- React 19 + TypeScript + Vite
-- Waveform Display (Web Audio API)
-- Track Upload/Versioning
-- Tone.js (MIDI - später!)
+### 🎵 **Projects & Tracks** (70%)
+- ✅ Projects System (CRUD, Settings: BPM/Key/Time Signature)
+- ✅ Project Collaborators (Email Invites via Supabase Edge Function)
+- ✅ Role-Based Permissions (Viewer, Contributor, Mixer, Admin)
+- ✅ Track Upload (WAV/MP3/FLAC, Drag & Drop)
+- ✅ Waveform Visualization (Canvas-based)
+- ✅ Audio Playback (HTML5 Audio)
+- ✅ **Peak Meters** (L/R Stereo, Clipping Detection, dBFS Display) - Professionell!
+- ✅ **Sync Playback** (Host/Listener Modes, Realtime Broadcast) - [useSyncPlayback.ts](web/frontend/src/hooks/useSyncPlayback.ts) komplett!
+- ✅ Track Comments (Timestamped, Markers auf Waveform, Resolve/Unresolve)
+- ✅ BPM Detection (web-audio-beat-detector)
+- ✅ Pan Control (-100L bis +100R)
+- 🚧 Track Versioning (40% - DB Schema da, Git-Style UI fehlt)
+- Location: `pages/projects/`, `components/projects/`, `components/tracks/`, `components/audio/`
 
-**Backend:**
-- Supabase (PostgreSQL + Storage + Auth + Realtime)
-- Row-Level Security (RLS) für alle Zugriffe
-- Signed URLs (1h expiry) für private Files
+### 📁 **File Management** (85%)
+- ✅ File Browser (4 Tabs: All, Audio, Images, Documents)
+- ✅ **Floating File Browser** (Draggable Window, Pin/Minimize, Route-Persistence) - Unique Feature!
+- ✅ File → Projects Integration (Add Chat Files zu Projects, Realtime Sync)
+- ✅ Secure File Storage (Supabase Storage + RLS, Signed URLs 1h expiry)
+- ✅ Audio Playback, Image Preview
+- Location: `pages/files/`, `components/files/`, `contexts/FloatingFileBrowserContext.tsx`
 
-**VST Plugin:**
-- JUCE Framework (C++17)
-- VST3 SDK
-- OAuth2 Flow
-- HTTP Client für Supabase API
+### ⚙️ **Admin Panel** (90%)
+- ✅ **Admin Dashboard** (System Health, Stats, Activity Feed)
+- ✅ **User Management** (CRUD, Bulk Actions, Role Management, Export CSV/JSON)
+- ✅ **Issues Tracking** (CRUD, Comments, Assignment, Filters, CLI Scripts)
+- ✅ **Feature Flags** (Toggle Features, Role-Based Access, Realtime Updates)
+- ✅ **Analytics** (LOC Chart, Project Metrics, Storage Breakdown, GitHub Actions Daily Snapshots)
+- ✅ **Admin Settings** (Application, Security, Notifications, System Info)
+- ✅ **Role System** (Super Admin / Admin / Moderator / Beta User / User)
+- Location: `pages/admin/`, `components/admin/`
 
-**Desktop App:**
-- C++ Win32 (Windows)
-- Supabase Integration
-- File Browser
+### 🔔 **System Features** (80%)
+- ✅ Realtime System (Messages, Typing Indicators, Online Status, Sync Playback)
+- ✅ Theme System (Dark/Light Mode Toggle, localStorage Persistence)
+- ✅ Toast Notifications (Success, Error, Info, Warning)
+- ✅ Error Handling (Error Boundary, 404 Page, Loading States)
+- ✅ Security (RLS auf allen Tabellen, Signed URLs, RBAC)
+- Location: `hooks/`, `lib/services/`, `components/ui/`
 
-### Datenbank-Status
+---
 
-✅ **Migration Complete** (15 MB → 17 MB)
+## 📋 **Was können die Features? (Details)**
 
-**8 neue Tabellen:**
-- `projects` - Musik-Projekte
-- `project_collaborators` - Kollaboratoren (Owner/Editor/Viewer)
-- `tracks` - Audio/MIDI/Bus/FX Tracks
-- `midi_events` - MIDI Note On/Off Events
-- `mixdowns` - Finale Audio-Mixdowns
-- `presets` - VST/Synth Presets
-- `track_comments` - Track-Kommentare mit Timestamps
-- `project_versions` - Versionshistorie
+### 🎯 **Issues Tracking System**
 
-**23 Performance-Indexes** (z.B. für creator_id, project_id, timestamp_ms)
+**Was ist das?**
+Ein vollständiges Issue-Tracking System (wie GitHub Issues/Jira) für Bug-Reports, Feature-Requests und Task-Management.
 
-**6 Auto-Update Triggers** (updated_at, search_vector)
+**Hauptfunktionen:**
+- ✅ **CRUD Operations**: Create, Edit, Delete Issues
+- ✅ **Status Management**: Open → In Progress → Done → Closed
+- ✅ **Priority System**: Low, Medium, High, Critical (mit Smart-Sorting)
+- ✅ **Categories**: Feature, Bug, Refactoring, Docs, Testing, Enhancement
+- ✅ **Labels System**: Multi-Select Tags (bug, urgent, enhancement, etc.)
+- ✅ **Assignment**: Issues zu Usern zuweisen (mit Lock-Protection gegen Race Conditions)
+- ✅ **Comments**: Kommentare mit Action-Log (status_change, assignment, label_change)
+- ✅ **PR Integration**: Pull Request URLs für "done" Issues
+- ✅ **Filtering**: Status, Priority, Category, Labels, Author, Assignee
+- ✅ **Search**: Title + Description Full-Text Search
+- ✅ **Stats Cards**: Total, Open, In Progress, Done, Urgent Count
+- ✅ **Bulk Actions**: Bulk Status/Priority Update, Bulk Delete
+- ✅ **CLI Scripts**: Claude kann Issues via Node.js Script erstellen!
 
-**Alte Tabellen unberührt:** profiles, messages, conversations, issues, etc.
+**CLI Usage (für Claude):**
+```bash
+cd web/frontend
+# Single Issue
+node scripts/claude-create-issue.js "Title" "Description" [category] [priority] [labels] [status]
 
-### Entwicklungsstand
+# Batch Issues
+node scripts/claude-create-issue-batch.js  # Editiere Script für mehrere Issues
+```
 
-**Gesamt: ~20%**
+**Location:**
+- Page: `pages/admin/AdminIssues.tsx`
+- Hook: `hooks/useIssues.ts`
+- Service: `lib/services/issues/issuesService.ts`
+- Components: `components/admin/IssueCard.tsx`, `IssueModalEnhanced.tsx`, `IssueCommentPanel.tsx`
 
-**Phase 1 Features (Core - NOW!):**
-- ✅ Database Schema: 100% (Migration done!)
-- ✅ Chat & Auth: 60%
-- Projects System: 5% (DB Schema exists, Frontend fehlt!)
-- Track Upload: 0%
-- Track Versioning: 0%
-- Timestamp Comments: 0%
-- VST Plugin: 5% (JUCE "Hello World" getestet)
+**Wichtige Hinweise:**
+- ⚠️ **Realtime nicht zuverlässig**: UI nutzt manuelle Refreshs nach CRUD
+- 📝 **Status Format**: `in_progress` (underscore, NICHT hyphen!)
+- 🔐 **RLS Policy**: Nur Admins/Moderators können Issues sehen/editieren
 
-**Phase 2 Features (Later):**
-- ✅ Social Features: 40%
-- ✅ Admin Panel: 80%
-- Desktop App: 3%
+---
 
-**Phase 3 Features (Much Later):**
-- MIDI Editor: 0% (kommt später!)
+### 🎵 **Sync Playback (Listening Sessions)**
 
-### Roadmap (Updated 2025-10-21)
+**Was ist das?**
+Multi-User synchronized audio playback - User können gemeinsam Tracks anhören in Echtzeit!
 
-**Phase 1: Core Collaboration (6-8 Wochen) - NOW!**
-1. Week 1-2: Projects + Track Upload
-2. Week 3-4: Timestamp Comments
-3. Week 5-6: Track Versioning (Git-style)
-4. Week 7-8: VST Plugin v1 (Download Tracks zu DAW)
+**Wie funktioniert's?**
+- **Host Mode**: User startet Sync → wird Host → steuert Playback
+- **Listener Mode**: Andere User sehen "Join" Button → klicken → hören synchron mit
+- **Broadcast**: Play/Pause/Seek Events über Supabase Realtime
+- **UI**: Sync Button (🔗/🎛️/👂) in AudioPlayer Transport Controls
 
-**Phase 2: Advanced Features (8-12 Wochen):**
-- Personal Preset-Sharing (eigene Kits!)
-- Desktop App (für Nicht-DAW-User)
-- Multi-Track Timeline
-- Voice Chat (WebRTC)
+**Features:**
+- ✅ Host/Listener Roles (automatisch)
+- ✅ Realtime Play/Pause/Seek Sync
+- ✅ Sync State Indicator ("Hosting" / "Listening to @username")
+- ✅ Listener Count anzeigen
+- ✅ Join Button wenn anderer Host aktiv
+- ✅ Auto-Cleanup bei Host Leave
 
-**Phase 3: Pro Features (12+ Wochen):**
-- MIDI Editor (Songwriter Melodie-Skizzen)
-- Mobile App (React Native)
-- macOS VST Build
-- AI Features (BPM/Key Detection)
+**Location:**
+- Hook: `hooks/useSyncPlayback.ts` (komplett implementiert!)
+- Component: `components/audio/AudioPlayer.tsx`
+- Styles: `styles/components/audio/_audio-player-sync.scss`
 
-## Nächste Schritte (Updated 2025-10-21)
+**Use Case:**
+Producer teilt Track Preview mit Band → alle hören gleichzeitig → geben Feedback in Echtzeit!
 
-### ✅ Phase 2 DONE: Quick Wins (Cleanup)
+---
 
-**Completed:**
-- ✅ Security Fix (credentials removed)
-- ✅ SQL Cleanup (19 obsolete files)
-- ✅ Docs Cleanup (14 obsolete files)
-- ✅ Scripts Cleanup (12 debug scripts)
-- ✅ Screenshots removed (3 files)
-- ✅ Vision Updated (BIG_PICTURE.md + CLAUDE.md)
+### 📁 **Floating File Browser**
 
-**Total:** 49 Files gelöscht, ~7200 lines removed! 🎉
+**Was ist das?**
+Ein schwebendes, draggable File Browser Fenster das über allen Routes persistiert!
 
-### 🎯 Phase 3: Vision Defined!
+**Features:**
+- ✅ Pop-out Window (React Portal)
+- ✅ Draggable (Move via Title Bar)
+- ✅ Resizable (Ecken/Kanten)
+- ✅ Pin/Unpin (bleibt offen beim Route-Wechsel)
+- ✅ Minimize/Restore
+- ✅ localStorage Persistence (Position, Size, State)
+- ✅ Route-Persistence (bleibt beim Navigation offen!)
+- ✅ Placeholder wenn floating (zeigt Info Card in original location)
 
-**Neue Wendung:**
-- NICHT noch ein BandLab (keine Stock-Library!)
-- Fokus auf EIGENE Kreativität
-- Bridge zwischen Musikern (Singer + Producer + Songwriter)
-- Track Upload/Comments/Versioning (Git für Audio)
-- VST Plugin als DAW-Bridge
+**Location:**
+- Component: `components/files/FloatingFileBrowserContainer.tsx`
+- Context: `contexts/FloatingFileBrowserContext.tsx`
+- Hook: `hooks/useFloatingFileBrowser.ts`
+- Styles: `styles/components/files/_file-browser-floating.scss`
 
-### 🚀 Next: Phase 1 Implementation
+**Use Case:**
+User arbeitet in Projects → öffnet File Browser floating → navigiert zwischen Routes → Browser bleibt offen!
 
-**Start Week 1-2: Projects + Track Upload**
-- Frontend: Project Creation Page
-- Frontend: Track Upload Component
-- Waveform Display
-- Backend: Upload to Supabase Storage
+---
 
-**Siehe:** `docs/DEGIXDAW_MASTERPLAN.md` für Details!
+### 🎨 **Custom Image Cropper (Avatar)**
+
+**Was ist das?**
+Ein **komplett selbst gebauter** Canvas-basierter Image Cropper - KEINE externe Library!
+
+**Features:**
+- ✅ Circular Crop Preview
+- ✅ Drag & Drop Image Positioning
+- ✅ Zoom Slider (1x-3x)
+- ✅ Size Slider (100px-400px Output)
+- ✅ 512x512 JPEG Output (85% Quality)
+- ✅ White Background Fill (keine schwarzen Ränder)
+- ✅ Dark Mode Support
+- ✅ Live Preview während Crop
+
+**Location:**
+- Component: `components/settings/ImageCropperModal.tsx`
+- Service: `lib/services/avatarService.ts`
+- Usage: `components/settings/ProfileSettingsSection.tsx`
+
+**Tech:**
+- Canvas API für Crop
+- FileReader API für Upload
+- Blob Output für Server Upload
+
+---
+
+### 📊 **Analytics System (Dual-Source)**
+
+**Was ist das?**
+Zwei verschiedene LOC-Quellen für unterschiedliche Zwecke!
+
+**1. LIVE LOC (StatsGrid Kachel):**
+- Backend API (`localhost:3001/api/analytics/code-metrics`)
+- Git Commands (git ls-files, git rev-list)
+- **Problem**: Nur lokal, in Production = Fallback (46.721)
+- **Lösung**: Backend auf Render.com deployen!
+
+**2. CHART LOC (Historical Snapshots):**
+- GitHub Actions (täglich 00:00 UTC)
+- Script: `scripts/analytics/create-snapshot-github-actions.js`
+- Speichert in Supabase: `project_snapshots` Table
+- **Zählt**: Komplettes Repo (mehr als lokales Backend)
+
+**Location:**
+- Frontend: `pages/admin/AdminAnalytics.tsx`
+- Backend: `web/backend/src/index.ts` (Analytics Endpoint)
+- Service: `lib/services/analytics/codeMetricsService.browser.ts`
+- GitHub Actions: `.github/workflows/daily-snapshot.yml`
+
+---
+
+### 🎛️ **Peak Meters (Professional Audio)**
+
+**Was ist das?**
+Professionelle Audio-Level-Metering wie in DAWs (Cubase, Ableton)!
+
+**Features:**
+- ✅ Stereo L/R Channels (separate Meters)
+- ✅ Gradient Bars (Green → Yellow → Orange → Red)
+- ✅ Clipping Detection (blinkt bei >0dB)
+- ✅ Peak Hold Indicators (zeigt höchsten Peak)
+- ✅ dBFS Numeric Display (-∞ bis 0 dB)
+- ✅ Master Peak Meter (für komplettes Project)
+- ✅ Real-time via Web Audio API
+
+**Location:**
+- Component: `components/audio/PeakMeter.tsx`, `MasterPeakMeter.tsx`
+- Hook: `hooks/usePeakMeter.ts`
+- Styles: `styles/components/audio/_peak-meter.scss`
+
+**Tech:**
+- Web Audio API (AnalyserNode)
+- getByteTimeDomainData() für Peak-Detection
+- requestAnimationFrame für Smooth Animation
+
+---
+
+## 🚧 **Teilweise Implementiert** (Baustellen!)
+
+- 🔨 **Track Versioning** (40%): DB Schema exists, Git-Style History UI fehlt
+- 🔨 **MIDI Support** (30%): DB Schema + Basic Events, Editor fehlt komplett
+- 🔨 **Multi-Track Mixing** (50%): Einzelne Tracks OK, Timeline-View fehlt
+- 🔨 **Search System** (50%): User Search OK, Global Search fehlt
+- 🔨 **Mobile Responsiveness** (60%): Header/Chat/Files OK, Admin/Projects braucht Optimierung
+- 🔨 **Speech-to-Text** (60%): Funktioniert, Genauigkeit Browser-abhängig
+- 🔨 **Email Invitations** (90%): Edge Function hat trailing spaces Bug
+
+---
+
+## ❌ **Nicht Implementiert** (Geplant)
+
+- ❌ **VST Plugin** (5%): Nur JUCE "Hello World", keine OAuth/Cloud Integration
+- ❌ **Desktop App** (3%): Basic C++ Structure, keine Supabase Integration
+- ❌ **Audio Enhancement** (0%): Keine Dolby.io API, kein Self-Hosted Processing
+- ❌ **MIDI Editor** (0%): Piano Roll UI fehlt komplett
+- ❌ **Voice Messages** (0%): Record Audio in Chat
+- ❌ **Video Calls** (0%): WebRTC Integration
+- ❌ **Kanban Board** (0%): Issue Tracking Visualization
+- ❌ **Project Export** (0%): Backup/Restore
+- ❌ **Offline Mode** (0%): Service Worker + IndexedDB
+
+---
+
+## 🐛 **Bekannte Bugs & Issues**
+
+**Critical:**
+1. **Analytics Backend offline**: Live LOC nur auf `localhost:3001`, Production zeigt Fallback (46.721)
+2. **Realtime nicht zuverlässig**: Manuelle Refreshs nötig nach CRUD (Issues, Users, Projects)
+3. **Console.logs**: 303 Vorkommen in 74 Files (Cleanup für Production nötig)
+
+**Medium:**
+4. **Code TODOs**: 24 TODOs nicht in Issues-System getrackt
+5. **Windows Bug**: `nul` File im Root (löschen + `.gitignore`)
+6. **Email Invitations**: Trailing spaces Bug in Edge Function redirect
+
+**Low:**
+7. **File Search**: Nur Basic Implementation, Advanced Filters fehlen
+8. **Mobile UX**: Admin Panel & Projects brauchen Responsive Optimization
+
+---
+
+## 📊 **Code-Statistiken**
+
+- **Codebase**: ~94.000 LOC (nach Refactoring: -78k LOC entfernt!)
+- **TypeScript Files**: 327
+- **React Components**: 80+
+- **Custom Hooks**: 60+
+- **Service Modules**: 15+
+- **Pages/Routes**: 20+
+- **Database Tables**: 19 (3 Migrations komplett)
+- **Indexes**: 23 Performance-Indexes
+- **Triggers**: 6 Auto-Update Triggers
+
+---
+
+## 📂 **Code-Struktur** (Wo finde ich was?)
+
+```
+web/frontend/src/
+├── pages/                    # 20+ Seiten
+│   ├── auth/                # Login, Register, Recovery
+│   ├── admin/               # Admin Panel (Dashboard, Users, Issues, Analytics)
+│   ├── projects/            # Project List, Project Detail
+│   ├── files/               # File Browser
+│   ├── dashboard/           # Dashboard, Social
+│   ├── settings/            # User Settings
+│   └── profile/             # User Profile
+├── components/              # 80+ Components
+│   ├── admin/               # Admin Components (Tables, Modals, Stats)
+│   ├── audio/               # AudioPlayer, Waveform, PeakMeter, Sync Playback
+│   ├── auth/                # Login/Register Forms, OAuth
+│   ├── chat/                # Chat Window, Messages, Sidebar
+│   ├── files/               # File Browser, Floating Window
+│   ├── projects/            # Project CRUD, Collaborators, Invites
+│   ├── tracks/              # Track Upload, Settings, Comments
+│   ├── social/              # Friends, Followers, User Search
+│   ├── settings/            # Settings Sections, Profile Editor
+│   └── ui/                  # Button, Input, Loading, Avatar, Toast
+├── hooks/                   # 60+ Custom Hooks
+│   ├── useAuth.ts           # Auth State
+│   ├── useAdmin.ts          # Admin State
+│   ├── useProjects.ts       # Project Management
+│   ├── useTracks.ts         # Track Management
+│   ├── useSyncPlayback.ts   # Synchronized Playback (Host/Listener)
+│   ├── usePeakMeter.ts      # Audio Level Metering
+│   ├── useConversations.ts  # Chat Conversations
+│   ├── useMessages.ts       # Chat Messages
+│   ├── useFeatureFlags.ts   # Feature Flags
+│   └── useAnalytics.ts      # Analytics Data
+├── lib/
+│   ├── services/            # 15+ Service Modules
+│   │   ├── projects/        # projectsService, collaboratorsService
+│   │   ├── tracks/          # tracksService, commentsService
+│   │   ├── files/           # userFilesService
+│   │   ├── analytics/       # metricsService, snapshotsService, codeMetricsService
+│   │   ├── issues/          # issuesService, commentsService
+│   │   ├── featureFlags/    # featureFlagsService
+│   │   └── storage/         # trackStorage, avatarService
+│   ├── validation/          # Zod Schemas
+│   └── supabase.ts          # Supabase Client
+├── styles/                  # SCSS (Modulare Struktur!)
+│   ├── components/          # Component-spezifische Styles
+│   ├── pages/               # Page-spezifische Styles
+│   └── utilities/           # Variables, Mixins, Base
+└── contexts/                # React Contexts
+    └── FloatingFileBrowserContext.tsx
+```
+
+---
+
+## 🎯 **Roadmap** (Updated 2025-10-28)
+
+**Nächste Schritte (Realistische Prioritäten):**
+
+**Phase 1: Bug Fixing & Polish** (Jetzt!)
+1. Backend auf Render.com deployen (Analytics Fix)
+2. Console.logs Cleanup (303 Vorkommen)
+3. TODOs in Issues-System tracken (24 TODOs)
+4. Realtime Reliability verbessern
+5. Mobile Responsiveness (Admin/Projects)
+
+**Phase 2: Core Features Complete** (2-4 Wochen)
+6. Track Versioning UI (Git-Style Commits)
+7. Multi-Track Timeline View
+8. MIDI Editor (Piano Roll Basics)
+9. Global Search System
+10. Kanban Board (Issues Visualization)
+
+**Phase 3: VST Integration** (4-8 Wochen)
+11. VST Plugin Development (JUCE + OAuth2)
+12. Desktop App (C++ + Supabase)
+13. Cloud ↔ DAW Bridge
+14. Audio Enhancement (Dolby.io API oder Self-Hosted)
+
+**Phase 4: Pro Features** (8+ Wochen)
+15. Voice Messages + Video Calls
+16. Mobile App (React Native)
+17. Project Export/Backup
+18. Offline Mode
+19. Notification Panel
 
 ## Weitere Dokumentation
 

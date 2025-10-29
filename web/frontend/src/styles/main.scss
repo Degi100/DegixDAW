@@ -42,6 +42,8 @@
 @use 'components/projects/collaborators-list';
 @use 'components/projects/pending-invites';
 @use 'components/projects/delete-project-modal';
+@use 'components/projects/version-history';
+@use 'components/projects/version-modal';
 @use 'components/tracks/track-upload-zone';
 @use 'components/tracks/track-settings-modal';
 @use 'components/settings/privacy-settings';

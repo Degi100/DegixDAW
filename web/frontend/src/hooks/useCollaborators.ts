@@ -14,6 +14,7 @@ import {
   type InviteCollaboratorData,
 } from '../lib/services/projects/collaboratorsService';
 import type { ProjectCollaborator } from '../types/projects';
+import { supabase } from '../lib/supabase';
 
 export function useCollaborators(projectId: string) {
   const [collaborators, setCollaborators] = useState<ProjectCollaborator[]>([]);
@@ -40,6 +41,64 @@ export function useCollaborators(projectId: string) {
   useEffect(() => {
     fetchCollaborators();
   }, [fetchCollaborators]);
+
+  // Realtime subscription for collaborators changes
+  useEffect(() => {
+    if (!projectId) return;
+
+    // Subscribe to INSERT, UPDATE, DELETE on project_collaborators
+    const channel = supabase
+      .channel(`project-collaborators-${projectId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'project_collaborators',
+          filter: `project_id=eq.${projectId}`,
+        },
+        async (payload: any) => {
+          console.log('Collaborator change:', payload);
+
+          if (payload.eventType === 'INSERT') {
+            // New collaborator added
+            const newCollab = payload.new as ProjectCollaborator;
+            setCollaborators((prev) => {
+              // Avoid duplicates
+              if (prev.find(c => c.id === newCollab.id)) return prev;
+              return [...prev, newCollab];
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            // Collaborator updated (role change, permissions, etc.)
+            const updatedCollab = payload.new as ProjectCollaborator;
+            setCollaborators((prev) =>
+              prev.map((c) => {
+                if (c.id === updatedCollab.id) {
+                  // Merge update but KEEP existing profile data (username, avatar_url, email)
+                  return {
+                    ...updatedCollab,
+                    username: c.username, // Keep existing username
+                    avatar_url: c.avatar_url, // Keep existing avatar
+                    email: c.email, // Keep existing email
+                  };
+                }
+                return c;
+              })
+            );
+          } else if (payload.eventType === 'DELETE') {
+            // Collaborator removed
+            const deletedId = payload.old.id;
+            setCollaborators((prev) => prev.filter((c) => c.id !== deletedId));
+          }
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [projectId]);
 
   // Invite collaborator by email
   const inviteByEmail = useCallback(

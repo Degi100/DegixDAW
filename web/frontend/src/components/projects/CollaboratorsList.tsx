@@ -13,6 +13,7 @@ interface CollaboratorsListProps {
   projectOwnerId: string;
   onRemove: (collaboratorId: string) => Promise<void>;
   onUpdatePermissions: (collaboratorId: string, permissions: Partial<ProjectCollaborator>) => Promise<unknown>;
+  onChangeRole?: (collaboratorId: string, newRole: string) => Promise<void>;
 }
 
 export default function CollaboratorsList({
@@ -20,10 +21,22 @@ export default function CollaboratorsList({
   currentUserId,
   projectOwnerId,
   onRemove,
+  onChangeRole,
 }: CollaboratorsListProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [changingRoleId, setChangingRoleId] = useState<string | null>(null);
 
   const isOwner = currentUserId === projectOwnerId;
+
+  const handleRoleChange = async (collaboratorId: string, newRole: string) => {
+    if (!onChangeRole) return;
+    setChangingRoleId(collaboratorId);
+    try {
+      await onChangeRole(collaboratorId, newRole);
+    } finally {
+      setChangingRoleId(null);
+    }
+  };
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -120,6 +133,30 @@ export default function CollaboratorsList({
                       enabled={collab.can_invite_others}
                     />
                   </div>
+
+                  {/* Role Change (Only for Owner/Admin) */}
+                  {isOwner && collab.user_id !== projectOwnerId && onChangeRole && (
+                    <div className="role-change-section">
+                      <label htmlFor={`role-${collab.id}`} className="role-label">
+                        Change Role:
+                      </label>
+                      <select
+                        id={`role-${collab.id}`}
+                        value={collab.role}
+                        onChange={(e) => handleRoleChange(collab.id, e.target.value)}
+                        disabled={changingRoleId === collab.id}
+                        className="role-select"
+                      >
+                        <option value="viewer">Viewer</option>
+                        <option value="contributor">Contributor</option>
+                        <option value="mixer">Mixer</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                      {changingRoleId === collab.id && (
+                        <span className="role-changing">Updating...</span>
+                      )}
+                    </div>
+                  )}
 
                   {/* Metadata */}
                   <div className="collaborator-meta">

@@ -1,12 +1,29 @@
 # 🎛️ Feature-Flags System
 
+**Version:** 2.0.0 (Supabase Backend)
+**Last Updated:** 2025-10-28
+**Status:** ✅ Production Ready
+
 ## Übersicht
 
-Das **Feature-Flags System** ermöglicht es, Features in Production **schrittweise** freizuschalten - **ohne neuen Deploy**! Du als Admin kannst Features:
-- ✅ Aktivieren/Deaktivieren
-- 🔒 Nur für dich sichtbar machen (Testen in Production)
-- 🧪 Für Beta-Tester freigeben
-- 🌍 Für alle User veröffentlichen
+Das **Feature-Flags System** ermöglicht es, Features in Production **schrittweise** freizuschalten - **ohne neuen Deploy**! Features werden in **Supabase gespeichert** und können via **Admin-Panel** in Echtzeit geändert werden.
+
+### 🎉 Was ist NEU in v2.0?
+
+- ✅ **Supabase Backend**: Persistierung in `feature_flags` Tabelle (statt in-memory!)
+- ✅ **Realtime Updates**: Änderungen synchronisieren sofort über alle Clients
+- ✅ **Role-Based Access**: JSONB Array `["public", "user", "moderator", "admin"]`
+- ✅ **Admin Panel**: Toggle Features via `/admin/features`
+- ✅ **Audit Log**: `created_by`, `updated_by`, `updated_at` Tracking
+- ✅ **Categories**: Gruppierung (core, chat, files, cloud, admin, etc.)
+
+### Was du als Admin kannst:
+
+- ✅ Features aktivieren/deaktivieren (1 Klick)
+- 🔒 Features nur für Admins sichtbar machen
+- 🧪 Features für Moderators/Beta-Tester freigeben
+- 🌍 Features für alle User veröffentlichen
+- 📊 Feature-Status in Echtzeit sehen
 
 ---
 
@@ -19,111 +36,327 @@ develop → testen → main deploy → ALLE sehen Feature
                           Problem? → Hotfix → neuer Deploy
 ```
 
-### **Mit Feature-Flags (Neu):**
+### **Mit Feature-Flags v2.0 (Neu):**
 ```
-develop → main deploy (Feature disabled)
+develop → main deploy (Feature disabled in Supabase)
                 ↓
-         Admin aktiviert Feature (nur für sich)
+         Admin öffnet /admin/features
                 ↓
-         Testen in Production ✓
+         Toggle "enabled" + Set "allowed_roles": ["admin"]
                 ↓
-         Feature für alle aktivieren (1 Klick!)
+         Testen in Production ✓ (nur Admins sehen es)
                 ↓
-         Problem? → Feature deaktivieren (1 Klick!)
+         Set "allowed_roles": ["user", "moderator", "admin"]
+                ↓
+         Feature für alle aktivieren! (Realtime Update)
+                ↓
+         Problem? → Toggle "enabled" OFF (1 Klick, sofort!)
 ```
 
 ---
 
-## 📁 Dateistruktur
+## 📁 Architektur
+
+### Dateistruktur
 
 ```
 src/
 ├── lib/
+│   ├── services/
+│   │   └── featureFlags/
+│   │       ├── featureFlagsService.ts   # Supabase CRUD
+│   │       ├── helpers.ts               # Role-Check Logic
+│   │       └── types.ts                 # TypeScript Interfaces
 │   └── constants/
-│       └── featureFlags.ts          # Feature-Definitions
+│       └── featureFlags.ts              # DEPRECATED: Legacy Adapter
 ├── components/
 │   ├── admin/
-│   │   └── AdminFeatureFlags.tsx    # Admin Toggle-Panel
+│   │   └── AdminFeatureFlags.tsx        # Admin Toggle-Panel (/admin/features)
+│   ├── auth/
+│   │   └── FeatureFlagRoute.tsx         # Feature-gated Routes
 │   └── layout/
-│       └── Header.tsx                # Navigation mit Flag-Check
-└── styles/
-    └── components/
-        └── admin/
-            └── _feature-flags.scss   # Panel-Styling
+│       └── Header.tsx                   # Navigation mit Flag-Check
+├── hooks/
+│   └── useFeatureFlags.ts               # React Hook mit Realtime
+└── scripts/
+    └── sql/
+        └── feature_flags_setup.sql      # DB Setup Script
+```
+
+### Datenfluss
+
+```
+Admin Panel (/admin/features)
+    ↓
+AdminFeatureFlags Component
+    ↓
+useFeatureFlags() Hook
+    ↓
+featureFlagsService.updateFeatureFlag()
+    ↓
+Supabase UPDATE (feature_flags Table)
+    ↓
+Supabase Realtime Broadcast (INSERT/UPDATE/DELETE)
+    ↓
+useFeatureFlags() Hook (alle Clients!)
+    ↓
+UI Update (Feature erscheint/verschwindet)
 ```
 
 ---
 
-## 🎯 Wie funktioniert's?
+## 🗄️ Datenbank-Schema
 
-### 1. Feature definieren
+### `feature_flags` Tabelle
 
-```typescript
-// src/lib/constants/featureFlags.ts
+| Spalte | Typ | Beschreibung |
+|--------|-----|--------------|
+| `id` | TEXT | Primary Key (z.B. `file_browser`) |
+| `name` | TEXT | Display Name (z.B. "Datei-Browser") |
+| `description` | TEXT | Feature-Beschreibung |
+| `enabled` | BOOLEAN | Feature global aktiviert? |
+| `allowed_roles` | JSONB | Array: `["public", "user", "moderator", "admin"]` |
+| `version` | TEXT | Seit welcher Version verfügbar (z.B. "2.2.0") |
+| `category` | TEXT | Kategorie (core, chat, files, cloud, admin) |
+| `created_at` | TIMESTAMPTZ | Erstellungs-Timestamp |
+| `updated_at` | TIMESTAMPTZ | Letztes Update (Auto-Trigger) |
+| `created_by` | UUID | FK → auth.users.id |
+| `updated_by` | UUID | FK → auth.users.id |
 
-export const FEATURE_FLAGS = {
-  FILE_BROWSER: {
-    id: 'file_browser',
-    name: 'Datei-Browser',
-    description: 'Übersicht aller hochgeladenen Dateien',
-    enabled: true,        // Feature ist aktiv
-    adminOnly: true,      // 🔒 Nur du siehst es!
-    betaAccess: false,
-    version: '2.2.0',
-  },
-};
+### Setup SQL ausführen
+
+```bash
+# 1. SQL Script anzeigen
+npm run db:show scripts/sql/feature_flags_setup.sql
+
+# 2. Öffne Supabase SQL-Editor
+# https://supabase.com/dashboard/project/YOUR_PROJECT/sql
+
+# 3. Kopiere Script-Inhalt, klicke "Run" ✅
 ```
 
-### 2. Feature in Code schützen
+Das erstellt:
+- ✅ `feature_flags` Tabelle
+- ✅ Indexes (enabled, category, full-text search)
+- ✅ `updated_at` Trigger
+- ✅ RLS Policies (Admins = Write, Alle = Read)
+- ✅ Helper Function `can_access_feature()`
+- ✅ Realtime Publication
+- ✅ 7 Default Features (dashboard, social_features, file_browser, etc.)
+
+---
+
+## 🎯 Aktuelle Features (v2.0)
+
+| Feature ID | Name | Category | Enabled | Allowed Roles | Version |
+|------------|------|----------|---------|---------------|---------|
+| `dashboard` | Dashboard | core | ✅ | user, moderator, admin | 2.3.0 |
+| `social_features` | Social-Funktionen | social | ✅ | user, moderator, admin | 2.3.0 |
+| `chat_sidebar` | Chat-Seitenleiste | chat | ✅ | user, moderator, admin | 2.3.0 |
+| `chat_sidebar_polish` | Chat-Sidebar Verbesserungen | chat | ✅ | public, user, moderator, admin | 2.1.0 |
+| `file_upload_system` | Datei-Upload System | files | ✅ | user, moderator, admin | 2.1.0 |
+| `file_browser` | Datei-Browser | files | ✅ | admin | 2.2.0 |
+| `cloud_integration` | Cloud-Integration | cloud | ❌ | admin | 2.3.0 |
+
+---
+
+## 💻 Code-Beispiele
+
+### 1. Feature in Component prüfen
 
 ```typescript
-// src/components/layout/Header.tsx
+// MyComponent.tsx
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
+
+export default function MyComponent() {
+  const { isFeatureEnabled, loading } = useFeatureFlags();
+
+  if (loading) return <Spinner />;
+
+  // Check if feature is enabled for current user
+  if (!isFeatureEnabled('file_browser')) {
+    return <NotFound />;
+  }
+
+  return <FileBrowser />;
+}
+```
+
+### 2. Route mit Feature Flag schützen
+
+```typescript
+// main.tsx
+import { FeatureFlagRoute } from '@/components/auth/FeatureFlagRoute';
+
+{
+  path: '/files',
+  element: (
+    <FeatureFlagRoute featureId="file_browser">
+      <FileBrowserPage />
+    </FeatureFlagRoute>
+  )
+}
+```
+
+### 3. Navigation mit Feature Flag
+
+```typescript
+// Header.tsx
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 const navigationItems = [
-  { 
-    path: '/files', 
-    label: 'Dateien', 
-    icon: '📂',
-    featureFlag: 'FILE_BROWSER'  // ← Zugriffskontrolle
-  },
+  { path: '/dashboard', label: 'Dashboard', featureId: 'dashboard' },
+  { path: '/social', label: 'Social', featureId: 'social_features' },
+  { path: '/files', label: 'Dateien', featureId: 'file_browser' },
 ];
 
-// Automatische Filterung:
-const filteredNavItems = navigationItems.filter(item => {
-  if (item.featureFlag) {
-    return canAccessFeature(item.featureFlag, isAdmin);
-  }
-  return true;
+export default function Header() {
+  const { isFeatureEnabled } = useFeatureFlags();
+
+  const visibleNav = navigationItems.filter(item =>
+    !item.featureId || isFeatureEnabled(item.featureId)
+  );
+
+  return <nav>{visibleNav.map(renderNavItem)}</nav>;
+}
+```
+
+### 4. Admin Panel Usage
+
+```typescript
+// AdminFeatureFlags.tsx
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
+
+export default function AdminFeatureFlags() {
+  const { features, toggleFeature, updateRoles, loading } = useFeatureFlags();
+
+  const handleToggle = async (featureId: string) => {
+    await toggleFeature(featureId);
+    // Realtime Update → UI refreshes automatically!
+  };
+
+  const handleRolesUpdate = async (featureId: string, roles: string[]) => {
+    await updateRoles(featureId, roles);
+  };
+
+  return (
+    <div>
+      {features.map(feature => (
+        <FeatureCard
+          key={feature.id}
+          feature={feature}
+          onToggle={() => handleToggle(feature.id)}
+          onRolesUpdate={(roles) => handleRolesUpdate(feature.id, roles)}
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+### 5. Direkter Service-Zugriff
+
+```typescript
+// Ohne Hook (z.B. in Service-Layer)
+import { getAllFeatureFlags, updateFeatureFlag } from '@/lib/services/featureFlags';
+
+// Load all features
+const { data: features, error } = await getAllFeatureFlags();
+
+// Update a feature
+const { data: updated, error } = await updateFeatureFlag('file_browser', {
+  enabled: true,
+  allowedRoles: ['user', 'moderator', 'admin']
 });
 ```
 
-### 3. Admin-Panel nutzen
+---
 
-**Zugriff**: `/admin/settings` → Tab "Feature-Flags"
+## 🔐 Row-Level Security (RLS)
 
-**Optionen**:
-- **✅ Aktiviert / ❌ Deaktiviert**: Feature komplett ein/aus
-- **🌍 Öffentlich**: Alle sehen es
-- **🧪 Beta-Tester**: Nur Beta-User
-- **🔒 Nur Admins**: Nur du (zum Testen)
+### Policy 1: Jeder kann Feature-Flags LESEN
+
+```sql
+CREATE POLICY "Anyone can read feature flags"
+  ON public.feature_flags
+  FOR SELECT
+  USING (true);
+```
+
+**Warum?** Frontend braucht Zugriff um `canAccessFeature()` zu checken!
+
+### Policy 2: Nur Admins können ÄNDERN
+
+```sql
+CREATE POLICY "Only admins can modify feature flags"
+  ON public.feature_flags
+  FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM auth.users
+      WHERE auth.users.id = auth.uid()
+      AND (
+        auth.users.raw_user_meta_data->>'is_admin' = 'true'
+        OR auth.users.email = current_setting('app.super_admin_email', true)
+      )
+    )
+  );
+```
+
+**Schutz**: Nur Admins + Super Admin können Features togglen!
 
 ---
 
-## 🔧 Use Cases
+## 🔄 Realtime Updates
 
-### **Use Case 1: Neues Feature sicher testen**
+### Wie funktioniert's?
+
+```typescript
+// useFeatureFlags.ts
+useEffect(() => {
+  // Subscribe to Supabase Realtime
+  const channel = supabase
+    .channel('feature-flags-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'feature_flags'
+      },
+      (payload) => {
+        console.log('Feature flag changed:', payload);
+        // Reload features
+        loadFeatures();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, []);
+```
+
+**Resultat**: Admin toggled Feature → **ALLE User sehen Update sofort!** (ohne Refresh)
+
+---
+
+## 🧪 Use Cases
+
+### Use Case 1: Neues Feature sicher testen
 
 ```
 1. Feature entwickeln auf develop
-2. Merge zu main (Feature enabled: false)
+2. Merge zu main (Feature in DB: enabled=false)
 3. Deploy zu Production
-4. Admin-Panel: Feature aktivieren (adminOnly: true)
+4. Admin-Panel: Toggle enabled=true, allowed_roles=["admin"]
 5. Du testest in Production → funktioniert? ✓
-6. Admin-Panel: adminOnly → false (alle sehen es)
-7. Fertig! Kein erneuter Deploy nötig
+6. Admin-Panel: allowed_roles=["user", "moderator", "admin"]
+7. Fertig! Feature live für alle! 🎉
 ```
 
-### **Use Case 2: Feature schnell deaktivieren**
+### Use Case 2: Feature schnell deaktivieren
 
 ```
 Problem: File-Browser hat Bug in Production
@@ -134,297 +367,173 @@ Traditionell:
 3. Deploy
 4. 30-60min Downtime
 
-Mit Feature-Flag:
-1. Admin-Panel öffnen
-2. FILE_BROWSER → deaktivieren
-3. Feature sofort unsichtbar
+Mit Feature-Flag v2.0:
+1. Admin-Panel öffnen (/admin/features)
+2. file_browser → Toggle OFF
+3. Feature sofort unsichtbar (Realtime!)
 4. In Ruhe Hotfix entwickeln
 5. Feature wieder aktivieren
 ✓ 10 Sekunden statt 60 Minuten!
 ```
 
-### **Use Case 3: Beta-Testing**
+### Use Case 3: Schrittweise Rollout
 
 ```
 1. Feature entwickeln (Cloud-Integration)
-2. Aktivieren für Beta-Tester (betaAccess: true)
-3. Feedback sammeln
-4. Verbesserungen umsetzen
-5. Für alle freischalten
+2. Deploy (enabled=false)
+3. Phase 1: allowed_roles=["admin"] (nur du)
+4. Phase 2: allowed_roles=["admin", "moderator"] (+ Mods)
+5. Phase 3: allowed_roles=["admin", "moderator", "user"] (+ Beta-User)
+6. Phase 4: allowed_roles=["public", "user", "moderator", "admin"] (alle!)
 ```
 
 ---
 
-## 🎨 Feature-Status Icons
+## 📊 Admin Panel Features
 
-| Icon | Bedeutung | Wer sieht es? |
-|------|-----------|---------------|
-| ✅ | Öffentlich | Alle User |
-| 🧪 | Beta | Beta-Tester + Admins |
-| 🔒 | Admin-Only | Nur du |
-| ❌ | Deaktiviert | Niemand |
+### `/admin/features` Page
 
----
+**Features:**
+- ✅ Liste aller Feature-Flags
+- ✅ Toggle enabled/disabled (1 Klick)
+- ✅ Edit allowed_roles (Multi-Select)
+- ✅ Edit name/description/version
+- ✅ Category-Filter (core, chat, files, etc.)
+- ✅ Search (name + description)
+- ✅ Realtime Status Indicator
+- ✅ Last Updated Info (wann + von wem)
 
-## 💻 Code-Beispiele
-
-### **Komponente mit Feature-Flag schützen**
-
-```typescript
-// FileBrowserPage.tsx
-import { canAccessFeature } from '../../lib/constants/featureFlags';
-import { useAdmin } from '../../hooks/useAdmin';
-
-export default function FileBrowserPage() {
-  const { isAdmin } = useAdmin();
-  
-  // Zugriffskontrolle
-  if (!canAccessFeature('FILE_BROWSER', isAdmin)) {
-    return <NotFound />;
-  }
-  
-  return <FileBrowser />;
-}
+**UI:**
 ```
-
-### **Feature in Hook verwenden**
-
-```typescript
-// useFeatures.ts
-import { canAccessFeature } from '../lib/constants/featureFlags';
-import { useAdmin } from './useAdmin';
-
-export function useFeatures() {
-  const { isAdmin } = useAdmin();
-  
-  return {
-    hasFileBrowser: canAccessFeature('FILE_BROWSER', isAdmin),
-    hasCloudSync: canAccessFeature('CLOUD_INTEGRATION', isAdmin),
-  };
-}
-```
-
-### **Conditional Rendering**
-
-```typescript
-// Dashboard.tsx
-const { hasFileBrowser } = useFeatures();
-
-return (
-  <div>
-    <h1>Dashboard</h1>
-    
-    {hasFileBrowser && (
-      <FileBrowserWidget />
-    )}
-  </div>
-);
+┌─────────────────────────────────────────────────┐
+│ Feature Flags Management              [🔄 Live] │
+├─────────────────────────────────────────────────┤
+│ [Search...] [Category: All ▼] [+ New Feature]  │
+├─────────────────────────────────────────────────┤
+│ 📁 file_browser                    [✅ Enabled] │
+│    Datei-Browser mit Filter & Sortierung        │
+│    Roles: 🔒 Admin Only                         │
+│    v2.2.0 | files | Updated 2h ago by @rdegi    │
+│    [Edit Roles] [Edit Details]                  │
+├─────────────────────────────────────────────────┤
+│ ☁️ cloud_integration               [❌ Disabled]│
+│    Dropbox, Google Drive, OneDrive Integration  │
+│    Roles: 🔒 Admin Only                         │
+│    v2.3.0 | cloud | Updated 1d ago by @rdegi    │
+│    [Enable] [Edit Roles] [Edit Details]         │
+└─────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🗄️ Persistierung (TODO)
+## 🔧 Troubleshooting
 
-**Aktuell**: Feature-Flags sind in-memory (neu laden = reset)
+### Issue: Feature ändert sich nicht
 
-**Geplant**: Supabase-Persistierung
+**Problem**: Feature-Toggle funktioniert nicht
 
+**Lösung**:
+1. Check Browser Console für Errors
+2. Check Supabase SQL-Editor: `SELECT * FROM feature_flags WHERE id = 'YOUR_FEATURE';`
+3. Check RLS Policies: Bist du Admin? (`SELECT is_admin(auth.uid());`)
+4. Check Realtime: `ALTER PUBLICATION supabase_realtime ADD TABLE public.feature_flags;`
+
+### Issue: "Permission denied"
+
+**Problem**: RLS Policy blockiert Update
+
+**Lösung**:
 ```sql
--- Tabelle erstellen
-CREATE TABLE feature_flags (
-  id TEXT PRIMARY KEY,
-  enabled BOOLEAN NOT NULL DEFAULT false,
-  admin_only BOOLEAN NOT NULL DEFAULT true,
-  beta_access BOOLEAN NOT NULL DEFAULT false,
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_by UUID REFERENCES auth.users(id)
-);
+-- Check ob du Admin bist
+SELECT
+  raw_user_meta_data->>'is_admin' as is_admin,
+  email
+FROM auth.users
+WHERE id = auth.uid();
 
--- Policies
-CREATE POLICY "Admins can manage flags"
-ON feature_flags FOR ALL
-TO authenticated
-USING (is_admin(auth.uid()))
-WITH CHECK (is_admin(auth.uid()));
-
-CREATE POLICY "Everyone can read flags"
-ON feature_flags FOR SELECT
-TO authenticated
-USING (true);
+-- Falls nicht: Admin machen
+UPDATE auth.users
+SET raw_user_meta_data = jsonb_set(raw_user_meta_data, '{is_admin}', 'true')
+WHERE id = 'YOUR_USER_ID';
 ```
 
-**Code-Update** (für später):
+### Issue: Realtime funktioniert nicht
+
+**Problem**: Änderungen nicht live
+
+**Lösung**:
+```sql
+-- Check ob Realtime enabled ist
+SELECT * FROM pg_publication_tables WHERE pubname = 'supabase_realtime';
+
+-- Falls feature_flags fehlt:
+ALTER PUBLICATION supabase_realtime ADD TABLE public.feature_flags;
+```
+
+---
+
+## 🎯 Migration von v1.0 → v2.0
+
+### Was du tun musst:
+
+1. **SQL Setup ausführen**: `npm run db:show scripts/sql/feature_flags_setup.sql`
+2. **Code Migration**: Entferne alte `FEATURE_FLAGS` Konstante, nutze `useFeatureFlags()` Hook
+3. **Admin Panel**: Gehe zu `/admin/features` und check alle Features
+
+### Breaking Changes:
+
+- ❌ `FEATURE_FLAGS` Konstante ist DEPRECATED (nutze Supabase statt in-memory)
+- ❌ `adminOnly` Boolean → `allowed_roles` Array
+- ❌ `betaAccess` Boolean → `allowed_roles` Array
+- ✅ Alle alten Functions funktionieren via Legacy Adapter (Backward Compatibility!)
+
+### Backward Compatibility:
 
 ```typescript
-// Load from Supabase
-const { data } = await supabase
-  .from('feature_flags')
-  .select('*');
+// OLD (v1.0) - FUNKTIONIERT NOCH!
+import { FEATURE_FLAGS, canAccessFeature } from '@/lib/constants/featureFlags';
 
-// Update state
-data.forEach(flag => {
-  FEATURE_FLAGS[flag.id].enabled = flag.enabled;
-  FEATURE_FLAGS[flag.id].adminOnly = flag.admin_only;
-});
+// NEW (v2.0) - EMPFOHLEN!
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
+const { isFeatureEnabled } = useFeatureFlags();
 ```
 
 ---
 
-## 🧪 Testing
+## 📝 Changelog
 
-### **Test 1: Admin sieht Feature**
-```typescript
-test('Admin can access admin-only feature', () => {
-  const result = canAccessFeature('FILE_BROWSER', true);
-  expect(result).toBe(true);
-});
-```
+### v2.0.0 (2025-10-28)
+- ✅ Supabase Backend Integration
+- ✅ Realtime Updates
+- ✅ Role-Based Access (JSONB Array)
+- ✅ Admin Panel (/admin/features)
+- ✅ Audit Log (created_by, updated_by)
+- ✅ Categories (core, chat, files, cloud, admin)
+- ✅ Full-Text Search Index
+- ✅ Helper Function `can_access_feature()`
 
-### **Test 2: User sieht Feature nicht**
-```typescript
-test('Regular user cannot access admin-only feature', () => {
-  const result = canAccessFeature('FILE_BROWSER', false);
-  expect(result).toBe(false);
-});
-```
-
-### **Test 3: Disabled Feature**
-```typescript
-test('Nobody can access disabled feature', () => {
-  FEATURE_FLAGS.CLOUD_INTEGRATION.enabled = false;
-  
-  expect(canAccessFeature('CLOUD_INTEGRATION', true)).toBe(false);
-  expect(canAccessFeature('CLOUD_INTEGRATION', false)).toBe(false);
-});
-```
+### v1.0.0 (2025-10-19)
+- ✅ In-Memory Feature Flags
+- ✅ Basic adminOnly/betaAccess
+- ✅ canAccessFeature() Helper
 
 ---
 
-## 🚀 Deployment-Workflow
+## 🚀 Nächste Schritte
 
-### **Strategie: Alle Features zu main, schrittweise aktivieren**
+**Für dich (jetzt):**
+1. Öffne `/admin/features`
+2. Check alle Feature-Status
+3. Test: Toggle ein Feature → Check ob es sofort verschwindet!
 
-```bash
-# develop Branch: Alle Features entwickelt
-git checkout develop
-
-# Merge zu main (alles geht live, aber versteckt!)
-git checkout main
-git merge develop
-git tag v2.1.0
-git push origin main --tags
-
-# Deploy erfolgt...
-# JETZT: Features sind deployed, aber disabled/admin-only!
-```
-
-**Admin-Panel Workflow**:
-
-1. **v2.1.0 Deploy** (7. Oktober)
-   - Chat-Sidebar: ✅ Öffentlich
-   - File-Upload: ✅ Öffentlich
-   - File-Browser: 🔒 Admin-Only
-
-2. **Feature-Test** (7-8. Oktober)
-   - Du testest File-Browser in Production
-   - Bugs gefunden? → Hotfix-Branch
-   - Alles gut? → Aktivieren!
-
-3. **Feature-Release** (9. Oktober)
-   - Admin-Panel: FILE_BROWSER → Öffentlich
-   - 📢 Announcement: "New file browser available!"
-
-4. **v2.2.0 Deploy** (14. Oktober)
-   - Cloud-Integration: 🔒 Admin-Only
-   - Repeat workflow...
+**Für Entwicklung (später):**
+1. A/B Testing: Verschiedene Features für verschiedene User-Gruppen
+2. Scheduled Rollouts: Feature auto-enable zu bestimmter Zeit
+3. Usage Analytics: Tracking welche Features genutzt werden
+4. Feature Dependencies: Feature A benötigt Feature B
 
 ---
 
-## 📊 Vorteile
-
-| Vorteil | Beschreibung |
-|---------|-------------|
-| **Sicheres Testen** | Features in Production testen ohne User-Impact |
-| **Schnelles Rollback** | Feature deaktivieren in 10 Sekunden |
-| **Schrittweise Releases** | Features einzeln aktivieren, nicht alles auf einmal |
-| **Beta-Testing** | Ausgewählte User einbinden |
-| **Keine Re-Deploys** | Feature-Aktivierung ohne Code-Deploy |
-| **A/B Testing** | Verschiedene Features für verschiedene User-Gruppen |
-
----
-
-## ⚠️ Best Practices
-
-### **DO's** ✅
-- Features immer mit Flag starten (adminOnly: true)
-- Flags nach Release für 1-2 Wochen behalten (Rollback-Option)
-- Flags in Code kommentieren (warum? seit wann?)
-- Feature-Status dokumentieren
-
-### **DON'Ts** ❌
-- Flags nicht zu lange behalten (Code-Bloat)
-- Nicht zu viele Flags gleichzeitig (max 5-10)
-- Flags nicht für kritische Auth/Security-Features
-
----
-
-## 🔄 Feature-Lifecycle
-
-```
-1. Development
-   ├─ Feature entwickeln
-   └─ Flag erstellen (enabled: false)
-
-2. Staging
-   ├─ Auf develop testen
-   └─ Flag: adminOnly: true
-
-3. Production (Silent Deploy)
-   ├─ Merge zu main
-   ├─ Deploy
-   └─ Feature unsichtbar
-
-4. Internal Testing
-   ├─ Admin aktiviert Flag
-   ├─ Testing in Production
-   └─ Bugs fixen
-
-5. Beta Release
-   ├─ betaAccess: true
-   └─ Feedback sammeln
-
-6. Public Release
-   ├─ adminOnly: false
-   └─ Announcement
-
-7. Cleanup (nach 2 Wochen)
-   ├─ Flag entfernen
-   └─ Feature "permanent"
-```
-
----
-
-## 📝 Aktuelle Features
-
-| Feature | Status | Version | Zugänglich für |
-|---------|--------|---------|----------------|
-| Chat-Sidebar Polish | ✅ Live | v2.1.0 | Alle |
-| File-Upload System | ✅ Live | v2.1.0 | Alle |
-| File-Browser | 🔒 Admin | v2.2.0 | Nur du |
-| Cloud-Integration | ❌ Disabled | v2.3.0 | Niemand |
-
----
-
-## 🎯 Nächste Schritte
-
-1. **Jetzt**: Auf main deployen (alle Features, flags gesetzt)
-2. **Testing**: File-Browser in Production testen
-3. **Release**: File-Browser öffentlich machen (1 Klick)
-4. **Develop**: Cloud-Integration entwickeln (parallel!)
-5. **Repeat**: Gleicher Workflow für Cloud-Features
-
----
-
-**Status**: ✅ Production Ready  
-**Version**: 1.0.0  
+**Status**: ✅ **Production Ready** (v2.0.0)
 **Maintainer**: DegixDAW Team
+**Support**: Check `/admin/features` oder `scripts/sql/feature_flags_setup.sql`
