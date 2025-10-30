@@ -208,6 +208,36 @@ export async function listProjectTracks(projectId: string): Promise<string[]> {
 }
 
 // ============================================
+// Trigger Browser Download for Track
+// ============================================
+
+export async function triggerTrackDownload(
+  filePath: string,
+  fileName: string
+): Promise<void> {
+  try {
+    // Get signed URL for download
+    const signedUrl = await getTrackSignedUrl(filePath, 3600);
+
+    if (!signedUrl) {
+      throw new Error('Failed to get download URL');
+    }
+
+    // Trigger browser download
+    const a = document.createElement('a');
+    a.href = signedUrl;
+    a.download = fileName;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (error) {
+    console.error('triggerTrackDownload failed:', error);
+    throw error;
+  }
+}
+
+// ============================================
 // Check if Storage Bucket Exists
 // ============================================
 

@@ -14,6 +14,7 @@ import TrackVersionBadge from '../tracks/TrackVersionBadge';
 import { useTrackComments } from '../../hooks/useTrackComments';
 import { supabase } from '../../lib/supabase';
 import { useSyncPlayback } from '../../hooks/useSyncPlayback';
+import { triggerTrackDownload } from '../../lib/services/storage/trackStorage';
 import type { Track } from '../../types/tracks';
 import type { TrackVersionInfo } from '../../lib/services/projects/trackVersionUtils';
 
@@ -42,6 +43,7 @@ export default function AudioPlayer({
   const [showAddComment, setShowAddComment] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [currentUsername, setCurrentUsername] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
 
   // Comments hook
   const {
@@ -289,6 +291,28 @@ export default function AudioPlayer({
     await updateComment(commentId, { content: newContent });
   }, [updateComment]);
 
+  // Download Handler
+  const handleDownload = useCallback(async () => {
+    if (!track.file_path) {
+      console.error('No file path available for download');
+      return;
+    }
+
+    setDownloading(true);
+    try {
+      // Get file extension from file_path
+      const fileExtension = track.file_path.split('.').pop() || 'wav';
+      const fileName = `${track.name}.${fileExtension}`;
+
+      await triggerTrackDownload(track.file_path, fileName);
+    } catch (error) {
+      console.error('Download failed:', error);
+      setError('Failed to download track');
+    } finally {
+      setDownloading(false);
+    }
+  }, [track.file_path, track.name]);
+
   // ============================================
   // Format Helpers
   // ============================================
@@ -360,6 +384,16 @@ export default function AudioPlayer({
             )}
           </div>
         )}
+
+        {/* Download Button */}
+        <button
+          className="track-download-btn"
+          onClick={handleDownload}
+          disabled={downloading || !track.file_path}
+          title={downloading ? 'Downloading...' : 'Download track'}
+        >
+          {downloading ? '⏳' : '⬇️'}
+        </button>
       </div>
         {syncState.mode === 'off' && syncState.hostUserId && (
           <button className="sync-join-btn" onClick={joinAsListener}>

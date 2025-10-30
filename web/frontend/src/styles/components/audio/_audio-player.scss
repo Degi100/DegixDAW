@@ -20,9 +20,15 @@
   // HEADER (Track Info)
   // ============================================
   .audio-player-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
     margin-bottom: 1rem;
 
     .track-info {
+      flex: 1;
+
       .track-name-row {
         display: flex;
         align-items: center;
@@ -42,6 +48,32 @@
         font-size: 0.875rem;
         color: var(--text-secondary);
         font-family: 'Courier New', monospace;
+      }
+    }
+
+    .track-download-btn {
+      flex: 0 0 auto;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 1.25rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover:not(:disabled) {
+        background: var(--bg-tertiary);
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
       }
     }
   }
