@@ -216,8 +216,22 @@ export async function triggerTrackDownload(
   fileName: string
 ): Promise<void> {
   try {
-    // Get signed URL for download
-    const signedUrl = await getTrackSignedUrl(filePath, 3600);
+    // Try project-tracks bucket first
+    let signedUrl = await getTrackSignedUrl(filePath, 3600);
+
+    // If not found, try shared_files bucket
+    if (!signedUrl) {
+      const { data, error } = await supabase.storage
+        .from(SHARED_FILES_BUCKET)
+        .createSignedUrl(filePath, 3600);
+
+      if (error) {
+        console.error('Error getting signed URL from shared_files:', error);
+        throw new Error('File not found in storage');
+      }
+
+      signedUrl = data.signedUrl;
+    }
 
     if (!signedUrl) {
       throw new Error('Failed to get download URL');

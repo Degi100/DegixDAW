@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProjects } from '../../hooks/useProjects';
+import { useTracks } from '../../hooks/useTracks';
 import { useUserSearch, type SearchUser } from '../../hooks/useUserSearch';
 import { inviteCollaborator, inviteByEmail } from '../../lib/services/projects/collaboratorsService';
 import { PROJECT_TEMPLATES } from '../../lib/constants/content';
@@ -38,6 +39,10 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
   const [trackUploaded, setTrackUploaded] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  // useTracks hook for upload (only when project is created)
+  const { upload: uploadTrack, uploading: trackUploading } = useTracks(createdProjectId);
 
   // Step 3: Invite collaborators state
   const [activeTab, setActiveTab] = useState<'search' | 'email'>('search');
@@ -216,6 +221,8 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
     e.preventDefault();
 
     if (!validateForm()) return;
+    if (loading) return; // Prevent double-submit
+    if (createdProjectId) return; // Project already created
 
     setLoading(true);
 
@@ -326,9 +333,22 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
     setErrors({});
   };
 
-  // Handle track upload success
-  const handleTrackUploadSuccess = () => {
-    setTrackUploaded(true);
+  // Handle track file selection
+  const handleTrackFileSelect = (file: File) => {
+    setSelectedFile(file);
+  };
+
+  // Handle track upload
+  const handleTrackUpload = async () => {
+    if (!selectedFile || !createdProjectId) return;
+
+    try {
+      await uploadTrack(selectedFile);
+      setTrackUploaded(true);
+      setSelectedFile(null);
+    } catch (error) {
+      console.error('Track upload failed:', error);
+    }
   };
 
   // Finish wizard (from Step 5)
@@ -868,13 +888,24 @@ export default function ProjectCreateModal({ isOpen, onClose }: ProjectCreateMod
               <div className="track-upload-section">
                 <TrackUploadZone
                   projectId={createdProjectId}
-                  onUploadComplete={() => {
-                    handleTrackUploadSuccess();
-                  }}
+                  onUploadStart={handleTrackFileSelect}
                   onUploadError={(error: string) => {
                     console.error('Track upload error:', error);
                   }}
+                  disabled={trackUploading || trackUploaded}
                 />
+
+                {selectedFile && !trackUploaded && (
+                  <div style={{ marginTop: '1rem' }}>
+                    <Button
+                      variant="primary"
+                      onClick={handleTrackUpload}
+                      disabled={trackUploading}
+                    >
+                      {trackUploading ? 'Uploading...' : `Upload ${selectedFile.name}`}
+                    </Button>
+                  </div>
+                )}
 
                 {trackUploaded && (
                   <div className="upload-success-message" style={{ marginTop: '1rem', padding: '1rem', background: 'var(--success-bg, #d4edda)', borderRadius: '8px' }}>
