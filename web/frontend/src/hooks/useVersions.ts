@@ -3,7 +3,7 @@
 // React hook for managing project versions
 // ============================================
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type {
   ProjectVersionWithCreator,
   CreateProjectVersionRequest,
@@ -17,6 +17,7 @@ import {
   compareVersions,
 } from '../lib/services/projects/versionsService';
 import { useToast } from './useToast';
+import { supabase } from '../lib/supabase';
 
 export function useVersions(projectId: string) {
   const [versions, setVersions] = useState<ProjectVersionWithCreator[]>([]);
@@ -151,6 +152,38 @@ export function useVersions(projectId: string) {
       throw err;
     }
   }, [showError]);
+
+  /**
+   * Realtime subscription for project_versions changes
+   * This ensures badges update live for all collaborators
+   */
+  useEffect(() => {
+    if (!projectId) return;
+
+    // Subscribe to project_versions changes
+    const channel = supabase
+      .channel(`project_versions:${projectId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'project_versions',
+          filter: `project_id=eq.${projectId}`,
+        },
+        (payload) => {
+          console.log('[useVersions] Realtime event:', payload.eventType);
+
+          // Reload versions on any change
+          loadVersions();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [projectId, loadVersions]);
 
   return {
     // State
