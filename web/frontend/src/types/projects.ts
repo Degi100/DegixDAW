@@ -170,6 +170,7 @@ export interface ProjectVersion {
 export interface ProjectVersionSnapshot {
   project: Project;
   tracks: Track[];
+  comments: TrackComment[]; // Track comments snapshot
   settings: {
     bpm: number;
     time_signature: string;

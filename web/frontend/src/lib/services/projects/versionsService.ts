@@ -128,7 +128,26 @@ export async function createProjectVersion(
     throw new Error(`Failed to fetch tracks: ${tracksError.message}`);
   }
 
-  // 3. Get latest version number
+  // 3. Get all track comments for the project
+  const trackIds = (tracks || []).map(t => t.id);
+  let comments: any[] = [];
+
+  if (trackIds.length > 0) {
+    const { data: commentsData, error: commentsError } = await supabase
+      .from('track_comments')
+      .select('*')
+      .in('track_id', trackIds)
+      .order('created_at', { ascending: true });
+
+    if (commentsError) {
+      console.warn('Failed to fetch comments for snapshot:', commentsError);
+      // Continue without comments rather than failing
+    } else {
+      comments = commentsData || [];
+    }
+  }
+
+  // 4. Get latest version number
   const { data: latestVersion } = await supabase
     .from('project_versions')
     .select('version_number')
@@ -139,10 +158,11 @@ export async function createProjectVersion(
 
   const nextVersionNumber = latestVersion ? latestVersion.version_number + 1 : 1;
 
-  // 4. Create snapshot data
+  // 5. Create snapshot data
   const snapshotData: ProjectVersionSnapshot = {
     project: project as Project,
     tracks: (tracks || []) as Track[],
+    comments: comments, // Include track comments in snapshot
     settings: {
       bpm: project.bpm,
       time_signature: project.time_signature,
@@ -151,7 +171,7 @@ export async function createProjectVersion(
     metadata: project.metadata || {},
   };
 
-  // 5. Insert new version
+  // 6. Insert new version
   const { data: newVersion, error: insertError } = await supabase
     .from('project_versions')
     .insert({
@@ -215,6 +235,8 @@ export async function restoreProjectVersion(
   }
 
   // 4. Restore tracks from snapshot
+  let trackMapping = new Map<string, string>(); // old_track_id -> new_track_id
+
   if (snapshot.tracks && snapshot.tracks.length > 0) {
     // Omit id, created_at, updated_at to let Postgres generate new values
     const tracksToInsert = snapshot.tracks.map(({ id, created_at, updated_at, ...track }) => ({
@@ -223,16 +245,61 @@ export async function restoreProjectVersion(
       updated_at: new Date().toISOString(),
     }));
 
-    const { error: tracksError } = await supabase
+    const { data: newTracks, error: tracksError } = await supabase
       .from('tracks')
-      .insert(tracksToInsert);
+      .insert(tracksToInsert)
+      .select(); // Get back the new tracks with their IDs
 
     if (tracksError) {
       throw new Error(`Failed to restore tracks: ${tracksError.message}`);
     }
+
+    // Create mapping: old track_id -> new track_id
+    // Map by track_number for stability (track_number is preserved)
+    if (newTracks && newTracks.length > 0) {
+      snapshot.tracks.forEach((oldTrack) => {
+        const newTrack = newTracks.find(t => t.track_number === oldTrack.track_number);
+        if (newTrack) {
+          trackMapping.set(oldTrack.id, newTrack.id);
+        }
+      });
+    }
   }
 
-  // 5. Create a new version to mark this restore point
+  // 5. Restore comments with remapped track IDs
+  if (snapshot.comments && snapshot.comments.length > 0 && trackMapping.size > 0) {
+    const commentsToInsert = snapshot.comments
+      .map(({ id, created_at, updated_at, ...comment }) => {
+        const newTrackId = trackMapping.get(comment.track_id);
+
+        // Skip comment if track doesn't exist in mapping
+        if (!newTrackId) {
+          console.warn(`Skipping comment ${id} - track ${comment.track_id} not found in mapping`);
+          return null;
+        }
+
+        return {
+          ...comment,
+          track_id: newTrackId, // Use new track ID
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+      })
+      .filter(c => c !== null); // Remove null entries
+
+    if (commentsToInsert.length > 0) {
+      const { error: commentsError } = await supabase
+        .from('track_comments')
+        .insert(commentsToInsert);
+
+      if (commentsError) {
+        console.error('Failed to restore comments:', commentsError);
+        // Don't throw - comments are non-critical
+      }
+    }
+  }
+
+  // 6. Create a new version to mark this restore point
   await createProjectVersion(
     version.project_id,
     userId,
