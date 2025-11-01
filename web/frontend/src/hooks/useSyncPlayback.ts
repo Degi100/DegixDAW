@@ -190,9 +190,10 @@ export function useSyncPlayback({
 
       switch (event.type) {
         case 'host_join':
-          // New host joined
+          // New host joined - automatically become listener if we're already host
           setSyncState((prev) => ({
             ...prev,
+            mode: prev.mode === 'host' ? 'listener' : prev.mode,
             hostUserId: event.userId,
             hostUsername: event.username || 'Unknown',
           }));
