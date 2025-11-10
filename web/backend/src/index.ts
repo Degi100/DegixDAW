@@ -4,7 +4,8 @@ import dotenv from 'dotenv';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
-import fs from 'fs/promises';
+import fs from 'fs';
+import { promises as fsPromises } from 'fs';
 import { createClient } from '@supabase/supabase-js';
 
 // Load environment variables
@@ -29,11 +30,29 @@ app.use(express.json());
 // Serve Frontend static files from web/frontend/dist
 // ============================================================================
 if (process.env.NODE_ENV === 'production') {
+  // Path: /app/web/backend/dist -> /app/web/frontend/dist
+  // __dirname = /app/web/backend/dist (in Docker)
+  // Go up 2 levels to /app/web, then into frontend/dist
   const frontendDistPath = path.resolve(__dirname, '..', '..', 'frontend', 'dist');
-  console.log(`📂 Serving static files from: ${frontendDistPath}`);
 
-  // Serve static assets (JS, CSS, images, etc)
-  app.use(express.static(frontendDistPath));
+  console.log(`📂 [Static Files] __dirname: ${__dirname}`);
+  console.log(`📂 [Static Files] Resolved path: ${frontendDistPath}`);
+
+  // Check if dist exists
+  if (fs.existsSync(frontendDistPath)) {
+    console.log(`✅ [Static Files] Found dist at: ${frontendDistPath}`);
+    app.use(express.static(frontendDistPath));
+  } else {
+    console.error(`❌ [Static Files] NOT FOUND: ${frontendDistPath}`);
+    console.error(`❌ [Static Files] Available files in parent dir:`);
+    try {
+      const parentDir = path.resolve(__dirname, '..', '..');
+      const files = fs.readdirSync(parentDir);
+      console.error(`   Files: ${files.join(', ')}`);
+    } catch (err) {
+      console.error(`   Error reading parent dir: ${err}`);
+    }
+  }
 }
 
 // Health check endpoint
@@ -117,7 +136,7 @@ app.get('/api/analytics/code-metrics', async (req: Request, res: Response) => {
     for (const file of sourceFiles) {
       try {
         const filePath = path.join(projectRoot, file);
-        const content = await fs.readFile(filePath, 'utf-8');
+        const content = await fsPromises.readFile(filePath, 'utf-8');
         const lines = content.split('\n').length;
         totalLOC += lines;
 
