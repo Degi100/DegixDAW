@@ -1,0 +1,356 @@
+// ============================================
+// VERSION HISTORY STYLES
+// Git-style timeline for project versions
+// ============================================
+
+.version-history {
+  padding: 20px;
+  background: var(--background-secondary, #f8f9fa);
+  border-radius: 8px;
+  min-height: 300px;
+
+  &-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: var(--text-secondary, #666);
+    text-align: center;
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    p {
+      margin: 8px 0;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text-primary, #333);
+    }
+
+    small {
+      font-size: 14px;
+      opacity: 0.7;
+    }
+  }
+}
+
+.version-timeline {
+  position: relative;
+  padding-left: 40px;
+
+  // Timeline line
+  &::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 20px;
+    bottom: 20px;
+    width: 2px;
+    background: var(--border-color, #ddd);
+  }
+}
+
+.version-item {
+  position: relative;
+  margin-bottom: 32px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border-color, #e5e5e5);
+
+  &:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  &--latest {
+    .version-dot::after {
+      background: var(--success-color, #28a745);
+      box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.2);
+    }
+  }
+}
+
+.version-dot {
+  position: absolute;
+  left: -40px;
+  top: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &::after {
+    content: '';
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--primary-color, #007bff);
+    border: 2px solid var(--background-primary, #fff);
+    box-shadow: 0 0 0 2px var(--primary-color, #007bff);
+  }
+
+  .latest-badge {
+    position: absolute;
+    top: -8px;
+    left: 24px;
+    background: var(--success-color, #28a745);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.version-content {
+  background: var(--background-primary, white);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.version-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.version-info {
+  flex: 1;
+}
+
+.version-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.version-number {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary-color, #007bff);
+}
+
+.version-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--info-bg, #e3f2fd);
+  color: var(--info-color, #1976d2);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.version-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary, #666);
+}
+
+.version-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.version-author {
+  font-weight: 500;
+  color: var(--text-primary, #333);
+}
+
+.version-time {
+  opacity: 0.8;
+}
+
+.version-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  .btn-icon {
+    padding: 6px 10px;
+    background: transparent;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-secondary, #666);
+    transition: all 0.2s;
+
+    &:hover {
+      background: var(--background-secondary, #f5f5f5);
+      border-color: var(--primary-color, #007bff);
+      color: var(--primary-color, #007bff);
+    }
+  }
+
+  .btn-restore {
+    padding: 6px 12px;
+    background: var(--primary-color, #007bff);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.2s;
+
+    &:hover:not(:disabled) {
+      background: var(--primary-hover, #0056b3);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  .btn-delete {
+    padding: 6px 10px;
+    background: transparent;
+    border: 1px solid var(--danger-color, #dc3545);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+
+    &:hover {
+      background: var(--danger-color, #dc3545);
+      transform: scale(1.1);
+    }
+  }
+}
+
+.version-changelog {
+  padding: 12px;
+  background: var(--background-secondary, #f8f9fa);
+  border-left: 3px solid var(--primary-color, #007bff);
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary, #333);
+  white-space: pre-wrap;
+  margin-bottom: 12px;
+}
+
+.version-details {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color, #e5e5e5);
+}
+
+.version-stats {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+
+  .stat-item {
+    display: flex;
+    gap: 6px;
+    font-size: 13px;
+
+    .stat-label {
+      color: var(--text-secondary, #666);
+      font-weight: 500;
+    }
+
+    .stat-value {
+      color: var(--text-primary, #333);
+      font-weight: 600;
+    }
+  }
+}
+
+.version-tracks {
+  h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-primary, #333);
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .track-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    background: var(--background-secondary, #f8f9fa);
+    border-radius: 4px;
+    margin-bottom: 4px;
+    font-size: 13px;
+
+    .track-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      background: var(--primary-color, #007bff);
+      color: white;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 11px;
+    }
+
+    .track-name {
+      flex: 1;
+      color: var(--text-primary, #333);
+      font-weight: 500;
+    }
+
+    .track-type {
+      padding: 2px 8px;
+      background: var(--background-tertiary, #e9ecef);
+      color: var(--text-secondary, #666);
+      border-radius: 3px;
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .version-history {
+    background: var(--background-secondary, #2c2c2c);
+  }
+
+  .version-content {
+    background: var(--background-primary, #1e1e1e);
+  }
+
+  .version-changelog {
+    background: var(--background-secondary, #2c2c2c);
+  }
+
+  .version-tracks .track-item {
+    background: var(--background-secondary, #2c2c2c);
+  }
+}

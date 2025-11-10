@@ -3,12 +3,14 @@
 // View and manage a single project
 // ============================================
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProject } from '../../hooks/useProjects';
 import { useTracks } from '../../hooks/useTracks';
 import { useCollaborators } from '../../hooks/useCollaborators';
+import { useVersions } from '../../hooks/useVersions';
 import { supabase } from '../../lib/supabase';
+import { getAllTracksVersionInfo } from '../../lib/services/projects/trackVersionUtils';
 import Button from '../../components/ui/Button';
 import TrackUploadZone from '../../components/tracks/TrackUploadZone';
 import AudioPlayer from '../../components/audio/AudioPlayer';
@@ -17,9 +19,11 @@ import InviteCollaboratorModal from '../../components/projects/InviteCollaborato
 import ProjectSettingsModal from '../../components/projects/ProjectSettingsModal';
 import CollaboratorsList from '../../components/projects/CollaboratorsList';
 import MasterPeakMeter from '../../components/audio/MasterPeakMeter';
+import VersionHistory from '../../components/projects/VersionHistory';
+import CreateVersionModal from '../../components/projects/CreateVersionModal';
 import type { Track, UpdateTrackRequest } from '../../types/tracks';
 import type { InviteCollaboratorData } from '../../components/projects/InviteCollaboratorModal';
-import type { Project } from '../../types/projects';
+import type { Project, CreateProjectVersionRequest } from '../../types/projects';
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -27,11 +31,23 @@ export default function ProjectDetailPage() {
   const { project, loading, error, refresh } = useProject(id || null);
   const { tracks, uploading, upload, remove, update } = useTracks(id || null);
   const { collaborators, remove: removeCollaborator, updatePermissions } = useCollaborators(id || '');
+  const {
+    versions,
+    loading: versionsLoading,
+    creating: creatingVersion,
+    restoring: restoringVersion,
+    loadVersions,
+    createVersion,
+    restoreVersion,
+    deleteVersion,
+  } = useVersions(id || '');
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showProjectSettings, setShowProjectSettings] = useState(false);
+  const [showVersionsModal, setShowVersionsModal] = useState(false);
+  const [showCreateVersionModal, setShowCreateVersionModal] = useState(false);
   const [selectedTrackIds, setSelectedTrackIds] = useState<Set<string>>(new Set());
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [settingsTrack, setSettingsTrack] = useState<Track | null>(null);
@@ -48,6 +64,18 @@ export default function ProjectDetailPage() {
       setCurrentUserId(data.user?.id || null);
     });
   }, []);
+
+  // Load versions when showing modal
+  useEffect(() => {
+    if (showVersionsModal && id) {
+      loadVersions();
+    }
+  }, [showVersionsModal, id, loadVersions]);
+
+  // Compute track version info
+  const tracksVersionInfo = useMemo(() => {
+    return getAllTracksVersionInfo(tracks, versions);
+  }, [tracks, versions]);
 
   // ============================================
   // Track Selection Handlers
@@ -108,6 +136,43 @@ export default function ProjectDetailPage() {
   };
 
   // ============================================
+  // Version Handlers
+  // ============================================
+
+  const handleCreateVersion = async (tag: string, changelog: string) => {
+    if (!currentUserId) return;
+    const versionData: CreateProjectVersionRequest = {};
+    if (tag) versionData.version_tag = tag;
+    if (changelog) versionData.changes = changelog;
+
+    await createVersion(currentUserId, versionData);
+    setShowCreateVersionModal(false);
+    // Refresh versions in modal if open
+    if (showVersionsModal) {
+      await loadVersions();
+    }
+  };
+
+  const handleRestoreVersion = async (versionId: string) => {
+    if (!currentUserId) return;
+    if (!confirm('Are you sure you want to restore this version? This will overwrite the current project state.')) {
+      return;
+    }
+    await restoreVersion(versionId, currentUserId);
+    // Refresh project data
+    refresh();
+    // Reload page to show restored state
+    window.location.reload();
+  };
+
+  const handleDeleteVersion = async (versionId: string) => {
+    if (!confirm('Are you sure you want to delete this version? This action cannot be undone.')) {
+      return;
+    }
+    await deleteVersion(versionId);
+  };
+
+  // ============================================
   // Collaborator Handlers
   // ============================================
 
@@ -133,6 +198,16 @@ export default function ProjectDetailPage() {
   const handleRemoveCollaborator = async (collaboratorId: string) => {
     if (!confirm('Remove this collaborator from the project?')) return;
     await removeCollaborator(collaboratorId);
+  };
+
+  const handleChangeCollaboratorRole = async (collaboratorId: string, newRole: string) => {
+    try {
+      await updatePermissions(collaboratorId, { role: newRole as any });
+      // State is automatically updated by useCollaborators hook!
+      // No reload needed - component re-renders with new role
+    } catch (error) {
+      console.error('Failed to change role:', error);
+    }
   };
 
   if (loading) {
@@ -177,6 +252,9 @@ export default function ProjectDetailPage() {
             <span className="project-status" data-status={project.status}>
               {project.status}
             </span>
+            <Button variant="secondary" onClick={() => setShowVersionsModal(true)}>
+              📦 Versions ({versions.length})
+            </Button>
             <Button variant="secondary" onClick={() => setShowProjectSettings(true)}>
               ⚙️ Settings
             </Button>
@@ -234,6 +312,7 @@ export default function ProjectDetailPage() {
             projectOwnerId={project.creator_id}
             onRemove={handleRemoveCollaborator}
             onUpdatePermissions={updatePermissions}
+            onChangeRole={handleChangeCollaboratorRole}
           />
         )}
       </div>
@@ -341,7 +420,10 @@ export default function ProjectDetailPage() {
                     </div>
                   </div>
 
-                  <AudioPlayer track={track} />
+                  <AudioPlayer
+                    track={track}
+                    versionInfo={tracksVersionInfo.get(track.id) || null}
+                  />
                 </div>
               ))}
             </div>
@@ -496,6 +578,59 @@ export default function ProjectDetailPage() {
           project={project}
           onClose={() => setShowProjectSettings(false)}
           onSave={handleSaveProjectSettings}
+        />
+      )}
+
+      {/* Versions Modal */}
+      {showVersionsModal && (
+        <div className="modal-overlay" onClick={() => setShowVersionsModal(false)}>
+          <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>📦 Version History</h2>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <Button
+                  variant="primary"
+                  onClick={() => setShowCreateVersionModal(true)}
+                  disabled={creatingVersion}
+                >
+                  📸 Create Version
+                </Button>
+                <button
+                  onClick={() => setShowVersionsModal(false)}
+                  className="modal-close"
+                  aria-label="Close modal"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div className="modal-body">
+              {versionsLoading ? (
+                <div style={{ textAlign: 'center', padding: '40px' }}>
+                  <div className="spinner"></div>
+                  <p>Loading versions...</p>
+                </div>
+              ) : (
+                <VersionHistory
+                  versions={versions}
+                  onRestore={handleRestoreVersion}
+                  onDelete={handleDeleteVersion}
+                  restoring={restoringVersion}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Version Modal */}
+      {showCreateVersionModal && (
+        <CreateVersionModal
+          isOpen={showCreateVersionModal}
+          onClose={() => setShowCreateVersionModal(false)}
+          onCreate={handleCreateVersion}
+          creating={creatingVersion}
+          nextVersionNumber={(versions[0]?.version_number || 0) + 1}
         />
       )}
     </div>

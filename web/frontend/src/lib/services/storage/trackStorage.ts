@@ -208,6 +208,50 @@ export async function listProjectTracks(projectId: string): Promise<string[]> {
 }
 
 // ============================================
+// Trigger Browser Download for Track
+// ============================================
+
+export async function triggerTrackDownload(
+  filePath: string,
+  fileName: string
+): Promise<void> {
+  try {
+    // Try project-tracks bucket first
+    let signedUrl = await getTrackSignedUrl(filePath, 3600);
+
+    // If not found, try shared_files bucket
+    if (!signedUrl) {
+      const { data, error } = await supabase.storage
+        .from(SHARED_FILES_BUCKET)
+        .createSignedUrl(filePath, 3600);
+
+      if (error) {
+        console.error('Error getting signed URL from shared_files:', error);
+        throw new Error('File not found in storage');
+      }
+
+      signedUrl = data.signedUrl;
+    }
+
+    if (!signedUrl) {
+      throw new Error('Failed to get download URL');
+    }
+
+    // Trigger browser download
+    const a = document.createElement('a');
+    a.href = signedUrl;
+    a.download = fileName;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (error) {
+    console.error('triggerTrackDownload failed:', error);
+    throw error;
+  }
+}
+
+// ============================================
 // Check if Storage Bucket Exists
 // ============================================
 

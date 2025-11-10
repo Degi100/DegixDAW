@@ -47,6 +47,7 @@ const ProjectFilesPage = lazy(() => import('./pages/files/ProjectFilesPage'));
 // Project Pages
 const ProjectsListPage = lazy(() => import('./pages/projects/ProjectsListPage'));
 const ProjectDetailPage = lazy(() => import('./pages/projects/ProjectDetailPage'));
+const TestVersions = lazy(() => import('./pages/projects/TestVersions'));
 
 // Admin Components
 import AdminRoute from './components/admin/AdminRoute';
@@ -149,6 +150,14 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<PageLoader />}>
             <ProjectDetailPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'projects/:projectId/test-versions',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <TestVersions />
           </Suspense>
         ),
       },

@@ -24,6 +24,18 @@ const supabaseAdmin = createClient(
 app.use(cors());
 app.use(express.json());
 
+// ============================================================================
+// STATIC FILE SERVING (Production) - Part 1: Assets
+// Serve Frontend static files from web/frontend/dist
+// ============================================================================
+if (process.env.NODE_ENV === 'production') {
+  const frontendDistPath = path.resolve(__dirname, '..', '..', 'frontend', 'dist');
+  console.log(`📂 Serving static files from: ${frontendDistPath}`);
+
+  // Serve static assets (JS, CSS, images, etc)
+  app.use(express.static(frontendDistPath));
+}
+
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', message: 'DegixDAW Backend is running' });
@@ -254,9 +266,25 @@ app.post('/api/invitations/email', async (req: Request, res: Response) => {
   }
 });
 
+// ============================================================================
+// STATIC FILE SERVING (Production) - Part 2: SPA Fallback
+// All non-API routes serve index.html (for React Router)
+// This MUST be after all API routes!
+// ============================================================================
+if (process.env.NODE_ENV === 'production') {
+  app.get('*', (req: Request, res: Response) => {
+    const frontendDistPath = path.resolve(__dirname, '..', '..', 'frontend', 'dist');
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
+  });
+}
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 DegixDAW Backend running on http://localhost:${PORT}`);
   console.log(`📊 Analytics API: http://localhost:${PORT}/api/analytics/code-metrics`);
   console.log(`📧 Invitations API: http://localhost:${PORT}/api/invitations/email`);
+
+  if (process.env.NODE_ENV === 'production') {
+    console.log(`🌐 Frontend: Serving static files from web/frontend/dist`);
+  }
 });

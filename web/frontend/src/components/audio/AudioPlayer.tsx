@@ -10,21 +10,26 @@ import CommentsList from './CommentsList';
 import AddCommentModal from './AddCommentModal';
 import Button from '../ui/Button';
 import PeakMeter from './PeakMeter';
+import TrackVersionBadge from '../tracks/TrackVersionBadge';
 import { useTrackComments } from '../../hooks/useTrackComments';
 import { supabase } from '../../lib/supabase';
 import { useSyncPlayback } from '../../hooks/useSyncPlayback';
+import { triggerTrackDownload } from '../../lib/services/storage/trackStorage';
 import type { Track } from '../../types/tracks';
+import type { TrackVersionInfo } from '../../lib/services/projects/trackVersionUtils';
 
 interface AudioPlayerProps {
   track: Track;
   autoPlay?: boolean;
   className?: string;
+  versionInfo?: TrackVersionInfo | null;
 }
 
 export default function AudioPlayer({
   track,
   autoPlay = false,
   className = '',
+  versionInfo = null,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -38,6 +43,7 @@ export default function AudioPlayer({
   const [showAddComment, setShowAddComment] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [currentUsername, setCurrentUsername] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
 
   // Comments hook
   const {
@@ -285,6 +291,28 @@ export default function AudioPlayer({
     await updateComment(commentId, { content: newContent });
   }, [updateComment]);
 
+  // Download Handler
+  const handleDownload = useCallback(async () => {
+    if (!track.file_path) {
+      console.error('No file path available for download');
+      return;
+    }
+
+    setDownloading(true);
+    try {
+      // Get file extension from file_path
+      const fileExtension = track.file_path.split('.').pop() || 'wav';
+      const fileName = `${track.name}.${fileExtension}`;
+
+      await triggerTrackDownload(track.file_path, fileName);
+    } catch (error) {
+      console.error('Download failed:', error);
+      setError('Failed to download track');
+    } finally {
+      setDownloading(false);
+    }
+  }, [track.file_path, track.name]);
+
   // ============================================
   // Format Helpers
   // ============================================
@@ -328,7 +356,10 @@ export default function AudioPlayer({
       {/* Track Info */}
       <div className="audio-player-header">
         <div className="track-info">
-          <h3 className="track-name">{track.name}</h3>
+          <div className="track-name-row">
+            <h3 className="track-name">{track.name}</h3>
+            {versionInfo && <TrackVersionBadge versionInfo={versionInfo} />}
+          </div>
           <p className="track-meta">
             {track.track_type.toUpperCase()}
             {track.duration_ms && ` • ${formatTime(track.duration_ms / 1000)}`}
@@ -353,6 +384,16 @@ export default function AudioPlayer({
             )}
           </div>
         )}
+
+        {/* Download Button */}
+        <button
+          className="track-download-btn"
+          onClick={handleDownload}
+          disabled={downloading || !track.file_path}
+          title={downloading ? 'Downloading...' : 'Download track'}
+        >
+          {downloading ? '⏳' : '⬇️'}
+        </button>
       </div>
         {syncState.mode === 'off' && syncState.hostUserId && (
           <button className="sync-join-btn" onClick={joinAsListener}>

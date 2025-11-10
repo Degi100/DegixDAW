@@ -152,6 +152,43 @@ export interface TrackWithCreator extends Track {
 }
 
 // ============================================
+// Project Versions (Version Control)
+// ============================================
+
+export interface ProjectVersion {
+  id: string;
+  project_id: string;
+  version_number: number;
+  version_tag?: string | null; // e.g., "v1.0", "beta", "final"
+  created_by: string;
+  snapshot_data: ProjectVersionSnapshot; // Complete project state
+  changes?: string | null; // Human-readable changelog
+  created_at: string;
+}
+
+// Snapshot data structure (what gets saved in each version)
+export interface ProjectVersionSnapshot {
+  project: Project;
+  tracks: Track[];
+  comments: TrackComment[]; // Track comments snapshot
+  settings: {
+    bpm: number;
+    time_signature: string;
+    key?: string | null;
+  };
+  metadata?: Record<string, any>;
+}
+
+// Project version with creator profile
+export interface ProjectVersionWithCreator extends ProjectVersion {
+  creator: {
+    id: string;
+    username: string;
+    avatar_url?: string | null;
+  };
+}
+
+// ============================================
 // Track Versions
 // ============================================
 
@@ -252,6 +289,11 @@ export interface CreateTrackCommentRequest {
   content: string;
   timestamp_ms?: number;
   parent_comment_id?: string;
+}
+
+export interface CreateProjectVersionRequest {
+  version_tag?: string; // e.g., "v1.0", "beta", "final"
+  changes?: string; // Changelog/commit message
 }
 
 // ============================================

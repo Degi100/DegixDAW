@@ -1,0 +1,79 @@
+// ============================================
+// TRACK VERSION BADGE
+// Shows version info for tracks
+// ============================================
+
+.track-version-badge {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.version-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: help;
+  transition: all 0.2s ease;
+
+  // Added badge (blue)
+  &--added {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--primary-color, #3b82f6);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+
+    &:hover {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+  }
+
+  // Modified badge (amber)
+  &--modified {
+    background: rgba(251, 191, 36, 0.1);
+    color: #f59e0b;
+    border: 1px solid rgba(251, 191, 36, 0.2);
+
+    &:hover {
+      background: rgba(251, 191, 36, 0.2);
+      border-color: rgba(251, 191, 36, 0.3);
+    }
+  }
+
+  .version-tag {
+    opacity: 0.7;
+    font-weight: 400;
+  }
+}
+
+// Dark mode adjustments
+[data-theme='dark'] {
+  .version-badge {
+    &--added {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border-color: rgba(59, 130, 246, 0.25);
+
+      &:hover {
+        background: rgba(59, 130, 246, 0.25);
+        border-color: rgba(59, 130, 246, 0.35);
+      }
+    }
+
+    &--modified {
+      background: rgba(251, 191, 36, 0.15);
+      color: #fbbf24;
+      border-color: rgba(251, 191, 36, 0.25);
+
+      &:hover {
+        background: rgba(251, 191, 36, 0.25);
+        border-color: rgba(251, 191, 36, 0.35);
+      }
+    }
+  }
+}

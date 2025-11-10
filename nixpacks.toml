@@ -1,0 +1,30 @@
+# ============================================
+# Nixpacks Configuration for DegixDAW Monorepo
+# Used by Coolify for deployment
+# ============================================
+
+[phases.setup]
+# Use Node.js 20 (matches package.json engines)
+nixPkgs = ['nodejs_20']
+
+[phases.install]
+# Install all workspace dependencies from root
+# This installs web/frontend, web/backend, and packages/*
+cmds = ['npm install']
+
+[phases.build]
+# Build all workspaces
+# Frontend: TypeScript + Vite → web/frontend/dist
+# Backend: TypeScript → web/backend/dist
+cmds = [
+  'npm run build:frontend',
+  'npm run build:backend'
+]
+
+[start]
+# Start backend in production mode
+# Backend serves:
+# - API routes: /api/*, /health
+# - Frontend static files: web/frontend/dist (via express.static)
+# - SPA fallback: index.html for all non-API routes
+cmd = 'NODE_ENV=production npm start --workspace=web/backend'
