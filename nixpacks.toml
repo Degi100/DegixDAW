@@ -3,9 +3,14 @@
 # Used by Coolify for deployment
 # ============================================
 
+[variables]
+# Force Node.js detection (prevent Deno/Bun auto-detection)
+NIXPACKS_NODEJS_VERSION = '20'
+
 [phases.setup]
 # Use Node.js 20 (matches package.json engines)
 nixPkgs = ['nodejs_20']
+nixLibs = ['glibc']
 
 [phases.install]
 # Install all workspace dependencies from root
