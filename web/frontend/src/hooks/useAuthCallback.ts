@@ -32,26 +32,8 @@ export function useAuthCallback() {
           } else if (session?.user) {
             const user = session.user;
             
-            // Check if user needs onboarding (no profile = needs onboarding)
-            try {
-              const { data: profile } = await supabase
-                .from('profiles')
-                .select('username')
-                .eq('user_id', user.id)
-                .single();
-              
-              if (!profile) {
-                // No profile found - user needs onboarding
-                navigate('/onboarding/username');
-              } else {
-                // Profile exists - user is already onboarded
-                navigate('/');
-              }
-            } catch (error) {
-              console.warn('Error checking profile for onboarding:', error);
-              // If we can't check the profile, assume user needs onboarding for safety
-              navigate('/onboarding/username');
-            }
+            // Profile is auto-created by auth trigger, redirect to home
+            navigate('/');
           } else {
             navigate('/login');
           }
