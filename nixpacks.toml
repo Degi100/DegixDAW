@@ -27,4 +27,4 @@ cmds = [
 # - API routes: /api/*, /health
 # - Frontend static files: web/frontend/dist (via express.static)
 # - SPA fallback: index.html for all non-API routes
-cmd = 'NODE_ENV=production npm start --workspace=web/backend'
+cmd = 'npm start'
