@@ -30,8 +30,6 @@ export function useAuthCallback() {
             console.warn('OAuth-Anmeldung fehlgeschlagen. Bitte versuche es erneut.');
             navigate('/login');
           } else if (session?.user) {
-            const user = session.user;
-            
             // Profile is auto-created by auth trigger, redirect to home
             navigate('/');
           } else {
